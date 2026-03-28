@@ -1,0 +1,24 @@
+{
+  "name": "chronicles-rebuild",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "build": "npm run build --workspace=shared && npm run build --workspace=server && npm run build --workspace=client",
+    "test": "npm run test --workspace=shared && npm run test --workspace=server && npm run test --workspace=client",
+    "test:watch": "concurrently \"npm run test:watch --workspace=shared\" \"npm run test:watch --workspace=server\" \"npm run test:watch --workspace=client\"",
+    "test:coverage": "npm run test:coverage --workspace=shared && npm run test:coverage --workspace=server && npm run test:coverage --workspace=client",
+    "migrate:tenants": "npm run migrate:tenants --workspace=server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.0"
+  }
+}

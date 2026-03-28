@@ -1,0 +1,81 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// =============================================================================
+// Account — User identity and encryption parameters
+// =============================================================================
+
+model Account {
+  id                Int       @id @default(autoincrement())
+  userId            String    @unique @default(uuid()) @db.Uuid
+  email             String    @unique
+  username          String    @unique
+  passwordHash      String    @map("password_hash")
+  tenantSchemaName  String    @unique @map("tenant_schema_name")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Encryption: Password-wrapped master key
+  encryptedMasterKey  Bytes?    @map("encrypted_master_key")
+  kekSalt             Bytes?    @map("kek_salt")
+  kekWrapIv           Bytes?    @map("kek_wrap_iv")
+  kekIterations       Int       @default(600000) @map("kek_iterations")
+
+  // Encryption: Recovery-wrapped master key
+  recoveryWrappedMK   Bytes?    @map("recovery_wrapped_mk")
+  recoveryWrapIv      Bytes?    @map("recovery_wrap_iv")
+
+  encryptionEnabled   Boolean   @default(false) @map("encryption_enabled")
+
+  // JIT migration flag
+  isMigrating         Boolean   @default(false) @map("is_migrating")
+
+  sessions          Session[]
+
+  @@map("accounts")
+}
+
+// =============================================================================
+// Session — Split token pattern (selector + verifier hash)
+// =============================================================================
+
+model Session {
+  id              Int       @id @default(autoincrement())
+  selector        String    @unique @db.VarChar(12)
+  verifierHash    String    @map("verifier_hash")
+  accountId       Int       @map("account_id")
+  tenantSchemaName String   @map("tenant_schema_name")
+  schemaVersion   Int       @default(0) @map("schema_version")
+  deviceInfo      String?   @map("device_info")
+  ipAddress       String?   @map("ip_address")
+  userAgent       String?   @map("user_agent")
+  lastActiveAt    DateTime  @default(now()) @map("last_active_at") @db.Timestamptz
+  expiresAt       DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt       DateTime? @map("revoked_at") @db.Timestamptz
+  revokedReason   String?   @map("revoked_reason")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  account         Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([selector])
+  @@index([expiresAt])
+  @@index([accountId])
+  @@map("sessions")
+}
+
+// =============================================================================
+// SchemaCounter — Atomic counter for tenant schema naming
+// =============================================================================
+
+model SchemaCounter {
+  id            Int      @id @default(1)
+  currentNumber Int      @default(0) @map("current_number")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("schema_counter")
+}

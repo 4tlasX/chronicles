@@ -1,0 +1,142 @@
+import { useState, type FormEvent } from 'react';
+import styled from 'styled-components';
+import { PasswordInput } from '../atoms/PasswordInput.js';
+import { Button } from '../atoms/Button.js';
+import { Spinner } from '../atoms/Spinner.js';
+import { FormField } from '../molecules/FormField.js';
+import { useEncryption } from '../../contexts/EncryptionContext.js';
+import { auth as authApi } from '../../services/api.js';
+
+const Section = styled.div`
+  margin-bottom: ${({ theme }) => theme.spacing.xl}px;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: ${({ theme }) => theme.fontSize.md}px;
+  font-weight: ${({ theme }) => theme.fontWeight.semibold};
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
+`;
+
+const ToggleButton = styled.button`
+  font-size: ${({ theme }) => theme.fontSize.sm}px;
+  color: ${({ theme }) => theme.colors.accent};
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  &:hover { text-decoration: underline; }
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.md}px;
+  margin-top: ${({ theme }) => theme.spacing.md}px;
+  padding: ${({ theme }) => theme.spacing.md}px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.1);
+`;
+
+const Message = styled.div<{ $error?: boolean }>`
+  font-size: ${({ theme }) => theme.fontSize.sm}px;
+  color: ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.success};
+`;
+
+export function ChangePassword() {
+  const { rewrapMasterKey } = useEncryption();
+  const [expanded, setExpanded] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setMessage('');
+
+    if (newPassword !== confirmPassword) {
+      setMessage('Passwords do not match');
+      setIsError(true);
+      return;
+    }
+
+    if (newPassword.length < 12) {
+      setMessage('Password must be at least 12 characters');
+      setIsError(true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { salt, wrappedMK, wrapIv } = await rewrapMasterKey(newPassword);
+
+      await authApi.changePassword({
+        currentPassword,
+        newPassword,
+        newEncryptedMasterKey: wrappedMK,
+        newKekSalt: salt,
+        newKekWrapIv: wrapIv,
+      });
+
+      setMessage('Password changed successfully');
+      setIsError(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setExpanded(false);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Failed to change password');
+      setIsError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Section>
+      <SectionTitle>Security</SectionTitle>
+      <ToggleButton onClick={() => setExpanded(!expanded)}>
+        {expanded ? 'Cancel' : 'Change Password'}
+      </ToggleButton>
+
+      {message && <Message $error={isError}>{message}</Message>}
+
+      {expanded && (
+        <Form onSubmit={handleSubmit}>
+          <FormField label="Current Password">
+            <PasswordInput
+              value={currentPassword}
+              onChange={e => setCurrentPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+          </FormField>
+          <FormField label="New Password">
+            <PasswordInput
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              placeholder="Min 12 characters"
+              required
+              autoComplete="new-password"
+            />
+          </FormField>
+          <FormField label="Confirm New Password">
+            <PasswordInput
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+            />
+          </FormField>
+          <Button type="submit" disabled={loading}>
+            {loading ? <Spinner size={14} /> : 'Update Password'}
+          </Button>
+        </Form>
+      )}
+    </Section>
+  );
+}

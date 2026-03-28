@@ -1,0 +1,60 @@
+import styled from 'styled-components';
+import { Select } from '../../atoms/Select.js';
+import { DateInput } from '../../atoms/DateInput.js';
+import { FormField } from '../FormField.js';
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.sm}px;
+`;
+
+const Row = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm}px;
+`;
+
+export interface GoalFieldValues {
+  goalType: 'short_term' | 'long_term';
+  goalStatus: 'active' | 'completed' | 'archived';
+  targetDate: string;
+}
+
+interface GoalFieldsProps {
+  values: GoalFieldValues;
+  onChange: (values: GoalFieldValues) => void;
+}
+
+export function GoalFields({ values, onChange }: GoalFieldsProps) {
+  return (
+    <Wrapper>
+      <Row>
+        <FormField label="Type">
+          <Select
+            value={values.goalType}
+            onChange={e => onChange({ ...values, goalType: e.target.value as GoalFieldValues['goalType'] })}
+          >
+            <option value="short_term">Short-term</option>
+            <option value="long_term">Long-term</option>
+          </Select>
+        </FormField>
+        <FormField label="Status">
+          <Select
+            value={values.goalStatus}
+            onChange={e => onChange({ ...values, goalStatus: e.target.value as GoalFieldValues['goalStatus'] })}
+          >
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="archived">Archived</option>
+          </Select>
+        </FormField>
+      </Row>
+      <FormField label="Target Date">
+        <DateInput
+          value={values.targetDate}
+          onChange={e => onChange({ ...values, targetDate: e.target.value })}
+        />
+      </FormField>
+    </Wrapper>
+  );
+}

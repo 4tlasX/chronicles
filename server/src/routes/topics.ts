@@ -1,0 +1,107 @@
+import { Router } from 'express';
+import { createTaxonomy, getTaxonomy, getAllTaxonomies, updateTaxonomy, deleteTaxonomy } from '../db/tenantQueries.js';
+import { createTaxonomySchema, updateTaxonomySchema } from '@chronicles/shared';
+import { prisma } from '../db/prisma.js';
+
+const router = Router();
+
+const DEFAULT_TOPICS = [
+  { name: 'Task', icon: 'circle-check', color: '#3B82F6' },
+  { name: 'Idea', icon: 'lightbulb', color: '#8B5CF6' },
+  { name: 'Research', icon: 'magnifying-glass', color: '#10B981' },
+  { name: 'Event', icon: 'calendar', color: '#F59E0B' },
+  { name: 'Meeting', icon: 'users', color: '#EC4899' },
+  { name: 'Symptom', icon: 'flask', color: '#EF4444' },
+  { name: 'Music', icon: 'music', color: '#EC4899' },
+  { name: 'Books', icon: 'book', color: '#8B5CF6' },
+  { name: 'TV/Movies', icon: 'film', color: '#F59E0B' },
+  { name: 'Quote', icon: 'quote-left', color: '#6366F1' },
+];
+
+async function seedTopicsIfEmpty(schemaName: string): Promise<void> {
+  const existing = await getAllTaxonomies(schemaName);
+  if (existing.length > 0) return;
+
+  const s = schemaName.replace(/[^a-z0-9_]/gi, '');
+  const values = DEFAULT_TOPICS.map(t => `('${t.name}', '${t.icon}', '${t.color}')`).join(', ');
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO ${s}.taxonomies (name, icon, color) VALUES ${values}`
+  );
+}
+
+// GET /api/topics
+router.get('/', async (req, res) => {
+  try {
+    // Auto-seed for existing users with empty topic tables
+    await seedTopicsIfEmpty(req.auth!.tenantSchemaName);
+    const taxonomies = await getAllTaxonomies(req.auth!.tenantSchemaName);
+    res.json(taxonomies);
+  } catch (err) {
+    console.error('Get topics error:', err);
+    res.status(500).json({ error: 'Failed to fetch topics' });
+  }
+});
+
+// POST /api/topics
+router.post('/', async (req, res) => {
+  try {
+    const parsed = createTaxonomySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
+      return;
+    }
+    const { name, icon, color } = parsed.data;
+    const taxonomy = await createTaxonomy(req.auth!.tenantSchemaName, name, { icon, color });
+    res.status(201).json(taxonomy);
+  } catch (err) {
+    console.error('Create topic error:', err);
+    res.status(500).json({ error: 'Failed to create topic' });
+  }
+});
+
+// GET /api/topics/:id
+router.get('/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const taxonomy = await getTaxonomy(req.auth!.tenantSchemaName, id);
+    if (!taxonomy) {
+      res.status(404).json({ error: 'Topic not found' });
+      return;
+    }
+    res.json(taxonomy);
+  } catch (err) {
+    console.error('Get topic error:', err);
+    res.status(500).json({ error: 'Failed to fetch topic' });
+  }
+});
+
+// PUT /api/topics/:id
+router.put('/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const parsed = updateTaxonomySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
+      return;
+    }
+    const taxonomy = await updateTaxonomy(req.auth!.tenantSchemaName, id, parsed.data);
+    res.json(taxonomy);
+  } catch (err) {
+    console.error('Update topic error:', err);
+    res.status(500).json({ error: 'Failed to update topic' });
+  }
+});
+
+// DELETE /api/topics/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await deleteTaxonomy(req.auth!.tenantSchemaName, id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete topic error:', err);
+    res.status(500).json({ error: 'Failed to delete topic' });
+  }
+});
+
+export default router;
