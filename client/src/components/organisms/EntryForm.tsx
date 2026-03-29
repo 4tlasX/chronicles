@@ -8,6 +8,8 @@ import { Checkbox } from '../atoms/Checkbox.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { TaskFields, type TaskFieldValues } from '../molecules/fields/TaskFields.js';
 import { GoalFields, type GoalFieldValues } from '../molecules/fields/GoalFields.js';
+import { MilestoneFields, type MilestoneFieldValues } from '../molecules/fields/MilestoneFields.js';
+import { useEntriesStore } from '../../stores/entriesStore.js';
 import { FoodFields, type FoodFieldValues } from '../molecules/fields/FoodFields.js';
 import { MedicationFields, type MedicationFieldValues } from '../molecules/fields/MedicationFields.js';
 import { SymptomFields, type SymptomFieldValues } from '../molecules/fields/SymptomFields.js';
@@ -47,13 +49,13 @@ const ExpandControl = styled.div`
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
-const IconBtn = styled.button`
+const IconBtn = styled.button<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: ${({ $active, theme }) => $active ? '#f59e0b' : theme.colors.textMuted};
   background: none;
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
@@ -62,18 +64,13 @@ const IconBtn = styled.button`
   transition: color 0.15s, background 0.15s;
 
   &:hover {
-    color: ${({ theme }) => theme.colors.text};
+    color: ${({ $active, theme }) => $active ? '#d97706' : theme.colors.text};
     background: rgba(0, 0, 0, 0.05);
   }
 `;
 
 const CustomFieldsSection = styled.div`
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  margin: 8px 16px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.1);
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const CustomFieldsHeader = styled.button`
@@ -176,6 +173,7 @@ function stripHtml(html: string): string {
 /* ── Component ── */
 
 interface EntryFormProps {
+  entryId: number | null;
   content: string;
   onContentChange: (content: string) => void;
   topicId: number | null;
@@ -186,6 +184,8 @@ interface EntryFormProps {
   onSave: () => Promise<void>;
   onDelete?: () => Promise<void>;
   onNew: () => void;
+  onBookmark?: () => void;
+  onShare?: () => void;
   isEditing: boolean;
   isSaving: boolean;
   saveStatus: string;
@@ -195,15 +195,76 @@ interface EntryFormProps {
 }
 
 export function EntryForm({
-  content, onContentChange, topicId, onTopicChange, topics,
+  entryId, content, onContentChange, topicId, onTopicChange, topics,
   customFields, onCustomFieldsChange, onSave, onDelete, onNew,
+  onBookmark, onShare,
   isEditing, isSaving, saveStatus, placeholder = 'Start writing...',
   expanded = false, onExpandChange,
 }: EntryFormProps) {
+  const isFavorite = !!customFields._isFavorite;
   const [fieldsExpanded, setFieldsExpanded] = useState(true);
+  const entries = useEntriesStore(s => s.decryptedEntries);
+  const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
 
   const selectedTopic = topics.find(t => t.id === topicId);
   const customType = getCustomType(selectedTopic?.name);
+
+  // Build goal options for milestone linking
+  const goalOptions = entries
+    .filter(e => {
+      const meta = e.metadata as Record<string, unknown>;
+      const tid = meta?._taxonomyId as number | undefined;
+      const t = tid ? topics.find(tp => tp.id === tid) : undefined;
+      return t && getCustomType(t.name) === 'goal';
+    })
+    .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || `Goal #${e.id}` }));
+
+  // Build milestone options for task linking
+  const milestoneOptions = entries
+    .filter(e => {
+      const meta = e.metadata as Record<string, unknown>;
+      const tid = meta?._taxonomyId as number | undefined;
+      const t = tid ? topics.find(tp => tp.id === tid) : undefined;
+      return t && getCustomType(t.name) === 'milestone';
+    })
+    .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || `Milestone #${e.id}` }));
+
+  // Build linked tasks for the current milestone (tasks whose parentMilestoneId === this entry)
+  const linkedTasks = entryId ? entries
+    .filter(e => {
+      const meta = e.metadata as Record<string, unknown>;
+      const cf = meta?._customFields as Record<string, unknown> | undefined;
+      const tid = meta?._taxonomyId as number | undefined;
+      const t = tid ? topics.find(tp => tp.id === tid) : undefined;
+      return t && getCustomType(t.name) === 'task' && cf?.parentMilestoneId === entryId;
+    })
+    .map(e => {
+      const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> | undefined;
+      return { id: e.id, title: stripHtml(e.content).slice(0, 60) || `Task #${e.id}`, isCompleted: !!cf?.isCompleted };
+    }) : [];
+
+  // Toggle a linked task's completion status
+  const handleToggleTaskComplete = (taskId: number, completed: boolean) => {
+    const entry = entries.find(e => e.id === taskId);
+    if (!entry) return;
+    const meta = entry.metadata as Record<string, unknown>;
+    const existingFields = (meta?._customFields as Record<string, unknown>) || {};
+    const updatedFields = { ...existingFields, isCompleted: completed };
+    const updatedMeta = { ...meta, _customFields: updatedFields };
+    updateDecryptedEntry(taskId, { metadata: updatedMeta });
+  };
+
+  // Unlink a task from this milestone
+  const handleUnlinkTask = (taskId: number) => {
+    const entry = entries.find(e => e.id === taskId);
+    if (!entry) return;
+    const meta = entry.metadata as Record<string, unknown>;
+    const existingFields = (meta?._customFields as Record<string, unknown>) || {};
+    const updatedFields = { ...existingFields, parentMilestoneId: null };
+    const updatedMeta = { ...meta, _customFields: updatedFields };
+    updateDecryptedEntry(taskId, { metadata: updatedMeta });
+  };
+
   const charCount = stripHtml(content).length;
   const canSave = charCount > 0;
   const atLimit = !expanded && charCount >= 200;
@@ -224,8 +285,23 @@ export function EntryForm({
             onChange={(val) => onExpandChange?.(val)}
             label={`Expand entry (${charCount}/200)`}
           />
-          <IconBtn type="button" title="Bookmark"><FontAwesomeIcon icon={faBookmark} /></IconBtn>
-          <IconBtn type="button" title="Share"><FontAwesomeIcon icon={faShareNodes} /></IconBtn>
+          <IconBtn
+            type="button"
+            $active={isFavorite}
+            title={isFavorite ? 'Remove bookmark' : 'Bookmark'}
+            onClick={() => entryId && onBookmark?.()}
+            style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
+          >
+            <FontAwesomeIcon icon={faBookmark} />
+          </IconBtn>
+          <IconBtn
+            type="button"
+            title="Share"
+            onClick={() => entryId && onShare?.()}
+            style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
+          >
+            <FontAwesomeIcon icon={faShareNodes} />
+          </IconBtn>
         </ExpandControl>
       </TopBar>
 
@@ -244,8 +320,9 @@ export function EntryForm({
             </CustomFieldsHeader>
             {fieldsExpanded && (
               <CustomFieldsBody>
-                {customType === 'task' && <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, ...customFields } as TaskFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
+                {customType === 'task' && <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentMilestoneId: null, ...customFields } as TaskFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} milestoneOptions={milestoneOptions} />}
                 {customType === 'goal' && <GoalFields values={{ goalType: 'short_term', goalStatus: 'active', targetDate: '', ...customFields } as GoalFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
+                {customType === 'milestone' && <MilestoneFields values={{ milestoneStatus: 'active', targetDate: '', isCompleted: false, parentGoalId: null, ...customFields } as MilestoneFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} goalOptions={goalOptions} linkedTasks={linkedTasks} onToggleTaskComplete={handleToggleTaskComplete} onUnlinkTask={handleUnlinkTask} />}
                 {customType === 'food' && <FoodFields values={{ mealType: 'breakfast', consumedDate: '', consumedTime: '', ingredients: '', calories: '', notes: '', ...customFields } as FoodFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
                 {customType === 'medication' && <MedicationFields values={{ dosage: '', frequency: 'once_daily', scheduleTimes: ['08:00'], isActive: true, notes: '', ...customFields } as MedicationFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
                 {customType === 'symptom' && <SymptomFields values={{ severity: 5, occurredDate: '', occurredTime: '', duration: '', notes: '', ...customFields } as SymptomFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}

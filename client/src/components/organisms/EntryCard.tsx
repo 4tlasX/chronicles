@@ -16,6 +16,7 @@ interface EntryCardProps {
   onClick: () => void;
   onTopicClick?: (topicId: number) => void;
   onToggleComplete?: (id: number, completed: boolean) => void;
+  onToggleBookmark?: (id: number, isFavorite: boolean) => void;
   hasCheckbox?: boolean;
   isCompleted?: boolean;
   isFavorite?: boolean;
@@ -152,10 +153,18 @@ const TypeBadge = styled.span<{ $type: string }>`
   text-transform: capitalize;
 `;
 
-const FavoriteStar = styled.span`
+const FavoriteStar = styled.button`
   margin-left: auto;
   color: #f59e0b;
   font-size: 12px;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  line-height: 1;
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.7; }
 `;
 
 function stripHtml(html: string): string {
@@ -176,6 +185,7 @@ export function EntryCard({
   onClick,
   onTopicClick,
   onToggleComplete,
+  onToggleBookmark,
   hasCheckbox,
   isCompleted,
   isFavorite,
@@ -228,7 +238,13 @@ export function EntryCard({
         <Footer>
           {!topicName && customType && <TypeBadge $type={customType}>{customType}</TypeBadge>}
           {isFavorite && (
-            <FavoriteStar>
+            <FavoriteStar
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleBookmark?.(id, false);
+              }}
+              title="Remove bookmark"
+            >
               <FontAwesomeIcon icon={faStar} />
             </FavoriteStar>
           )}

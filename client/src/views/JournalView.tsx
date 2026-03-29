@@ -17,6 +17,7 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { entries as entriesApi, topics as topicsApi } from '../services/api.js';
+import { ShareModal } from '../components/organisms/ShareModal.js';
 import type { EncryptedPost } from '@shared/crypto/types';
 
 const ContentArea = styled.div`
@@ -167,6 +168,7 @@ export function JournalView() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [entryExpanded, setEntryExpanded] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const handleUnlock = useCallback(async (password: string) => {
     if (!encryptionData?.kekSalt || !encryptionData?.encryptedMasterKey || !encryptionData?.kekWrapIv) {
@@ -295,6 +297,54 @@ export function JournalView() {
     setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({});
   };
 
+  /** Toggle bookmark on the currently open entry (from EntryForm toolbar) */
+  const handleBookmark = useCallback(async () => {
+    if (!selectedEntryId) return;
+    const entry = decryptedEntries.find(e => e.id === selectedEntryId);
+    if (!entry) return;
+
+    const newFavorite = !((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)?._isFavorite;
+    const updatedCustomFields = { ...customFields, _isFavorite: newFavorite };
+
+    // Optimistic update in store + form state
+    setCustomFields(updatedCustomFields);
+    const updatedMeta: Record<string, unknown> = {};
+    if (editorTopicId) updatedMeta._taxonomyId = editorTopicId;
+    updatedMeta._customFields = updatedCustomFields;
+    updateDecryptedEntry(selectedEntryId, { metadata: updatedMeta });
+
+    // Persist to server
+    try {
+      const encrypted = await encryptPost(editorContent, updatedMeta);
+      await entriesApi.update(selectedEntryId, {
+        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+        taxonomyIds: editorTopicId ? [editorTopicId] : [],
+      });
+    } catch (err) { console.error('Bookmark save failed:', err); }
+  }, [selectedEntryId, decryptedEntries, customFields, editorContent, editorTopicId, encryptPost]);
+
+  /** Toggle bookmark on a card in the list (persist immediately) */
+  const handleBookmarkFromCard = useCallback(async (entryId: number, isFavorite: boolean) => {
+    const entry = decryptedEntries.find(e => e.id === entryId);
+    if (!entry) return;
+
+    const meta = entry.metadata as Record<string, unknown>;
+    const existingFields = (meta?._customFields as Record<string, unknown>) || {};
+    const updatedFields = { ...existingFields, _isFavorite: isFavorite };
+    const updatedMeta = { ...meta, _customFields: updatedFields };
+
+    // Persist to server
+    try {
+      const encrypted = await encryptPost(entry.content, updatedMeta);
+      await entriesApi.update(entryId, {
+        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+      });
+    } catch (err) { console.error('Bookmark save failed:', err); }
+    // Store is already updated optimistically by EntryList
+  }, [decryptedEntries, encryptPost]);
+
   const handleQuickCreate = useCallback(async (content: string, topicId: number | null) => {
     try {
       const metadata: Record<string, unknown> = {};
@@ -348,12 +398,13 @@ export function JournalView() {
           <QuickEntryCard>
             <QuickEntry onCreateEntry={handleQuickCreate} />
           </QuickEntryCard>
-          <EntryList />
+          <EntryList onToggleBookmark={handleBookmarkFromCard} />
         </SidePanel>
 
         {/* ── Right: editor with topic selector, custom fields, toolbar, content, save ── */}
         <EditorPanel>
           <EntryForm
+            entryId={selectedEntryId}
             content={editorContent}
             onContentChange={setEditorContent}
             topicId={editorTopicId}
@@ -364,6 +415,8 @@ export function JournalView() {
             onSave={handleSave}
             onDelete={selectedEntryId ? handleDelete : undefined}
             onNew={handleNew}
+            onBookmark={handleBookmark}
+            onShare={() => setShareOpen(true)}
             isEditing={selectedEntryId !== null}
             isSaving={isSaving}
             saveStatus={saveStatus}
@@ -372,6 +425,13 @@ export function JournalView() {
           />
         </EditorPanel>
       </ContentArea>
+
+      {shareOpen && selectedEntryId && (
+        <ShareModal
+          entryContent={editorContent}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </AppTemplate>
   );
 }

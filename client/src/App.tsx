@@ -10,6 +10,7 @@ import { RegisterView } from './views/RegisterView.js';
 import { RecoverView } from './views/RecoverView.js';
 import { JournalView } from './views/JournalView.js';
 import { SettingsView } from './views/SettingsView.js';
+import { SharedEntryView } from './views/SharedEntryView.js';
 
 // Placeholder for Phase 2-4 views
 function PlaceholderView({ name }: { name: string }) {
@@ -32,6 +33,7 @@ export function App() {
               <Route path="/login" element={<LoginView />} />
               <Route path="/register" element={<RegisterView />} />
               <Route path="/recover" element={<RecoverView />} />
+              <Route path="/share/:token" element={<SharedEntryView />} />
 
               {/* Phase 1 */}
               <Route path="/" element={<ProtectedRoute><JournalView /></ProtectedRoute>} />

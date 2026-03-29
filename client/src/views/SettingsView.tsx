@@ -20,6 +20,7 @@ import { useUIStore } from '../stores/uiStore.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useNavigate } from 'react-router-dom';
 import { auth as authApi, settings as settingsApi, sessions as sessionsApi, topics as topicsApi } from '../services/api.js';
+import { seedTestData } from '../utils/seedTestData.js';
 import { HEADER_COLORS } from '@shared/theme/accentColors';
 
 /* ── Styled ── */
@@ -219,8 +220,10 @@ const FEATURES = [
 
 export function SettingsView() {
   const { user, logout } = useAuth();
-  const { lock, rewrapMasterKey } = useEncryption();
+  const { lock, rewrapMasterKey, encryptPost } = useEncryption();
   const clearAll = useEntriesStore(s => s.clearAll);
+  const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
+  const seedTopics = useEntriesStore(s => s.topics);
   const headerColor = useUIStore(s => s.headerColor);
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
   const backgroundImage = useUIStore(s => s.backgroundImage);
@@ -252,6 +255,8 @@ export function SettingsView() {
   // Seeding
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState('');
+  const [seedingEntries, setSeedingEntries] = useState(false);
+  const [seedEntriesResult, setSeedEntriesResult] = useState('');
 
   // Load settings
   useEffect(() => {
@@ -323,6 +328,25 @@ export function SettingsView() {
       setSeedResult('Default topics created');
     } catch { setSeedResult('Failed'); }
     finally { setSeeding(false); }
+  };
+
+  const handleSeedEntries = async () => {
+    setSeedingEntries(true); setSeedEntriesResult('');
+    try {
+      // Refresh topics first to make sure all defaults exist
+      const freshTopics = await topicsApi.getAll();
+      const result = await seedTestData({
+        encryptPost,
+        topics: freshTopics as { id: number; name: string; icon: string | null; color: string | null }[],
+        addDecryptedEntry,
+        onProgress: (msg) => setSeedEntriesResult(msg),
+      });
+      setSeedEntriesResult(result);
+    } catch (err) {
+      setSeedEntriesResult(`Failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setSeedingEntries(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -466,6 +490,16 @@ export function SettingsView() {
           }
         />
         {seedResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: '#22c55e' }}>{seedResult}</div>}
+        <SettingsRow
+          title="Seed Test Data"
+          description="Create 18 test entries across all topic types with custom fields and linking"
+          action={
+            <ActionButton onClick={handleSeedEntries} disabled={seedingEntries}>
+              {seedingEntries ? <Spinner size={14} /> : 'Seed Entries'}
+            </ActionButton>
+          }
+        />
+        {seedEntriesResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: seedEntriesResult.startsWith('Failed') ? '#ef4444' : '#22c55e' }}>{seedEntriesResult}</div>}
         <SettingsRow
           title="Export Entries"
           description="Download all entries as a decrypted CSV file"

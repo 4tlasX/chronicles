@@ -31,7 +31,11 @@ const EmptyState = styled.div`
 
 const CHECKABLE_TYPES = new Set(['task', 'goal', 'milestone']);
 
-export function EntryList() {
+interface EntryListProps {
+  onToggleBookmark?: (entryId: number, isFavorite: boolean) => void;
+}
+
+export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const topics = useEntriesStore(s => s.topics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
@@ -47,6 +51,19 @@ export function EntryList() {
   const handleTopicClick = useCallback((topicId: number) => {
     setSelectedTopicId(topicId);
   }, [setSelectedTopicId]);
+
+  const handleToggleBookmarkLocal = useCallback((entryId: number, isFavorite: boolean) => {
+    // Optimistic store update
+    const entry = entries.find(e => e.id === entryId);
+    if (!entry) return;
+    const meta = entry.metadata as Record<string, unknown>;
+    const existingFields = (meta?._customFields as Record<string, unknown>) || {};
+    const updatedFields = { ...existingFields, _isFavorite: isFavorite };
+    const updatedMeta = { ...meta, _customFields: updatedFields };
+    updateDecryptedEntry(entryId, { metadata: updatedMeta });
+    // Delegate persist to parent if provided
+    onToggleBookmark?.(entryId, isFavorite);
+  }, [entries, updateDecryptedEntry, onToggleBookmark]);
 
   const handleToggleComplete = useCallback((entryId: number, completed: boolean) => {
     const entry = entries.find(e => e.id === entryId);
@@ -142,6 +159,7 @@ export function EntryList() {
             onClick={() => setSelectedEntryId(entry.id)}
             onTopicClick={handleTopicClick}
             onToggleComplete={hasCheckbox ? handleToggleComplete : undefined}
+            onToggleBookmark={handleToggleBookmarkLocal}
             hasCheckbox={hasCheckbox}
             isCompleted={isCompleted}
             isFavorite={isFavorite}

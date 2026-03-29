@@ -187,5 +187,38 @@ export const sessions = {
     request<{ success: boolean }>('/sessions/revoke-all', { method: 'POST' }),
 };
 
+// =============================================================================
+// Shares
+// =============================================================================
+
+export interface ShareRecord {
+  id: number;
+  token: string;
+  accountId: number;
+  contentEncrypted: string; // base64
+  contentIv: string;        // base64
+  createdAt: string;
+  expiresAt: string | null;
+  isActive: boolean;
+}
+
+export const shares = {
+  /** Create a share (protected) */
+  create: (data: { contentEncrypted: string; contentIv: string; expiresAt?: string | null }) =>
+    request<ShareRecord>('/shares', { method: 'POST', body: data }),
+
+  /** Fetch a share by token — public, no auth */
+  get: (token: string) =>
+    request<ShareRecord>(`/shares/${token}`),
+
+  /** List all my shares (protected) */
+  list: () =>
+    request<ShareRecord[]>('/shares'),
+
+  /** Revoke a share (protected) */
+  revoke: (token: string) =>
+    request<{ success: boolean }>(`/shares/${token}`, { method: 'DELETE' }),
+};
+
 export { ApiError };
-export default { auth, entries, topics, settings, sessions };
+export default { auth, entries, topics, settings, sessions, shares };

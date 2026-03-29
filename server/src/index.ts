@@ -8,6 +8,8 @@ import entriesRoutes from './routes/entries.js';
 import topicsRoutes from './routes/topics.js';
 import settingsRoutes from './routes/settings.js';
 import sessionsRoutes from './routes/sessions.js';
+import sharesRoutes from './routes/shares.js';
+import { initSharesTable } from './db/shareQueries.js';
 
 // Prisma raw queries return BigInt for integer columns — make JSON.stringify handle them
 (BigInt.prototype as unknown as Record<string, unknown>).toJSON = function () {
@@ -37,8 +39,10 @@ app.use('/api/entries', authMiddleware, entriesRoutes);
 app.use('/api/topics', authMiddleware, topicsRoutes);
 app.use('/api/settings', authMiddleware, settingsRoutes);
 app.use('/api/sessions', authMiddleware, sessionsRoutes);
+app.use('/api/shares', sharesRoutes); // public GET by token; POST/DELETE use authMiddleware inline
 
-// Cleanup expired sessions on startup
+// Init shares table + cleanup expired sessions on startup
+initSharesTable().catch(err => console.error('Failed to init shares table:', err));
 cleanupSessions().then(count => {
   if (count > 0) console.log(`Cleaned up ${count} expired/revoked sessions`);
 }).catch(() => {});

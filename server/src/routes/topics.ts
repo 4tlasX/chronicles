@@ -7,10 +7,14 @@ const router = Router();
 
 const DEFAULT_TOPICS = [
   { name: 'Task', icon: 'circle-check', color: '#3B82F6' },
-  { name: 'Idea', icon: 'lightbulb', color: '#8B5CF6' },
+  { name: 'Goal', icon: 'bullseye', color: '#8B5CF6' },
+  { name: 'Milestone', icon: 'flag', color: '#6366F1' },
+  { name: 'Idea', icon: 'lightbulb', color: '#F59E0B' },
   { name: 'Research', icon: 'magnifying-glass', color: '#10B981' },
   { name: 'Event', icon: 'calendar', color: '#F59E0B' },
   { name: 'Meeting', icon: 'users', color: '#EC4899' },
+  { name: 'Food', icon: 'utensils', color: '#F97316' },
+  { name: 'Exercise', icon: 'dumbbell', color: '#EF4444' },
   { name: 'Symptom', icon: 'flask', color: '#EF4444' },
   { name: 'Music', icon: 'music', color: '#EC4899' },
   { name: 'Books', icon: 'book', color: '#8B5CF6' },
@@ -18,12 +22,15 @@ const DEFAULT_TOPICS = [
   { name: 'Quote', icon: 'quote-left', color: '#6366F1' },
 ];
 
-async function seedTopicsIfEmpty(schemaName: string): Promise<void> {
+async function ensureDefaultTopics(schemaName: string): Promise<void> {
   const existing = await getAllTaxonomies(schemaName);
-  if (existing.length > 0) return;
+  const existingNames = new Set(existing.map(t => t.name.toLowerCase()));
+  const missing = DEFAULT_TOPICS.filter(t => !existingNames.has(t.name.toLowerCase()));
+
+  if (missing.length === 0) return;
 
   const s = schemaName.replace(/[^a-z0-9_]/gi, '');
-  const values = DEFAULT_TOPICS.map(t => `('${t.name}', '${t.icon}', '${t.color}')`).join(', ');
+  const values = missing.map(t => `('${t.name}', '${t.icon}', '${t.color}')`).join(', ');
   await prisma.$executeRawUnsafe(
     `INSERT INTO ${s}.taxonomies (name, icon, color) VALUES ${values}`
   );
@@ -32,8 +39,8 @@ async function seedTopicsIfEmpty(schemaName: string): Promise<void> {
 // GET /api/topics
 router.get('/', async (req, res) => {
   try {
-    // Auto-seed for existing users with empty topic tables
-    await seedTopicsIfEmpty(req.auth!.tenantSchemaName);
+    // Ensure all default topics exist (adds missing ones)
+    await ensureDefaultTopics(req.auth!.tenantSchemaName);
     const taxonomies = await getAllTaxonomies(req.auth!.tenantSchemaName);
     res.json(taxonomies);
   } catch (err) {
