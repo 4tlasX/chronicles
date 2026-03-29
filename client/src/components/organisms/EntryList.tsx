@@ -38,6 +38,7 @@ interface EntryListProps {
 export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const topics = useEntriesStore(s => s.topics);
+  const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
@@ -85,10 +86,17 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
     return TOPIC_TO_TYPE[topicName.toLowerCase()] || null;
   };
 
+  // Set of enabled (visible) topic IDs for fast lookup
+  const enabledTopicIds = useMemo(() => new Set(topics.map(t => t.id)), [topics]);
+
   const filteredEntries = useMemo(() => {
     return entries.filter(entry => {
       const meta = entry.metadata as Record<string, unknown>;
       const customFields = meta?._customFields as Record<string, unknown> | undefined;
+      const taxId = meta?._taxonomyId as number | undefined;
+
+      // Hide entries whose topic is disabled (exists in allTopics but not in filtered topics)
+      if (taxId && !enabledTopicIds.has(taxId)) return false;
 
       // View mode filters
       if (viewMode === 'tasks') {
@@ -128,7 +136,7 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
 
       return true;
     });
-  }, [entries, topics, selectedTopicId, viewMode, searchKeyword, searchDateFrom, searchDateTo]);
+  }, [entries, topics, enabledTopicIds, selectedTopicId, viewMode, searchKeyword, searchDateFrom, searchDateTo]);
 
   if (filteredEntries.length === 0) {
     return <EmptyState>No entries yet</EmptyState>;

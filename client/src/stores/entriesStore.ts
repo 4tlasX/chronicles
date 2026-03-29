@@ -1,13 +1,43 @@
 import { create } from 'zustand';
 import type { DecryptedPost, EncryptedPost } from '@shared/crypto/types';
 
+type Topic = { id: number; name: string; icon: string | null; color: string | null };
+
+/** Maps feature flag keys to the topic names they control. */
+const FEATURE_TOPIC_MAP: Record<string, string[]> = {
+  foodEnabled: ['Food'],
+  medicationEnabled: ['Medication', 'Symptom'],
+  goalsEnabled: ['Goal'],
+  milestonesEnabled: ['Milestone'],
+  exerciseEnabled: ['Exercise'],
+  allergiesEnabled: ['Allergy and Sensitivities'],
+};
+
+/** Set of all topic names gated by a feature flag. */
+const GATED_TOPIC_NAMES = new Set(Object.values(FEATURE_TOPIC_MAP).flat());
+
+function filterTopics(allTopics: Topic[], featureFlags: Record<string, boolean>): Topic[] {
+  return allTopics.filter(topic => {
+    // Topics not gated by any feature flag are always shown
+    if (!GATED_TOPIC_NAMES.has(topic.name)) return true;
+    // Check if any flag that controls this topic is enabled
+    return Object.entries(FEATURE_TOPIC_MAP).some(
+      ([flag, names]) => names.includes(topic.name) && featureFlags[flag]
+    );
+  });
+}
+
 interface EntriesState {
   // Raw encrypted entries from server
   rawEntries: EncryptedPost[];
   // Decrypted entries (in memory only)
   decryptedEntries: DecryptedPost[];
-  // Topics
-  topics: { id: number; name: string; icon: string | null; color: string | null }[];
+  // All topics (unfiltered)
+  allTopics: Topic[];
+  // Topics filtered by feature flags
+  topics: Topic[];
+  // Feature flags from settings
+  featureFlags: Record<string, boolean>;
   // Loading state
   isInitialized: boolean;
   isLoading: boolean;
@@ -15,7 +45,8 @@ interface EntriesState {
   // Actions
   setRawEntries: (entries: EncryptedPost[]) => void;
   setDecryptedEntries: (entries: DecryptedPost[]) => void;
-  setTopics: (topics: EntriesState['topics']) => void;
+  setTopics: (topics: Topic[]) => void;
+  setFeatureFlags: (flags: Record<string, boolean>) => void;
   addDecryptedEntry: (entry: DecryptedPost) => void;
   updateDecryptedEntry: (id: number, updates: Partial<DecryptedPost>) => void;
   removeEntry: (id: number) => void;
@@ -24,16 +55,19 @@ interface EntriesState {
   clearAll: () => void;
 }
 
-export const useEntriesStore = create<EntriesState>((set) => ({
+export const useEntriesStore = create<EntriesState>((set, get) => ({
   rawEntries: [],
   decryptedEntries: [],
+  allTopics: [],
   topics: [],
+  featureFlags: {},
   isInitialized: false,
   isLoading: false,
 
   setRawEntries: (entries) => set({ rawEntries: entries }),
   setDecryptedEntries: (entries) => set({ decryptedEntries: entries, isInitialized: true }),
-  setTopics: (topics) => set({ topics }),
+  setTopics: (topics) => set({ allTopics: topics, topics: filterTopics(topics, get().featureFlags) }),
+  setFeatureFlags: (flags) => set({ featureFlags: flags, topics: filterTopics(get().allTopics, flags) }),
   addDecryptedEntry: (entry) => set(s => ({
     decryptedEntries: [entry, ...s.decryptedEntries],
   })),
@@ -49,7 +83,9 @@ export const useEntriesStore = create<EntriesState>((set) => ({
   clearAll: () => set({
     rawEntries: [],
     decryptedEntries: [],
+    allTopics: [],
     topics: [],
+    featureFlags: {},
     isInitialized: false,
     isLoading: false,
   }),

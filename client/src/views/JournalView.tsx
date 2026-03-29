@@ -149,7 +149,7 @@ export function JournalView() {
   const { isUnlocked, unlock, decryptPosts, encryptPost } = useEncryption();
   const {
     decryptedEntries, setDecryptedEntries, setRawEntries,
-    topics, setTopics, isInitialized, setLoading, isLoading,
+    topics, setTopics, setFeatureFlags, isInitialized, setLoading, isLoading,
     addDecryptedEntry, updateDecryptedEntry, removeEntry,
   } = useEntriesStore();
   const selectedEntryId = useUIStore(s => s.selectedEntryId);
@@ -187,12 +187,20 @@ export function JournalView() {
         const [rawEntries, topicsData, settingsData] = await Promise.all([
           entriesApi.getAll(), topicsApi.getAll(), settingsApi.getAll(),
         ]);
-        setTopics(topicsData);
         // Apply saved theme settings
         const settingsMap: Record<string, unknown> = {};
         for (const s of settingsData) settingsMap[s.key] = s.value;
         if (typeof settingsMap.headerColor === 'string') setHeaderColor(settingsMap.headerColor);
         if (typeof settingsMap.backgroundImage === 'string') setBackgroundImage(settingsMap.backgroundImage);
+        // Extract feature flags and store them (must be set before setTopics so filtering works)
+        const flags: Record<string, boolean> = {};
+        for (const key of Object.keys(settingsMap)) {
+          if (key.endsWith('Enabled') && typeof settingsMap[key] === 'boolean') {
+            flags[key] = settingsMap[key] as boolean;
+          }
+        }
+        setFeatureFlags(flags);
+        setTopics(topicsData);
         const encrypted: EncryptedPost[] = rawEntries.map(e => ({
           id: e.id as number,
           contentEncrypted: (e.contentEncrypted as string) || null,

@@ -224,6 +224,7 @@ export function SettingsView() {
   const clearAll = useEntriesStore(s => s.clearAll);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
   const seedTopics = useEntriesStore(s => s.topics);
+  const setFeatureFlags = useEntriesStore(s => s.setFeatureFlags);
   const headerColor = useUIStore(s => s.headerColor);
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
   const backgroundImage = useUIStore(s => s.backgroundImage);
@@ -271,6 +272,7 @@ export function SettingsView() {
         f[feat.key] = map[feat.key] === true;
       }
       setFeatures(f);
+      setFeatureFlags(f);
     }).catch(() => {});
   }, []);
 
@@ -291,7 +293,9 @@ export function SettingsView() {
   };
 
   const handleFeatureToggle = async (key: string, value: boolean) => {
-    setFeatures(prev => ({ ...prev, [key]: value }));
+    const updated = { ...features, [key]: value };
+    setFeatures(updated);
+    setFeatureFlags(updated);
     await settingsApi.upsert(key, value).catch(() => {});
   };
 

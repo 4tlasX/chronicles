@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { faPlus, faArrowRightFromBracket, faChevronDown, faBars, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useUIStore } from '../../stores/uiStore.js';
+import { useEntriesStore } from '../../stores/entriesStore.js';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -340,6 +341,7 @@ function NavDropdown({ label, items, activePath }: NavDropdownProps) {
 
 export function Header() {
   const headerColor = useUIStore(s => s.headerColor);
+  const featureFlags = useEntriesStore(s => s.featureFlags);
   const { logout } = useAuth();
   const { lock } = useEncryption();
   const navigate = useNavigate();
@@ -360,6 +362,23 @@ export function Header() {
 
   const isActive = (path: string) => location.pathname === path;
   const bgColor = headerColor || '#0F4C5C';
+
+  // Feature-gated nav items
+  const ff = featureFlags;
+  // Goals dropdown items — each gated by its own flag
+  const goalsItems: { label: string; to: string }[] = [];
+  if (ff.goalsEnabled) goalsItems.push({ label: 'Goals', to: '/goals' });
+  if (ff.milestonesEnabled) goalsItems.push({ label: 'Milestones', to: '/goals/milestones' });
+
+  const healthItems: { label: string; to: string }[] = [];
+  if (ff.medicationEnabled) {
+    healthItems.push({ label: 'Meds List', to: '/health/meds' });
+    healthItems.push({ label: 'Meds Schedule', to: '/health/schedule' });
+  }
+  if (ff.foodEnabled) healthItems.push({ label: 'Food', to: '/health/food' });
+  if (ff.medicationEnabled) healthItems.push({ label: 'Symptoms', to: '/health/symptoms' });
+  if (ff.exerciseEnabled) healthItems.push({ label: 'Exercise', to: '/health/exercise' });
+  if (healthItems.length > 0) healthItems.push({ label: 'Reporting', to: '/health/reporting' });
 
   const mobileNav = (to: string, label: string) => (
     <DrawerLink to={to} $active={isActive(to)} onClick={() => setMobileMenuOpen(false)}>
@@ -384,20 +403,21 @@ export function Header() {
         <Nav>
           <NavLink to="/" $active={isActive('/')}>Journal</NavLink>
           <NavLink to="/calendar" $active={isActive('/calendar')}>Calendar</NavLink>
-          <NavLink to="/goals" $active={isActive('/goals')}>Goals</NavLink>
+          {goalsItems.length > 0 && (
+            <NavDropdown
+              label="Goals"
+              activePath={location.pathname}
+              items={goalsItems}
+            />
+          )}
 
-          <NavDropdown
-            label="Health"
-            activePath={location.pathname}
-            items={[
-              { label: 'Meds List', to: '/health/meds' },
-              { label: 'Meds Schedule', to: '/health/schedule' },
-              { label: 'Food', to: '/health/food' },
-              { label: 'Symptoms', to: '/health/symptoms' },
-              { label: 'Exercise', to: '/health/exercise' },
-              { label: 'Reporting', to: '/health/reporting' },
-            ]}
-          />
+          {healthItems.length > 0 && (
+            <NavDropdown
+              label="Health"
+              activePath={location.pathname}
+              items={healthItems}
+            />
+          )}
 
           <NavDropdown
             label="Entertainment"
@@ -443,15 +463,26 @@ export function Header() {
         <DrawerNav>
           {mobileNav('/', 'Journal')}
           {mobileNav('/calendar', 'Calendar')}
-          {mobileNav('/goals', 'Goals')}
-          <DrawerDivider />
-          <DrawerSectionLabel>Health</DrawerSectionLabel>
-          {mobileNav('/health/meds', 'Meds List')}
-          {mobileNav('/health/schedule', 'Meds Schedule')}
-          {mobileNav('/health/food', 'Food')}
-          {mobileNav('/health/symptoms', 'Symptoms')}
-          {mobileNav('/health/exercise', 'Exercise')}
-          {mobileNav('/health/reporting', 'Reporting')}
+          {goalsItems.length > 0 && (
+            <>
+              <DrawerDivider />
+              <DrawerSectionLabel>Goals</DrawerSectionLabel>
+              {ff.goalsEnabled && mobileNav('/goals', 'Goals')}
+              {ff.milestonesEnabled && mobileNav('/goals/milestones', 'Milestones')}
+            </>
+          )}
+          {healthItems.length > 0 && (
+            <>
+              <DrawerDivider />
+              <DrawerSectionLabel>Health</DrawerSectionLabel>
+              {ff.medicationEnabled && mobileNav('/health/meds', 'Meds List')}
+              {ff.medicationEnabled && mobileNav('/health/schedule', 'Meds Schedule')}
+              {ff.foodEnabled && mobileNav('/health/food', 'Food')}
+              {ff.medicationEnabled && mobileNav('/health/symptoms', 'Symptoms')}
+              {ff.exerciseEnabled && mobileNav('/health/exercise', 'Exercise')}
+              {mobileNav('/health/reporting', 'Reporting')}
+            </>
+          )}
           <DrawerDivider />
           <DrawerSectionLabel>Entertainment</DrawerSectionLabel>
           {mobileNav('/entertainment/music', 'Music')}
