@@ -16,7 +16,7 @@ import { useAuth } from '../contexts/AuthContext.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
-import { entries as entriesApi, topics as topicsApi } from '../services/api.js';
+import { entries as entriesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
 import { ShareModal } from '../components/organisms/ShareModal.js';
 import type { EncryptedPost } from '@shared/crypto/types';
 
@@ -158,6 +158,8 @@ export function JournalView() {
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
   const headerColor = useUIStore(s => s.headerColor) || '#0F4C5C';
+  const setHeaderColor = useUIStore(s => s.setHeaderColor);
+  const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
   const filterTopic = topics.find(t => t.id === selectedTopicId);
 
   const [selectedDate, setSelectedDate] = useState(() => new Date());
@@ -182,10 +184,15 @@ export function JournalView() {
     const load = async () => {
       setLoading(true);
       try {
-        const [rawEntries, topicsData] = await Promise.all([
-          entriesApi.getAll(), topicsApi.getAll(),
+        const [rawEntries, topicsData, settingsData] = await Promise.all([
+          entriesApi.getAll(), topicsApi.getAll(), settingsApi.getAll(),
         ]);
         setTopics(topicsData);
+        // Apply saved theme settings
+        const settingsMap: Record<string, unknown> = {};
+        for (const s of settingsData) settingsMap[s.key] = s.value;
+        if (typeof settingsMap.headerColor === 'string') setHeaderColor(settingsMap.headerColor);
+        if (typeof settingsMap.backgroundImage === 'string') setBackgroundImage(settingsMap.backgroundImage);
         const encrypted: EncryptedPost[] = rawEntries.map(e => ({
           id: e.id as number,
           contentEncrypted: (e.contentEncrypted as string) || null,
