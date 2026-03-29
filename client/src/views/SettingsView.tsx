@@ -225,6 +225,8 @@ export function SettingsView() {
   const { lock, rewrapMasterKey, encryptPost } = useEncryption();
   const clearAll = useEntriesStore(s => s.clearAll);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
+  const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
+  const allTopics = useEntriesStore(s => s.allTopics);
   const seedTopics = useEntriesStore(s => s.topics);
   const setFeatureFlags = useEntriesStore(s => s.setFeatureFlags);
   const headerColor = useUIStore(s => s.headerColor);
@@ -352,6 +354,77 @@ export function SettingsView() {
       setSeedEntriesResult(`Failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setSeedingEntries(false);
+    }
+  };
+
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportCsv = () => {
+    setExporting(true);
+    try {
+      const topicMap = new Map(allTopics.map(t => [t.id, t.name]));
+
+      const stripHtml = (html: string) => {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+      };
+
+      const escCsv = (val: string) => {
+        if (val.includes('"') || val.includes(',') || val.includes('\n')) {
+          return `"${val.replace(/"/g, '""')}"`;
+        }
+        return val;
+      };
+
+      // Collect all custom field keys across entries
+      const cfKeySet = new Set<string>();
+      for (const entry of decryptedEntries) {
+        const cf = (entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> | undefined;
+        if (cf) Object.keys(cf).forEach(k => { if (!k.startsWith('_')) cfKeySet.add(k); });
+      }
+      const cfKeys = [...cfKeySet].sort();
+
+      const headers = ['ID', 'Date', 'Updated', 'Topic', 'Content', 'Bookmarked', ...cfKeys.map(k => k)];
+      const rows = [headers.map(escCsv).join(',')];
+
+      // Sort entries by date descending
+      const sorted = [...decryptedEntries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      for (const entry of sorted) {
+        const meta = entry.metadata as Record<string, unknown>;
+        const cf = (meta?._customFields as Record<string, unknown>) || {};
+        const topicId = meta?._taxonomyId as number | undefined;
+        const topicName = topicId ? (topicMap.get(topicId) || '') : '';
+        const bookmarked = cf._isFavorite ? 'Yes' : '';
+
+        const row = [
+          String(entry.id),
+          new Date(entry.createdAt).toISOString().slice(0, 10),
+          new Date(entry.updatedAt).toISOString().slice(0, 10),
+          topicName,
+          stripHtml(entry.content),
+          bookmarked,
+          ...cfKeys.map(k => {
+            const v = cf[k];
+            if (v == null) return '';
+            if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+            return String(v);
+          }),
+        ];
+        rows.push(row.map(escCsv).join(','));
+      }
+
+      const csv = rows.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chronicles-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -509,7 +582,11 @@ export function SettingsView() {
         <SettingsRow
           title="Export Entries"
           description="Download all entries as a decrypted CSV file"
-          action={<ActionButton>Export to CSV</ActionButton>}
+          action={
+            <ActionButton onClick={handleExportCsv} disabled={exporting || decryptedEntries.length === 0}>
+              {exporting ? <Spinner size={14} /> : 'Export to CSV'}
+            </ActionButton>
+          }
         />
       </SettingsCard>
 
