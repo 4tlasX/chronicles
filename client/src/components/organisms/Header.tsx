@@ -419,25 +419,29 @@ export function Header() {
             />
           )}
 
-          <NavDropdown
-            label="Entertainment"
-            activePath={location.pathname}
-            items={[
-              { label: 'Music', to: '/entertainment/music' },
-              { label: 'Books', to: '/entertainment/books' },
-              { label: 'TV/Movies', to: '/entertainment/tv' },
-            ]}
-          />
+          {ff.entertainmentEnabled && (
+            <NavDropdown
+              label="Entertainment"
+              activePath={location.pathname}
+              items={[
+                { label: 'Music', to: '/entertainment/music' },
+                { label: 'Books', to: '/entertainment/books' },
+                { label: 'TV/Movies', to: '/entertainment/tv' },
+              ]}
+            />
+          )}
 
-          <NavDropdown
-            label="Inspiration"
-            activePath={location.pathname}
-            items={[
-              { label: 'Research', to: '/inspiration/research' },
-              { label: 'Ideas', to: '/inspiration/ideas' },
-              { label: 'Quotes', to: '/inspiration/quotes' },
-            ]}
-          />
+          {ff.inspirationEnabled && (
+            <NavDropdown
+              label="Inspiration"
+              activePath={location.pathname}
+              items={[
+                { label: 'Research', to: '/inspiration/research' },
+                { label: 'Ideas', to: '/inspiration/ideas' },
+                { label: 'Quotes', to: '/inspiration/quotes' },
+              ]}
+            />
+          )}
 
           <NavLink to="/topics" $active={isActive('/topics')}>Topics</NavLink>
           <NavLink to="/settings" $active={isActive('/settings')}>Settings</NavLink>
@@ -483,16 +487,24 @@ export function Header() {
               {mobileNav('/health/reporting', 'Reporting')}
             </>
           )}
-          <DrawerDivider />
-          <DrawerSectionLabel>Entertainment</DrawerSectionLabel>
-          {mobileNav('/entertainment/music', 'Music')}
-          {mobileNav('/entertainment/books', 'Books')}
-          {mobileNav('/entertainment/tv', 'TV/Movies')}
-          <DrawerDivider />
-          <DrawerSectionLabel>Inspiration</DrawerSectionLabel>
-          {mobileNav('/inspiration/research', 'Research')}
-          {mobileNav('/inspiration/ideas', 'Ideas')}
-          {mobileNav('/inspiration/quotes', 'Quotes')}
+          {ff.entertainmentEnabled && (
+            <>
+              <DrawerDivider />
+              <DrawerSectionLabel>Entertainment</DrawerSectionLabel>
+              {mobileNav('/entertainment/music', 'Music')}
+              {mobileNav('/entertainment/books', 'Books')}
+              {mobileNav('/entertainment/tv', 'TV/Movies')}
+            </>
+          )}
+          {ff.inspirationEnabled && (
+            <>
+              <DrawerDivider />
+              <DrawerSectionLabel>Inspiration</DrawerSectionLabel>
+              {mobileNav('/inspiration/research', 'Research')}
+              {mobileNav('/inspiration/ideas', 'Ideas')}
+              {mobileNav('/inspiration/quotes', 'Quotes')}
+            </>
+          )}
           <DrawerDivider />
           {mobileNav('/topics', 'Topics')}
           {mobileNav('/settings', 'Settings')}

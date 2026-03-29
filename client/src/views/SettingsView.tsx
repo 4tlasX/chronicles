@@ -214,6 +214,8 @@ const FEATURES = [
   { key: 'milestonesEnabled', title: 'Milestone', description: 'Break goals into milestones' },
   { key: 'exerciseEnabled', title: 'Exercise', description: 'Log workouts and fitness' },
   { key: 'allergiesEnabled', title: 'Allergy and Sensitivities', description: 'Track allergies and reactions' },
+  { key: 'entertainmentEnabled', title: 'Entertainment', description: 'Track music, books, and TV/movies' },
+  { key: 'inspirationEnabled', title: 'Inspiration', description: 'Save research, ideas, and quotes' },
 ];
 
 /* ── View ── */
