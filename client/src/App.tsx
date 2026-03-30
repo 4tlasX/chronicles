@@ -12,6 +12,7 @@ import { JournalView } from './views/JournalView.js';
 import { SettingsView } from './views/SettingsView.js';
 import { SharedEntryView } from './views/SharedEntryView.js';
 import { TopicsView } from './views/TopicsView.js';
+import { CalendarView } from './views/CalendarView.js';
 
 // Placeholder for Phase 2-4 views
 function PlaceholderView({ name }: { name: string }) {
@@ -43,7 +44,7 @@ export function App() {
 
               {/* Phase 2+ placeholders */}
               <Route path="/goals" element={P('Goals')} />
-              <Route path="/calendar" element={P('Calendar')} />
+              <Route path="/calendar" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
 
               {/* Health sub-routes */}
               <Route path="/health" element={P('Health')} />
