@@ -1,7 +1,22 @@
 import { Router } from 'express';
-import { createTaxonomy, getTaxonomy, getAllTaxonomies, updateTaxonomy, deleteTaxonomy } from '../db/tenantQueries.js';
+import { createTaxonomy, getTaxonomy, getAllTaxonomies, updateTaxonomy, deleteTaxonomy, reorderTaxonomies } from '../db/tenantQueries.js';
 import { createTaxonomySchema, updateTaxonomySchema } from '@chronicles/shared';
 import { prisma } from '../db/prisma.js';
+
+/** JIT migration: add sort_order column if missing (for schemas created before this feature). */
+async function ensureSortOrderColumn(schemaName: string): Promise<void> {
+  const s = schemaName.replace(/[^a-z0-9_]/gi, '');
+  const result = await prisma.$queryRawUnsafe<{ exists: boolean }[]>(
+    `SELECT EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = $1 AND table_name = 'taxonomies' AND column_name = 'sort_order'
+     ) as exists`,
+    s
+  );
+  if (!result[0]?.exists) {
+    await prisma.$executeRawUnsafe(`ALTER TABLE ${s}.taxonomies ADD COLUMN sort_order INTEGER DEFAULT 0`);
+  }
+}
 
 const router = Router();
 
@@ -39,13 +54,29 @@ async function ensureDefaultTopics(schemaName: string): Promise<void> {
 // GET /api/topics
 router.get('/', async (req, res) => {
   try {
-    // Ensure all default topics exist (adds missing ones)
+    await ensureSortOrderColumn(req.auth!.tenantSchemaName);
     await ensureDefaultTopics(req.auth!.tenantSchemaName);
     const taxonomies = await getAllTaxonomies(req.auth!.tenantSchemaName);
     res.json(taxonomies);
   } catch (err) {
     console.error('Get topics error:', err);
     res.status(500).json({ error: 'Failed to fetch topics' });
+  }
+});
+
+// POST /api/topics/reorder
+router.post('/reorder', async (req, res) => {
+  try {
+    const { topicIds } = req.body;
+    if (!Array.isArray(topicIds) || !topicIds.every((id: unknown) => typeof id === 'number')) {
+      res.status(400).json({ error: 'topicIds must be an array of numbers' });
+      return;
+    }
+    await reorderTaxonomies(req.auth!.tenantSchemaName, topicIds);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Reorder topics error:', err);
+    res.status(500).json({ error: 'Failed to reorder topics' });
   }
 });
 

@@ -49,7 +49,8 @@ function generateTenantSchemaStatements(schemaName: string): string[] {
       id SERIAL PRIMARY KEY,
       name TEXT UNIQUE NOT NULL,
       icon TEXT,
-      color VARCHAR(7)
+      color VARCHAR(7),
+      sort_order INTEGER DEFAULT 0
     )`,
 
     // Posts table (supports both plaintext and encrypted)

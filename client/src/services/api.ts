@@ -152,6 +152,9 @@ export const topics = {
 
   delete: (id: number) =>
     request<{ success: boolean }>(`/topics/${id}`, { method: 'DELETE' }),
+
+  reorder: (topicIds: number[]) =>
+    request<{ success: boolean }>('/topics/reorder', { method: 'POST', body: { topicIds } }),
 };
 
 // =============================================================================

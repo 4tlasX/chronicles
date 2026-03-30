@@ -23,6 +23,7 @@ export interface TenantTaxonomy {
   name: string;
   icon: string | null;
   color: string | null;
+  sort_order: number;
 }
 
 export interface TenantPost {
@@ -86,21 +87,28 @@ export async function createTaxonomy(
   options?: { icon?: string; color?: string }
 ): Promise<TenantTaxonomy> {
   const s = escapeSchema(schemaName);
+  // Auto-assign sort_order as max + 1
+  const maxResult = await prisma.$queryRawUnsafe<{ max_order: number | null }[]>(
+    `SELECT MAX(sort_order) as max_order FROM ${s}.taxonomies`
+  );
+  const nextOrder = (maxResult[0]?.max_order ?? -1) + 1;
+
   const result = await prisma.$queryRawUnsafe<TenantTaxonomy[]>(
-    `INSERT INTO ${s}.taxonomies (name, icon, color)
-     VALUES ($1, $2, $3)
-     RETURNING id, name, icon, color`,
+    `INSERT INTO ${s}.taxonomies (name, icon, color, sort_order)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, name, icon, color, sort_order`,
     name,
     options?.icon ?? null,
-    options?.color ?? null
+    options?.color ?? null,
+    nextOrder
   );
-  return { ...result[0], id: Number(result[0].id) };
+  return { ...result[0], id: Number(result[0].id), sort_order: Number(result[0].sort_order) };
 }
 
 export async function getTaxonomy(schemaName: string, id: number): Promise<TenantTaxonomy | null> {
   const s = escapeSchema(schemaName);
   const result = await prisma.$queryRawUnsafe<TenantTaxonomy[]>(
-    `SELECT id, name, icon, color FROM ${s}.taxonomies WHERE id = $1`,
+    `SELECT id, name, icon, color, sort_order FROM ${s}.taxonomies WHERE id = $1`,
     id
   );
   return result[0] || null;
@@ -109,10 +117,9 @@ export async function getTaxonomy(schemaName: string, id: number): Promise<Tenan
 export async function getAllTaxonomies(schemaName: string): Promise<TenantTaxonomy[]> {
   const s = escapeSchema(schemaName);
   const rows = await prisma.$queryRawUnsafe<TenantTaxonomy[]>(
-    `SELECT id, name, icon, color FROM ${s}.taxonomies ORDER BY name`
+    `SELECT id, name, icon, color, sort_order FROM ${s}.taxonomies ORDER BY sort_order, name`
   );
-  // Prisma raw queries return BigInt for integer columns — convert to Number
-  return rows.map(r => ({ ...r, id: Number(r.id) }));
+  return rows.map(r => ({ ...r, id: Number(r.id), sort_order: Number(r.sort_order ?? 0) }));
 }
 
 export async function updateTaxonomy(
@@ -131,7 +138,7 @@ export async function updateTaxonomy(
 
   values.push(id);
   const result = await prisma.$queryRawUnsafe<TenantTaxonomy[]>(
-    `UPDATE ${s}.taxonomies SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING id, name, icon, color`,
+    `UPDATE ${s}.taxonomies SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING id, name, icon, color, sort_order`,
     ...values
   );
   return result[0];
@@ -140,6 +147,17 @@ export async function updateTaxonomy(
 export async function deleteTaxonomy(schemaName: string, id: number): Promise<void> {
   const s = escapeSchema(schemaName);
   await prisma.$executeRawUnsafe(`DELETE FROM ${s}.taxonomies WHERE id = $1`, id);
+}
+
+export async function reorderTaxonomies(schemaName: string, orderedIds: number[]): Promise<void> {
+  const s = escapeSchema(schemaName);
+  for (let i = 0; i < orderedIds.length; i++) {
+    await prisma.$executeRawUnsafe(
+      `UPDATE ${s}.taxonomies SET sort_order = $1 WHERE id = $2`,
+      i,
+      orderedIds[i]
+    );
+  }
 }
 
 // =============================================================================

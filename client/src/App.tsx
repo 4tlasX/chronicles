@@ -11,6 +11,7 @@ import { RecoverView } from './views/RecoverView.js';
 import { JournalView } from './views/JournalView.js';
 import { SettingsView } from './views/SettingsView.js';
 import { SharedEntryView } from './views/SharedEntryView.js';
+import { TopicsView } from './views/TopicsView.js';
 
 // Placeholder for Phase 2-4 views
 function PlaceholderView({ name }: { name: string }) {
@@ -38,7 +39,7 @@ export function App() {
               {/* Phase 1 */}
               <Route path="/" element={<ProtectedRoute><JournalView /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsView /></ProtectedRoute>} />
-              <Route path="/topics" element={P('Topics')} />
+              <Route path="/topics" element={<ProtectedRoute><TopicsView /></ProtectedRoute>} />
 
               {/* Phase 2+ placeholders */}
               <Route path="/goals" element={P('Goals')} />
