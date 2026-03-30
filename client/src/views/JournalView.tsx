@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { getTopicIcon } from '../utils/topicIcons.js';
 import { AppTemplate } from '../components/templates/AppTemplate.js';
 import { ViewTabs } from '../components/organisms/ViewTabs.js';
@@ -26,7 +26,7 @@ const ContentArea = styled.div`
   min-height: 0;
 `;
 
-const SidePanel = styled.div`
+const SidePanel = styled.div<{ $hiddenMobile?: boolean }>`
   width: 33%;
   min-width: 320px;
   max-width: 480px;
@@ -40,7 +40,9 @@ const SidePanel = styled.div`
 
   @media (max-width: 768px) {
     width: 100%;
+    min-width: 100%;
     max-width: 100%;
+    display: ${({ $hiddenMobile }) => $hiddenMobile ? 'none' : 'flex'};
   }
 `;
 
@@ -65,7 +67,7 @@ const QuickEntryCard = styled.div`
   }
 `;
 
-const EditorPanel = styled.div`
+const EditorPanel = styled.div<{ $visibleMobile?: boolean }>`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -75,7 +77,26 @@ const EditorPanel = styled.div`
   background: rgba(255, 255, 255, 0.9);
 
   @media (max-width: 768px) {
-    display: none;
+    display: ${({ $visibleMobile }) => $visibleMobile ? 'flex' : 'none'};
+    width: 100%;
+  }
+`;
+
+const MobileBackButton = styled.button`
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  background: none;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  cursor: pointer;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+
+  @media (max-width: 768px) {
+    display: flex;
   }
 `;
 
@@ -154,6 +175,8 @@ export function JournalView() {
   } = useEntriesStore();
   const selectedEntryId = useUIStore(s => s.selectedEntryId);
   const setSelectedEntryId = useUIStore(s => s.setSelectedEntryId);
+  const showMobileEditor = useUIStore(s => s.showMobileEditor);
+  const setShowMobileEditor = useUIStore(s => s.setShowMobileEditor);
   const viewMode = useUIStore(s => s.viewMode);
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
@@ -253,10 +276,10 @@ export function JournalView() {
         const meta = entry.metadata as Record<string, unknown>;
         setEditorTopicId(meta?._taxonomyId as number | null ?? null);
         setCustomFields(meta?._customFields as Record<string, unknown> ?? {});
-        // Auto-expand if entry exceeds 200 char limit
         if (stripHtml(entry.content).length > 200) {
           setEntryExpanded(true);
         }
+        setShowMobileEditor(true);
       }
     } else {
       setEditorContent('');
@@ -305,11 +328,17 @@ export function JournalView() {
       await entriesApi.delete(selectedEntryId);
       removeEntry(selectedEntryId);
       setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({});
+      setShowMobileEditor(false);
     } catch (err) { console.error('Delete failed:', err); }
   }, [selectedEntryId]);
 
   const handleNew = () => {
     setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({});
+    setShowMobileEditor(false);
+  };
+
+  const handleMobileBack = () => {
+    setShowMobileEditor(false);
   };
 
   /** Toggle bookmark on the currently open entry (from EntryForm toolbar) */
@@ -387,7 +416,7 @@ export function JournalView() {
     <AppTemplate hideSidebar transparentContent>
       <ContentArea>
         {/* ── Left sidebar: tabs → quick entry → entries ── */}
-        <SidePanel>
+        <SidePanel $hiddenMobile={showMobileEditor}>
           <SidePadding>
             <ViewTabs onDateTabClick={() => setCalendarExpanded(prev => !prev)} />
           </SidePadding>
@@ -417,7 +446,11 @@ export function JournalView() {
         </SidePanel>
 
         {/* ── Right: editor with topic selector, custom fields, toolbar, content, save ── */}
-        <EditorPanel>
+        <EditorPanel $visibleMobile={showMobileEditor}>
+          <MobileBackButton onClick={handleMobileBack}>
+            <FontAwesomeIcon icon={faChevronLeft} size="xs" />
+            Back to entries
+          </MobileBackButton>
           <EntryForm
             entryId={selectedEntryId}
             content={editorContent}
