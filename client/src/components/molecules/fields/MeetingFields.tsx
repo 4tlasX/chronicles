@@ -3,6 +3,8 @@ import { TextInput } from '../../atoms/TextInput.js';
 import { Textarea } from '../../atoms/Textarea.js';
 import { DateTimeInput } from '../../atoms/DateTimeInput.js';
 import { FormField } from '../FormField.js';
+import type { MeetingFieldValues } from '../../../types/fields.js';
+export type { MeetingFieldValues } from '../../../types/fields.js';
 
 const Wrapper = styled.div`
   display: flex;
@@ -14,19 +16,6 @@ const Row = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.sm}px;
 `;
-
-export interface MeetingFieldValues {
-  startDate: string;
-  startTime: string;
-  endDate: string;
-  endTime: string;
-  meetingTopic: string;
-  attendees: string;
-  location: string;
-  address: string;
-  phone: string;
-  notes: string;
-}
 
 interface MeetingFieldsProps {
   values: MeetingFieldValues;

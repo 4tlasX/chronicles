@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { auth as authApi } from '../services/api.js';
@@ -9,30 +8,16 @@ import { TextInput } from '../components/atoms/TextInput.js';
 import { PasswordInput } from '../components/atoms/PasswordInput.js';
 import { Button } from '../components/atoms/Button.js';
 import { Spinner } from '../components/atoms/Spinner.js';
+import { AuthForm } from '../components/atoms/AuthForm.js';
+import { ErrorBanner } from '../components/atoms/ErrorBanner.js';
 import { FormField } from '../components/molecules/FormField.js';
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.md}px;
-`;
-
-const ErrorBanner = styled.div`
-  padding: ${({ theme }) => theme.spacing.sm}px ${({ theme }) => theme.spacing.md}px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid ${({ theme }) => theme.colors.danger};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  color: ${({ theme }) => theme.colors.danger};
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-`;
-
-type Step = 'email' | 'recovery' | 'newPassword';
+import type { RecoverStep } from '../types/health.js';
 
 export function RecoverView() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { unlockWithRecoveryKey, rewrapMasterKey } = useEncryption();
-  const [step, setStep] = useState<Step>('email');
+  const [step, setStep] = useState<RecoverStep>('email');
   const [email, setEmail] = useState('');
   const [recoveryKey, setRecoveryKey] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -118,7 +103,7 @@ export function RecoverView() {
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
       {step === 'email' && (
-        <Form onSubmit={handleEmailStep}>
+        <AuthForm onSubmit={handleEmailStep}>
           <FormField label="Email address" htmlFor="recover-email">
             <TextInput
               id="recover-email"
@@ -132,11 +117,11 @@ export function RecoverView() {
           <Button type="submit" fullWidth disabled={loading}>
             {loading ? <Spinner size={18} /> : 'Continue'}
           </Button>
-        </Form>
+        </AuthForm>
       )}
 
       {step === 'recovery' && (
-        <Form onSubmit={handleRecoveryStep}>
+        <AuthForm onSubmit={handleRecoveryStep}>
           <FormField label="Recovery Key" htmlFor="recover-key">
             <TextInput
               id="recover-key"
@@ -149,11 +134,11 @@ export function RecoverView() {
           <Button type="submit" fullWidth disabled={loading}>
             {loading ? <Spinner size={18} /> : 'Verify'}
           </Button>
-        </Form>
+        </AuthForm>
       )}
 
       {step === 'newPassword' && (
-        <Form onSubmit={handleNewPasswordStep}>
+        <AuthForm onSubmit={handleNewPasswordStep}>
           <FormField label="New Password" htmlFor="recover-newpw">
             <PasswordInput
               id="recover-newpw"
@@ -175,7 +160,7 @@ export function RecoverView() {
           <Button type="submit" fullWidth disabled={loading}>
             {loading ? <Spinner size={18} /> : 'Reset password'}
           </Button>
-        </Form>
+        </AuthForm>
       )}
     </AuthTemplate>
   );

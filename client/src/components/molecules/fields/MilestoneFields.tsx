@@ -5,6 +5,9 @@ import { Select } from '../../atoms/Select.js';
 import { DateInput } from '../../atoms/DateInput.js';
 import { Checkbox } from '../../atoms/Checkbox.js';
 import { FormField } from '../FormField.js';
+import type { MilestoneFieldValues } from '../../../types/fields.js';
+import type { GoalOption, LinkedTask } from '../../../types/ui.js';
+export type { MilestoneFieldValues } from '../../../types/fields.js';
 
 const Wrapper = styled.div`
   display: flex;
@@ -100,24 +103,6 @@ const NoTasks = styled.div`
   font-style: italic;
 `;
 
-export interface MilestoneFieldValues {
-  milestoneStatus: 'active' | 'completed' | 'archived';
-  targetDate: string;
-  isCompleted: boolean;
-  parentGoalId: number | null;
-}
-
-interface GoalOption {
-  id: number;
-  title: string;
-}
-
-interface LinkedTask {
-  id: number;
-  title: string;
-  isCompleted: boolean;
-}
-
 interface MilestoneFieldsProps {
   values: MilestoneFieldValues;
   onChange: (values: MilestoneFieldValues) => void;
@@ -144,8 +129,11 @@ export function MilestoneFields({ values, onChange, goalOptions, linkedTasks = [
       <Row>
         <FormField label="Status">
           <Select
-            value={values.milestoneStatus}
-            onChange={e => onChange({ ...values, milestoneStatus: e.target.value as MilestoneFieldValues['milestoneStatus'] })}
+            value={values.isCompleted ? 'completed' : values.milestoneStatus}
+            onChange={e => {
+              const status = e.target.value as MilestoneFieldValues['milestoneStatus'];
+              onChange({ ...values, milestoneStatus: status, isCompleted: status === 'completed' });
+            }}
           >
             <option value="active">Active</option>
             <option value="completed">Completed</option>
@@ -159,35 +147,10 @@ export function MilestoneFields({ values, onChange, goalOptions, linkedTasks = [
           />
         </FormField>
       </Row>
-      <Checkbox
-        checked={values.isCompleted}
-        onChange={v => onChange({ ...values, isCompleted: v })}
-        label="Completed"
-      />
       <LinkedTasksSection>
-        <LinkedTasksLabel>Linked Tasks ({linkedTasks.length})</LinkedTasksLabel>
-        {linkedTasks.length === 0 ? (
-          <NoTasks>No tasks linked to this milestone yet</NoTasks>
-        ) : (
-          linkedTasks.map(task => (
-            <TaskItem key={task.id} $completed={task.isCompleted}>
-              <TaskCheckBtn
-                $completed={task.isCompleted}
-                onClick={() => onToggleTaskComplete?.(task.id, !task.isCompleted)}
-                title={task.isCompleted ? 'Mark incomplete' : 'Mark complete'}
-              >
-                {task.isCompleted && <FontAwesomeIcon icon={faCheck} />}
-              </TaskCheckBtn>
-              <TaskTitle>{task.title}</TaskTitle>
-              <UnlinkBtn
-                onClick={() => onUnlinkTask?.(task.id)}
-                title="Unlink task from milestone"
-              >
-                <FontAwesomeIcon icon={faXmark} />
-              </UnlinkBtn>
-            </TaskItem>
-          ))
-        )}
+        <LinkedTasksLabel>
+          Linked Tasks: {linkedTasks.filter(t => t.isCompleted).length}/{linkedTasks.length} completed
+        </LinkedTasksLabel>
       </LinkedTasksSection>
     </Wrapper>
   );

@@ -4,6 +4,8 @@ import { TextInput } from '../../atoms/TextInput.js';
 import { Textarea } from '../../atoms/Textarea.js';
 import { DateTimeInput } from '../../atoms/DateTimeInput.js';
 import { FormField } from '../FormField.js';
+import type { ExerciseFieldValues } from '../../../types/fields.js';
+export type { ExerciseFieldValues } from '../../../types/fields.js';
 
 const Wrapper = styled.div`
   display: flex;
@@ -15,18 +17,6 @@ const Row = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.sm}px;
 `;
-
-export interface ExerciseFieldValues {
-  exerciseType: string;
-  duration: string;
-  intensity: 'low' | 'medium' | 'high';
-  distance: string;
-  distanceUnit: 'miles' | 'km';
-  calories: string;
-  performedDate: string;
-  performedTime: string;
-  notes: string;
-}
 
 interface ExerciseFieldsProps {
   values: ExerciseFieldValues;

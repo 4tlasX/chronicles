@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faCheck } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { useUIStore } from '../../stores/uiStore.js';
+import { stripHtml } from '../../utils/stripHtml.js';
 
 interface EntryCardProps {
   id: number;
@@ -167,11 +168,6 @@ const FavoriteStar = styled.button`
   &:hover { opacity: 0.7; }
 `;
 
-function stripHtml(html: string): string {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
-}
 
 export function EntryCard({
   id,

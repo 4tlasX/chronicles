@@ -4,6 +4,8 @@ import { TextInput } from '../../atoms/TextInput.js';
 import { Textarea } from '../../atoms/Textarea.js';
 import { DateTimeInput } from '../../atoms/DateTimeInput.js';
 import { FormField } from '../FormField.js';
+import type { SymptomFieldValues } from '../../../types/fields.js';
+export type { SymptomFieldValues } from '../../../types/fields.js';
 
 const Wrapper = styled.div`
   display: flex;
@@ -15,14 +17,6 @@ const Row = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.sm}px;
 `;
-
-export interface SymptomFieldValues {
-  severity: number;
-  occurredDate: string;
-  occurredTime: string;
-  duration: string;
-  notes: string;
-}
 
 interface SymptomFieldsProps {
   values: SymptomFieldValues;

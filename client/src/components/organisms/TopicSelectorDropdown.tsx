@@ -3,13 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getTopicIcon } from '../../utils/topicIcons.js';
 import { useUIStore } from '../../stores/uiStore.js';
-
-interface Topic {
-  id: number;
-  name: string;
-  icon: string | null;
-  color: string | null;
-}
+import type { Topic } from '../../types/topics.js';
 
 interface TopicSelectorDropdownProps {
   isOpen: boolean;

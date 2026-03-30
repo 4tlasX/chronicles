@@ -259,6 +259,107 @@ export async function deletePost(schemaName: string, id: number): Promise<void> 
 }
 
 // =============================================================================
+// Medication Dose Logs
+// =============================================================================
+
+export interface DoseLog {
+  id: number;
+  medicationPostId: number;
+  scheduledTime: string;
+  takenAt: string | null;
+  date: string;
+  status: string;
+  createdAt: Date;
+}
+
+/** JIT migration: create medication_dose_logs table if missing. */
+export async function ensureDoseLogsTable(schemaName: string): Promise<void> {
+  const s = escapeSchema(schemaName);
+  const result = await prisma.$queryRawUnsafe<{ exists: boolean }[]>(
+    `SELECT EXISTS (
+       SELECT 1 FROM information_schema.tables
+       WHERE table_schema = $1 AND table_name = 'medication_dose_logs'
+     ) as exists`,
+    s
+  );
+  if (!result[0]?.exists) {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE ${s}.medication_dose_logs (
+        id SERIAL PRIMARY KEY,
+        medication_post_id INTEGER NOT NULL REFERENCES ${s}.posts(id) ON DELETE CASCADE,
+        scheduled_time TIME NOT NULL,
+        taken_at TEXT,
+        date DATE NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await prisma.$executeRawUnsafe(`CREATE INDEX idx_${s}_dose_logs_date ON ${s}.medication_dose_logs (date)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX idx_${s}_dose_logs_med_date ON ${s}.medication_dose_logs (medication_post_id, date)`);
+  }
+}
+
+export async function getDoseLogsByDate(schemaName: string, date: string): Promise<DoseLog[]> {
+  const s = escapeSchema(schemaName);
+  const rows = await prisma.$queryRawUnsafe<DoseLog[]>(
+    `SELECT id, medication_post_id as "medicationPostId", scheduled_time as "scheduledTime",
+            taken_at as "takenAt", date, status, created_at as "createdAt"
+     FROM ${s}.medication_dose_logs
+     WHERE date = $1::date
+     ORDER BY scheduled_time ASC`,
+    date
+  );
+  return rows.map(r => ({ ...r, id: Number(r.id), medicationPostId: Number(r.medicationPostId) }));
+}
+
+export async function upsertDoseLog(
+  schemaName: string,
+  medicationPostId: number,
+  scheduledTime: string,
+  date: string,
+  status: string,
+  takenAt: string | null
+): Promise<DoseLog> {
+  const s = escapeSchema(schemaName);
+
+  // Check if log exists for this medication/time/date
+  const existing = await prisma.$queryRawUnsafe<{ id: number }[]>(
+    `SELECT id FROM ${s}.medication_dose_logs
+     WHERE medication_post_id = $1 AND scheduled_time = $2::time AND date = $3::date`,
+    medicationPostId,
+    scheduledTime,
+    date
+  );
+
+  if (existing.length > 0) {
+    const result = await prisma.$queryRawUnsafe<DoseLog[]>(
+      `UPDATE ${s}.medication_dose_logs
+       SET status = $1, taken_at = $2
+       WHERE id = $3
+       RETURNING id, medication_post_id as "medicationPostId", scheduled_time as "scheduledTime",
+                 taken_at as "takenAt", date, status, created_at as "createdAt"`,
+      status,
+      takenAt,
+      Number(existing[0].id)
+    );
+    return { ...result[0], id: Number(result[0].id), medicationPostId: Number(result[0].medicationPostId) };
+  }
+
+  const result = await prisma.$queryRawUnsafe<DoseLog[]>(
+    `INSERT INTO ${s}.medication_dose_logs (medication_post_id, scheduled_time, date, status, taken_at)
+     VALUES ($1, $2::time, $3::date, $4, $5)
+     RETURNING id, medication_post_id as "medicationPostId", scheduled_time as "scheduledTime",
+               taken_at as "takenAt", date, status, created_at as "createdAt"`,
+    medicationPostId,
+    scheduledTime,
+    date,
+    status,
+    takenAt
+  );
+  return { ...result[0], id: Number(result[0].id), medicationPostId: Number(result[0].medicationPostId) };
+}
+
+// =============================================================================
 // Post-Taxonomy Relationships
 // =============================================================================
 

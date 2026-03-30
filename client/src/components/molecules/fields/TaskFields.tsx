@@ -2,24 +2,15 @@ import { Checkbox } from '../../atoms/Checkbox.js';
 import { Select } from '../../atoms/Select.js';
 import { FormField } from '../FormField.js';
 import styled from 'styled-components';
+import type { TaskFieldValues } from '../../../types/fields.js';
+import type { MilestoneOption } from '../../../types/ui.js';
+export type { TaskFieldValues } from '../../../types/fields.js';
 
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.sm}px;
 `;
-
-export interface TaskFieldValues {
-  isInProgress: boolean;
-  isCompleted: boolean;
-  isAutoMigrating: boolean;
-  parentMilestoneId: number | null;
-}
-
-interface MilestoneOption {
-  id: number;
-  title: string;
-}
 
 interface TaskFieldsProps {
   values: TaskFieldValues;

@@ -357,6 +357,7 @@ export function Header() {
 
   const handleNewEntry = () => {
     useUIStore.getState().setSelectedEntryId(null);
+    useUIStore.getState().setShowMobileEditor(false);
     navigate('/');
   };
 

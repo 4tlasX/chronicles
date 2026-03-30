@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { SettingsTemplate } from '../components/templates/SettingsTemplate.js';
 import { SettingsCard, SettingsRow } from '../components/molecules/SettingsCard.js';
+import {
+  HeaderRow, Title, SectionTitle, SectionDescription, DangerTitle,
+  CollapsibleHeader, CollapsibleTitle, CollapsibleDesc, CollapsibleBody,
+  PrivacyCard, DangerCard, PasswordForm, SessionsList, SessionItem,
+  ColorSection, ColorSectionTitle, ColorSectionDesc,
+} from '../components/molecules/SettingsSection.js';
+import { ActionButton, SignOutButton, SelectedColorLabel, BackLink } from '../components/atoms/SettingsAtoms.js';
 import { Toggle } from '../components/atoms/Toggle.js';
 import { Select } from '../components/atoms/Select.js';
 import { PasswordInput } from '../components/atoms/PasswordInput.js';
@@ -22,170 +27,7 @@ import { useNavigate } from 'react-router-dom';
 import { auth as authApi, settings as settingsApi, sessions as sessionsApi, topics as topicsApi } from '../services/api.js';
 import { seedTestData } from '../utils/seedTestData.js';
 import { HEADER_COLORS } from '@shared/theme/accentColors';
-
-/* ── Styled ── */
-
-const HeaderRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 32px;
-`;
-
-const Title = styled.h1`
-  font-size: 24px;
-  font-weight: 700;
-`;
-
-const BackLink = styled(Link)`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.accent};
-  text-decoration: none;
-  &:hover { text-decoration: underline; }
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 18px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.text};
-  margin: 32px 0 12px;
-`;
-
-const SectionDescription = styled.p`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin-bottom: 12px;
-`;
-
-const CollapsibleHeader = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 16px 20px;
-  background: white;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  cursor: pointer;
-  text-align: left;
-`;
-
-const CollapsibleTitle = styled.div`
-  font-size: 15px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const CollapsibleDesc = styled.div`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin-top: 2px;
-`;
-
-const CollapsibleBody = styled.div`
-  padding: 16px 20px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-top: none;
-  border-radius: 0 0 ${({ theme }) => theme.borderRadius.lg}px ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
-  font-size: 14px;
-  line-height: 1.6;
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-const PrivacyCard = styled.div`
-  padding: 16px 20px;
-  border: 1px solid #f5e6a3;
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: #fefce8;
-  font-size: 14px;
-  line-height: 1.6;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const DangerTitle = styled.h2`
-  font-size: 18px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.danger};
-  margin: 32px 0 12px;
-`;
-
-const DangerCard = styled.div`
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
-  overflow: hidden;
-`;
-
-const PasswordForm = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-  background: white;
-`;
-
-const SessionsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 0 20px 16px;
-`;
-
-const SessionItem = styled.div`
-  padding: 12px 0;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  &:last-child { border-bottom: none; }
-`;
-
-const SelectedColorLabel = styled.div`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin-top: 8px;
-`;
-
-const ColorSection = styled.div`
-  padding: 16px 20px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-`;
-
-const ColorSectionTitle = styled.div`
-  font-size: 15px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: 4px;
-`;
-
-const ColorSectionDesc = styled.div`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin-bottom: 12px;
-`;
-
-const ActionButton = styled.button`
-  padding: 6px 16px;
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  background: white;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  cursor: pointer;
-  transition: background 0.15s;
-  &:hover { background: ${({ theme }) => theme.colors.surfaceHover}; }
-`;
-
-const SignOutButton = styled.button`
-  padding: 6px 16px;
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.danger};
-  background: white;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  cursor: pointer;
-  transition: background 0.15s;
-  &:hover { background: rgba(239, 68, 68, 0.05); }
-`;
+import { stripHtml } from '../utils/stripHtml.js';
 
 const TIMEZONES = [
   { value: 'Pacific/Honolulu', label: 'Hawaii (HST)' },
@@ -227,6 +69,7 @@ export function SettingsView() {
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
+  const setTopics = useEntriesStore(s => s.setTopics);
   const seedTopics = useEntriesStore(s => s.topics);
   const setFeatureFlags = useEntriesStore(s => s.setFeatureFlags);
   const headerColor = useUIStore(s => s.headerColor);
@@ -332,7 +175,8 @@ export function SettingsView() {
   const handleSeedTopics = async () => {
     setSeeding(true); setSeedResult('');
     try {
-      await topicsApi.getAll(); // triggers auto-seed
+      const freshTopics = await topicsApi.getAll(); // triggers auto-seed on server
+      setTopics(freshTopics as typeof allTopics);
       setSeedResult('Default topics created');
     } catch { setSeedResult('Failed'); }
     finally { setSeeding(false); }
@@ -364,11 +208,6 @@ export function SettingsView() {
     try {
       const topicMap = new Map(allTopics.map(t => [t.id, t.name]));
 
-      const stripHtml = (html: string) => {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || '';
-      };
 
       const escCsv = (val: string) => {
         if (val.includes('"') || val.includes(',') || val.includes('\n')) {

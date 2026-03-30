@@ -30,6 +30,7 @@ const DEFAULT_TOPICS = [
   { name: 'Meeting', icon: 'users', color: '#EC4899' },
   { name: 'Food', icon: 'utensils', color: '#F97316' },
   { name: 'Exercise', icon: 'dumbbell', color: '#EF4444' },
+  { name: 'Medication', icon: 'pills', color: '#14B8A6' },
   { name: 'Symptom', icon: 'flask', color: '#EF4444' },
   { name: 'Music', icon: 'music', color: '#EC4899' },
   { name: 'Books', icon: 'book', color: '#8B5CF6' },

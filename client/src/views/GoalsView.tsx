@@ -1,468 +1,64 @@
 import { useState, useMemo, useCallback } from 'react';
-import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faBullseye, faFlag, faChevronDown, faChevronUp, faPen, faGripVertical,
-  faCircleCheck, faCircle, faCircleHalfStroke, faLink,
-} from '@fortawesome/free-solid-svg-icons';
+import { faBullseye, faFlag } from '@fortawesome/free-solid-svg-icons';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
-import {
-  arrayMove, SortableContext, sortableKeyboardCoordinates,
-  useSortable, verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { AppTemplate } from '../components/templates/AppTemplate.js';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { ContentTemplate } from '../components/templates/ContentTemplate.js';
+import { EmptyState } from '../components/atoms/EmptyState.js';
+import { ScrollList } from '../components/atoms/ScrollList.js';
+import { Spinner } from '../components/atoms/Spinner.js';
+import { ViewHeader } from '../components/molecules/ViewHeader.js';
+import { FilterTabs } from '../components/molecules/FilterTabs.js';
+import { TabBar } from '../components/molecules/TabBar.js';
+import { GoalCard } from '../components/organisms/GoalCard.js';
+import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
+import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
+import { useEncryption } from '../contexts/EncryptionContext.js';
+import { useInitializeData } from '../hooks/useInitializeData.js';
+import { entries as entriesApi } from '../services/api.js';
+import { stripHtml } from '../utils/stripHtml.js';
 import { useNavigate } from 'react-router-dom';
+import type { GoalEntry, MilestoneEntryData, TaskEntryData } from '../types/goals.js';
 
-/* ── Helpers ── */
+/* ── Filter options ── */
 
-function stripHtml(html: string): string {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
-}
+const GOAL_FILTERS = [
+  { value: 'active' as const, label: 'Active' },
+  { value: 'short_term' as const, label: 'Short-term' },
+  { value: 'long_term' as const, label: 'Long-term' },
+  { value: 'completed' as const, label: 'Completed' },
+  { value: 'all' as const, label: 'All' },
+];
 
-type GoalEntry = {
-  id: number;
-  title: string;
-  goalType: string;
-  goalStatus: string;
-  targetDate: string;
-  milestoneIds: number[];
-  createdAt: Date;
-};
+const MILESTONE_FILTERS = [
+  { value: 'all' as const, label: 'All' },
+  { value: 'active' as const, label: 'Active' },
+  { value: 'in_progress' as const, label: 'In Progress' },
+  { value: 'completed' as const, label: 'Completed' },
+];
 
-type MilestoneEntry = {
-  id: number;
-  title: string;
-  milestoneStatus: string;
-  isCompleted: boolean;
-  targetDate: string;
-  parentGoalId: number | null;
-  taskIds: number[];
-  createdAt: Date;
-};
-
-type TaskEntry = {
-  id: number;
-  title: string;
-  isCompleted: boolean;
-  parentMilestoneId: number | null;
-};
-
-/* ── Styled ── */
-
-const PageWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.9);
-`;
-
-const HeaderBar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-`;
-
-const Title = styled.h1`
-  font-size: 20px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const BackLink = styled.button`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.accent};
-  background: none;
-  border: none;
-  cursor: pointer;
-  &:hover { text-decoration: underline; }
-`;
-
-const TabRow = styled.div`
-  display: flex;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-`;
-
-const Tab = styled.button<{ $active?: boolean; $color: string }>`
-  flex: 1;
-  padding: 10px;
-  font-size: 14px;
-  font-weight: ${({ $active }) => $active ? 600 : 400};
-  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textMuted};
-  background: none;
-  border: none;
-  border-bottom: 2px solid ${({ $active, $color }) => $active ? $color : 'transparent'};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
-`;
-
-const FilterRow = styled.div`
-  display: flex;
-  gap: 4px;
-  padding: 8px 20px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  overflow-x: auto;
-`;
-
-const FilterBtn = styled.button<{ $active?: boolean }>`
-  padding: 4px 12px;
-  font-size: 13px;
-  font-weight: ${({ $active }) => $active ? 600 : 400};
-  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textMuted};
-  background: ${({ $active }) => $active ? 'rgba(0,0,0,0.06)' : 'transparent'};
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  cursor: pointer;
-  white-space: nowrap;
-  &:hover { background: rgba(0, 0, 0, 0.04); }
-`;
-
-const ListArea = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const EmptyState = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  padding: 40px;
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  text-align: center;
-  gap: 4px;
-`;
-
-const EmptySub = styled.span`
-  font-size: 12px;
-`;
-
-/* ── Card Styles ── */
-
-const Card = styled.div<{ $isDragging?: boolean }>`
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
-  overflow: hidden;
-  opacity: ${({ $isDragging }) => $isDragging ? 0.7 : 1};
-  box-shadow: ${({ $isDragging }) => $isDragging ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'};
-`;
-
-const CardHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  cursor: pointer;
-`;
-
-const DragHandle = styled.button`
-  display: flex;
-  align-items: center;
-  color: ${({ theme }) => theme.colors.textMuted};
-  background: none;
-  border: none;
-  cursor: grab;
-  font-size: 12px;
-  touch-action: none;
-  flex-shrink: 0;
-  &:active { cursor: grabbing; }
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
-`;
-
-const CardTitle = styled.div<{ $completed?: boolean }>`
-  flex: 1;
-  font-size: 15px;
-  font-weight: 500;
-  color: ${({ theme, $completed }) => $completed ? theme.colors.textMuted : theme.colors.text};
-  text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-`;
-
-const StatusBadge = styled.span<{ $color: string }>`
-  font-size: 11px;
-  font-weight: 600;
-  color: ${({ $color }) => $color};
-  background: ${({ $color }) => $color}15;
-  padding: 2px 8px;
-  border-radius: 4px;
-  text-transform: capitalize;
-  flex-shrink: 0;
-`;
-
-const TypeLabel = styled.span`
-  font-size: 11px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  flex-shrink: 0;
-`;
-
-const EditBtn = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  background: none;
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  cursor: pointer;
-  font-size: 12px;
-  flex-shrink: 0;
-  &:hover { color: ${({ theme }) => theme.colors.text}; background: rgba(0,0,0,0.06); }
-`;
-
-const ProgressBarOuter = styled.div`
-  height: 4px;
-  background: ${({ theme }) => theme.colors.border};
-`;
-
-const ProgressBarInner = styled.div<{ $percent: number; $color: string }>`
-  height: 100%;
-  width: ${({ $percent }) => $percent}%;
-  background: ${({ $color }) => $color};
-  transition: width 0.3s ease;
-`;
-
-const ExpandSection = styled.div`
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-`;
-
-const ExpandHeader = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 8px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.textMuted};
-  background: none;
-  border: none;
-  cursor: pointer;
-  &:hover { background: rgba(0,0,0,0.02); }
-`;
-
-const SubItemList = styled.div`
-  padding: 0 14px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const SubItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  font-size: 13px;
-`;
-
-const SubItemIcon = styled.span<{ $color: string }>`
-  color: ${({ $color }) => $color};
-  font-size: 14px;
-  flex-shrink: 0;
-`;
-
-const SubItemTitle = styled.span<{ $completed?: boolean }>`
-  flex: 1;
-  color: ${({ theme, $completed }) => $completed ? theme.colors.textMuted : theme.colors.text};
-  text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-`;
-
-const LinkedGoalLabel = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  padding: 0 14px 8px;
-`;
-
-const STATUS_COLORS: Record<string, string> = {
-  active: '#10b981',
-  completed: '#6366f1',
-  archived: '#9ca3af',
-};
-
-/* ── Sortable Goal Card ── */
-
-interface GoalCardProps {
-  goal: GoalEntry;
-  milestones: MilestoneEntry[];
-  headerColor: string;
-  onEdit: (id: number) => void;
-}
-
-function SortableGoalCard({ goal, milestones, headerColor, onEdit }: GoalCardProps) {
-  const [expanded, setExpanded] = useState(false);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: goal.id });
-  const style = { transform: CSS.Transform.toString(transform), transition };
-
-  const linkedMilestones = milestones.filter(m => m.parentGoalId === goal.id);
-  const completedCount = linkedMilestones.filter(m => m.isCompleted).length;
-  const progress = linkedMilestones.length > 0 ? Math.round((completedCount / linkedMilestones.length) * 100) : 0;
-
-  return (
-    <Card ref={setNodeRef} style={style} $isDragging={isDragging}>
-      <CardHeader onClick={() => onEdit(goal.id)}>
-        <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()}>
-          <FontAwesomeIcon icon={faGripVertical} />
-        </DragHandle>
-        <CardTitle $completed={goal.goalStatus === 'completed'}>{goal.title}</CardTitle>
-        <TypeLabel>{goal.goalType === 'short_term' ? 'Short' : 'Long'}</TypeLabel>
-        <StatusBadge $color={STATUS_COLORS[goal.goalStatus] || '#9ca3af'}>{goal.goalStatus}</StatusBadge>
-        {goal.targetDate && <TypeLabel>{goal.targetDate}</TypeLabel>}
-        <EditBtn onClick={e => { e.stopPropagation(); onEdit(goal.id); }} title="Edit">
-          <FontAwesomeIcon icon={faPen} />
-        </EditBtn>
-      </CardHeader>
-
-      {linkedMilestones.length > 0 && (
-        <>
-          <ProgressBarOuter>
-            <ProgressBarInner $percent={progress} $color={headerColor} />
-          </ProgressBarOuter>
-          <ExpandSection>
-            <ExpandHeader onClick={() => setExpanded(!expanded)}>
-              <span>Milestones ({completedCount}/{linkedMilestones.length})</span>
-              <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} size="xs" />
-            </ExpandHeader>
-            {expanded && (
-              <SubItemList>
-                {linkedMilestones.map(m => (
-                  <SubItem key={m.id}>
-                    <SubItemIcon $color={m.isCompleted ? '#6366f1' : m.milestoneStatus === 'active' ? '#f59e0b' : '#d1d5db'}>
-                      <FontAwesomeIcon icon={m.isCompleted ? faCircleCheck : m.milestoneStatus === 'active' ? faCircleHalfStroke : faCircle} />
-                    </SubItemIcon>
-                    <SubItemTitle $completed={m.isCompleted}>{m.title}</SubItemTitle>
-                  </SubItem>
-                ))}
-              </SubItemList>
-            )}
-          </ExpandSection>
-        </>
-      )}
-    </Card>
-  );
-}
-
-/* ── Milestone Card (non-sortable) ── */
-
-interface MilestoneCardProps {
-  milestone: MilestoneEntry;
-  tasks: TaskEntry[];
-  goalTitle: string | null;
-  headerColor: string;
-  onEdit: (id: number) => void;
-}
-
-function MilestoneCard({ milestone, tasks, goalTitle, headerColor, onEdit }: MilestoneCardProps) {
-  const [expanded, setExpanded] = useState(false);
-
-  const linkedTasks = tasks.filter(t => t.parentMilestoneId === milestone.id);
-  const completedCount = linkedTasks.filter(t => t.isCompleted).length;
-  const progress = linkedTasks.length > 0 ? Math.round((completedCount / linkedTasks.length) * 100) : 0;
-
-  const statusIcon = milestone.isCompleted ? faCircleCheck : milestone.milestoneStatus === 'active' ? faCircleHalfStroke : faCircle;
-  const statusColor = milestone.isCompleted ? '#6366f1' : milestone.milestoneStatus === 'active' ? '#10b981' : '#9ca3af';
-
-  return (
-    <Card>
-      <CardHeader onClick={() => onEdit(milestone.id)}>
-        <SubItemIcon $color={statusColor}>
-          <FontAwesomeIcon icon={statusIcon} />
-        </SubItemIcon>
-        <CardTitle $completed={milestone.isCompleted}>{milestone.title}</CardTitle>
-        <StatusBadge $color={statusColor}>
-          {milestone.isCompleted ? 'Completed' : milestone.milestoneStatus}
-        </StatusBadge>
-        {milestone.targetDate && <TypeLabel>{milestone.targetDate}</TypeLabel>}
-        <EditBtn onClick={e => { e.stopPropagation(); onEdit(milestone.id); }} title="Edit">
-          <FontAwesomeIcon icon={faPen} />
-        </EditBtn>
-      </CardHeader>
-
-      {goalTitle && (
-        <LinkedGoalLabel>
-          <FontAwesomeIcon icon={faLink} style={{ fontSize: 10 }} />
-          Goal: {goalTitle}
-        </LinkedGoalLabel>
-      )}
-
-      {linkedTasks.length > 0 && (
-        <>
-          <ProgressBarOuter>
-            <ProgressBarInner $percent={progress} $color={headerColor} />
-          </ProgressBarOuter>
-          <ExpandSection>
-            <ExpandHeader onClick={() => setExpanded(!expanded)}>
-              <span>Tasks ({completedCount}/{linkedTasks.length})</span>
-              <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} size="xs" />
-            </ExpandHeader>
-            {expanded && (
-              <SubItemList>
-                {linkedTasks.map(t => (
-                  <SubItem key={t.id}>
-                    <SubItemIcon $color={t.isCompleted ? '#6366f1' : '#d1d5db'}>
-                      <FontAwesomeIcon icon={t.isCompleted ? faCircleCheck : faCircle} />
-                    </SubItemIcon>
-                    <SubItemTitle $completed={t.isCompleted}>{t.title}</SubItemTitle>
-                  </SubItem>
-                ))}
-              </SubItemList>
-            )}
-          </ExpandSection>
-        </>
-      )}
-    </Card>
-  );
-}
-
-/* ── Main View ── */
-
-type GoalFilter = 'all' | 'active' | 'short_term' | 'long_term' | 'completed';
-type MilestoneFilter = 'all' | 'active' | 'in_progress' | 'completed';
+type GoalFilter = typeof GOAL_FILTERS[number]['value'];
+type MilestoneFilter = typeof MILESTONE_FILTERS[number]['value'];
 
 export function GoalsView() {
+  const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
+  const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
+  const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
   const headerColor = useUIStore(s => s.headerColor) || '#2d2c2a';
-  const setSelectedEntryId = useUIStore(s => s.setSelectedEntryId);
   const navigate = useNavigate();
+  const { encryptPost } = useEncryption();
 
   const [tab, setTab] = useState<'goals' | 'milestones'>('goals');
   const [goalFilter, setGoalFilter] = useState<GoalFilter>('active');
   const [milestoneFilter, setMilestoneFilter] = useState<MilestoneFilter>('all');
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -474,185 +70,272 @@ export function GoalsView() {
   const milestoneTopicId = useMemo(() => allTopics.find(t => t.name.toLowerCase() === 'milestone')?.id, [allTopics]);
   const taskTopicId = useMemo(() => allTopics.find(t => t.name.toLowerCase() === 'task')?.id, [allTopics]);
 
-  // Parse goals
+  // Parse entries into typed data
   const goals: GoalEntry[] = useMemo(() => {
     if (!goalTopicId) return [];
     return entries
       .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === goalTopicId)
       .map(e => {
         const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
-        return {
-          id: e.id,
-          title: stripHtml(e.content).slice(0, 120) || 'Untitled goal',
-          goalType: (cf.goalType as string) || 'short_term',
-          goalStatus: (cf.goalStatus as string) || 'active',
-          targetDate: (cf.targetDate as string) || '',
-          milestoneIds: [],
-          createdAt: e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt),
-        };
+        return { id: e.id, content: e.content, title: stripHtml(e.content).slice(0, 120) || 'Untitled goal',
+          goalType: (cf.goalType as string) || 'short_term', goalStatus: (cf.goalStatus as string) || 'active',
+          targetDate: (cf.targetDate as string) || '', customFields: cf, taxonomyId: goalTopicId,
+          createdAt: e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt) };
       });
   }, [entries, goalTopicId]);
 
-  // Parse milestones
-  const milestones: MilestoneEntry[] = useMemo(() => {
+  const milestones: MilestoneEntryData[] = useMemo(() => {
     if (!milestoneTopicId) return [];
     return entries
       .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === milestoneTopicId)
       .map(e => {
         const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
-        return {
-          id: e.id,
-          title: stripHtml(e.content).slice(0, 120) || 'Untitled milestone',
-          milestoneStatus: (cf.milestoneStatus as string) || 'active',
-          isCompleted: !!cf.isCompleted,
-          targetDate: (cf.targetDate as string) || '',
-          parentGoalId: (cf.parentGoalId as number) || null,
-          taskIds: [],
-          createdAt: e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt),
-        };
+        return { id: e.id, content: e.content, title: stripHtml(e.content).slice(0, 120) || 'Untitled milestone',
+          milestoneStatus: (cf.milestoneStatus as string) || 'active', isCompleted: !!cf.isCompleted,
+          targetDate: (cf.targetDate as string) || '', parentGoalId: (cf.parentGoalId as number) || null,
+          customFields: cf, taxonomyId: milestoneTopicId,
+          createdAt: e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt) };
       });
   }, [entries, milestoneTopicId]);
 
-  // Parse tasks
-  const tasks: TaskEntry[] = useMemo(() => {
+  const tasks: TaskEntryData[] = useMemo(() => {
     if (!taskTopicId) return [];
     return entries
       .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === taskTopicId)
       .map(e => {
         const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
-        return {
-          id: e.id,
-          title: stripHtml(e.content).slice(0, 80) || 'Untitled task',
-          isCompleted: !!cf.isCompleted,
-          parentMilestoneId: (cf.parentMilestoneId as number) || null,
-        };
+        return { id: e.id, content: e.content, title: stripHtml(e.content).slice(0, 80) || 'Untitled task',
+          isCompleted: !!cf.isCompleted, parentMilestoneId: (cf.parentMilestoneId as number) || null,
+          customFields: cf, taxonomyId: taskTopicId };
       });
   }, [entries, taskTopicId]);
 
-  // Goal title lookup for milestones
+  const goalOptions = useMemo(() => goals.map(g => ({ id: g.id, title: g.title })), [goals]);
   const goalTitles = useMemo(() => new Map(goals.map(g => [g.id, g.title])), [goals]);
 
-  // Filter goals
-  const filteredGoals = useMemo(() => {
-    return goals
-      .filter(g => {
-        if (goalFilter === 'all') return true;
-        if (goalFilter === 'active') return g.goalStatus === 'active';
-        if (goalFilter === 'completed') return g.goalStatus === 'completed';
-        if (goalFilter === 'short_term') return g.goalType === 'short_term' && g.goalStatus !== 'completed';
-        if (goalFilter === 'long_term') return g.goalType === 'long_term' && g.goalStatus !== 'completed';
-        return true;
-      })
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  }, [goals, goalFilter]);
+  // Filtered lists
+  const filteredGoals = useMemo(() => goals
+    .filter(g => {
+      if (goalFilter === 'all') return true;
+      if (goalFilter === 'active') return g.goalStatus === 'active';
+      if (goalFilter === 'completed') return g.goalStatus === 'completed';
+      if (goalFilter === 'short_term') return g.goalType === 'short_term' && g.goalStatus !== 'completed';
+      if (goalFilter === 'long_term') return g.goalType === 'long_term' && g.goalStatus !== 'completed';
+      return true;
+    })
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+  [goals, goalFilter]);
 
-  // Filter milestones
-  const filteredMilestones = useMemo(() => {
-    return milestones
-      .filter(m => {
-        if (milestoneFilter === 'all') return true;
-        if (milestoneFilter === 'active') return !m.isCompleted && m.milestoneStatus === 'active';
-        if (milestoneFilter === 'in_progress') return !m.isCompleted;
-        if (milestoneFilter === 'completed') return m.isCompleted;
-        return true;
-      })
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  }, [milestones, milestoneFilter]);
+  const filteredMilestones = useMemo(() => milestones
+    .filter(m => {
+      if (milestoneFilter === 'all') return true;
+      if (milestoneFilter === 'active') return !m.isCompleted && m.milestoneStatus === 'active';
+      if (milestoneFilter === 'in_progress') return !m.isCompleted;
+      if (milestoneFilter === 'completed') return m.isCompleted;
+      return true;
+    })
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+  [milestones, milestoneFilter]);
 
-  const handleEdit = useCallback((entryId: number) => {
-    setSelectedEntryId(entryId);
-    navigate('/');
-  }, [setSelectedEntryId, navigate]);
+  // Shared persist helper
+  const persistEntry = useCallback(async (id: number, content: string, taxonomyId: number, customFields: Record<string, unknown>) => {
+    const metadata: Record<string, unknown> = { _taxonomyId: taxonomyId, _customFields: customFields };
+    updateDecryptedEntry(id, { metadata });
+    const encrypted = await encryptPost(content, metadata);
+    await entriesApi.update(id, {
+      contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+      metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+      taxonomyIds: [taxonomyId],
+    });
+  }, [encryptPost, updateDecryptedEntry]);
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    // Reorder is visual only for now — goals derive from entries store
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    // Future: persist order via custom field priority
-  }, []);
+  const handleToggleMilestone = useCallback(async (m: MilestoneEntryData) => {
+    let newStatus: string, newCompleted: boolean;
+    if (!m.isCompleted && m.milestoneStatus !== 'active') { newStatus = 'active'; newCompleted = false; }
+    else if (!m.isCompleted) { newStatus = 'completed'; newCompleted = true; }
+    else { newStatus = 'not_started'; newCompleted = false; }
+    try {
+      await persistEntry(m.id, m.content, m.taxonomyId, { ...m.customFields, milestoneStatus: newStatus, isCompleted: newCompleted });
+
+      // Auto-update parent goal — read fresh from store
+      if (m.parentGoalId && goalTopicId && milestoneTopicId) {
+        const freshEntries = useEntriesStore.getState().decryptedEntries;
+
+        const parentEntry = freshEntries.find(e => e.id === m.parentGoalId);
+        if (parentEntry) {
+          const parentCf = (parentEntry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
+          const parentStatus = (parentCf.goalStatus as string) || 'active';
+
+          const siblingMilestones = freshEntries
+            .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === milestoneTopicId)
+            .filter(e => {
+              const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
+              return cf.parentGoalId === m.parentGoalId;
+            });
+
+          const allCompleted = siblingMilestones.length > 0 && siblingMilestones.every(e => {
+            const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
+            return !!cf.isCompleted;
+          });
+
+          const anyIncomplete = siblingMilestones.some(e => {
+            const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
+            return !cf.isCompleted;
+          });
+
+          if (allCompleted && parentStatus !== 'completed') {
+            await persistEntry(parentEntry.id, parentEntry.content, goalTopicId, { ...parentCf, goalStatus: 'completed' });
+          } else if (anyIncomplete && parentStatus === 'completed') {
+            await persistEntry(parentEntry.id, parentEntry.content, goalTopicId, { ...parentCf, goalStatus: 'active' });
+          }
+        }
+      }
+    }
+    catch (err) { console.error('Failed to toggle milestone:', err); }
+  }, [persistEntry, goalTopicId, milestoneTopicId]);
+
+  const handleUnlinkMilestone = useCallback(async (m: MilestoneEntryData) => {
+    try { await persistEntry(m.id, m.content, m.taxonomyId, { ...m.customFields, parentGoalId: null }); }
+    catch (err) { console.error('Failed to unlink milestone:', err); }
+  }, [persistEntry]);
+
+  const handleToggleTask = useCallback(async (t: TaskEntryData) => {
+    const newCompleted = !t.isCompleted;
+    try {
+      await persistEntry(t.id, t.content, t.taxonomyId, { ...t.customFields, isCompleted: newCompleted });
+
+      // Auto-complete parent milestone when all tasks are done
+      // Read fresh from store to avoid stale closure
+      if (t.parentMilestoneId && milestoneTopicId && taskTopicId) {
+        const freshEntries = useEntriesStore.getState().decryptedEntries;
+
+        const parentEntry = freshEntries.find(e => e.id === t.parentMilestoneId);
+        if (parentEntry) {
+          const parentCf = (parentEntry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
+          const parentIsCompleted = !!parentCf.isCompleted;
+
+          const siblingTasks = freshEntries
+            .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === taskTopicId)
+            .filter(e => {
+              const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
+              return cf.parentMilestoneId === t.parentMilestoneId;
+            });
+
+          const allDone = siblingTasks.length > 0 && siblingTasks.every(e => {
+            const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
+            return !!cf.isCompleted;
+          });
+
+          const anyUndone = siblingTasks.some(e => {
+            const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
+            return !cf.isCompleted;
+          });
+
+          if (allDone && !parentIsCompleted) {
+            await persistEntry(parentEntry.id, parentEntry.content, milestoneTopicId,
+              { ...parentCf, milestoneStatus: 'completed', isCompleted: true });
+          } else if (anyUndone && parentIsCompleted) {
+            await persistEntry(parentEntry.id, parentEntry.content, milestoneTopicId,
+              { ...parentCf, milestoneStatus: 'active', isCompleted: false });
+          }
+        }
+      }
+    }
+    catch (err) { console.error('Failed to toggle task:', err); }
+  }, [persistEntry, milestoneTopicId, taskTopicId]);
+
+  const handleUnlinkTask = useCallback(async (t: TaskEntryData) => {
+    try { await persistEntry(t.id, t.content, t.taxonomyId, { ...t.customFields, parentMilestoneId: null }); }
+    catch (err) { console.error('Failed to unlink task:', err); }
+  }, [persistEntry]);
+
+  const handleCreateTask = useCallback(async (milestoneId: number, title: string) => {
+    if (!taskTopicId) return;
+    const content = `<p>${title}</p>`;
+    const customFields = { isCompleted: false, isInProgress: false, isAutoMigrating: true, parentMilestoneId: milestoneId };
+    const metadata: Record<string, unknown> = { _taxonomyId: taskTopicId, _customFields: customFields };
+    const encrypted = await encryptPost(content, metadata);
+    const result = await entriesApi.create({
+      contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+      metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+      isEncrypted: true, taxonomyIds: [taskTopicId],
+    });
+    addDecryptedEntry({
+      id: result.id as number, content, metadata, isEncrypted: true,
+      createdAt: new Date(result.createdAt as string), updatedAt: new Date((result.updatedAt || result.createdAt) as string),
+    });
+  }, [taskTopicId, encryptPost, addDecryptedEntry]);
+
+  const handleCreateMilestone = useCallback(async (goalId: number, title: string) => {
+    if (!milestoneTopicId) return;
+    const content = `<p>${title}</p>`;
+    const customFields = { milestoneStatus: 'active', isCompleted: false, targetDate: '', parentGoalId: goalId };
+    const metadata: Record<string, unknown> = { _taxonomyId: milestoneTopicId, _customFields: customFields };
+    const encrypted = await encryptPost(content, metadata);
+    const result = await entriesApi.create({
+      contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+      metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+      isEncrypted: true, taxonomyIds: [milestoneTopicId],
+    });
+    addDecryptedEntry({
+      id: result.id as number, content, metadata, isEncrypted: true,
+      createdAt: new Date(result.createdAt as string), updatedAt: new Date((result.updatedAt || result.createdAt) as string),
+    });
+  }, [milestoneTopicId, encryptPost, addDecryptedEntry]);
+
+  const handleDragEnd = useCallback((_event: DragEndEvent) => {}, []);
+  const handleSelect = (id: number) => setEditingId(prev => prev === id ? null : id);
+
+  if (needsUnlock) {
+    return (<><ContentTemplate><EmptyState message="Unlock your journal to view goals" /></ContentTemplate><UnlockDialog onUnlock={handleUnlock} /></>);
+  }
+  if (isLoading || !isReady) {
+    return (<ContentTemplate><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}><Spinner size={40} /></div></ContentTemplate>);
+  }
+
+  const TABS = [
+    { value: 'goals' as const, label: <><FontAwesomeIcon icon={faBullseye} size="sm" /> Goals ({goals.length})</> },
+    { value: 'milestones' as const, label: <><FontAwesomeIcon icon={faFlag} size="sm" /> Milestones ({milestones.length})</> },
+  ];
 
   return (
-    <AppTemplate hideSidebar transparentContent>
-      <PageWrapper>
-        <HeaderBar>
-          <Title>Goals & Milestones</Title>
-          <BackLink onClick={() => navigate('/')}>Back to Journal</BackLink>
-        </HeaderBar>
+    <ContentTemplate>
+      <ViewHeader title="Goals & Milestones" onBack={() => navigate('/')} />
 
-        <TabRow>
-          <Tab $active={tab === 'goals'} $color={headerColor} onClick={() => setTab('goals')}>
-            <FontAwesomeIcon icon={faBullseye} size="sm" /> Goals ({goals.length})
-          </Tab>
-          <Tab $active={tab === 'milestones'} $color={headerColor} onClick={() => setTab('milestones')}>
-            <FontAwesomeIcon icon={faFlag} size="sm" /> Milestones ({milestones.length})
-          </Tab>
-        </TabRow>
+      <TabBar tabs={TABS} active={tab} onChange={v => { setTab(v); setEditingId(null); }} accentColor={headerColor} />
 
-        {tab === 'goals' && (
-          <FilterRow>
-            {(['active', 'short_term', 'long_term', 'completed', 'all'] as GoalFilter[]).map(f => (
-              <FilterBtn key={f} $active={goalFilter === f} onClick={() => setGoalFilter(f)}>
-                {f === 'all' ? 'All' : f === 'short_term' ? 'Short-term' : f === 'long_term' ? 'Long-term' : f.charAt(0).toUpperCase() + f.slice(1)}
-              </FilterBtn>
-            ))}
-          </FilterRow>
+      {tab === 'goals' && <FilterTabs options={GOAL_FILTERS} active={goalFilter} onChange={setGoalFilter} />}
+      {tab === 'milestones' && <FilterTabs options={MILESTONE_FILTERS} active={milestoneFilter} onChange={setMilestoneFilter} />}
+
+      <ScrollList>
+        {tab === 'goals' && (filteredGoals.length === 0
+          ? <EmptyState message="No goals found." submessage="Create a journal entry with the Goal topic to get started." />
+          : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={filteredGoals.map(g => g.id)} strategy={verticalListSortingStrategy}>
+                {filteredGoals.map(g => (
+                  <GoalCard key={g.id} goal={g} milestones={milestones} headerColor={headerColor}
+                    isEditing={editingId === g.id} onSelect={() => handleSelect(g.id)}
+                    onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
+                    onToggleMilestone={handleToggleMilestone} onUnlinkMilestone={handleUnlinkMilestone}
+                    onCreateMilestone={handleCreateMilestone} />
+                ))}
+              </SortableContext>
+            </DndContext>
         )}
 
-        {tab === 'milestones' && (
-          <FilterRow>
-            {(['all', 'active', 'in_progress', 'completed'] as MilestoneFilter[]).map(f => (
-              <FilterBtn key={f} $active={milestoneFilter === f} onClick={() => setMilestoneFilter(f)}>
-                {f === 'all' ? 'All' : f === 'in_progress' ? 'In Progress' : f.charAt(0).toUpperCase() + f.slice(1)}
-              </FilterBtn>
-            ))}
-          </FilterRow>
+        {tab === 'milestones' && (filteredMilestones.length === 0
+          ? <EmptyState message="No milestones found." submessage="Create a journal entry with the Milestone topic to get started." />
+          : filteredMilestones.map(m => (
+              <MilestoneCard key={m.id} milestone={m} tasks={tasks}
+                goalTitle={m.parentGoalId ? (goalTitles.get(m.parentGoalId) || null) : null}
+                goalOptions={goalOptions} headerColor={headerColor}
+                isEditing={editingId === m.id} onSelect={() => handleSelect(m.id)}
+                onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
+                onToggleTask={handleToggleTask} onUnlinkTask={handleUnlinkTask}
+                onCreateTask={handleCreateTask} />
+            ))
         )}
-
-        <ListArea>
-          {tab === 'goals' && (
-            filteredGoals.length === 0 ? (
-              <EmptyState>
-                No goals found.
-                <EmptySub>Create a journal entry with the Goal topic to get started.</EmptySub>
-              </EmptyState>
-            ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={filteredGoals.map(g => g.id)} strategy={verticalListSortingStrategy}>
-                  {filteredGoals.map(goal => (
-                    <SortableGoalCard
-                      key={goal.id}
-                      goal={goal}
-                      milestones={milestones}
-                      headerColor={headerColor}
-                      onEdit={handleEdit}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
-            )
-          )}
-
-          {tab === 'milestones' && (
-            filteredMilestones.length === 0 ? (
-              <EmptyState>
-                No milestones found.
-                <EmptySub>Create a journal entry with the Milestone topic to get started.</EmptySub>
-              </EmptyState>
-            ) : (
-              filteredMilestones.map(milestone => (
-                <MilestoneCard
-                  key={milestone.id}
-                  milestone={milestone}
-                  tasks={tasks}
-                  goalTitle={milestone.parentGoalId ? (goalTitles.get(milestone.parentGoalId) || null) : null}
-                  headerColor={headerColor}
-                  onEdit={handleEdit}
-                />
-              ))
-            )
-          )}
-        </ListArea>
-      </PageWrapper>
-    </AppTemplate>
+      </ScrollList>
+    </ContentTemplate>
   );
 }

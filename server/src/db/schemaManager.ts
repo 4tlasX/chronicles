@@ -74,6 +74,19 @@ function generateTenantSchemaStatements(schemaName: string): string[] {
       PRIMARY KEY (post_id, tax_id)
     )`,
 
+    // Medication dose logs
+    `CREATE TABLE ${s}.medication_dose_logs (
+      id SERIAL PRIMARY KEY,
+      medication_post_id INTEGER NOT NULL REFERENCES ${s}.posts(id) ON DELETE CASCADE,
+      scheduled_time TIME NOT NULL,
+      taken_at TEXT,
+      date DATE NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`,
+    `CREATE INDEX idx_${s}_dose_logs_date ON ${s}.medication_dose_logs (date)`,
+    `CREATE INDEX idx_${s}_dose_logs_med_date ON ${s}.medication_dose_logs (medication_post_id, date)`,
+
     // Indexes
     `CREATE INDEX idx_${s}_posts_meta ON ${s}.posts USING GIN (metadata)`,
     `CREATE INDEX idx_${s}_posts_created ON ${s}.posts (created_at DESC)`,
@@ -84,10 +97,15 @@ function generateTenantSchemaStatements(schemaName: string): string[] {
     // Seed default topics
     `INSERT INTO ${s}.taxonomies (name, icon, color) VALUES
       ('Task', 'circle-check', '#3B82F6'),
-      ('Idea', 'lightbulb', '#8B5CF6'),
+      ('Goal', 'bullseye', '#8B5CF6'),
+      ('Milestone', 'flag', '#6366F1'),
+      ('Idea', 'lightbulb', '#F59E0B'),
       ('Research', 'magnifying-glass', '#10B981'),
       ('Event', 'calendar', '#F59E0B'),
       ('Meeting', 'users', '#EC4899'),
+      ('Food', 'utensils', '#F97316'),
+      ('Exercise', 'dumbbell', '#EF4444'),
+      ('Medication', 'pills', '#14B8A6'),
       ('Symptom', 'flask', '#EF4444'),
       ('Music', 'music', '#EC4899'),
       ('Books', 'book', '#8B5CF6'),

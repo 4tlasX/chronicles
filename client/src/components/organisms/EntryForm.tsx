@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
+import { stripHtml } from '../../utils/stripHtml.js';
 import { faChevronDown, faChevronUp, faBookmark, faShareNodes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Editor } from './Editor.js';
@@ -164,11 +165,6 @@ function getCustomType(topicName: string | undefined): string | null {
   return TOPIC_TO_TYPE[topicName.toLowerCase()] || null;
 }
 
-function stripHtml(html: string): string {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
-}
 
 /* ── Component ── */
 

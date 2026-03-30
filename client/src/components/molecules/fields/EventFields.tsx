@@ -3,6 +3,8 @@ import { TextInput } from '../../atoms/TextInput.js';
 import { Textarea } from '../../atoms/Textarea.js';
 import { DateTimeInput } from '../../atoms/DateTimeInput.js';
 import { FormField } from '../FormField.js';
+import type { EventFieldValues } from '../../../types/fields.js';
+export type { EventFieldValues } from '../../../types/fields.js';
 
 const Wrapper = styled.div`
   display: flex;
@@ -14,17 +16,6 @@ const Row = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.sm}px;
 `;
-
-export interface EventFieldValues {
-  startDate: string;
-  startTime: string;
-  endDate: string;
-  endTime: string;
-  location: string;
-  address: string;
-  phone: string;
-  notes: string;
-}
 
 interface EventFieldsProps {
   values: EventFieldValues;

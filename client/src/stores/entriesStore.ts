@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import type { DecryptedPost, EncryptedPost } from '@shared/crypto/types';
-
-type Topic = { id: number; name: string; icon: string | null; color: string | null };
+import type { Topic } from '../types/topics.js';
 
 /** Maps feature flag keys to the topic names they control. */
 const FEATURE_TOPIC_MAP: Record<string, string[]> = {

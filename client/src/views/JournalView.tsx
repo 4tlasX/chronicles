@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
-import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { getTopicIcon } from '../utils/topicIcons.js';
 import { AppTemplate } from '../components/templates/AppTemplate.js';
+import { JournalTemplate, SidePanel, EditorPanel, MobileBackButton } from '../components/templates/JournalTemplate.js';
+import { LoadingCenter } from '../components/atoms/LoadingCenter.js';
+import { EmptyEditor } from '../components/atoms/EmptyEditor.js';
+import { SidePadding } from '../components/atoms/SidePadding.js';
+import { QuickEntryCard } from '../components/atoms/QuickEntryCard.js';
+import { TopicFilterBar } from '../components/molecules/TopicFilterBar.js';
 import { ViewTabs } from '../components/organisms/ViewTabs.js';
 import { QuickEntry } from '../components/organisms/QuickEntry.js';
 import { EntryList } from '../components/organisms/EntryList.js';
@@ -11,159 +14,15 @@ import { EntryForm } from '../components/organisms/EntryForm.js';
 import { SearchPanel } from '../components/organisms/SearchPanel.js';
 import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
+import { ShareModal } from '../components/organisms/ShareModal.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { useAuth } from '../contexts/AuthContext.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { entries as entriesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
-import { ShareModal } from '../components/organisms/ShareModal.js';
+import { stripHtml } from '../utils/stripHtml.js';
 import type { EncryptedPost } from '@shared/crypto/types';
-
-const ContentArea = styled.div`
-  display: flex;
-  flex: 1;
-  min-height: 0;
-`;
-
-const SidePanel = styled.div<{ $hiddenMobile?: boolean }>`
-  width: 33%;
-  min-width: 320px;
-  max-width: 480px;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.8);
-  border-right: 1px solid ${({ theme }) => theme.colors.border};
-
-  @media (max-width: 768px) {
-    width: 100%;
-    min-width: 100%;
-    max-width: 100%;
-    display: ${({ $hiddenMobile }) => $hiddenMobile ? 'none' : 'flex'};
-  }
-`;
-
-const SidePadding = styled.div`
-  padding: 12px 16px;
-`;
-
-const QuickEntryCard = styled.div`
-  margin: 0 12px 12px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(4px);
-  position: relative;
-  z-index: 2;
-  overflow: visible;
-
-  /* Remove QuickEntry's own border/padding since the card provides it */
-  & > div {
-    border: none;
-    border-bottom: none;
-  }
-`;
-
-const EditorPanel = styled.div<{ $visibleMobile?: boolean }>`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.9);
-
-  @media (max-width: 768px) {
-    display: ${({ $visibleMobile }) => $visibleMobile ? 'flex' : 'none'};
-    width: 100%;
-  }
-`;
-
-const MobileBackButton = styled.button`
-  display: none;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  background: none;
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  cursor: pointer;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
-
-  @media (max-width: 768px) {
-    display: flex;
-  }
-`;
-
-const LoadingCenter = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-`;
-
-const EmptyEditor = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 14px;
-`;
-
-const FilterBar = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 16px 8px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
-`;
-
-const FilterIcon = styled.span<{ $color: string }>`
-  color: ${({ $color }) => $color};
-  font-size: 14px;
-`;
-
-const FilterText = styled.span`
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const FilterBold = styled.strong`
-  font-weight: ${({ theme }) => theme.fontWeight.semibold};
-`;
-
-const ClearButton = styled.button`
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
-  color: ${({ theme }) => theme.colors.text};
-  background: transparent;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
-  cursor: pointer;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.04);
-  }
-`;
-
-function stripHtml(html: string): string {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
-}
 
 export function JournalView() {
   const { encryptionData } = useAuth();
@@ -414,65 +273,60 @@ export function JournalView() {
 
   return (
     <AppTemplate hideSidebar transparentContent>
-      <ContentArea>
-        {/* ── Left sidebar: tabs → quick entry → entries ── */}
-        <SidePanel $hiddenMobile={showMobileEditor}>
-          <SidePadding>
-            <ViewTabs onDateTabClick={() => setCalendarExpanded(prev => !prev)} />
-          </SidePadding>
-          {filterTopic && (
-            <FilterBar>
-              <FilterIcon $color={headerColor}>
-                <FontAwesomeIcon icon={getTopicIcon(filterTopic.icon)} />
-              </FilterIcon>
-              <FilterText>Filtering by: <FilterBold>{filterTopic.name}</FilterBold></FilterText>
-              <ClearButton onClick={() => setSelectedTopicId(null)}>
-                <FontAwesomeIcon icon={faXmark} size="xs" /> Clear
-              </ClearButton>
-            </FilterBar>
-          )}
-          {viewMode === 'date' && calendarExpanded && (
-            <MiniCalendar
-              selectedDate={selectedDate}
-              onSelectDate={(date) => { setSelectedDate(date); setCalendarExpanded(false); }}
-              expanded={true}
+      <JournalTemplate
+        sidePanel={
+          <SidePanel hiddenMobile={showMobileEditor}>
+            <SidePadding>
+              <ViewTabs onDateTabClick={() => setCalendarExpanded(prev => !prev)} />
+            </SidePadding>
+            {filterTopic && (
+              <TopicFilterBar
+                icon={getTopicIcon(filterTopic.icon)}
+                iconColor={headerColor}
+                topicName={filterTopic.name}
+                onClear={() => setSelectedTopicId(null)}
+              />
+            )}
+            {viewMode === 'date' && calendarExpanded && (
+              <MiniCalendar
+                selectedDate={selectedDate}
+                onSelectDate={(date) => { setSelectedDate(date); setCalendarExpanded(false); }}
+                expanded={true}
+              />
+            )}
+            {viewMode === 'search' && <SearchPanel />}
+            <QuickEntryCard>
+              <QuickEntry onCreateEntry={handleQuickCreate} />
+            </QuickEntryCard>
+            <EntryList onToggleBookmark={handleBookmarkFromCard} />
+          </SidePanel>
+        }
+        editorPanel={
+          <EditorPanel visibleMobile={showMobileEditor}>
+            <MobileBackButton onClick={handleMobileBack} />
+            <EntryForm
+              entryId={selectedEntryId}
+              content={editorContent}
+              onContentChange={setEditorContent}
+              topicId={editorTopicId}
+              onTopicChange={setEditorTopicId}
+              topics={topics}
+              customFields={customFields}
+              onCustomFieldsChange={setCustomFields}
+              onSave={handleSave}
+              onDelete={selectedEntryId ? handleDelete : undefined}
+              onNew={handleNew}
+              onBookmark={handleBookmark}
+              onShare={() => setShareOpen(true)}
+              isEditing={selectedEntryId !== null}
+              isSaving={isSaving}
+              saveStatus={saveStatus}
+              expanded={entryExpanded}
+              onExpandChange={setEntryExpanded}
             />
-          )}
-          {viewMode === 'search' && <SearchPanel />}
-          <QuickEntryCard>
-            <QuickEntry onCreateEntry={handleQuickCreate} />
-          </QuickEntryCard>
-          <EntryList onToggleBookmark={handleBookmarkFromCard} />
-        </SidePanel>
-
-        {/* ── Right: editor with topic selector, custom fields, toolbar, content, save ── */}
-        <EditorPanel $visibleMobile={showMobileEditor}>
-          <MobileBackButton onClick={handleMobileBack}>
-            <FontAwesomeIcon icon={faChevronLeft} size="xs" />
-            Back to entries
-          </MobileBackButton>
-          <EntryForm
-            entryId={selectedEntryId}
-            content={editorContent}
-            onContentChange={setEditorContent}
-            topicId={editorTopicId}
-            onTopicChange={setEditorTopicId}
-            topics={topics}
-            customFields={customFields}
-            onCustomFieldsChange={setCustomFields}
-            onSave={handleSave}
-            onDelete={selectedEntryId ? handleDelete : undefined}
-            onNew={handleNew}
-            onBookmark={handleBookmark}
-            onShare={() => setShareOpen(true)}
-            isEditing={selectedEntryId !== null}
-            isSaving={isSaving}
-            saveStatus={saveStatus}
-            expanded={entryExpanded}
-            onExpandChange={setEntryExpanded}
-          />
-        </EditorPanel>
-      </ContentArea>
+          </EditorPanel>
+        }
+      />
 
       {shareOpen && selectedEntryId && (
         <ShareModal

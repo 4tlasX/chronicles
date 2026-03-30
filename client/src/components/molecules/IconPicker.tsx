@@ -16,11 +16,8 @@ import {
   faCheck, faCircleCheck, faMagnifyingGlass, faCalendar, faBullseye,
   faTriangleExclamation, faQuoteLeft,
 } from '@fortawesome/free-solid-svg-icons';
-
-export interface IconOption {
-  name: string;
-  icon: IconDefinition;
-}
+import type { IconOption } from '../../types/ui.js';
+export type { IconOption } from '../../types/ui.js';
 
 export const TOPIC_ICONS: IconOption[] = [
   // Tasks & Actions

@@ -3,8 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { useUIStore } from '../../stores/uiStore.js';
-
-type ViewMode = 'date' | 'all' | 'tasks' | 'favorites' | 'search';
+import type { ViewMode } from '../../types/ui.js';
 
 const tabs: { value: ViewMode; label: ReactNode }[] = [
   { value: 'date', label: 'Date' },

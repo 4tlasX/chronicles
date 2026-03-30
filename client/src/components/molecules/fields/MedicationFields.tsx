@@ -8,6 +8,8 @@ import { Button } from '../../atoms/Button.js';
 import { FormField } from '../FormField.js';
 import { faPlus, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import type { MedicationFieldValues } from '../../../types/fields.js';
+export type { MedicationFieldValues } from '../../../types/fields.js';
 
 const Wrapper = styled.div`
   display: flex;
@@ -50,14 +52,6 @@ const RemoveBtn = styled.button`
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   &:hover { background: rgba(239, 68, 68, 0.1); }
 `;
-
-export interface MedicationFieldValues {
-  dosage: string;
-  frequency: 'once_daily' | 'twice_daily' | 'three_times_daily' | 'as_needed' | 'custom';
-  scheduleTimes: string[];
-  isActive: boolean;
-  notes: string;
-}
 
 interface MedicationFieldsProps {
   values: MedicationFieldValues;

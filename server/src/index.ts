@@ -9,6 +9,7 @@ import topicsRoutes from './routes/topics.js';
 import settingsRoutes from './routes/settings.js';
 import sessionsRoutes from './routes/sessions.js';
 import sharesRoutes from './routes/shares.js';
+import dosesRoutes from './routes/doses.js';
 import { initSharesTable } from './db/shareQueries.js';
 
 // Prisma raw queries return BigInt for integer columns — make JSON.stringify handle them
@@ -39,6 +40,7 @@ app.use('/api/entries', authMiddleware, entriesRoutes);
 app.use('/api/topics', authMiddleware, topicsRoutes);
 app.use('/api/settings', authMiddleware, settingsRoutes);
 app.use('/api/sessions', authMiddleware, sessionsRoutes);
+app.use('/api/doses', authMiddleware, dosesRoutes);
 app.use('/api/shares', sharesRoutes); // public GET by token; POST/DELETE use authMiddleware inline
 
 // Init shares table + cleanup expired sessions on startup

@@ -2,6 +2,8 @@ import styled from 'styled-components';
 import { Select } from '../../atoms/Select.js';
 import { DateInput } from '../../atoms/DateInput.js';
 import { FormField } from '../FormField.js';
+import type { GoalFieldValues } from '../../../types/fields.js';
+export type { GoalFieldValues } from '../../../types/fields.js';
 
 const Wrapper = styled.div`
   display: flex;
@@ -13,12 +15,6 @@ const Row = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.sm}px;
 `;
-
-export interface GoalFieldValues {
-  goalType: 'short_term' | 'long_term';
-  goalStatus: 'active' | 'completed' | 'archived';
-  targetDate: string;
-}
 
 interface GoalFieldsProps {
   values: GoalFieldValues;

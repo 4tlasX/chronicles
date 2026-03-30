@@ -44,15 +44,7 @@ const CurrentBadge = styled.span`
   font-weight: ${({ theme }) => theme.fontWeight.semibold};
 `;
 
-interface SessionData {
-  id: number;
-  deviceInfo: string | null;
-  ipAddress: string | null;
-  userAgent: string | null;
-  lastActiveAt: string;
-  createdAt: string;
-  isCurrent: boolean;
-}
+import type { SessionData } from '../../types/ui.js';
 
 export function SessionManager() {
   const [sessionList, setSessionList] = useState<SessionData[]>([]);

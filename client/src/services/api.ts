@@ -191,6 +191,33 @@ export const sessions = {
 };
 
 // =============================================================================
+// Doses
+// =============================================================================
+
+export interface DoseLogRecord {
+  id: number;
+  medicationPostId: number;
+  scheduledTime: string;
+  takenAt: string | null;
+  date: string;
+  status: string;
+  createdAt: string;
+}
+
+export const doses = {
+  getByDate: (date: string) =>
+    request<{ logs: DoseLogRecord[] }>('/doses', { params: { date } }),
+
+  log: (data: {
+    medicationPostId: number;
+    scheduledTime: string;
+    date: string;
+    status: 'taken' | 'skipped' | 'pending';
+    takenAt?: string | null;
+  }) => request<{ log: DoseLogRecord }>('/doses', { method: 'POST', body: data }),
+};
+
+// =============================================================================
 // Shares
 // =============================================================================
 
@@ -224,4 +251,4 @@ export const shares = {
 };
 
 export { ApiError };
-export default { auth, entries, topics, settings, sessions, shares };
+export default { auth, entries, topics, settings, sessions, doses, shares };

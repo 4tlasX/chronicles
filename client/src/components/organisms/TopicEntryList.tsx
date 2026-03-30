@@ -1,0 +1,122 @@
+import { useState } from 'react';
+import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { EmptyState } from '../atoms/EmptyState.js';
+import { EditableEntryCard } from './EditableEntryCard.js';
+import { NewEntryCard } from './NewEntryCard.js';
+import type { DecryptedPost } from '@shared/crypto/types';
+import type { Topic } from '../../types/topics.js';
+
+const Panel = styled.div<{ $hidden?: boolean }>`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.9);
+  @media (max-width: 768px) {
+    display: ${({ $hidden }) => $hidden ? 'none' : 'flex'};
+  }
+`;
+
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+const Title = styled.h1`
+  font-size: 18px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+const MobileBack = styled.button`
+  display: none;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  @media (max-width: 768px) { display: flex; }
+`;
+
+const BackLink = styled.button`
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.accent};
+  background: none;
+  border: none;
+  cursor: pointer;
+  &:hover { text-decoration: underline; }
+  @media (max-width: 768px) { display: none; }
+`;
+
+const ListArea = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+`;
+
+interface TopicEntryListProps {
+  title: string;
+  entries: DecryptedPost[];
+  allTopics: Topic[];
+  headerColor: string;
+  hiddenMobile?: boolean;
+  onMobileBack: () => void;
+  onBackToJournal: () => void;
+  /** When a specific topic is selected, show a "New Entry" button */
+  selectedTopic?: Topic;
+}
+
+export function TopicEntryList({ title, entries, allTopics, headerColor, hiddenMobile, onMobileBack, onBackToJournal, selectedTopic }: TopicEntryListProps) {
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  const getTopicForEntry = (entry: DecryptedPost) => {
+    const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
+    return taxId ? allTopics.find(t => t.id === taxId) : undefined;
+  };
+
+  return (
+    <Panel $hidden={hiddenMobile}>
+      <Header>
+        <div>
+          <MobileBack onClick={onMobileBack}>
+            <FontAwesomeIcon icon={faChevronLeft} size="xs" />
+            Back to Topics
+          </MobileBack>
+          <Title>{title}</Title>
+        </div>
+        <BackLink onClick={onBackToJournal}>Back to Journal</BackLink>
+      </Header>
+
+      <ListArea>
+        {selectedTopic && <NewEntryCard topic={selectedTopic} headerColor={headerColor} />}
+        {entries.length === 0 && !selectedTopic ? (
+          <EmptyState message="No entries found." />
+        ) : (
+          entries.map(entry => (
+            <EditableEntryCard
+              key={entry.id}
+              entry={entry}
+              topic={getTopicForEntry(entry)}
+              headerColor={headerColor}
+              isEditing={editingId === entry.id}
+              onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
+              onClose={() => setEditingId(null)}
+              onDeleted={() => setEditingId(null)}
+            />
+          ))
+        )}
+      </ListArea>
+    </Panel>
+  );
+}

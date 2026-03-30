@@ -1,0 +1,64 @@
+import { Router } from 'express';
+import { ensureDoseLogsTable, getDoseLogsByDate, upsertDoseLog } from '../db/tenantQueries.js';
+import { z } from 'zod';
+
+const router = Router();
+
+const logDoseSchema = z.object({
+  medicationPostId: z.number(),
+  scheduledTime: z.string(), // HH:MM format
+  date: z.string(),          // YYYY-MM-DD
+  status: z.enum(['taken', 'skipped', 'pending']),
+  takenAt: z.string().nullable().optional(),
+});
+
+// GET /api/doses?date=YYYY-MM-DD
+router.get('/', async (req, res) => {
+  try {
+    const date = req.query.date as string;
+    if (!date) {
+      res.status(400).json({ error: 'date query parameter is required' });
+      return;
+    }
+
+    await ensureDoseLogsTable(req.auth!.tenantSchemaName);
+    const logs = await getDoseLogsByDate(req.auth!.tenantSchemaName, date);
+    res.json({ logs });
+  } catch (err) {
+    console.error('Get dose logs error:', err);
+    res.status(500).json({ error: 'Failed to fetch dose logs' });
+  }
+});
+
+// POST /api/doses
+router.post('/', async (req, res) => {
+  try {
+    const parsed = logDoseSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
+      return;
+    }
+
+    const { medicationPostId, scheduledTime, date, status, takenAt } = parsed.data;
+    const resolvedTakenAt = status === 'taken'
+      ? (takenAt || new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }))
+      : null;
+
+    await ensureDoseLogsTable(req.auth!.tenantSchemaName);
+    const log = await upsertDoseLog(
+      req.auth!.tenantSchemaName,
+      medicationPostId,
+      scheduledTime,
+      date,
+      status,
+      resolvedTakenAt
+    );
+
+    res.json({ log });
+  } catch (err) {
+    console.error('Log dose error:', err);
+    res.status(500).json({ error: 'Failed to log dose' });
+  }
+});
+
+export default router;

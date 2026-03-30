@@ -15,6 +15,8 @@ import { TopicsView } from './views/TopicsView.js';
 import { CalendarView } from './views/CalendarView.js';
 import { GoalsView } from './views/GoalsView.js';
 import { TopicEntriesView } from './views/TopicEntriesView.js';
+import { MedicationScheduleView } from './views/MedicationScheduleView.js';
+import { HealthReportingView } from './views/HealthReportingView.js';
 
 function R({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -44,12 +46,12 @@ export function App() {
 
               {/* Health */}
               <Route path="/health" element={<R><TopicEntriesView title="Health" topicNames={['Medication', 'Symptom', 'Food', 'Exercise']} /></R>} />
-              <Route path="/health/meds" element={<R><TopicEntriesView title="Medications" topicNames={['Medication']} metaFields={[{ key: 'dosage', label: 'Dosage' }, { key: 'frequency', label: 'Frequency' }, { key: 'isActive', label: 'Active' }]} /></R>} />
-              <Route path="/health/schedule" element={<R><TopicEntriesView title="Medication Schedule" topicNames={['Medication']} metaFields={[{ key: 'dosage', label: 'Dosage' }, { key: 'scheduleTimes', label: 'Times' }]} /></R>} />
+              <Route path="/health/meds" element={<R><TopicEntriesView title="Medications" topicNames={['Medication']} metaFields={[{ key: 'dosage', label: 'Dosage' }, { key: 'frequency', label: 'Frequency' }, { key: 'isActive', label: 'Active' }]} showDateFilter={false} /></R>} />
+              <Route path="/health/schedule" element={<R><MedicationScheduleView /></R>} />
               <Route path="/health/food" element={<R><TopicEntriesView title="Food" topicNames={['Food']} metaFields={[{ key: 'mealType', label: 'Meal' }, { key: 'calories', label: 'Calories' }, { key: 'ingredients', label: 'Ingredients' }]} /></R>} />
               <Route path="/health/symptoms" element={<R><TopicEntriesView title="Symptoms" topicNames={['Symptom']} metaFields={[{ key: 'severity', label: 'Severity' }, { key: 'duration', label: 'Duration' }]} /></R>} />
               <Route path="/health/exercise" element={<R><TopicEntriesView title="Exercise" topicNames={['Exercise']} metaFields={[{ key: 'exerciseType', label: 'Type' }, { key: 'duration', label: 'Duration' }, { key: 'intensity', label: 'Intensity' }]} /></R>} />
-              <Route path="/health/reporting" element={<R><TopicEntriesView title="Health Reporting" topicNames={['Medication', 'Symptom', 'Food', 'Exercise']} /></R>} />
+              <Route path="/health/reporting" element={<R><HealthReportingView /></R>} />
 
               {/* Entertainment */}
               <Route path="/entertainment/music" element={<R><TopicEntriesView title="Music" topicNames={['Music']} showDateFilter={false} /></R>} />
