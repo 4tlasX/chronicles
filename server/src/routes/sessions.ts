@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../db/prisma.js';
 import { revokeAllSessions } from '../middleware/auth.js';
+import { parseId } from '../middleware/parseId.js';
 import type { SessionInfo } from '@chronicles/shared';
 
 const router = Router();
@@ -46,7 +47,8 @@ router.get('/', async (req, res) => {
 // POST /api/sessions/:id/revoke — Revoke a specific session
 router.post('/:id/revoke', async (req, res) => {
   try {
-    const sessionId = parseInt(req.params.id);
+    const sessionId = parseId(req.params.id);
+    if (Number.isNaN(sessionId)) { res.status(400).json({ error: 'Invalid session ID' }); return; }
     const session = await prisma.session.findFirst({
       where: { id: sessionId, accountId: req.auth!.accountId },
     });

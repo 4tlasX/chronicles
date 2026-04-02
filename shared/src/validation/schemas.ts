@@ -18,6 +18,7 @@ export const registerSchema = z.object({
   kekWrapIv: z.string().min(1),
   recoveryWrappedMK: z.string().min(1),
   recoveryWrapIv: z.string().min(1),
+  recoveryKeyHash: z.string().min(1),
 });
 
 export const loginSchema = z.object({
@@ -35,11 +36,18 @@ export const changePasswordSchema = z.object({
 
 export const recoverSchema = z.object({
   email: emailSchema,
-  recoveryKey: z.string().min(1),
+  recoveryKey: z.string().min(1, 'Recovery key is required'),
   newPassword: passwordSchema,
   newEncryptedMasterKey: z.string().min(1),
   newKekSalt: z.string().min(1),
   newKekWrapIv: z.string().min(1),
+});
+
+// Shares validation
+export const createShareSchema = z.object({
+  contentEncrypted: z.string().min(1, 'contentEncrypted is required'),
+  contentIv: z.string().min(1, 'contentIv is required'),
+  expiresAt: z.string().datetime().nullable().optional(),
 });
 
 // Post validation

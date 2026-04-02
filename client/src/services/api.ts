@@ -64,6 +64,7 @@ export const auth = {
     kekWrapIv: string;
     recoveryWrappedMK: string;
     recoveryWrapIv: string;
+    recoveryKeyHash: string;
   }) => request<{ user: { email: string; username: string } }>('/auth/register', { method: 'POST', body: data }),
 
   login: (data: { email: string; password: string }) =>

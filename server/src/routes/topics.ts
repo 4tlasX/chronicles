@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createTaxonomy, getTaxonomy, getAllTaxonomies, updateTaxonomy, deleteTaxonomy, reorderTaxonomies } from '../db/tenantQueries.js';
 import { createTaxonomySchema, updateTaxonomySchema } from '@chronicles/shared';
 import { prisma } from '../db/prisma.js';
+import { parseId } from '../middleware/parseId.js';
 
 /** JIT migration: add sort_order column if missing (for schemas created before this feature). */
 async function ensureSortOrderColumn(schemaName: string): Promise<void> {
@@ -45,11 +46,9 @@ async function ensureDefaultTopics(schemaName: string): Promise<void> {
 
   if (missing.length === 0) return;
 
-  const s = schemaName.replace(/[^a-z0-9_]/gi, '');
-  const values = missing.map(t => `('${t.name}', '${t.icon}', '${t.color}')`).join(', ');
-  await prisma.$executeRawUnsafe(
-    `INSERT INTO ${s}.taxonomies (name, icon, color) VALUES ${values}`
-  );
+  for (const topic of missing) {
+    await createTaxonomy(schemaName, topic.name, { icon: topic.icon, color: topic.color });
+  }
 }
 
 // GET /api/topics
@@ -101,7 +100,8 @@ router.post('/', async (req, res) => {
 // GET /api/topics/:id
 router.get('/:id', async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseId(req.params.id);
+    if (Number.isNaN(id)) { res.status(400).json({ error: 'Invalid topic ID' }); return; }
     const taxonomy = await getTaxonomy(req.auth!.tenantSchemaName, id);
     if (!taxonomy) {
       res.status(404).json({ error: 'Topic not found' });
@@ -117,7 +117,8 @@ router.get('/:id', async (req, res) => {
 // PUT /api/topics/:id
 router.put('/:id', async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseId(req.params.id);
+    if (Number.isNaN(id)) { res.status(400).json({ error: 'Invalid topic ID' }); return; }
     const parsed = updateTaxonomySchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.errors[0].message });
@@ -134,7 +135,8 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/topics/:id
 router.delete('/:id', async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseId(req.params.id);
+    if (Number.isNaN(id)) { res.status(400).json({ error: 'Invalid topic ID' }); return; }
     await deleteTaxonomy(req.auth!.tenantSchemaName, id);
     res.json({ success: true });
   } catch (err) {

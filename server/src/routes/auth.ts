@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { prisma } from '../db/prisma.js';
 import { registerTenant } from '../db/schemaManager.js';
 import { createSession, revokeSession, revokeAllSessions, authMiddleware } from '../middleware/auth.js';
+import { authLimiter, strictLimiter } from '../middleware/rateLimiter.js';
 import { registerSchema, loginSchema, changePasswordSchema, recoverSchema } from '@chronicles/shared';
 
 const router = Router();
@@ -11,7 +13,7 @@ const BCRYPT_ROUNDS = 12;
 const COOKIE_NAME = 'chronicle_session';
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: process.env.NODE_ENV !== 'development',
   sameSite: 'lax' as const,
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   path: '/',
@@ -20,7 +22,7 @@ const COOKIE_OPTIONS = {
 // =============================================================================
 // POST /api/auth/register
 // =============================================================================
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -28,7 +30,7 @@ router.post('/register', async (req, res) => {
       return;
     }
 
-    const { email, username, password, encryptedMasterKey, kekSalt, kekWrapIv, recoveryWrappedMK, recoveryWrapIv } = parsed.data;
+    const { email, username, password, encryptedMasterKey, kekSalt, kekWrapIv, recoveryWrappedMK, recoveryWrapIv, recoveryKeyHash } = parsed.data;
 
     // Check for existing account
     const existing = await prisma.account.findFirst({
@@ -47,6 +49,7 @@ router.post('/register', async (req, res) => {
       kekWrapIv: new Uint8Array(Buffer.from(kekWrapIv, 'base64')),
       recoveryWrappedMK: new Uint8Array(Buffer.from(recoveryWrappedMK, 'base64')),
       recoveryWrapIv: new Uint8Array(Buffer.from(recoveryWrapIv, 'base64')),
+      recoveryKeyHash,
     });
 
     // Create session
@@ -111,7 +114,7 @@ router.get('/me', authMiddleware, async (req, res) => {
 // =============================================================================
 // POST /api/auth/login
 // =============================================================================
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -174,7 +177,7 @@ router.post('/logout', authMiddleware, async (req, res) => {
 // =============================================================================
 // GET /api/auth/salt — Get encryption params for key derivation
 // =============================================================================
-router.get('/salt', async (req, res) => {
+router.get('/salt', authLimiter, async (req, res) => {
   try {
     const email = req.query.email as string;
     if (!email) {
@@ -194,8 +197,18 @@ router.get('/salt', async (req, res) => {
     });
 
     if (!account) {
-      // Don't reveal whether email exists
-      res.status(404).json({ error: 'Not found' });
+      // Return fake params so attackers can't distinguish existing vs non-existing accounts
+      // The login will still fail — these fake params just waste their time
+      const fakeSalt = crypto.randomBytes(16).toString('base64');
+      const fakeWrappedKey = crypto.randomBytes(48).toString('base64');
+      const fakeIv = crypto.randomBytes(12).toString('base64');
+      res.json({
+        encryptionEnabled: true,
+        kekSalt: fakeSalt,
+        encryptedMasterKey: fakeWrappedKey,
+        kekWrapIv: fakeIv,
+        kekIterations: 600000,
+      });
       return;
     }
 
@@ -215,7 +228,7 @@ router.get('/salt', async (req, res) => {
 // =============================================================================
 // POST /api/auth/change-password
 // =============================================================================
-router.post('/change-password', authMiddleware, async (req, res) => {
+router.post('/change-password', strictLimiter, authMiddleware, async (req, res) => {
   try {
     const parsed = changePasswordSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -261,7 +274,7 @@ router.post('/change-password', authMiddleware, async (req, res) => {
 // =============================================================================
 // POST /api/auth/recover — Password recovery using recovery key
 // =============================================================================
-router.post('/recover', async (req, res) => {
+router.post('/recover', strictLimiter, async (req, res) => {
   try {
     const parsed = recoverSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -269,13 +282,30 @@ router.post('/recover', async (req, res) => {
       return;
     }
 
-    const { email, newPassword, newEncryptedMasterKey, newKekSalt, newKekWrapIv } = parsed.data;
+    const { email, recoveryKey, newPassword, newEncryptedMasterKey, newKekSalt, newKekWrapIv } = parsed.data;
 
     const account = await prisma.account.findUnique({ where: { email } });
     if (!account) {
-      res.status(404).json({ error: 'Account not found' });
+      // Constant-time delay to prevent timing-based enumeration
+      await bcrypt.hash('dummy', BCRYPT_ROUNDS);
+      res.status(401).json({ error: 'Recovery failed' });
       return;
     }
+
+    // Verify recovery key: hash the provided key and compare to stored hash
+    const providedHash = crypto.createHash('sha256').update(recoveryKey).digest('hex');
+
+    if (account.recoveryKeyHash) {
+      // Normal path: verify against stored hash
+      if (!crypto.timingSafeEqual(Buffer.from(providedHash), Buffer.from(account.recoveryKeyHash))) {
+        res.status(401).json({ error: 'Recovery failed' });
+        return;
+      }
+    }
+    // Legacy accounts without recoveryKeyHash: the client-side unwrap with the
+    // wrong recovery key will produce garbage, so the re-wrapped master key won't
+    // decrypt anything. We allow this through but backfill the hash below so
+    // future recovery attempts are server-verified.
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
@@ -286,6 +316,8 @@ router.post('/recover', async (req, res) => {
         encryptedMasterKey: new Uint8Array(Buffer.from(newEncryptedMasterKey, 'base64')),
         kekSalt: new Uint8Array(Buffer.from(newKekSalt, 'base64')),
         kekWrapIv: new Uint8Array(Buffer.from(newKekWrapIv, 'base64')),
+        // Backfill recoveryKeyHash for legacy accounts
+        ...(!account.recoveryKeyHash ? { recoveryKeyHash: providedHash } : {}),
       },
     });
 
@@ -320,7 +352,7 @@ router.post('/recover', async (req, res) => {
 // =============================================================================
 // GET /api/auth/recovery-params — Get recovery key params for password reset
 // =============================================================================
-router.get('/recovery-params', async (req, res) => {
+router.get('/recovery-params', authLimiter, async (req, res) => {
   try {
     const email = req.query.email as string;
     if (!email) {
@@ -338,7 +370,13 @@ router.get('/recovery-params', async (req, res) => {
     });
 
     if (!account || !account.encryptionEnabled) {
-      res.status(404).json({ error: 'Not found' });
+      // Return fake params to prevent account enumeration
+      const fakeWrappedKey = crypto.randomBytes(48).toString('base64');
+      const fakeIv = crypto.randomBytes(12).toString('base64');
+      res.json({
+        recoveryWrappedMK: fakeWrappedKey,
+        recoveryWrapIv: fakeIv,
+      });
       return;
     }
 

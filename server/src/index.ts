@@ -43,11 +43,16 @@ app.use('/api/sessions', authMiddleware, sessionsRoutes);
 app.use('/api/doses', authMiddleware, dosesRoutes);
 app.use('/api/shares', sharesRoutes); // public GET by token; POST/DELETE use authMiddleware inline
 
-// Init shares table + cleanup expired sessions on startup
+// Init shares table + cleanup expired sessions on startup and periodically
 initSharesTable().catch(err => console.error('Failed to init shares table:', err));
 cleanupSessions().then(count => {
   if (count > 0) console.log(`Cleaned up ${count} expired/revoked sessions`);
 }).catch(() => {});
+
+// Run session cleanup every 6 hours
+setInterval(() => {
+  cleanupSessions().catch(() => {});
+}, 6 * 60 * 60 * 1000);
 
 app.listen(PORT, () => {
   console.log(`Chronicles API running on port ${PORT}`);

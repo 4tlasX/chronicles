@@ -32,7 +32,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     token = req.headers.authorization.slice(7);
   } else if (req.cookies?.chronicle_session) {
     // WEB PATH: Cookie sent automatically — enforce CSRF header
-    if (!req.headers['x-requested-with']) {
+    if (req.headers['x-requested-with'] !== 'XMLHttpRequest') {
       res.status(403).json({ error: 'Missing CSRF header' });
       return;
     }

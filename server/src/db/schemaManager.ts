@@ -147,6 +147,7 @@ export interface EncryptionSetupParams {
   kekWrapIv: Uint8Array;
   recoveryWrappedMK: Uint8Array;
   recoveryWrapIv: Uint8Array;
+  recoveryKeyHash: string;
 }
 
 export async function registerTenant(
@@ -169,6 +170,7 @@ export async function registerTenant(
         kekWrapIv: new Uint8Array(encryptionParams.kekWrapIv) as Uint8Array<ArrayBuffer>,
         recoveryWrappedMK: new Uint8Array(encryptionParams.recoveryWrappedMK) as Uint8Array<ArrayBuffer>,
         recoveryWrapIv: new Uint8Array(encryptionParams.recoveryWrapIv) as Uint8Array<ArrayBuffer>,
+        recoveryKeyHash: encryptionParams.recoveryKeyHash,
         encryptionEnabled: true,
       }),
     },

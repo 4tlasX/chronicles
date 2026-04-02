@@ -16,6 +16,15 @@ export function RegisterView() {
     // Setup encryption — generates master key, wraps with password + recovery key
     const result = await setupEncryption(password);
 
+    // Hash the recovery key for server-side verification during recovery
+    const recoveryKeyHashBuffer = await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(result.recoveryKey)
+    );
+    const recoveryKeyHash = Array.from(new Uint8Array(recoveryKeyHashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
     // Register with server
     await register({
       email,
@@ -26,6 +35,7 @@ export function RegisterView() {
       kekWrapIv: result.wrapIv,
       recoveryWrappedMK: result.recoveryWrappedMK,
       recoveryWrapIv: result.recoveryWrapIv,
+      recoveryKeyHash,
     });
 
     // Show recovery key — user must save it

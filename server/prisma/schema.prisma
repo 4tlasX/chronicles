@@ -29,6 +29,7 @@ model Account {
   // Encryption: Recovery-wrapped master key
   recoveryWrappedMK   Bytes?    @map("recovery_wrapped_mk")
   recoveryWrapIv      Bytes?    @map("recovery_wrap_iv")
+  recoveryKeyHash     String?   @map("recovery_key_hash")
 
   encryptionEnabled   Boolean   @default(false) @map("encryption_enabled")
 

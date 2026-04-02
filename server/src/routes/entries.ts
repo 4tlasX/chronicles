@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { createPost, getPost, getAllPosts, updatePost, deletePost, setPostTaxonomies, getPostTaxonomies } from '../db/tenantQueries.js';
 import { createPostSchema, updatePostSchema } from '@chronicles/shared';
+import { parseId } from '../middleware/parseId.js';
 
 const router = Router();
 
@@ -66,7 +67,8 @@ router.post('/', async (req, res) => {
 // GET /api/entries/:id — Get single entry
 router.get('/:id', async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseId(req.params.id);
+    if (Number.isNaN(id)) { res.status(400).json({ error: 'Invalid entry ID' }); return; }
     const post = await getPost(req.auth!.tenantSchemaName, id);
     if (!post) {
       res.status(404).json({ error: 'Entry not found' });
@@ -84,7 +86,8 @@ router.get('/:id', async (req, res) => {
 // PUT /api/entries/:id — Update entry
 router.put('/:id', async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseId(req.params.id);
+    if (Number.isNaN(id)) { res.status(400).json({ error: 'Invalid entry ID' }); return; }
     const parsed = updatePostSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.errors[0].message });
@@ -117,7 +120,8 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/entries/:id — Delete entry
 router.delete('/:id', async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseId(req.params.id);
+    if (Number.isNaN(id)) { res.status(400).json({ error: 'Invalid entry ID' }); return; }
     await deletePost(req.auth!.tenantSchemaName, id);
     res.json({ success: true });
   } catch (err) {

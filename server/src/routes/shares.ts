@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { createShare, getShareByToken, revokeShare, getSharesByAccount } from '../db/shareQueries.js';
+import { createShareSchema } from '@chronicles/shared';
 
 const router = Router();
 
@@ -34,12 +35,13 @@ router.get('/:token', async (req, res) => {
 // POST /api/shares — Create a share (protected)
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { contentEncrypted, contentIv, expiresAt } = req.body;
-
-    if (!contentEncrypted || !contentIv) {
-      res.status(400).json({ error: 'contentEncrypted and contentIv are required' });
+    const parsed = createShareSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.errors[0].message });
       return;
     }
+
+    const { contentEncrypted, contentIv, expiresAt } = parsed.data;
 
     const share = await createShare({
       accountId: req.auth!.accountId,
