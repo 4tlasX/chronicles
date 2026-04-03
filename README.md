@@ -14,7 +14,7 @@ A journal for those too busy to journal with zero-knowledge encryption. Chronicl
 - **Mobile Responsive** - Works on desktop and mobile devices
 - **Customizable colors and background** - Choose from a variety of colors and background images
 
-## Privacy Guarantees
+## Privacy
 
 - All entry content is encrypted in the browser before transmission
 - Recovery key system allows password reset without compromising zero-knowledge design
@@ -22,6 +22,15 @@ A journal for those too busy to journal with zero-knowledge encryption. Chronicl
 - Session Management - Revoke sessions at any time if you see an unfamiliar device
 - Non-extractable CryptoKeys — master key cannot be exported from the browser's crypto subsystem
 - Split-token sessions — database leaks cannot reconstruct valid session tokens
+
+## Screenshots
+<img width="1377" height="744" alt="Screenshot 2026-04-02 at 11 07 13 PM" src="https://github.com/user-attachments/assets/1114a924-bf13-4b0c-93ea-e7412c6de9db" />
+<img width="1383" height="742" alt="Screenshot 2026-04-02 at 11 06 51 PM" src="https://github.com/user-attachments/assets/4e25515c-cdd0-4732-a3ed-7d5540cacbf1" />
+<img width="1383" height="746" alt="Screenshot 2026-04-02 at 11 06 26 PM" src="https://github.com/user-attachments/assets/f1fd7fdc-c89d-4184-aa47-45fede4057d8" />
+<img width="1389" height="744" alt="Screenshot 2026-04-02 at 11 06 15 PM" src="https://github.com/user-attachments/assets/06fc5375-43d9-462a-88b4-10783ce2cafb" />
+<img width="1385" height="735" alt="Screenshot 2026-04-02 at 11 07 47 PM" src="https://github.com/user-attachments/assets/4e10a50e-dfba-4b8e-b045-379328ab04fe" />
+<img width="1380" height="738" alt="Screenshot 2026-04-02 at 11 08 14 PM" src="https://github.com/user-attachments/assets/ee13d013-9128-45c8-8e9f-fb59313011e7" />
+<img width="1386" height="736" alt="Screenshot 2026-04-02 at 11 08 49 PM" src="https://github.com/user-attachments/assets/9af8f8ad-af05-42ea-b595-1fdac02cf0eb" />
 
 ## Architecture
 
