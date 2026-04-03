@@ -32,7 +32,7 @@ function isDarkTheme(bg: string): boolean {
 export function Background() {
   const backgroundImage = useUIStore(s => s.backgroundImage);
   const theme = useTheme();
-  const opacity = isDarkTheme(theme.colors.background) ? 0.3 : 0.6;
+  const opacity = isDarkTheme(theme.colors.background) ? 0.3 : 0.8;
 
   return (
     <BackgroundWrapper>
