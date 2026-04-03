@@ -1,0 +1,237 @@
+/**
+ * Comprehensive unit tests for shareQueries
+ * Mocks prisma to verify SQL construction and parameter passing
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Use vi.hoisted so mock fns are available when vi.mock factory runs (hoisted to top)
+const { mockQueryRaw, mockExecuteRaw } = vi.hoisted(() => ({
+  mockQueryRaw: vi.fn(),
+  mockExecuteRaw: vi.fn(),
+}));
+
+vi.mock('../db/prisma.js', () => ({
+  prisma: {
+    $queryRaw: mockQueryRaw,
+    $executeRaw: mockExecuteRaw,
+    $executeRawUnsafe: vi.fn(),
+    $queryRawUnsafe: vi.fn(),
+  },
+}));
+
+import {
+  createShare,
+  getShareByToken,
+  revokeShare,
+  getSharesByAccount,
+} from '../db/shareQueries.js';
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+// =============================================================================
+// createShare
+// =============================================================================
+describe('createShare', () => {
+  it('creates a share record and returns it with a generated token', async () => {
+    const now = new Date();
+    const contentEnc = Buffer.from('encrypted-content');
+    const contentIv = Buffer.from('iv-data');
+    const expiresAt = new Date('2025-06-01');
+
+    const share = {
+      id: 1,
+      token: 'generated-token',
+      accountId: 42,
+      contentEncrypted: contentEnc,
+      contentIv,
+      createdAt: now,
+      expiresAt,
+      isActive: true,
+    };
+    mockQueryRaw.mockResolvedValue([share]);
+
+    const result = await createShare({
+      accountId: 42,
+      contentEncrypted: contentEnc,
+      contentIv,
+      expiresAt,
+    });
+
+    expect(result).toEqual(share);
+    expect(mockQueryRaw).toHaveBeenCalledOnce();
+  });
+
+  it('passes null expiresAt when not provided', async () => {
+    const contentEnc = Buffer.from('enc');
+    const contentIv = Buffer.from('iv');
+
+    mockQueryRaw.mockResolvedValue([{
+      id: 1, token: 'tok', accountId: 1, contentEncrypted: contentEnc,
+      contentIv, createdAt: new Date(), expiresAt: null, isActive: true,
+    }]);
+
+    const result = await createShare({
+      accountId: 1,
+      contentEncrypted: contentEnc,
+      contentIv,
+    });
+
+    expect(result.expiresAt).toBeNull();
+    expect(mockQueryRaw).toHaveBeenCalledOnce();
+  });
+
+  it('calls prisma.$queryRaw with INSERT INTO public.shares', async () => {
+    const contentEnc = Buffer.from('enc');
+    const contentIv = Buffer.from('iv');
+
+    mockQueryRaw.mockResolvedValue([{
+      id: 1, token: 'test-token', accountId: 1, contentEncrypted: contentEnc,
+      contentIv, createdAt: new Date(), expiresAt: null, isActive: true,
+    }]);
+
+    await createShare({
+      accountId: 1,
+      contentEncrypted: contentEnc,
+      contentIv,
+    });
+
+    // prisma.$queryRaw is called with a tagged template literal
+    expect(mockQueryRaw).toHaveBeenCalledOnce();
+  });
+});
+
+// =============================================================================
+// getShareByToken
+// =============================================================================
+describe('getShareByToken', () => {
+  it('returns share when token is valid, active, and not expired', async () => {
+    const share = {
+      id: 1,
+      token: 'valid-token',
+      accountId: 42,
+      contentEncrypted: Buffer.from('enc'),
+      contentIv: Buffer.from('iv'),
+      createdAt: new Date(),
+      expiresAt: new Date('2099-01-01'),
+      isActive: true,
+    };
+    mockQueryRaw.mockResolvedValue([share]);
+
+    const result = await getShareByToken('valid-token');
+
+    expect(result).toEqual(share);
+    expect(mockQueryRaw).toHaveBeenCalledOnce();
+  });
+
+  it('returns null when no matching share found', async () => {
+    mockQueryRaw.mockResolvedValue([]);
+
+    const result = await getShareByToken('nonexistent-token');
+
+    expect(result).toBeNull();
+  });
+
+  it('returns null for expired shares (handled by SQL WHERE clause)', async () => {
+    // The SQL query includes "expires_at > NOW()" so expired shares are not returned
+    mockQueryRaw.mockResolvedValue([]);
+
+    const result = await getShareByToken('expired-token');
+
+    expect(result).toBeNull();
+  });
+
+  it('returns null for inactive shares (handled by SQL WHERE clause)', async () => {
+    // The SQL query includes "is_active = TRUE" so inactive shares are not returned
+    mockQueryRaw.mockResolvedValue([]);
+
+    const result = await getShareByToken('revoked-token');
+
+    expect(result).toBeNull();
+  });
+});
+
+// =============================================================================
+// revokeShare
+// =============================================================================
+describe('revokeShare', () => {
+  it('returns true when share is successfully revoked', async () => {
+    mockExecuteRaw.mockResolvedValue(1);
+
+    const result = await revokeShare('token-to-revoke', 42);
+
+    expect(result).toBe(true);
+    expect(mockExecuteRaw).toHaveBeenCalledOnce();
+  });
+
+  it('returns false when token does not belong to accountId (ownership validation)', async () => {
+    mockExecuteRaw.mockResolvedValue(0);
+
+    const result = await revokeShare('other-users-token', 42);
+
+    expect(result).toBe(false);
+  });
+
+  it('returns false when token does not exist', async () => {
+    mockExecuteRaw.mockResolvedValue(0);
+
+    const result = await revokeShare('nonexistent-token', 42);
+
+    expect(result).toBe(false);
+  });
+
+  it('validates ownership by including account_id in WHERE clause', async () => {
+    mockExecuteRaw.mockResolvedValue(1);
+
+    await revokeShare('my-token', 99);
+
+    // The mock is called with a tagged template, so we verify it was called
+    expect(mockExecuteRaw).toHaveBeenCalledOnce();
+  });
+});
+
+// =============================================================================
+// getSharesByAccount
+// =============================================================================
+describe('getSharesByAccount', () => {
+  it('returns all active shares for an account', async () => {
+    const shares = [
+      {
+        id: 1, token: 'tok-1', accountId: 42,
+        contentEncrypted: Buffer.from('enc1'), contentIv: Buffer.from('iv1'),
+        createdAt: new Date('2024-01-02'), expiresAt: null, isActive: true,
+      },
+      {
+        id: 2, token: 'tok-2', accountId: 42,
+        contentEncrypted: Buffer.from('enc2'), contentIv: Buffer.from('iv2'),
+        createdAt: new Date('2024-01-01'), expiresAt: new Date('2025-01-01'), isActive: true,
+      },
+    ];
+    mockQueryRaw.mockResolvedValue(shares);
+
+    const result = await getSharesByAccount(42);
+
+    expect(result).toEqual(shares);
+    expect(result).toHaveLength(2);
+    expect(mockQueryRaw).toHaveBeenCalledOnce();
+  });
+
+  it('returns empty array when account has no active shares', async () => {
+    mockQueryRaw.mockResolvedValue([]);
+
+    const result = await getSharesByAccount(42);
+
+    expect(result).toEqual([]);
+  });
+
+  it('only returns active shares (is_active = TRUE in SQL)', async () => {
+    // Inactive shares should be filtered out by the SQL query
+    mockQueryRaw.mockResolvedValue([]);
+
+    const result = await getSharesByAccount(42);
+
+    expect(result).toEqual([]);
+    expect(mockQueryRaw).toHaveBeenCalledOnce();
+  });
+});

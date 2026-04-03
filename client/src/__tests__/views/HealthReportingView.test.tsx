@@ -1,0 +1,153 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { screen } from '@testing-library/react';
+import { HealthReportingView } from '@/views/HealthReportingView';
+import { renderWithTheme } from '../testUtils';
+import { useInitializeData } from '@/hooks/useInitializeData';
+
+const mockNavigate = vi.fn();
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: vi.fn(() => mockNavigate),
+}));
+
+vi.mock('@/hooks/useInitializeData', () => ({
+  useInitializeData: vi.fn(() => ({
+    isReady: false,
+    isLoading: true,
+    needsUnlock: false,
+    handleUnlock: vi.fn(),
+  })),
+}));
+
+const stableEntries: any[] = [];
+const stableTopics: any[] = [];
+
+vi.mock('@/stores/entriesStore', () => ({
+  useEntriesStore: vi.fn((selector: (s: any) => any) =>
+    selector({
+      decryptedEntries: stableEntries,
+      allTopics: stableTopics,
+    })
+  ),
+}));
+
+vi.mock('@/stores/uiStore', () => ({
+  useUIStore: vi.fn((selector: (s: any) => any) =>
+    selector({ headerColor: '#4A5568' })
+  ),
+}));
+
+vi.mock('@/services/api', () => ({
+  doses: { getByDate: vi.fn().mockResolvedValue({ logs: [] }) },
+}));
+
+vi.mock('@/components/templates/ContentTemplate', () => ({
+  ContentTemplate: ({ children }: any) => <div data-testid="content-template">{children}</div>,
+}));
+
+vi.mock('@/components/atoms/EmptyState', () => ({
+  EmptyState: ({ message }: any) => <div data-testid="empty-state">{message}</div>,
+}));
+
+vi.mock('@/components/atoms/Spinner', () => ({
+  Spinner: () => <span data-testid="spinner">Loading...</span>,
+}));
+
+vi.mock('@/components/molecules/ViewHeader', () => ({
+  ViewHeader: ({ title, onBack }: any) => (
+    <div data-testid="view-header">
+      <h2>{title}</h2>
+      <button onClick={onBack}>Back</button>
+    </div>
+  ),
+}));
+
+vi.mock('@/components/molecules/FilterTabs', () => ({
+  FilterTabs: ({ options }: any) => (
+    <div data-testid="filter-tabs">
+      {options.map((o: any) => (
+        <button key={o.value}>{o.label}</button>
+      ))}
+    </div>
+  ),
+}));
+
+vi.mock('@/components/organisms/HealthReport', () => ({
+  HealthReport: () => <div data-testid="health-report">Health Report</div>,
+}));
+
+vi.mock('@/components/organisms/UnlockDialog', () => ({
+  UnlockDialog: () => <div data-testid="unlock-dialog" />,
+}));
+
+vi.mock('@/utils/stripHtml', () => ({
+  stripHtml: vi.fn((html: string) => html.replace(/<[^>]*>/g, '')),
+}));
+
+describe('HealthReportingView (loading)', () => {
+  it('renders without crashing', () => {
+    renderWithTheme(<HealthReportingView />);
+    expect(screen.getByTestId('content-template')).toBeInTheDocument();
+  });
+
+  it('shows loading spinner', () => {
+    renderWithTheme(<HealthReportingView />);
+    expect(screen.getByTestId('spinner')).toBeInTheDocument();
+  });
+});
+
+describe('HealthReportingView (needs unlock)', () => {
+  beforeEach(() => {
+    vi.mocked(useInitializeData).mockReturnValue({
+      isReady: false,
+      isLoading: false,
+      needsUnlock: true,
+      handleUnlock: vi.fn(),
+    });
+  });
+
+  it('shows unlock dialog', () => {
+    renderWithTheme(<HealthReportingView />);
+    expect(screen.getByTestId('unlock-dialog')).toBeInTheDocument();
+  });
+
+  it('shows empty state with unlock message', () => {
+    renderWithTheme(<HealthReportingView />);
+    expect(screen.getByTestId('empty-state')).toHaveTextContent('Unlock your journal to view reports');
+  });
+});
+
+describe('HealthReportingView (ready)', () => {
+  beforeEach(() => {
+    vi.mocked(useInitializeData).mockReturnValue({
+      isReady: true,
+      isLoading: false,
+      needsUnlock: false,
+      handleUnlock: vi.fn(),
+    });
+  });
+
+  it('displays the view header with title', () => {
+    renderWithTheme(<HealthReportingView />);
+    expect(screen.getByText('Health Reporting')).toBeInTheDocument();
+  });
+
+  it('renders period filter tabs', () => {
+    renderWithTheme(<HealthReportingView />);
+    expect(screen.getByTestId('filter-tabs')).toBeInTheDocument();
+    expect(screen.getByText('Week')).toBeInTheDocument();
+    expect(screen.getByText('Month')).toBeInTheDocument();
+    expect(screen.getByText('Year')).toBeInTheDocument();
+  });
+
+  it('renders the health report component', () => {
+    renderWithTheme(<HealthReportingView />);
+    expect(screen.getByTestId('health-report')).toBeInTheDocument();
+  });
+
+  it('navigates back when back button is clicked', () => {
+    renderWithTheme(<HealthReportingView />);
+    screen.getByText('Back').click();
+    expect(mockNavigate).toHaveBeenCalledWith('/');
+  });
+});
