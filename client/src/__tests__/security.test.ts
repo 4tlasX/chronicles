@@ -61,7 +61,7 @@ describe('RegisterView PBKDF2 recovery key hashing', () => {
     const content = readSrc('views/RegisterView.tsx');
     expect(content).toContain('PBKDF2');
     expect(content).toContain('deriveBits');
-    expect(content).toContain('iterations: 100000');
+    expect(content).toContain('iterations: 600000');
     // Should NOT use SHA-256 digest directly
     expect(content).not.toContain("crypto.subtle.digest(\n      'SHA-256'");
   });
@@ -142,5 +142,28 @@ describe('PBKDF2 downgrade protection', () => {
     const content = readSrc('contexts/EncryptionContext.tsx');
     expect(content).toContain('kekIterations < PBKDF2_ITERATIONS');
     expect(content).toContain('below minimum');
+  });
+});
+
+// ============================================================================
+// 8. RegisterView — recovery key PBKDF2 uses 600,000 iterations
+// ============================================================================
+describe('RegisterView recovery key iterations', () => {
+  it('uses 600000 iterations for recovery key PBKDF2 hashing', () => {
+    const content = readSrc('views/RegisterView.tsx');
+    expect(content).toContain('iterations: 600000');
+    // Should NOT use old 100000 iterations
+    expect(content).not.toContain('iterations: 100000');
+  });
+});
+
+// ============================================================================
+// 9. RecoveryKeyDisplay — clipboard failure logging
+// ============================================================================
+describe('RecoveryKeyDisplay clipboard failure logging', () => {
+  it('logs warning when clipboard auto-clear fails', () => {
+    const content = readSrc('components/molecules/RecoveryKeyDisplay.tsx');
+    expect(content).toContain('Failed to auto-clear clipboard');
+    expect(content).toContain('console.warn');
   });
 });

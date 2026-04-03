@@ -16,7 +16,7 @@ declare global {
   }
 }
 
-const ACTIVITY_DEBOUNCE_MS = 15 * 60 * 1000; // 15 minutes
+const ACTIVITY_DEBOUNCE_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Split token auth middleware

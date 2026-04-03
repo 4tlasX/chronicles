@@ -49,7 +49,9 @@ export function RecoveryKeyDisplay({ recoveryKey, onConfirm }: RecoveryKeyDispla
     setTimeout(() => setCopied(false), 2000);
     // Auto-clear clipboard after 30 seconds
     setTimeout(() => {
-      navigator.clipboard.writeText('').catch(() => {});
+      navigator.clipboard.writeText('').catch(() => {
+        console.warn('Failed to auto-clear clipboard');
+      });
     }, 30000);
   };
 

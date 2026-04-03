@@ -30,7 +30,7 @@ export function RegisterView() {
       ['deriveBits']
     );
     const derivedBits = await crypto.subtle.deriveBits(
-      { name: 'PBKDF2', salt: recoveryKeySaltBytes, iterations: 100000, hash: 'SHA-256' },
+      { name: 'PBKDF2', salt: recoveryKeySaltBytes, iterations: 600000, hash: 'SHA-256' },
       keyMaterial,
       256
     );

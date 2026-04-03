@@ -342,3 +342,18 @@ describe('Validation schema security', () => {
     expect(result.success).toBe(true);
   });
 });
+
+// ============================================================================
+// 10. RECOVERY_PBKDF2_ITERATIONS constant
+// ============================================================================
+describe('RECOVERY_PBKDF2_ITERATIONS constant', () => {
+  it('equals 600000 to match KEK iterations', async () => {
+    const { RECOVERY_PBKDF2_ITERATIONS } = await import('../crypto/constants.js');
+    expect(RECOVERY_PBKDF2_ITERATIONS).toBe(600000);
+  });
+
+  it('matches PBKDF2_ITERATIONS for consistent security', async () => {
+    const { PBKDF2_ITERATIONS, RECOVERY_PBKDF2_ITERATIONS } = await import('../crypto/constants.js');
+    expect(RECOVERY_PBKDF2_ITERATIONS).toBe(PBKDF2_ITERATIONS);
+  });
+});

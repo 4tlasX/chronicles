@@ -143,15 +143,15 @@ describe('Recovery key PBKDF2 hashing', () => {
     expect(recoverSection).toContain('pbkdf2Sync');
     expect(recoverSection).not.toContain("createHash('sha256')");
     expect(recoverSection).toContain('recoveryKeySalt');
-    expect(recoverSection).toContain('100000'); // iterations
+    expect(recoverSection).toContain('600000'); // iterations
   });
 
   it('PBKDF2 hash produces correct output', () => {
     const recoveryKey = 'test-recovery-key-base64';
     const salt = crypto.randomBytes(16);
-    const hash = crypto.pbkdf2Sync(recoveryKey, salt, 100000, 32, 'sha256').toString('hex');
+    const hash = crypto.pbkdf2Sync(recoveryKey, salt, 600000, 32, 'sha256').toString('hex');
     // Verify it's deterministic with same inputs
-    const hash2 = crypto.pbkdf2Sync(recoveryKey, salt, 100000, 32, 'sha256').toString('hex');
+    const hash2 = crypto.pbkdf2Sync(recoveryKey, salt, 600000, 32, 'sha256').toString('hex');
     expect(hash).toBe(hash2);
     expect(hash).toHaveLength(64); // 32 bytes = 64 hex chars
     // Different salt produces different hash
@@ -364,5 +364,131 @@ describe('Register schema includes recoveryKeySalt', () => {
       'utf8'
     );
     expect(content).toContain("recoveryKeySalt: z.string().min(1)");
+  });
+});
+
+// ============================================================================
+// 16. Login timing oracle fix — constantTimeDelay on bad password
+// ============================================================================
+describe('Login timing oracle fix', () => {
+  it('login endpoint uses constantTimeDelay on both no-account and bad-password paths', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    const loginSection = authContent.split("router.post('/login'")[1]?.split("router.")[0] || '';
+    // Should capture startTime at top of handler
+    expect(loginSection).toContain('const startTime = Date.now()');
+    // Should use constantTimeDelay on no-account path
+    const noAccountBlock = loginSection.split('login_failed_no_account')[1]?.split('const valid')[0] || '';
+    expect(noAccountBlock).toContain('constantTimeDelay(startTime)');
+    // Should use constantTimeDelay on bad-password path
+    const badPasswordBlock = loginSection.split('login_failed_bad_password')[1]?.split('const token')[0] || '';
+    expect(badPasswordBlock).toContain('constantTimeDelay(startTime)');
+  });
+});
+
+// ============================================================================
+// 17. Login does NOT leak Zod validation errors
+// ============================================================================
+describe('Login validation error sanitization', () => {
+  it('login endpoint returns generic error on validation failure', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    const loginSection = authContent.split("router.post('/login'")[1]?.split("router.")[0] || '';
+    // Should NOT expose Zod error details
+    expect(loginSection).not.toContain('parsed.error.errors[0].message');
+    expect(loginSection).not.toContain('parsed.error.errors');
+  });
+});
+
+// ============================================================================
+// 18. Recovery race condition — interactive transaction with row locking
+// ============================================================================
+describe('Recovery race condition prevention', () => {
+  it('recovery endpoint uses interactive transaction with FOR UPDATE row locking', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    const recoverSection = authContent.split("router.post('/recover'")[1]?.split("router.")[0] || '';
+    // Should use interactive transaction (async callback, not array)
+    expect(recoverSection).toContain('prisma.$transaction(async (tx)');
+    // Should use SELECT ... FOR UPDATE to lock the row
+    expect(recoverSection).toContain('FOR UPDATE');
+    // Should re-check recovery_key_hash inside transaction
+    expect(recoverSection).toContain('recovery_key_hash');
+    // Should handle concurrent recovery case
+    expect(recoverSection).toContain('concurrent_recovery');
+  });
+});
+
+// ============================================================================
+// 19. Server tsconfig has sourceMap disabled
+// ============================================================================
+describe('Server source maps disabled', () => {
+  it('server tsconfig.json has sourceMap set to false', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../../tsconfig.json', import.meta.url).pathname.replace('/src/__tests__', ''),
+      'utf8'
+    );
+    const config = JSON.parse(content);
+    expect(config.compilerOptions.sourceMap).toBe(false);
+  });
+});
+
+// ============================================================================
+// 20. Expanded Permissions-Policy header
+// ============================================================================
+describe('Expanded Permissions-Policy', () => {
+  it('security headers include payment, usb, accelerometer, gyroscope, magnetometer', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../middleware/security.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    expect(content).toContain('payment=()');
+    expect(content).toContain('usb=()');
+    expect(content).toContain('accelerometer=()');
+    expect(content).toContain('gyroscope=()');
+    expect(content).toContain('magnetometer=()');
+  });
+});
+
+// ============================================================================
+// 21. Activity debounce reduced to 5 minutes
+// ============================================================================
+describe('Activity debounce interval', () => {
+  it('ACTIVITY_DEBOUNCE_MS is 5 minutes', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../middleware/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    expect(content).toContain('5 * 60 * 1000');
+    expect(content).not.toContain('15 * 60 * 1000');
+  });
+});
+
+// ============================================================================
+// 22. Recovery PBKDF2 iterations increased to 600,000
+// ============================================================================
+describe('Recovery PBKDF2 iterations', () => {
+  it('server recovery endpoint uses 600000 iterations', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    const recoverSection = authContent.split("router.post('/recover'")[1]?.split("router.")[0] || '';
+    expect(recoverSection).toContain('pbkdf2Sync(recoveryKey, recoveryKeySalt, 600000');
+    // Should NOT use old 100000 iterations
+    expect(recoverSection).not.toContain('100000');
   });
 });

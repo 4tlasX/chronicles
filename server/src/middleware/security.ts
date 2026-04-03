@@ -15,6 +15,6 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
   // Control referrer leakage — no-referrer prevents share URLs (with #key fragment) from leaking
   res.setHeader('Referrer-Policy', 'no-referrer');
   // Disable browser features we don't need
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()');
   next();
 }

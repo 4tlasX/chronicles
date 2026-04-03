@@ -18,3 +18,4 @@ export const PBKDF2_SALT_LENGTH = 16; // bytes
 
 // Recovery key configuration
 export const RECOVERY_KEY_LENGTH = 32; // bytes (256 bits)
+export const RECOVERY_PBKDF2_ITERATIONS = 600000; // Match KEK iterations for consistent security

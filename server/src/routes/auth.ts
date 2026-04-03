@@ -132,10 +132,11 @@ router.get('/me', authMiddleware, async (req, res) => {
 // POST /api/auth/login
 // =============================================================================
 router.post('/login', authLimiter, async (req, res) => {
+  const startTime = Date.now();
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.errors[0].message });
+      res.status(400).json({ error: 'Invalid credentials' });
       return;
     }
 
@@ -147,6 +148,7 @@ router.post('/login', authLimiter, async (req, res) => {
       logSecurityEvent('login_failed_no_account', { ip: req.ip });
       // Constant-time delay to prevent timing-based email enumeration
       await bcrypt.hash('dummy', BCRYPT_ROUNDS);
+      await constantTimeDelay(startTime);
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
@@ -154,6 +156,7 @@ router.post('/login', authLimiter, async (req, res) => {
     const valid = await bcrypt.compare(password, account.passwordHash);
     if (!valid) {
       logSecurityEvent('login_failed_bad_password', { accountId: account.id, ip: req.ip });
+      await constantTimeDelay(startTime);
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
@@ -354,7 +357,7 @@ router.post('/recover', strictLimiter, async (req, res) => {
 
     // Verify recovery key using PBKDF2 (salted + iterated)
     const recoveryKeySalt = Buffer.from(account.recoveryKeySalt, 'hex');
-    const providedHash = crypto.pbkdf2Sync(recoveryKey, recoveryKeySalt, 100000, 32, 'sha256').toString('hex');
+    const providedHash = crypto.pbkdf2Sync(recoveryKey, recoveryKeySalt, 600000, 32, 'sha256').toString('hex');
 
     if (!crypto.timingSafeEqual(Buffer.from(providedHash), Buffer.from(account.recoveryKeyHash))) {
       logSecurityEvent('recovery_failed', { accountId: account.id, ip: req.ip });
@@ -365,9 +368,20 @@ router.post('/recover', strictLimiter, async (req, res) => {
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-    // Atomic: update password + invalidate recovery key + revoke sessions in single transaction
-    await prisma.$transaction([
-      prisma.account.update({
+    // Interactive transaction with row-level locking to prevent concurrent recovery race condition
+    const txResult = await prisma.$transaction(async (tx) => {
+      // Lock the account row to prevent concurrent recovery attempts
+      const locked = await tx.$queryRawUnsafe<{ id: number; recovery_key_hash: string | null }[]>(
+        'SELECT id, recovery_key_hash FROM "Account" WHERE id = $1 FOR UPDATE',
+        account.id
+      );
+
+      // Re-check recovery key hasn't been used by a concurrent request
+      if (!locked[0]?.recovery_key_hash) {
+        return null; // Recovery already consumed by another request
+      }
+
+      await tx.account.update({
         where: { id: account.id },
         data: {
           passwordHash,
@@ -380,12 +394,22 @@ router.post('/recover', strictLimiter, async (req, res) => {
           recoveryWrapIv: null,
           recoveryKeyUsedAt: new Date(),
         },
-      }),
-      prisma.session.updateMany({
+      });
+
+      await tx.session.updateMany({
         where: { accountId: account.id, revokedAt: null },
         data: { revokedAt: new Date(), revokedReason: 'recovery' },
-      }),
-    ]);
+      });
+
+      return { success: true };
+    });
+
+    if (!txResult) {
+      logSecurityEvent('recovery_failed', { accountId: account.id, ip: req.ip, details: { reason: 'concurrent_recovery' } });
+      await constantTimeDelay(startTime);
+      res.status(401).json({ error: 'Recovery failed' });
+      return;
+    }
 
     logSecurityEvent('recovery_success', { accountId: account.id, ip: req.ip });
 
