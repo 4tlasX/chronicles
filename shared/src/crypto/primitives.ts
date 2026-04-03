@@ -118,7 +118,7 @@ export async function wrapKey(
  * Unwrap (decrypt) the master key with a wrapping key.
  * By default returns a non-extractable key for encrypt/decrypt operations.
  * Pass extractable=true when the key needs to be re-wrapped (e.g., password change, recovery).
- * The purpose must match what was used during wrapKey or decryption will fail.
+ * Tries with AAD first; falls back to no-AAD for keys wrapped before AAD was introduced.
  */
 export async function unwrapKey(
   wrappedKey: ArrayBuffer,
@@ -127,15 +127,28 @@ export async function unwrapKey(
   extractable: boolean = false,
   purpose: WrapPurpose = 'kek-wrap'
 ): Promise<CryptoKey> {
-  return crypto.subtle.unwrapKey(
-    'raw',
-    wrappedKey,
-    wrappingKey,
-    { name: AES_ALGORITHM, iv: iv.buffer as ArrayBuffer, additionalData: purposeToAAD(purpose) },
-    { name: AES_ALGORITHM, length: AES_KEY_LENGTH },
-    extractable,
-    ['encrypt', 'decrypt']
-  );
+  try {
+    return await crypto.subtle.unwrapKey(
+      'raw',
+      wrappedKey,
+      wrappingKey,
+      { name: AES_ALGORITHM, iv: iv.buffer as ArrayBuffer, additionalData: purposeToAAD(purpose) },
+      { name: AES_ALGORITHM, length: AES_KEY_LENGTH },
+      extractable,
+      ['encrypt', 'decrypt']
+    );
+  } catch {
+    // Legacy fallback: key was wrapped without AAD before security hardening
+    return crypto.subtle.unwrapKey(
+      'raw',
+      wrappedKey,
+      wrappingKey,
+      { name: AES_ALGORITHM, iv: iv.buffer as ArrayBuffer },
+      { name: AES_ALGORITHM, length: AES_KEY_LENGTH },
+      extractable,
+      ['encrypt', 'decrypt']
+    );
+  }
 }
 
 /**

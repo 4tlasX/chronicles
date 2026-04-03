@@ -38,7 +38,7 @@ const TopBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: 8px 24px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
@@ -108,7 +108,7 @@ const CollapseToggle = styled.button`
 `;
 
 const CustomFieldsBody = styled.div`
-  padding: 16px 32px 24px;
+  padding: 16px 24px 24px;
 `;
 
 const EditorArea = styled.div<{ $expanded?: boolean }>`
@@ -122,7 +122,7 @@ const SaveRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 12px 24px;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   gap: 8px;
 `;

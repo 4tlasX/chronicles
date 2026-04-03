@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 /**
  * General auth rate limiter — login, register, salt lookups
@@ -34,7 +34,11 @@ export const apiLimiter = rateLimit({
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => (req as any).auth?.accountId?.toString() || req.ip || 'unknown',
+  keyGenerator: (req) => {
+    const accountId = (req as any).auth?.accountId?.toString();
+    if (accountId) return accountId;
+    return ipKeyGenerator(req.ip || 'unknown');
+  },
   message: { error: 'Too many requests, please try again later' },
 });
 

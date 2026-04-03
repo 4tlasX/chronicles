@@ -18,7 +18,7 @@ const EditorWrapper = styled.div`
     flex: 1;
     position: relative;
     z-index: 1;
-    padding: 16px 56px 32px;
+    padding: 16px 24px 32px;
     outline: none;
     font-size: 18px;
     line-height: 1.85;
