@@ -112,11 +112,13 @@ export function MedicationFields({ values, onChange }: MedicationFieldsProps) {
           <FontAwesomeIcon icon={faPlus} /> Add time
         </Button>
       </FormField>
-      <Checkbox
-        checked={values.isActive}
-        onChange={v => onChange({ ...values, isActive: v })}
-        label="Currently active"
-      />
+      <div style={{ marginTop: 4 }}>
+        <Checkbox
+          checked={values.isActive}
+          onChange={v => onChange({ ...values, isActive: v })}
+          label="Currently active"
+        />
+      </div>
       <FormField label="Notes">
         <Textarea
           value={values.notes}

@@ -13,7 +13,7 @@ const EditorWrap = styled.div`
   & > div { min-height: unset; }
   .tiptap {
     min-height: 60px;
-    max-height: 120px;
+    max-height: 240px;
     overflow-y: auto;
     padding: 8px 12px;
   }
@@ -87,7 +87,7 @@ export function InlineEditPanel({ editor, fields, accentColor, saving, status, o
   return (
     <Panel>
       <EditorWrap>{editor}</EditorWrap>
-      <FieldsWrap>{fields}</FieldsWrap>
+      {fields && <FieldsWrap>{fields}</FieldsWrap>}
       <Actions>
         <SaveBtn $color={accentColor} onClick={onSave} disabled={saving}>
           {saving ? <Spinner size={14} /> : 'Save'}

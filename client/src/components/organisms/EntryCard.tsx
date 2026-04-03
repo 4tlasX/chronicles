@@ -28,11 +28,11 @@ const Card = styled.button<{ $active?: boolean }>`
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 12px 24px 28px;
+  padding: 12px 24px 24px;
   margin-bottom: 0;
   text-align: left;
-  background: ${({ $active, theme }) =>
-    $active ? theme.colors.surfaceHover : 'transparent'};
+  background: ${({ $active }) =>
+    $active ? 'rgba(0, 0, 0, 0.04)' : 'transparent'};
   border: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 0;
@@ -40,7 +40,7 @@ const Card = styled.button<{ $active?: boolean }>`
   transition: background 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    background: ${({ theme }) => theme.colors.surfaceHover};
+    background: rgba(0, 0, 0, 0.04);
   }
 `;
 
