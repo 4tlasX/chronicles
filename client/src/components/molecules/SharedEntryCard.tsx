@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import DOMPurify from 'dompurify';
 import { Spinner } from '../atoms/Spinner.js';
 
 const Card = styled.div`
@@ -116,7 +117,7 @@ export function SharedEntryCard({ status, errorMsg, content, createdAt }: Shared
 
       {status === 'done' && content != null && (
         <>
-          <Body dangerouslySetInnerHTML={{ __html: content }} />
+          <Body dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 's', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'hr'], ALLOWED_ATTR: [] }) }} />
           <Footer>
             {createdAt && <>Originally written {new Date(createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</>}
           </Footer>

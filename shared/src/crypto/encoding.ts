@@ -12,6 +12,9 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
 }
 
 export function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(base64)) {
+    throw new Error('Invalid base64 string');
+  }
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {

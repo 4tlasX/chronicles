@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from 'react';
 import { encryptionService } from '@shared/crypto/encryptionService.js';
 import type { EncryptedPostData, DecryptedPost, EncryptedPost, SetupEncryptionResult } from '@shared/crypto/types.js';
 
@@ -74,6 +74,13 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
 
   const rewrapMasterKey = useCallback(async (newPassword: string) => {
     return encryptionService.rewrapMasterKey(getKey(), newPassword);
+  }, []);
+
+  // Clear master key on unmount
+  useEffect(() => {
+    return () => {
+      masterKeyRef.current = null;
+    };
   }, []);
 
   return (

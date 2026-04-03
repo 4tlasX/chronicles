@@ -294,8 +294,10 @@ export async function ensureDoseLogsTable(schemaName: string): Promise<void> {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
-    await prisma.$executeRawUnsafe(`CREATE INDEX idx_${s}_dose_logs_date ON ${s}.medication_dose_logs (date)`);
-    await prisma.$executeRawUnsafe(`CREATE INDEX idx_${s}_dose_logs_med_date ON ${s}.medication_dose_logs (medication_post_id, date)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_${s}_dose_logs_date ON ${s}.medication_dose_logs (date)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_${s}_dose_logs_med_date ON ${s}.medication_dose_logs (medication_post_id, date)`);
+    // Unique constraint for upsert ON CONFLICT support
+    await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS idx_${s}_dose_logs_unique ON ${s}.medication_dose_logs (medication_post_id, scheduled_time, date)`);
   }
 }
 
@@ -322,32 +324,12 @@ export async function upsertDoseLog(
 ): Promise<DoseLog> {
   const s = escapeSchema(schemaName);
 
-  // Check if log exists for this medication/time/date
-  const existing = await prisma.$queryRawUnsafe<{ id: number }[]>(
-    `SELECT id FROM ${s}.medication_dose_logs
-     WHERE medication_post_id = $1 AND scheduled_time = $2::time AND date = $3::date`,
-    medicationPostId,
-    scheduledTime,
-    date
-  );
-
-  if (existing.length > 0) {
-    const result = await prisma.$queryRawUnsafe<DoseLog[]>(
-      `UPDATE ${s}.medication_dose_logs
-       SET status = $1, taken_at = $2
-       WHERE id = $3
-       RETURNING id, medication_post_id as "medicationPostId", scheduled_time as "scheduledTime",
-                 taken_at as "takenAt", date, status, created_at as "createdAt"`,
-      status,
-      takenAt,
-      Number(existing[0].id)
-    );
-    return { ...result[0], id: Number(result[0].id), medicationPostId: Number(result[0].medicationPostId) };
-  }
-
+  // Use INSERT ... ON CONFLICT to avoid race conditions between check-and-insert
   const result = await prisma.$queryRawUnsafe<DoseLog[]>(
     `INSERT INTO ${s}.medication_dose_logs (medication_post_id, scheduled_time, date, status, taken_at)
      VALUES ($1, $2::time, $3::date, $4, $5)
+     ON CONFLICT (medication_post_id, scheduled_time, date)
+     DO UPDATE SET status = EXCLUDED.status, taken_at = EXCLUDED.taken_at
      RETURNING id, medication_post_id as "medicationPostId", scheduled_time as "scheduledTime",
                taken_at as "takenAt", date, status, created_at as "createdAt"`,
     medicationPostId,
@@ -395,14 +377,15 @@ export async function getPostTaxonomies(schemaName: string, postId: number): Pro
 
 export async function setPostTaxonomies(schemaName: string, postId: number, taxonomyIds: number[]): Promise<void> {
   const s = escapeSchema(schemaName);
-  // Remove all existing
-  await prisma.$executeRawUnsafe(`DELETE FROM ${s}.post_taxonomies WHERE post_id = $1`, postId);
-  // Add new ones
-  for (const taxId of taxonomyIds) {
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO ${s}.post_taxonomies (post_id, tax_id) VALUES ($1, $2)`,
-      postId,
-      taxId
-    );
-  }
+  // Wrap in transaction to prevent partial taxonomy state on failure
+  await prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(`DELETE FROM ${s}.post_taxonomies WHERE post_id = $1`, postId);
+    for (const taxId of taxonomyIds) {
+      await tx.$executeRawUnsafe(
+        `INSERT INTO ${s}.post_taxonomies (post_id, tax_id) VALUES ($1, $2)`,
+        postId,
+        taxId
+      );
+    }
+  });
 }

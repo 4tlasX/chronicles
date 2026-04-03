@@ -10,10 +10,11 @@ import { registerSchema, loginSchema, changePasswordSchema, recoverSchema } from
 const router = Router();
 
 const BCRYPT_ROUNDS = 12;
-const COOKIE_NAME = 'chronicle_session';
+const IS_PRODUCTION = process.env.NODE_ENV !== 'development';
+const COOKIE_NAME = IS_PRODUCTION ? '__Host-chronicle_session' : 'chronicle_session';
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV !== 'development',
+  secure: IS_PRODUCTION,
   sameSite: 'lax' as const,
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   path: '/',
@@ -30,7 +31,8 @@ router.post('/register', authLimiter, async (req, res) => {
       return;
     }
 
-    const { email, username, password, encryptedMasterKey, kekSalt, kekWrapIv, recoveryWrappedMK, recoveryWrapIv, recoveryKeyHash } = parsed.data;
+    const { email: rawEmail, username, password, encryptedMasterKey, kekSalt, kekWrapIv, recoveryWrappedMK, recoveryWrapIv, recoveryKeyHash } = parsed.data;
+    const email = rawEmail.toLowerCase();
 
     // Check for existing account
     const existing = await prisma.account.findFirst({
@@ -124,8 +126,11 @@ router.post('/login', authLimiter, async (req, res) => {
 
     const { email, password } = parsed.data;
 
-    const account = await prisma.account.findUnique({ where: { email } });
+    const normalizedEmail = email.toLowerCase();
+    const account = await prisma.account.findUnique({ where: { email: normalizedEmail } });
     if (!account) {
+      // Constant-time delay to prevent timing-based email enumeration
+      await bcrypt.hash('dummy', BCRYPT_ROUNDS);
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
@@ -179,11 +184,12 @@ router.post('/logout', authMiddleware, async (req, res) => {
 // =============================================================================
 router.get('/salt', authLimiter, async (req, res) => {
   try {
-    const email = req.query.email as string;
-    if (!email) {
+    const rawEmail = req.query.email as string;
+    if (!rawEmail) {
       res.status(400).json({ error: 'Email required' });
       return;
     }
+    const email = rawEmail.toLowerCase();
 
     const account = await prisma.account.findUnique({
       where: { email },
@@ -282,7 +288,8 @@ router.post('/recover', strictLimiter, async (req, res) => {
       return;
     }
 
-    const { email, recoveryKey, newPassword, newEncryptedMasterKey, newKekSalt, newKekWrapIv } = parsed.data;
+    const { email: rawEmail, recoveryKey, newPassword, newEncryptedMasterKey, newKekSalt, newKekWrapIv } = parsed.data;
+    const email = rawEmail.toLowerCase();
 
     const account = await prisma.account.findUnique({ where: { email } });
     if (!account) {
@@ -309,6 +316,8 @@ router.post('/recover', strictLimiter, async (req, res) => {
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
+    // Invalidate old recovery key material — recovery key is single-use
+    // Clear recoveryWrappedMK and recoveryWrapIv so the old recovery key can't be reused
     await prisma.account.update({
       where: { id: account.id },
       data: {
@@ -316,8 +325,9 @@ router.post('/recover', strictLimiter, async (req, res) => {
         encryptedMasterKey: new Uint8Array(Buffer.from(newEncryptedMasterKey, 'base64')),
         kekSalt: new Uint8Array(Buffer.from(newKekSalt, 'base64')),
         kekWrapIv: new Uint8Array(Buffer.from(newKekWrapIv, 'base64')),
-        // Backfill recoveryKeyHash for legacy accounts
-        ...(!account.recoveryKeyHash ? { recoveryKeyHash: providedHash } : {}),
+        recoveryKeyHash: providedHash,
+        recoveryWrappedMK: null,
+        recoveryWrapIv: null,
       },
     });
 
@@ -339,8 +349,8 @@ router.post('/recover', strictLimiter, async (req, res) => {
         encryptedMasterKey: newEncryptedMasterKey,
         kekWrapIv: newKekWrapIv,
         kekIterations: account.kekIterations,
-        recoveryWrappedMK: account.recoveryWrappedMK ? Buffer.from(account.recoveryWrappedMK).toString('base64') : null,
-        recoveryWrapIv: account.recoveryWrapIv ? Buffer.from(account.recoveryWrapIv).toString('base64') : null,
+        recoveryWrappedMK: null,
+        recoveryWrapIv: null,
       },
     });
   } catch (err) {
@@ -354,11 +364,12 @@ router.post('/recover', strictLimiter, async (req, res) => {
 // =============================================================================
 router.get('/recovery-params', authLimiter, async (req, res) => {
   try {
-    const email = req.query.email as string;
-    if (!email) {
+    const rawEmail = req.query.email as string;
+    if (!rawEmail) {
       res.status(400).json({ error: 'Email required' });
       return;
     }
+    const email = rawEmail.toLowerCase();
 
     const account = await prisma.account.findUnique({
       where: { email },

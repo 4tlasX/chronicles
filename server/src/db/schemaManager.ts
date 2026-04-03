@@ -12,15 +12,16 @@ function escapeSchemaName(schemaName: string): string {
 async function generateSchemaName(): Promise<string> {
   const randomSuffix = crypto.randomBytes(3).toString('hex');
 
-  await prisma.$executeRaw`
+  // Atomic increment + read via RETURNING to prevent race conditions
+  const result = await prisma.$queryRaw<{ current_number: number }[]>`
     INSERT INTO schema_counter (id, current_number, updated_at)
     VALUES (1, 1, NOW())
     ON CONFLICT (id) DO UPDATE
     SET current_number = schema_counter.current_number + 1, updated_at = NOW()
+    RETURNING current_number
   `;
 
-  const counter = await prisma.schemaCounter.findUnique({ where: { id: 1 } });
-  const currentNumber = counter?.currentNumber || 1;
+  const currentNumber = Number(result[0]?.current_number) || 1;
   return `usr_${currentNumber}_${randomSuffix}`;
 }
 
@@ -86,6 +87,7 @@ function generateTenantSchemaStatements(schemaName: string): string[] {
     )`,
     `CREATE INDEX idx_${s}_dose_logs_date ON ${s}.medication_dose_logs (date)`,
     `CREATE INDEX idx_${s}_dose_logs_med_date ON ${s}.medication_dose_logs (medication_post_id, date)`,
+    `CREATE UNIQUE INDEX idx_${s}_dose_logs_unique ON ${s}.medication_dose_logs (medication_post_id, scheduled_time, date)`,
 
     // Indexes
     `CREATE INDEX idx_${s}_posts_meta ON ${s}.posts USING GIN (metadata)`,

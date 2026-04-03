@@ -4,10 +4,13 @@ import { z } from 'zod';
 
 const router = Router();
 
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+const timeRegex = /^\d{2}:\d{2}$/;
+
 const logDoseSchema = z.object({
   medicationPostId: z.number(),
-  scheduledTime: z.string(), // HH:MM format
-  date: z.string(),          // YYYY-MM-DD
+  scheduledTime: z.string().regex(timeRegex, 'Must be HH:MM format'),
+  date: z.string().regex(dateRegex, 'Must be YYYY-MM-DD format'),
   status: z.enum(['taken', 'skipped', 'pending']),
   takenAt: z.string().nullable().optional(),
 });
@@ -16,8 +19,8 @@ const logDoseSchema = z.object({
 router.get('/', async (req, res) => {
   try {
     const date = req.query.date as string;
-    if (!date) {
-      res.status(400).json({ error: 'date query parameter is required' });
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      res.status(400).json({ error: 'date query parameter is required in YYYY-MM-DD format' });
       return;
     }
 

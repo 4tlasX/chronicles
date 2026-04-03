@@ -12,8 +12,8 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   // Prevent clickjacking
   res.setHeader('X-Frame-Options', 'DENY');
-  // Control referrer leakage
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Control referrer leakage — no-referrer prevents share URLs (with #key fragment) from leaking
+  res.setHeader('Referrer-Policy', 'no-referrer');
   // Disable browser features we don't need
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   next();

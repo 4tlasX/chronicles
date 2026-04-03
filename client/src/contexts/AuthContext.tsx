@@ -83,6 +83,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setEncryptionData(null);
+    // Clear search state and entries from memory
+    try {
+      const { useEntriesStore } = await import('../stores/entriesStore.js');
+      const { useUIStore } = await import('../stores/uiStore.js');
+      useEntriesStore.getState().clearAll();
+      useUIStore.getState().clearSearch();
+    } catch {
+      // Non-critical — stores may not be loaded
+    }
   }, []);
 
   return (

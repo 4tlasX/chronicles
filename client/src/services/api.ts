@@ -47,6 +47,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     throw new ApiError(res.status, data.error || 'Request failed');
   }
 
+  const contentType = res.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    throw new ApiError(res.status, 'Unexpected response content type');
+  }
+
   return res.json();
 }
 

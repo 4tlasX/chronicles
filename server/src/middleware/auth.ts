@@ -30,13 +30,13 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
   if (req.headers.authorization?.startsWith('Bearer ')) {
     // MOBILE PATH: Token from secure storage, no CSRF risk
     token = req.headers.authorization.slice(7);
-  } else if (req.cookies?.chronicle_session) {
+  } else if (req.cookies?.['__Host-chronicle_session'] || req.cookies?.chronicle_session) {
     // WEB PATH: Cookie sent automatically — enforce CSRF header
     if (req.headers['x-requested-with'] !== 'XMLHttpRequest') {
       res.status(403).json({ error: 'Missing CSRF header' });
       return;
     }
-    token = req.cookies.chronicle_session;
+    token = req.cookies['__Host-chronicle_session'] || req.cookies.chronicle_session;
   }
 
   if (!token || token.length < 44) {
@@ -114,28 +114,40 @@ export async function createSession(
     schemaVersion?: number;
   } = {}
 ): Promise<string> {
-  const selector = crypto.randomBytes(6).toString('hex'); // 12 hex chars
-  const verifier = crypto.randomBytes(16).toString('hex'); // 32 hex chars
-  const verifierHash = crypto.createHash('sha256').update(verifier).digest('hex');
+  const MAX_RETRIES = 3;
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 30); // 30-day max lifetime
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const selector = crypto.randomBytes(6).toString('hex'); // 12 hex chars
+    const verifier = crypto.randomBytes(16).toString('hex'); // 32 hex chars
+    const verifierHash = crypto.createHash('sha256').update(verifier).digest('hex');
 
-  await prisma.session.create({
-    data: {
-      selector,
-      verifierHash,
-      accountId,
-      tenantSchemaName,
-      schemaVersion: options.schemaVersion || 0,
-      deviceInfo: options.deviceInfo || null,
-      ipAddress: options.ipAddress || null,
-      userAgent: options.userAgent || null,
-      expiresAt,
-    },
-  });
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30-day max lifetime
 
-  return selector + verifier; // 44 chars total
+    try {
+      await prisma.session.create({
+        data: {
+          selector,
+          verifierHash,
+          accountId,
+          tenantSchemaName,
+          schemaVersion: options.schemaVersion || 0,
+          deviceInfo: options.deviceInfo || null,
+          ipAddress: options.ipAddress || null,
+          userAgent: options.userAgent || null,
+          expiresAt,
+        },
+      });
+
+      return selector + verifier; // 44 chars total
+    } catch (err: unknown) {
+      // Retry on unique constraint violation (selector collision)
+      const isUniqueViolation = err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2002';
+      if (!isUniqueViolation || attempt === MAX_RETRIES - 1) throw err;
+    }
+  }
+
+  throw new Error('Failed to create session after retries');
 }
 
 /**
