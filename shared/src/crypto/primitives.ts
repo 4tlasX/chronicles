@@ -89,17 +89,28 @@ export async function importRawKey(keyBytes: Uint8Array): Promise<CryptoKey> {
   );
 }
 
+/** Wrap purpose identifiers for Additional Authenticated Data (AAD) */
+export type WrapPurpose = 'kek-wrap' | 'recovery-wrap';
+
+/** Encode a wrap purpose string as AAD bytes for AES-GCM */
+function purposeToAAD(purpose: WrapPurpose): ArrayBuffer {
+  return new TextEncoder().encode(purpose).buffer as ArrayBuffer;
+}
+
 /**
- * Wrap (encrypt) the master key with a wrapping key (KEK or recovery key)
+ * Wrap (encrypt) the master key with a wrapping key (KEK or recovery key).
+ * The purpose parameter is authenticated as AAD — prevents cross-purpose key substitution.
  */
 export async function wrapKey(
   masterKey: CryptoKey,
   wrappingKey: CryptoKey,
-  iv: Uint8Array
+  iv: Uint8Array,
+  purpose: WrapPurpose = 'kek-wrap'
 ): Promise<ArrayBuffer> {
   return crypto.subtle.wrapKey('raw', masterKey, wrappingKey, {
     name: AES_ALGORITHM,
     iv: iv.buffer as ArrayBuffer,
+    additionalData: purposeToAAD(purpose),
   });
 }
 
@@ -107,18 +118,20 @@ export async function wrapKey(
  * Unwrap (decrypt) the master key with a wrapping key.
  * By default returns a non-extractable key for encrypt/decrypt operations.
  * Pass extractable=true when the key needs to be re-wrapped (e.g., password change, recovery).
+ * The purpose must match what was used during wrapKey or decryption will fail.
  */
 export async function unwrapKey(
   wrappedKey: ArrayBuffer,
   wrappingKey: CryptoKey,
   iv: Uint8Array,
-  extractable: boolean = false
+  extractable: boolean = false,
+  purpose: WrapPurpose = 'kek-wrap'
 ): Promise<CryptoKey> {
   return crypto.subtle.unwrapKey(
     'raw',
     wrappedKey,
     wrappingKey,
-    { name: AES_ALGORITHM, iv: iv.buffer as ArrayBuffer },
+    { name: AES_ALGORITHM, iv: iv.buffer as ArrayBuffer, additionalData: purposeToAAD(purpose) },
     { name: AES_ALGORITHM, length: AES_KEY_LENGTH },
     extractable,
     ['encrypt', 'decrypt']

@@ -46,6 +46,8 @@ export function SharedEntryView() {
 
     const shareKey = window.location.hash.slice(1);
     if (!shareKey) { setStatus('error'); setErrorMsg('This link is missing its decryption key.'); return; }
+    // Validate base64url format before attempting crypto operations (256-bit key = 43 base64url chars)
+    if (!/^[A-Za-z0-9\-_]{43}$/.test(shareKey)) { setStatus('error'); setErrorMsg('Invalid decryption key format.'); return; }
 
     const load = async () => {
       try {

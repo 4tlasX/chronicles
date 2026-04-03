@@ -2,6 +2,11 @@ import type { Request, Response, NextFunction } from 'express';
 
 export function securityHeaders(_req: Request, res: Response, next: NextFunction): void {
   // Prevent XSS from stealing in-memory key
+  // Note: style-src 'unsafe-inline' is required by styled-components (CSS-in-JS).
+  // CSP nonces can't be used here because Express is API-only — the HTML page is served
+  // separately (Vite dev server / static CDN), so nonces set on API responses wouldn't
+  // propagate to the page's style tags. The risk is mitigated by script-src 'self'
+  // (no inline JS), which prevents CSS-based exfiltration from escalating to code execution.
   res.setHeader('Content-Security-Policy',
     "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
     "img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'"

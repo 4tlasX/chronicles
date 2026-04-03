@@ -193,7 +193,7 @@ router.post('/logout', authMiddleware, async (req, res) => {
   try {
     await revokeSession(req.auth!.selector, 'user_logout');
     logSecurityEvent('logout', { accountId: req.auth!.accountId, ip: req.ip });
-    res.clearCookie(COOKIE_NAME);
+    res.clearCookie(COOKIE_NAME, { path: '/', secure: IS_PRODUCTION, sameSite: 'strict' as const });
     res.json({ success: true });
   } catch (err) {
     console.error('Logout error:', err instanceof Error ? err.message : 'Unknown error');

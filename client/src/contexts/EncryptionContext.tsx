@@ -51,6 +51,7 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
 
   const lock = useCallback(() => {
     masterKeyRef.current = null;
+    extractableKeyRef.current = null;
     encryptionParamsRef.current = null;
     setIsUnlocked(false);
   }, []);
@@ -79,16 +80,20 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     return encryptionService.decryptPosts(getKey(), posts);
   }, []);
 
+  // During recovery, we need the extractable key for rewrapping with a new password.
+  // Store it separately so masterKeyRef always holds a non-extractable key.
+  const extractableKeyRef = useRef<CryptoKey | null>(null);
+
   const unlockWithRecoveryKey = useCallback(async (
     recoveryKey: string,
     recoveryWrappedMK: string,
     recoveryWrapIv: string
   ) => {
-    // Unwraps as extractable — needed for rewrap in recovery flow
     const extractableKey = await encryptionService.unwrapWithRecoveryKey(recoveryKey, recoveryWrappedMK, recoveryWrapIv);
-    // Store extractable key temporarily for rewrap, then convert immediately
-    // The rewrapMasterKey callback will use this extractable key then convert it
-    masterKeyRef.current = extractableKey;
+    // Store extractable key in separate ref for rewrap only
+    extractableKeyRef.current = extractableKey;
+    // Convert to non-extractable immediately for encrypt/decrypt operations
+    masterKeyRef.current = await toNonExtractable(extractableKey);
     encryptionParamsRef.current = null; // Recovery path — no stored params
     setIsUnlocked(true);
   }, []);
@@ -114,18 +119,20 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
       };
       return result;
     }
-    // Recovery flow: key is already extractable, wrap directly then convert
-    const extractableKey = getKey();
+    // Recovery flow: use the extractable key stored during unlockWithRecoveryKey
+    const extractableKey = extractableKeyRef.current;
+    if (!extractableKey) throw new Error('No extractable key available for rewrap');
     const result = await encryptionService.rewrapMasterKey(extractableKey, newPassword);
-    // Convert to non-extractable immediately after rewrap for ongoing encrypt/decrypt
-    masterKeyRef.current = await toNonExtractable(extractableKey);
+    // Clear the extractable key — no longer needed after rewrap
+    extractableKeyRef.current = null;
     return result;
   }, []);
 
-  // Clear master key on unmount
+  // Clear all key material on unmount
   useEffect(() => {
     return () => {
       masterKeyRef.current = null;
+      extractableKeyRef.current = null;
     };
   }, []);
 

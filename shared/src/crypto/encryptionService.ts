@@ -39,13 +39,13 @@ class EncryptionService {
     const salt = generateSalt();
     const kek = await deriveKEK(password, salt, PBKDF2_ITERATIONS);
     const wrapIv = generateIv();
-    const wrappedMKBuffer = await wrapKey(extractableKey, kek, wrapIv);
+    const wrappedMKBuffer = await wrapKey(extractableKey, kek, wrapIv, 'kek-wrap');
 
     // Wrap with recovery key
     const recoveryKeyBytes = generateRecoveryKey();
     const recoveryKeyObj = await importRawKey(recoveryKeyBytes);
     const recoveryWrapIv = generateIv();
-    const recoveryWrappedMKBuffer = await wrapKey(extractableKey, recoveryKeyObj, recoveryWrapIv);
+    const recoveryWrappedMKBuffer = await wrapKey(extractableKey, recoveryKeyObj, recoveryWrapIv, 'recovery-wrap');
 
     // Convert to non-extractable for in-memory use (encrypt/decrypt only)
     const masterKey = await toNonExtractable(extractableKey);
@@ -81,7 +81,7 @@ class EncryptionService {
     const wrapIv = base64ToUint8Array(wrapIvBase64);
 
     const kek = await deriveKEK(password, salt, iterations);
-    return unwrapKey(wrappedMK.buffer as ArrayBuffer, kek, wrapIv);
+    return unwrapKey(wrappedMK.buffer as ArrayBuffer, kek, wrapIv, false, 'kek-wrap');
   }
 
   /**
@@ -98,7 +98,7 @@ class EncryptionService {
     const recoveryWrapIv = base64ToUint8Array(recoveryWrapIvBase64);
 
     const recoveryKeyObj = await importRawKey(recoveryKeyBytes);
-    return unwrapKey(recoveryWrappedMK.buffer as ArrayBuffer, recoveryKeyObj, recoveryWrapIv, true);
+    return unwrapKey(recoveryWrappedMK.buffer as ArrayBuffer, recoveryKeyObj, recoveryWrapIv, true, 'recovery-wrap');
   }
 
   /**
@@ -111,7 +111,7 @@ class EncryptionService {
     const salt = generateSalt();
     const kek = await deriveKEK(newPassword, salt, PBKDF2_ITERATIONS);
     const wrapIv = generateIv();
-    const wrappedMKBuffer = await wrapKey(masterKey, kek, wrapIv);
+    const wrappedMKBuffer = await wrapKey(masterKey, kek, wrapIv, 'kek-wrap');
 
     return {
       salt: uint8ArrayToBase64(salt),
@@ -138,7 +138,7 @@ class EncryptionService {
     const wrappedMK = base64ToUint8Array(encryptedMKBase64);
     const wrapIv = base64ToUint8Array(kekWrapIvBase64);
     const kek = await deriveKEK(currentPassword, salt, kekIterations);
-    const extractableKey = await unwrapKey(wrappedMK.buffer as ArrayBuffer, kek, wrapIv, true);
+    const extractableKey = await unwrapKey(wrappedMK.buffer as ArrayBuffer, kek, wrapIv, true, 'kek-wrap');
 
     try {
       // Wrap with new password
