@@ -6,7 +6,9 @@ import { prisma } from './prisma.js';
 // =============================================================================
 
 function escapeSchemaName(schemaName: string): string {
-  return schemaName.replace(/[^a-z0-9_]/gi, '');
+  const escaped = schemaName.replace(/[^a-z0-9_]/gi, '');
+  if (!escaped || escaped.length < 3) throw new Error('Invalid schema name');
+  return escaped;
 }
 
 async function generateSchemaName(): Promise<string> {
@@ -196,7 +198,9 @@ export async function registerTenant(
 
 export async function deleteTenant(userId: string): Promise<void> {
   const account = await prisma.account.findUnique({ where: { userId } });
-  if (!account) throw new Error(`Account not found for userId: ${userId}`);
+  if (!account) throw new Error('Account not found');
+  // Drop schema and delete account in sequence — schema drop is DDL (can't be in Prisma transaction)
+  // but we delete the account only if schema drop succeeds
   await dropTenantSchema(account.tenantSchemaName);
   await prisma.account.delete({ where: { userId } });
 }

@@ -44,6 +44,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST /api/sessions/revoke-all — Revoke all sessions except current
+// IMPORTANT: Must be defined BEFORE /:id/revoke to avoid Express matching "revoke-all" as :id
+router.post('/revoke-all', async (req, res) => {
+  try {
+    await revokeAllSessions(req.auth!.accountId, req.auth!.selector, 'user_logout');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Revoke all error:', err);
+    res.status(500).json({ error: 'Failed to revoke sessions' });
+  }
+});
+
 // POST /api/sessions/:id/revoke — Revoke a specific session
 router.post('/:id/revoke', async (req, res) => {
   try {
@@ -67,17 +79,6 @@ router.post('/:id/revoke', async (req, res) => {
   } catch (err) {
     console.error('Revoke session error:', err);
     res.status(500).json({ error: 'Failed to revoke session' });
-  }
-});
-
-// POST /api/sessions/revoke-all — Revoke all sessions except current
-router.post('/revoke-all', async (req, res) => {
-  try {
-    await revokeAllSessions(req.auth!.accountId, req.auth!.selector, 'user_logout');
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Revoke all error:', err);
-    res.status(500).json({ error: 'Failed to revoke sessions' });
   }
 });
 

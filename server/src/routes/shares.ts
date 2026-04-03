@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
+import { shareLimiter } from '../middleware/rateLimiter.js';
 import { createShare, getShareByToken, revokeShare, getSharesByAccount } from '../db/shareQueries.js';
 import { createShareSchema } from '@chronicles/shared';
 
@@ -18,9 +19,9 @@ function serializeShare(share: Record<string, unknown>) {
 }
 
 // GET /api/shares/:token — Public, no auth required
-router.get('/:token', async (req, res) => {
+router.get('/:token', shareLimiter, async (req, res) => {
   try {
-    const share = await getShareByToken(req.params.token);
+    const share = await getShareByToken(String(req.params.token));
     if (!share) {
       res.status(404).json({ error: 'Share not found or expired' });
       return;

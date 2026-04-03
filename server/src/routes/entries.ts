@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createPost, getPost, getAllPosts, updatePost, deletePost, setPostTaxonomies, getPostTaxonomies } from '../db/tenantQueries.js';
+import { createPost, getPost, getAllPosts, updatePost, deletePost, setPostTaxonomies, getPostTaxonomies, getAllTaxonomies } from '../db/tenantQueries.js';
 import { createPostSchema, updatePostSchema } from '@chronicles/shared';
 import { parseId } from '../middleware/parseId.js';
 
@@ -17,10 +17,12 @@ function serializePost(post: Record<string, unknown>) {
   return result;
 }
 
-// GET /api/entries — Get all entries
+// GET /api/entries — Get all entries (paginated)
 router.get('/', async (req, res) => {
   try {
-    const posts = await getAllPosts(req.auth!.tenantSchemaName);
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 100, 1), 200);
+    const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
+    const posts = await getAllPosts(req.auth!.tenantSchemaName, { limit, offset });
     res.json(posts.map(p => serializePost(p as unknown as Record<string, unknown>)));
   } catch (err) {
     console.error('Get entries error:', err);
@@ -54,7 +56,13 @@ router.post('/', async (req, res) => {
     const post = await createPost(req.auth!.tenantSchemaName, input as Parameters<typeof createPost>[1]);
 
     if (taxonomyIds?.length) {
-      await setPostTaxonomies(req.auth!.tenantSchemaName, post.id, taxonomyIds);
+      // Validate taxonomy IDs belong to this tenant
+      const existing = await getAllTaxonomies(req.auth!.tenantSchemaName);
+      const existingIds = new Set(existing.map(t => t.id));
+      const validIds = taxonomyIds.filter(id => existingIds.has(id));
+      if (validIds.length > 0) {
+        await setPostTaxonomies(req.auth!.tenantSchemaName, post.id, validIds);
+      }
     }
 
     res.status(201).json(serializePost(post as unknown as Record<string, unknown>));
@@ -107,7 +115,11 @@ router.put('/:id', async (req, res) => {
     const post = await updatePost(req.auth!.tenantSchemaName, id, input as Parameters<typeof updatePost>[2]);
 
     if (taxonomyIds !== undefined) {
-      await setPostTaxonomies(req.auth!.tenantSchemaName, id, taxonomyIds);
+      // Validate taxonomy IDs belong to this tenant
+      const existing = await getAllTaxonomies(req.auth!.tenantSchemaName);
+      const existingIds = new Set(existing.map(t => t.id));
+      const validIds = taxonomyIds.filter(id => existingIds.has(id));
+      await setPostTaxonomies(req.auth!.tenantSchemaName, id, validIds);
     }
 
     res.json(serializePost(post as unknown as Record<string, unknown>));

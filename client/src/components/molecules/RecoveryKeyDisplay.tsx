@@ -40,6 +40,10 @@ export function RecoveryKeyDisplay({ recoveryKey, onConfirm }: RecoveryKeyDispla
     await navigator.clipboard.writeText(recoveryKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    // Auto-clear clipboard after 30 seconds
+    setTimeout(() => {
+      navigator.clipboard.writeText('').catch(() => {});
+    }, 30000);
   };
 
   return (

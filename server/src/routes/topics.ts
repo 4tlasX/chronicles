@@ -7,6 +7,7 @@ import { parseId } from '../middleware/parseId.js';
 /** JIT migration: add sort_order column if missing (for schemas created before this feature). */
 async function ensureSortOrderColumn(schemaName: string): Promise<void> {
   const s = schemaName.replace(/[^a-z0-9_]/gi, '');
+  if (!s || s.length < 3) throw new Error('Invalid schema name');
   const result = await prisma.$queryRawUnsafe<{ exists: boolean }[]>(
     `SELECT EXISTS (
        SELECT 1 FROM information_schema.columns
@@ -70,6 +71,13 @@ router.post('/reorder', async (req, res) => {
     const { topicIds } = req.body;
     if (!Array.isArray(topicIds) || !topicIds.every((id: unknown) => typeof id === 'number')) {
       res.status(400).json({ error: 'topicIds must be an array of numbers' });
+      return;
+    }
+    // Validate all IDs belong to this tenant
+    const existing = await getAllTaxonomies(req.auth!.tenantSchemaName);
+    const existingIds = new Set(existing.map(t => t.id));
+    if (!topicIds.every(id => existingIds.has(id))) {
+      res.status(400).json({ error: 'Invalid topic IDs' });
       return;
     }
     await reorderTaxonomies(req.auth!.tenantSchemaName, topicIds);

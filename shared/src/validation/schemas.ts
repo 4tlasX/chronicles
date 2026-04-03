@@ -61,7 +61,15 @@ export const createPostSchema = z.object({
   metadataIv: z.string().optional(),
   isEncrypted: z.boolean().optional(),
   taxonomyIds: z.array(z.number()).optional(),
-});
+}).refine(
+  (data) => {
+    if (data.isEncrypted) {
+      return data.contentEncrypted && data.contentIv && data.metadataEncrypted && data.metadataIv;
+    }
+    return true;
+  },
+  { message: 'Encrypted posts must include contentEncrypted, contentIv, metadataEncrypted, and metadataIv' }
+);
 
 export const updatePostSchema = z.object({
   content: z.string().optional(),
@@ -90,4 +98,7 @@ export const updateTaxonomySchema = z.object({
 export const upsertSettingSchema = z.object({
   key: z.string().min(1).max(100),
   value: z.unknown(),
-});
+}).refine(
+  (data) => JSON.stringify(data.value).length <= 65536,
+  { message: 'Setting value too large (max 64KB)', path: ['value'] }
+);

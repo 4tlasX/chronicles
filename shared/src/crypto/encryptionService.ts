@@ -158,10 +158,22 @@ class EncryptionService {
       decrypt(masterKey, post.metadataEncrypted, post.metadataIv),
     ]);
 
+    let metadata: Record<string, unknown>;
+    try {
+      const parsed = JSON.parse(metadataStr);
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        metadata = {};
+      } else {
+        metadata = parsed;
+      }
+    } catch {
+      metadata = {};
+    }
+
     return {
       id: post.id,
       content,
-      metadata: JSON.parse(metadataStr),
+      metadata,
       isEncrypted: true,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,

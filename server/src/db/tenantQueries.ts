@@ -5,7 +5,9 @@ import { prisma } from './prisma.js';
 // =============================================================================
 
 function escapeSchema(schemaName: string): string {
-  return schemaName.replace(/[^a-z0-9_]/gi, '');
+  const escaped = schemaName.replace(/[^a-z0-9_]/gi, '');
+  if (!escaped || escaped.length < 3) throw new Error('Invalid schema name');
+  return escaped;
 }
 
 // =============================================================================
@@ -151,13 +153,15 @@ export async function deleteTaxonomy(schemaName: string, id: number): Promise<vo
 
 export async function reorderTaxonomies(schemaName: string, orderedIds: number[]): Promise<void> {
   const s = escapeSchema(schemaName);
-  for (let i = 0; i < orderedIds.length; i++) {
-    await prisma.$executeRawUnsafe(
-      `UPDATE ${s}.taxonomies SET sort_order = $1 WHERE id = $2`,
-      i,
-      orderedIds[i]
-    );
-  }
+  await prisma.$transaction(async (tx) => {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await tx.$executeRawUnsafe(
+        `UPDATE ${s}.taxonomies SET sort_order = $1 WHERE id = $2`,
+        i,
+        orderedIds[i]
+      );
+    }
+  });
 }
 
 // =============================================================================

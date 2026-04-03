@@ -10,6 +10,9 @@ import { shares as sharesApi } from '../services/api.js';
 /* ── Helpers — decrypt share content using key from URL fragment ── */
 
 function base64urlToBytes(str: string): Uint8Array {
+  if (!/^[A-Za-z0-9\-_]+$/.test(str)) {
+    throw new Error('Invalid base64url string');
+  }
   const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
   const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
   const binary = atob(padded);

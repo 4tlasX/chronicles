@@ -39,7 +39,7 @@ router.post('/register', authLimiter, async (req, res) => {
       where: { OR: [{ email }, { username }] },
     });
     if (existing) {
-      res.status(409).json({ error: existing.email === email ? 'Email already registered' : 'Username taken' });
+      res.status(409).json({ error: 'An account with this email or username already exists' });
       return;
     }
 
@@ -257,18 +257,26 @@ router.post('/change-password', strictLimiter, authMiddleware, async (req, res) 
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-    await prisma.account.update({
-      where: { id: account.id },
-      data: {
-        passwordHash,
-        encryptedMasterKey: new Uint8Array(Buffer.from(newEncryptedMasterKey, 'base64')),
-        kekSalt: new Uint8Array(Buffer.from(newKekSalt, 'base64')),
-        kekWrapIv: new Uint8Array(Buffer.from(newKekWrapIv, 'base64')),
-      },
-    });
-
-    // Revoke all other sessions
-    await revokeAllSessions(account.id, req.auth!.selector, 'password_change');
+    // Atomic: update password + revoke sessions in a single transaction
+    await prisma.$transaction([
+      prisma.account.update({
+        where: { id: account.id },
+        data: {
+          passwordHash,
+          encryptedMasterKey: new Uint8Array(Buffer.from(newEncryptedMasterKey, 'base64')),
+          kekSalt: new Uint8Array(Buffer.from(newKekSalt, 'base64')),
+          kekWrapIv: new Uint8Array(Buffer.from(newKekWrapIv, 'base64')),
+        },
+      }),
+      prisma.session.updateMany({
+        where: {
+          accountId: account.id,
+          revokedAt: null,
+          NOT: { selector: req.auth!.selector },
+        },
+        data: { revokedAt: new Date(), revokedReason: 'password_change' },
+      }),
+    ]);
 
     res.json({ success: true });
   } catch (err) {
@@ -308,11 +316,13 @@ router.post('/recover', strictLimiter, async (req, res) => {
         res.status(401).json({ error: 'Recovery failed' });
         return;
       }
+    } else {
+      // Legacy accounts without recoveryKeyHash: reject recovery attempts.
+      // Accounts must have server-side key verification. Users with legacy accounts
+      // should contact support or re-register.
+      res.status(401).json({ error: 'Recovery failed' });
+      return;
     }
-    // Legacy accounts without recoveryKeyHash: the client-side unwrap with the
-    // wrong recovery key will produce garbage, so the re-wrapped master key won't
-    // decrypt anything. We allow this through but backfill the hash below so
-    // future recovery attempts are server-verified.
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 

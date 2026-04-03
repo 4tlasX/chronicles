@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from 'react';
 import { encryptionService } from '@shared/crypto/encryptionService.js';
+import { PBKDF2_ITERATIONS } from '@shared/crypto/constants.js';
 import type { EncryptedPostData, DecryptedPost, EncryptedPost, SetupEncryptionResult } from '@shared/crypto/types.js';
 
 interface EncryptionContextValue {
@@ -28,6 +29,10 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     kekWrapIv: string,
     kekIterations: number
   ) => {
+    // Reject iterations below the security minimum to prevent downgrade attacks
+    if (kekIterations < PBKDF2_ITERATIONS) {
+      throw new Error(`PBKDF2 iterations ${kekIterations} below minimum ${PBKDF2_ITERATIONS}`);
+    }
     const key = await encryptionService.unwrapMasterKey(password, kekSalt, encryptedMasterKey, kekWrapIv, kekIterations);
     masterKeyRef.current = key;
     setIsUnlocked(true);
@@ -82,6 +87,17 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
       masterKeyRef.current = null;
     };
   }, []);
+
+  // Auto-lock when tab becomes hidden (user switches away)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && masterKeyRef.current) {
+        lock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [lock]);
 
   return (
     <EncryptionContext.Provider value={{

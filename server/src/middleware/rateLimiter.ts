@@ -23,3 +23,15 @@ export const strictLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later' },
 });
+
+/**
+ * Share lookup rate limiter — public share token lookups
+ * 30 requests per 15-minute window per IP to prevent brute-force
+ */
+export const shareLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+});

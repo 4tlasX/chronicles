@@ -20,6 +20,11 @@ import { initSharesTable } from './db/shareQueries.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Require CLIENT_URL in production to prevent misconfigured CORS
+if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_URL) {
+  throw new Error('CLIENT_URL environment variable is required in production');
+}
+
 // Middleware
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -42,6 +47,16 @@ app.use('/api/settings', authMiddleware, settingsRoutes);
 app.use('/api/sessions', authMiddleware, sessionsRoutes);
 app.use('/api/doses', authMiddleware, dosesRoutes);
 app.use('/api/shares', sharesRoutes); // public GET by token; POST/DELETE use authMiddleware inline
+
+// Global error handler — sanitize errors in production
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('Unhandled error:', err.message);
+  } else {
+    console.error('Unhandled error:', err);
+  }
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 // Init shares table + cleanup expired sessions on startup and periodically
 initSharesTable().catch(err => console.error('Failed to init shares table:', err));

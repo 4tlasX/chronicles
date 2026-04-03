@@ -178,11 +178,16 @@ export async function revokeAllSessions(accountId: number, exceptSelector?: stri
  * Clean up expired and revoked sessions
  */
 export async function cleanupSessions(): Promise<number> {
+  // Grace period: only delete sessions expired/revoked for more than 1 day
+  // to avoid deleting sessions that are currently in-flight
+  const gracePeriod = new Date();
+  gracePeriod.setDate(gracePeriod.getDate() - 1);
+
   const result = await prisma.session.deleteMany({
     where: {
       OR: [
-        { expiresAt: { lt: new Date() } },
-        { revokedAt: { not: null } },
+        { expiresAt: { lt: gracePeriod } },
+        { revokedAt: { not: null, lt: gracePeriod } },
       ],
     },
   });
