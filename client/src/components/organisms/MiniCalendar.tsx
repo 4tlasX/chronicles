@@ -21,7 +21,9 @@ const ToggleBar = styled.button`
   justify-content: center;
   gap: 6px;
   padding: 4px 8px;
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.textMuted};
   background: transparent;
   border: none;
@@ -44,8 +46,10 @@ const Header = styled.div`
 `;
 
 const MonthLabel = styled.span`
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
+  font-size: 11px;
   font-weight: ${({ theme }) => theme.fontWeight.semibold};
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.text};
 `;
 
@@ -73,7 +77,9 @@ const WeekdayRow = styled.div`
 `;
 
 const WeekdayLabel = styled.span`
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.textMuted};
   text-align: center;
   line-height: 20px;
@@ -101,21 +107,15 @@ const DayButton = styled.button<{
   margin: 0 auto;
   font-size: 12px;
   font-weight: ${({ $isToday, theme }) => $isToday ? theme.fontWeight.bold : theme.fontWeight.normal};
-  color: ${({ $isSelected, $isOutside, $isToday, theme }) => {
-    if ($isSelected) return 'white';
-    if ($isOutside) return theme.colors.border;
-    if ($isToday) return theme.colors.accent;
-    return theme.colors.text;
-  }};
-  background: ${({ $isSelected, theme }) => $isSelected ? theme.colors.accent : 'transparent'};
-  border: none;
+  color: ${({ $isOutside, theme }) => $isOutside ? theme.colors.border : theme.colors.text};
+  background: transparent;
+  border: ${({ $isToday, theme }) => $isToday ? `1.5px solid ${theme.colors.border}` : 'none'};
   border-radius: 50%;
   cursor: pointer;
   line-height: 1;
 
   &:hover {
-    background: ${({ $isSelected, theme }) =>
-      $isSelected ? theme.colors.accentHover : 'rgba(0, 0, 0, 0.05)'};
+    background: rgba(0, 0, 0, 0.05);
   }
 `;
 

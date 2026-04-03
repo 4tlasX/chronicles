@@ -7,29 +7,12 @@ const Chip = styled.span<{ $color: string }>`
   align-items: center;
   gap: 6px;
   padding: 2px 8px;
-  border-radius: ${({ theme }) => theme.borderRadius.full}px;
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
-  color: ${({ $color }) => $color};
-`;
-
-const IconCircle = styled.span<{ $color: string }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: ${({ $color }) => $color};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  font-size: 10px;
+  font-weight: 500;
   color: white;
-  font-size: 8px;
-`;
-
-const Dot = styled.span<{ $color: string }>`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: ${({ $color }) => $color};
-  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03rem;
 `;
 
 interface TopicBadgeProps {
@@ -39,16 +22,10 @@ interface TopicBadgeProps {
   showDot?: boolean;
 }
 
-export function TopicBadge({ name, color, icon, showDot = false }: TopicBadgeProps) {
+export function TopicBadge({ name, color, icon }: TopicBadgeProps) {
   return (
     <Chip $color={color}>
-      {icon ? (
-        <IconCircle $color={color}>
-          <FontAwesomeIcon icon={icon} />
-        </IconCircle>
-      ) : showDot ? (
-        <Dot $color={color} />
-      ) : null}
+      {icon && <FontAwesomeIcon icon={icon} style={{ fontSize: 10 }} />}
       {name}
     </Chip>
   );

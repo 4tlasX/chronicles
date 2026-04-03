@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { faPlus, faArrowRightFromBracket, faChevronDown, faBars, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowRightFromBracket, faChevronDown, faBars, faXmark, faSliders, faLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
@@ -8,17 +8,26 @@ import { useAuth } from '../../contexts/AuthContext.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
-const HeaderBar = styled.header<{ $bgColor: string }>`
+function isLightColor(hex: string): boolean {
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5;
+}
+
+const HeaderBar = styled.header<{ $bgColor: string; $light: boolean }>`
   display: flex;
   align-items: center;
   padding: 0 16px;
-  height: 48px;
+  height: 65px;
   background: ${({ $bgColor }) => $bgColor};
-  color: rgba(255, 255, 255, 0.9);
+  color: ${({ $light }) => $light ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)'};
   position: sticky;
   top: 0;
   z-index: ${({ theme }) => theme.zIndex.header};
-  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
 `;
 
 const LeftSection = styled.div`
@@ -33,32 +42,40 @@ const Logo = styled(Link)`
   text-decoration: none;
 `;
 
-const LogoImg = styled.img`
-  height: 28px;
-  width: auto;
-  filter: brightness(0) invert(1);
+const LogoText = styled.span<{ $light?: boolean }>`
+  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-size: 24px;
+  font-weight: 100;
+  text-transform: uppercase;
+  letter-spacing: 0.12rem;
+  color: inherit;
+  text-shadow: ${({ $light }) => $light ? 'none' : '1px 1px 5px #00000080'};
+  margin-bottom: 0.5rem;
 `;
 
-const NewEntryButton = styled.button`
+const NewEntryButton = styled.button<{ $light?: boolean }>`
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.09rem;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : 'rgba(255, 255, 255, 0.85)'};
   background: none;
   border: none;
   cursor: pointer;
   transition: color 0.15s;
 
-  &:hover { color: white; }
+  &:hover { color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'}; }
 `;
 
 const Divider = styled.div`
   width: 1px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.25);
+  background: currentColor;
+  opacity: 0.25;
   margin: 0 4px;
 `;
 
@@ -73,37 +90,45 @@ const Nav = styled.nav`
   }
 `;
 
-const NavLink = styled(Link)<{ $active?: boolean }>`
+const NavLink = styled(Link)<{ $active?: boolean; $light?: boolean }>`
   padding: 6px 14px;
-  font-size: 14px;
-  font-weight: ${({ $active }) => $active ? 700 : 500};
-  color: ${({ $active }) => $active ? 'white' : 'rgba(255,255,255,0.7)'};
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.09rem;
+  color: ${({ $active, $light }) => $active
+    ? ($light ? 'rgba(0,0,0,0.9)' : 'white')
+    : ($light ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)')};
   text-decoration: none;
   transition: color 0.15s;
   white-space: nowrap;
 
-  &:hover { color: white; }
+  &:hover { color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'}; }
 `;
 
 const DropdownWrapper = styled.div`
   position: relative;
 `;
 
-const DropdownTrigger = styled.button<{ $active?: boolean }>`
+const DropdownTrigger = styled.button<{ $active?: boolean; $light?: boolean }>`
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 6px 14px;
-  font-size: 14px;
-  font-weight: ${({ $active }) => $active ? 700 : 500};
-  color: ${({ $active }) => $active ? 'white' : 'rgba(255,255,255,0.7)'};
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.09rem;
+  color: ${({ $active, $light }) => $active
+    ? ($light ? 'rgba(0,0,0,0.9)' : 'white')
+    : ($light ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)')};
   background: none;
   border: none;
   cursor: pointer;
   transition: color 0.15s;
   white-space: nowrap;
 
-  &:hover { color: white; }
+  &:hover { color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'}; }
 `;
 
 const DropdownChevron = styled.span`
@@ -111,17 +136,15 @@ const DropdownChevron = styled.span`
   margin-left: 2px;
 `;
 
-const DropdownMenu = styled.div`
+const DropdownMenu = styled.div<{ $bgColor: string }>`
   position: absolute;
   top: 100%;
   left: 0;
   margin-top: 4px;
   min-width: 160px;
   padding: 4px 0;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ $bgColor }) => $bgColor};
+  border: none;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   box-shadow: ${({ theme }) => theme.shadow.lg};
   animation: dropdownIn 0.15s ease-out;
@@ -132,33 +155,40 @@ const DropdownMenu = styled.div`
   }
 `;
 
-const DropdownItem = styled(Link)`
+const DropdownItem = styled(Link)<{ $light?: boolean }>`
   display: block;
   padding: 8px 16px;
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.text};
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.09rem;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.6)' : 'rgba(255, 255, 255, 0.7)'};
   text-decoration: none;
-  transition: background 0.1s;
+  transition: background 0.1s, color 0.15s;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.04);
+    color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'};
+    background: ${({ $light }) => $light ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.1)'};
   }
 `;
 
-const LogoutButton = styled.button`
+const LogoutButton = styled.button<{ $light?: boolean }>`
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.09rem;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)'};
   background: none;
   border: none;
   cursor: pointer;
   transition: color 0.15s;
 
-  &:hover { color: white; }
+  &:hover { color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'}; }
 `;
 
 const HamburgerButton = styled.button`
@@ -244,8 +274,10 @@ const DrawerNav = styled.nav`
 const DrawerLink = styled(Link)<{ $active?: boolean }>`
   display: block;
   padding: 12px 20px;
-  font-size: 15px;
-  font-weight: ${({ $active }) => $active ? 700 : 500};
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.09rem;
   color: ${({ $active }) => $active ? 'white' : 'rgba(255,255,255,0.75)'};
   text-decoration: none;
   transition: background 0.1s;
@@ -272,8 +304,10 @@ const DrawerLogout = styled.button`
   display: block;
   width: 100%;
   padding: 12px 20px;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.09rem;
   color: rgba(255, 255, 255, 0.75);
   background: none;
   border: none;
@@ -285,12 +319,14 @@ const DrawerLogout = styled.button`
 `;
 
 interface NavDropdownProps {
-  label: string;
+  label: React.ReactNode;
   items: { label: string; to: string }[];
   activePath: string;
+  bgColor?: string;
+  light?: boolean;
 }
 
-function NavDropdown({ label, items, activePath }: NavDropdownProps) {
+function NavDropdown({ label, items, activePath, bgColor, light }: NavDropdownProps) {
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -320,16 +356,16 @@ function NavDropdown({ label, items, activePath }: NavDropdownProps) {
 
   return (
     <DropdownWrapper ref={wrapperRef}>
-      <DropdownTrigger $active={isActive || open} onClick={() => open ? closeMenu() : setOpen(true)}>
+      <DropdownTrigger $active={isActive || open} $light={light} onClick={() => open ? closeMenu() : setOpen(true)}>
         {label}
         <DropdownChevron style={{ transform: open && !closing ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
           <FontAwesomeIcon icon={faChevronDown} />
         </DropdownChevron>
       </DropdownTrigger>
       {open && (
-        <DropdownMenu style={closing ? { opacity: 0, transform: 'translateY(-4px)', transition: 'opacity 0.15s, transform 0.15s' } : undefined}>
+        <DropdownMenu $bgColor={bgColor || '#4A5568'} style={closing ? { opacity: 0, transform: 'translateY(-4px)', transition: 'opacity 0.15s, transform 0.15s' } : undefined}>
           {items.map(item => (
-            <DropdownItem key={item.to} to={item.to} onClick={() => { closeMenu(); }}>
+            <DropdownItem key={item.to} to={item.to} $light={light} onClick={() => { closeMenu(); }}>
               {item.label}
             </DropdownItem>
           ))}
@@ -362,7 +398,8 @@ export function Header() {
   };
 
   const isActive = (path: string) => location.pathname === path;
-  const bgColor = headerColor || '#0F4C5C';
+  const bgColor = headerColor || '#4A5568';
+  const light = isLightColor(bgColor);
 
   // Feature-gated nav items
   const ff = featureFlags;
@@ -389,26 +426,28 @@ export function Header() {
 
   return (
     <>
-      <HeaderBar $bgColor={bgColor}>
+      <HeaderBar $bgColor={bgColor} $light={light}>
         <LeftSection>
           <Logo to="/">
-            <LogoImg src="/chronicles-logo.png" alt="Chronicles" />
+            <LogoText $light={light}>Chronicles</LogoText>
           </Logo>
           <Divider />
-          <NewEntryButton onClick={handleNewEntry}>
+          <NewEntryButton $light={light} onClick={handleNewEntry}>
             <FontAwesomeIcon icon={faPlus} size="sm" />
             New Entry
           </NewEntryButton>
         </LeftSection>
 
         <Nav>
-          <NavLink to="/" $active={isActive('/')}>Journal</NavLink>
-          <NavLink to="/calendar" $active={isActive('/calendar')}>Calendar</NavLink>
+          <NavLink to="/" $active={isActive('/')} $light={light}>Journal</NavLink>
+          <NavLink to="/calendar" $active={isActive('/calendar')} $light={light}>Calendar</NavLink>
           {goalsItems.length > 0 && (
             <NavDropdown
               label="Goals"
               activePath={location.pathname}
               items={goalsItems}
+              bgColor={bgColor}
+              light={light}
             />
           )}
 
@@ -417,38 +456,37 @@ export function Header() {
               label="Health"
               activePath={location.pathname}
               items={healthItems}
+              bgColor={bgColor}
+              light={light}
             />
           )}
 
-          {ff.entertainmentEnabled && (
+          <NavLink to="/topics" $active={isActive('/topics')} $light={light}>Topics</NavLink>
+
+          {(ff.entertainmentEnabled || ff.inspirationEnabled) && (
             <NavDropdown
-              label="Entertainment"
+              label={<FontAwesomeIcon icon={faLink} />}
               activePath={location.pathname}
+              bgColor={bgColor}
+              light={light}
               items={[
-                { label: 'Music', to: '/entertainment/music' },
-                { label: 'Books', to: '/entertainment/books' },
-                { label: 'TV/Movies', to: '/entertainment/tv' },
+                ...(ff.entertainmentEnabled ? [
+                  { label: 'Music', to: '/entertainment/music' },
+                  { label: 'Books', to: '/entertainment/books' },
+                  { label: 'TV/Movies', to: '/entertainment/tv' },
+                ] : []),
+                ...(ff.inspirationEnabled ? [
+                  { label: 'Research', to: '/inspiration/research' },
+                  { label: 'Ideas', to: '/inspiration/ideas' },
+                  { label: 'Quotes', to: '/inspiration/quotes' },
+                ] : []),
               ]}
             />
           )}
-
-          {ff.inspirationEnabled && (
-            <NavDropdown
-              label="Inspiration"
-              activePath={location.pathname}
-              items={[
-                { label: 'Research', to: '/inspiration/research' },
-                { label: 'Ideas', to: '/inspiration/ideas' },
-                { label: 'Quotes', to: '/inspiration/quotes' },
-              ]}
-            />
-          )}
-
-          <NavLink to="/topics" $active={isActive('/topics')}>Topics</NavLink>
-          <NavLink to="/settings" $active={isActive('/settings')}>Settings</NavLink>
+          <NavLink to="/settings" $active={isActive('/settings')} $light={light} title="Settings"><FontAwesomeIcon icon={faSliders} size="lg" /></NavLink>
           <Divider />
-          <LogoutButton onClick={handleLogout}>
-            Logout
+          <LogoutButton $light={light} onClick={handleLogout} title="Logout">
+            <FontAwesomeIcon icon={faArrowRightFromBracket} size="lg" />
           </LogoutButton>
         </Nav>
 
@@ -488,22 +526,16 @@ export function Header() {
               {mobileNav('/health/reporting', 'Reporting')}
             </>
           )}
-          {ff.entertainmentEnabled && (
+          {(ff.entertainmentEnabled || ff.inspirationEnabled) && (
             <>
               <DrawerDivider />
-              <DrawerSectionLabel>Entertainment</DrawerSectionLabel>
-              {mobileNav('/entertainment/music', 'Music')}
-              {mobileNav('/entertainment/books', 'Books')}
-              {mobileNav('/entertainment/tv', 'TV/Movies')}
-            </>
-          )}
-          {ff.inspirationEnabled && (
-            <>
-              <DrawerDivider />
-              <DrawerSectionLabel>Inspiration</DrawerSectionLabel>
-              {mobileNav('/inspiration/research', 'Research')}
-              {mobileNav('/inspiration/ideas', 'Ideas')}
-              {mobileNav('/inspiration/quotes', 'Quotes')}
+              <DrawerSectionLabel>Quick Links</DrawerSectionLabel>
+              {ff.entertainmentEnabled && mobileNav('/entertainment/music', 'Music')}
+              {ff.entertainmentEnabled && mobileNav('/entertainment/books', 'Books')}
+              {ff.entertainmentEnabled && mobileNav('/entertainment/tv', 'TV/Movies')}
+              {ff.inspirationEnabled && mobileNav('/inspiration/research', 'Research')}
+              {ff.inspirationEnabled && mobileNav('/inspiration/ideas', 'Ideas')}
+              {ff.inspirationEnabled && mobileNav('/inspiration/quotes', 'Quotes')}
             </>
           )}
           <DrawerDivider />

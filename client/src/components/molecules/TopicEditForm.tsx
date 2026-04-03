@@ -6,7 +6,7 @@ const Card = styled.div`
   padding: 12px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   display: flex;
   flex-direction: column;
   gap: 10px;

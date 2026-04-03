@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
-import { theme } from '@shared/theme/tokens';
+import { lightTheme, darkTheme } from '@shared/theme/tokens';
+import { useUIStore } from './stores/uiStore.js';
 import { GlobalStyle } from './styles/GlobalStyle.js';
 import { AuthProvider } from './contexts/AuthContext.js';
 import { EncryptionProvider } from './contexts/EncryptionContext.js';
@@ -23,8 +24,11 @@ function R({ children }: { children: React.ReactNode }) {
 }
 
 export function App() {
+  const themeMode = useUIStore(s => s.themeMode);
+  const activeTheme = themeMode === 'dark' ? darkTheme : lightTheme;
+
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={activeTheme}>
       <GlobalStyle />
       <AuthProvider>
         <EncryptionProvider>

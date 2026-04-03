@@ -39,7 +39,7 @@ function getCustomType(topicName: string | undefined): string | null {
 const Card = styled.div<{ $editing?: boolean }>`
   border: 1px solid ${({ theme, $editing }) => $editing ? theme.colors.accent : theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   margin-bottom: 4px;
 `;
 

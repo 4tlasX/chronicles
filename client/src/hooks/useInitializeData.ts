@@ -19,7 +19,9 @@ export function useInitializeData() {
     isInitialized, setLoading, isLoading,
   } = useEntriesStore();
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
+  const setThemeMode = useUIStore(s => s.setThemeMode);
   const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
+  const setBackgroundOpacity = useUIStore(s => s.setBackgroundOpacity);
 
   const handleUnlock = useCallback(async (password: string) => {
     if (!encryptionData?.kekSalt || !encryptionData?.encryptedMasterKey || !encryptionData?.kekWrapIv) {
@@ -41,7 +43,9 @@ export function useInitializeData() {
         const settingsMap: Record<string, unknown> = {};
         for (const s of settingsData) settingsMap[s.key] = s.value;
         if (typeof settingsMap.headerColor === 'string') setHeaderColor(settingsMap.headerColor);
+        if (settingsMap.themeMode === 'light' || settingsMap.themeMode === 'dark') setThemeMode(settingsMap.themeMode);
         if (typeof settingsMap.backgroundImage === 'string') setBackgroundImage(settingsMap.backgroundImage);
+        if (typeof settingsMap.backgroundOpacity === 'string') setBackgroundOpacity(parseFloat(settingsMap.backgroundOpacity));
 
         // Feature flags
         const flags: Record<string, boolean> = {};

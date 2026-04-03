@@ -18,9 +18,7 @@ const Pane = styled.div<{ $hidden?: boolean }>`
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.8);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
   border-right: 1px solid ${({ theme }) => theme.colors.border};
   @media (max-width: 768px) {
     width: 100%;
@@ -38,8 +36,9 @@ const Header = styled.div`
 `;
 
 const Title = styled.h2`
-  font-size: 18px;
-  font-weight: 700;
+  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-size: ${({ theme }) => theme.typography.h3.fontSize};
+  font-weight: ${({ theme }) => theme.typography.h3.fontWeight};
   color: ${({ theme }) => theme.colors.text};
 `;
 
@@ -71,8 +70,11 @@ const AllItem = styled.button<{ $active?: boolean }>`
   gap: 8px;
   width: 100%;
   padding: 8px 12px;
-  font-size: 14px;
-  font-weight: ${({ $active }) => $active ? 600 : 400};
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.text};
   background: ${({ $active }) => $active ? 'rgba(0, 0, 0, 0.06)' : 'transparent'};
   border: none;

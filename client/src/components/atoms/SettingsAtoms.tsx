@@ -4,20 +4,20 @@ import { Link } from 'react-router-dom';
 export const ActionButton = styled.button`
   padding: 6px 16px;
   font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  background: white;
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.background};
+  border: none;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   cursor: pointer;
-  transition: background 0.15s;
-  &:hover { background: ${({ theme }) => theme.colors.surfaceHover}; }
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.85; }
 `;
 
 export const SignOutButton = styled.button`
   padding: 6px 16px;
   font-size: 14px;
   color: ${({ theme }) => theme.colors.danger};
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   cursor: pointer;
@@ -32,8 +32,15 @@ export const SelectedColorLabel = styled.div`
 `;
 
 export const BackLink = styled(Link)`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.accent};
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.text};
   text-decoration: none;
-  &:hover { text-decoration: underline; }
+  &:hover { opacity: 0.7; }
 `;

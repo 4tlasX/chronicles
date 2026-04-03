@@ -20,7 +20,7 @@ export function TopicsView() {
   const topics = useEntriesStore(s => s.topics);
   const entries = useEntriesStore(s => s.decryptedEntries);
   const setTopics = useEntriesStore(s => s.setTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#2d2c2a';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
   const navigate = useNavigate();
 
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);

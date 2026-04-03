@@ -9,7 +9,7 @@ export type { TaskFieldValues } from '../../../types/fields.js';
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm}px;
+  gap: ${({ theme }) => theme.spacing.lg}px;
 `;
 
 interface TaskFieldsProps {

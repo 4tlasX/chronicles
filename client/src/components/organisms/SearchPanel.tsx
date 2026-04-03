@@ -10,10 +10,10 @@ import { useUIStore } from '../../stores/uiStore.js';
 const Panel = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm}px;
-  padding: ${({ theme }) => theme.spacing.md}px;
+  gap: ${({ theme }) => theme.spacing.md}px;
+  padding: ${({ theme }) => theme.spacing.lg}px ${({ theme }) => theme.spacing.lg}px ${({ theme }) => theme.spacing.xl}px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  background: rgba(255, 255, 255, 0.95);
+  background: transparent;
 `;
 
 const DateRow = styled.div`
@@ -39,13 +39,15 @@ export function SearchPanel() {
 
   return (
     <Panel>
-      <FormField label="Search">
-        <TextInput
-          value={searchKeyword}
-          onChange={e => setSearchKeyword(e.target.value)}
-          placeholder="Search entries..."
-        />
-      </FormField>
+      <div style={{ marginBottom: 8 }}>
+        <FormField label="Search">
+          <TextInput
+            value={searchKeyword}
+            onChange={e => setSearchKeyword(e.target.value)}
+            placeholder="Search entries..."
+          />
+        </FormField>
+      </div>
       <DateRow>
         <FormField label="From">
           <DateInput

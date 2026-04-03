@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Header } from '../organisms/Header.js';
 import { Sidebar } from '../organisms/Sidebar.js';
 import { Background } from '../organisms/Background.js';
+import { useUIStore } from '../../stores/uiStore.js';
 
 const Layout = styled.div`
   display: flex;
@@ -17,14 +18,14 @@ const Body = styled.div`
   min-height: 0;
 `;
 
-const MainContent = styled.main<{ $transparent?: boolean }>`
+const MainContent = styled.main<{ $transparent?: boolean; $hasBackground?: boolean }>`
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow-y: ${({ $transparent }) => $transparent ? 'hidden' : 'auto'};
-  background: ${({ $transparent }) => $transparent ? 'transparent' : 'rgba(255, 255, 255, 0.9)'};
-  backdrop-filter: ${({ $transparent }) => $transparent ? 'none' : 'blur(12px)'};
+  background: ${({ $transparent, $hasBackground, theme }) =>
+    $transparent ? 'transparent' : $hasBackground ? theme.colors.surfaceOverlay : theme.colors.surfaceOverlay};
 `;
 
 interface AppTemplateProps {

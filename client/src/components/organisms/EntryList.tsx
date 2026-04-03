@@ -14,10 +14,10 @@ const TOPIC_TO_TYPE: Record<string, string> = {
 const ListContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: ${({ theme }) => theme.spacing.sm}px;
-  overflow-y: auto;
-  flex: 1;
+  gap: 0;
+  padding: 0;
+  flex-shrink: 0;
+  background: transparent;
 `;
 
 const EmptyState = styled.div`

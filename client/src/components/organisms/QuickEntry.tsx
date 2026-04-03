@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEntriesStore } from '../../stores/entriesStore.js';
+import { useUIStore } from '../../stores/uiStore.js';
+import { getTopicIcon } from '../../utils/topicIcons.js';
 import { TopicSelectorDropdown } from './TopicSelectorDropdown.js';
 
 interface QuickEntryProps {
@@ -12,9 +14,7 @@ interface QuickEntryProps {
 const Container = styled.div`
   padding: 16px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
 `;
 
 const HeaderRow = styled.div`
@@ -30,8 +30,12 @@ const TopicTrigger = styled.button<{ $hasColor?: boolean }>`
   align-items: center;
   gap: 8px;
   padding: 4px 8px;
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  color: ${({ theme }) => theme.colors.text};
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.textSecondary};
   background: transparent;
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
@@ -42,11 +46,11 @@ const TopicTrigger = styled.button<{ $hasColor?: boolean }>`
   }
 `;
 
-const TopicDot = styled.span<{ $color: string }>`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: ${({ $color }) => $color};
+const TopicIconSmall = styled.span<{ $color: string }>`
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: ${({ $color }) => $color};
   flex-shrink: 0;
 `;
 
@@ -71,46 +75,50 @@ const BodyRow = styled.div`
 
 const Input = styled.input`
   flex: 1;
-  padding: 8px 16px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
+  font-size: 15px;
+  font-style: italic;
   color: ${({ theme }) => theme.colors.text};
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
   outline: none;
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.textMuted};
+    font-style: italic;
   }
 
   &:focus {
-    border-color: ${({ theme }) => theme.colors.borderFocus};
+    border-bottom-color: ${({ theme }) => theme.colors.text};
   }
 `;
 
 const SubmitButton = styled.button<{ $disabled?: boolean }>`
-  padding: 8px 12px;
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  font-weight: ${({ theme }) => theme.fontWeight.medium};
-  color: ${({ theme }) => theme.colors.textInverse};
-  background: ${({ theme, $disabled }) =>
-    $disabled ? theme.colors.border : theme.colors.accent};
+  padding: 0;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme, $disabled }) =>
+    $disabled ? theme.colors.textMuted : theme.colors.text};
+  background: transparent;
   border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
   cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
-  opacity: ${({ $disabled }) => ($disabled ? 0.6 : 1)};
-  transition: background 0.15s ease;
+  transition: color 0.15s ease;
+  white-space: nowrap;
 
   &:hover {
-    background: ${({ theme, $disabled }) =>
-      $disabled ? theme.colors.border : theme.colors.accentHover};
+    color: ${({ theme, $disabled }) =>
+      $disabled ? theme.colors.border : theme.colors.text};
   }
 `;
 
 export function QuickEntry({ onCreateEntry }: QuickEntryProps) {
   const topics = useEntriesStore((s) => s.topics);
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
 
   const [text, setText] = useState('');
   const [quickTopicId, setQuickTopicId] = useState<number | null>(null);
@@ -138,7 +146,9 @@ export function QuickEntry({ onCreateEntry }: QuickEntryProps) {
         <TopicTrigger onClick={() => setDropdownOpen(!dropdownOpen)}>
           {selectedTopic ? (
             <>
-              <TopicDot $color={selectedTopic.color || '#999'} />
+              <TopicIconSmall $color={headerColor}>
+                <FontAwesomeIcon icon={getTopicIcon(selectedTopic.icon)} />
+              </TopicIconSmall>
               {selectedTopic.name}
             </>
           ) : (

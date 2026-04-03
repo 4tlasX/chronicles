@@ -32,7 +32,7 @@ const StatsGrid = styled.div`
 const StatCard = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   padding: 14px;
   text-align: center;
 `;
@@ -58,13 +58,14 @@ const StatSub = styled.div`
 const SectionCard = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   padding: 16px;
 `;
 
 const SectionTitle = styled.h3`
-  font-size: 15px;
-  font-weight: 600;
+  font-family: ${({ theme }) => theme.typography.h3.fontFamily};
+  font-size: ${({ theme }) => theme.typography.h3.fontSize};
+  font-weight: ${({ theme }) => theme.typography.h3.fontWeight};
   color: ${({ theme }) => theme.colors.text};
   margin: 0 0 12px;
 `;

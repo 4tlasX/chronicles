@@ -20,8 +20,10 @@ const Card = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: ${({ theme }) => theme.fontSize.xl}px;
-  font-weight: ${({ theme }) => theme.fontWeight.bold};
+  font-family: ${({ theme }) => theme.typography.brand.fontFamily};
+  font-size: ${({ theme }) => theme.typography.h1.fontSize};
+  font-weight: ${({ theme }) => theme.typography.h1.fontWeight};
+  letter-spacing: ${({ theme }) => theme.typography.brand.letterSpacing};
   color: ${({ theme }) => theme.colors.text};
   margin-bottom: ${({ theme }) => theme.spacing.lg}px;
   text-align: center;

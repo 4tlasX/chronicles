@@ -68,9 +68,11 @@ const ActionBtn = styled.button`
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   cursor: pointer;
   font-size: 12px;
+  opacity: 0.85;
+  transition: opacity 0.15s, color 0.15s;
   &:hover {
+    opacity: 1;
     color: ${({ theme }) => theme.colors.text};
-    background: rgba(0, 0, 0, 0.06);
   }
 `;
 

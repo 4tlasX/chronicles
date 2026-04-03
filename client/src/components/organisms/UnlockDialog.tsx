@@ -26,8 +26,9 @@ const Card = styled.div`
 `;
 
 const Title = styled.h2`
-  font-size: ${({ theme }) => theme.fontSize.lg}px;
-  font-weight: ${({ theme }) => theme.fontWeight.bold};
+  font-family: ${({ theme }) => theme.typography.h3.fontFamily};
+  font-size: ${({ theme }) => theme.typography.h3.fontSize};
+  font-weight: ${({ theme }) => theme.typography.h3.fontWeight};
   margin-bottom: ${({ theme }) => theme.spacing.sm}px;
 `;
 

@@ -12,8 +12,9 @@ const Section = styled.div`
 `;
 
 const SectionTitle = styled.h3`
-  font-size: ${({ theme }) => theme.fontSize.md}px;
-  font-weight: ${({ theme }) => theme.fontWeight.semibold};
+  font-family: ${({ theme }) => theme.typography.h3.fontFamily};
+  font-size: ${({ theme }) => theme.typography.h3.fontSize};
+  font-weight: ${({ theme }) => theme.typography.h3.fontWeight};
   margin-bottom: ${({ theme }) => theme.spacing.md}px;
 `;
 
@@ -35,8 +36,7 @@ const Form = styled.form`
   padding: ${({ theme }) => theme.spacing.md}px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.1);
+  background: ${({ theme }) => theme.colors.surface};
 `;
 
 const Message = styled.div<{ $error?: boolean }>`

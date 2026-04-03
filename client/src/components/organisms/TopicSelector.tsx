@@ -20,7 +20,11 @@ const Trigger = styled.button`
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: ${({ theme }) => theme.fontWeight.medium};
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   background: transparent;
@@ -123,7 +127,7 @@ export function TopicSelector({ selectedId, onSelect, topics }: TopicSelectorPro
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const headerColor = useUIStore(s => s.headerColor) || '#0F4C5C';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
 
   const selected = topics.find(t => t.id === selectedId);
 

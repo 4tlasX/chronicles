@@ -20,7 +20,7 @@ export function CalendarView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#2d2c2a';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
   const setSelectedEntryId = useUIStore(s => s.setSelectedEntryId);
   const navigate = useNavigate();
 

@@ -13,8 +13,7 @@ const Layout = styled.div`
 const Body = styled.div`
   flex: 1;
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
 `;
 
 const Content = styled.div`
@@ -24,8 +23,9 @@ const Content = styled.div`
 `;
 
 const PageTitle = styled.h1`
-  font-size: ${({ theme }) => theme.fontSize.xl}px;
-  font-weight: ${({ theme }) => theme.fontWeight.bold};
+  font-family: ${({ theme }) => theme.typography.h1.fontFamily};
+  font-size: ${({ theme }) => theme.typography.h1.fontSize};
+  font-weight: ${({ theme }) => theme.typography.h1.fontWeight};
   margin-bottom: ${({ theme }) => theme.spacing.xl}px;
 `;
 

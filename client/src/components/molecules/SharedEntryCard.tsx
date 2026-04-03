@@ -4,7 +4,7 @@ import { Spinner } from '../atoms/Spinner.js';
 const Card = styled.div`
   width: 100%;
   max-width: 680px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
   overflow: hidden;

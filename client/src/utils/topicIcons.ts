@@ -4,6 +4,7 @@
  */
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import {
+  faCheck,
   faCircleCheck,
   faLightbulb,
   faMagnifyingGlass,
@@ -21,9 +22,26 @@ import {
   faDumbbell,
   faTriangleExclamation,
   faCircle,
+  faPen,
+  faPencil,
+  faNoteSticky,
+  faHeart,
+  faStar,
+  faHome,
+  faBriefcase,
+  faGraduationCap,
+  faCode,
+  faCamera,
+  faPalette,
+  faPlane,
+  faCar,
+  faGamepad,
+  faCoffee,
+  faMugHot,
 } from '@fortawesome/free-solid-svg-icons';
 
 const ICON_MAP: Record<string, IconDefinition> = {
+  'check': faCheck,
   'circle-check': faCircleCheck,
   'lightbulb': faLightbulb,
   'magnifying-glass': faMagnifyingGlass,
@@ -40,6 +58,22 @@ const ICON_MAP: Record<string, IconDefinition> = {
   'flag': faFlag,
   'dumbbell': faDumbbell,
   'triangle-exclamation': faTriangleExclamation,
+  'pen': faPen,
+  'pencil': faPencil,
+  'note-sticky': faNoteSticky,
+  'heart': faHeart,
+  'star': faStar,
+  'home': faHome,
+  'briefcase': faBriefcase,
+  'graduation-cap': faGraduationCap,
+  'code': faCode,
+  'camera': faCamera,
+  'palette': faPalette,
+  'plane': faPlane,
+  'car': faCar,
+  'gamepad': faGamepad,
+  'coffee': faCoffee,
+  'mug-hot': faMugHot,
 };
 
 /**

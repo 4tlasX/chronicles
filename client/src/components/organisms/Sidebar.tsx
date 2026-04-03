@@ -1,17 +1,18 @@
 import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '../atoms/Icon.js';
 import { Button } from '../atoms/Button.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
+import { getTopicIcon } from '../../utils/topicIcons.js';
 
 const SidebarContainer = styled.aside`
   width: 280px;
   min-width: 280px;
   height: 100%;
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
   border-right: 1px solid ${({ theme }) => theme.colors.border};
   display: flex;
   flex-direction: column;
@@ -27,7 +28,7 @@ const TopicList = styled.div`
   flex: 1;
 `;
 
-const TopicItem = styled.button<{ $active?: boolean; $color?: string }>`
+const TopicItem = styled.button<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
@@ -36,7 +37,7 @@ const TopicItem = styled.button<{ $active?: boolean; $color?: string }>`
   font-size: ${({ theme }) => theme.fontSize.sm}px;
   color: ${({ theme, $active }) => $active ? theme.colors.accent : theme.colors.text};
   font-weight: ${({ $active, theme }) => $active ? theme.fontWeight.semibold : theme.fontWeight.normal};
-  background: ${({ $active }) => $active ? 'rgba(0, 180, 216, 0.08)' : 'transparent'};
+  background: ${({ $active, theme }) => $active ? theme.colors.surfaceHover : 'transparent'};
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   cursor: pointer;
@@ -44,15 +45,17 @@ const TopicItem = styled.button<{ $active?: boolean; $color?: string }>`
   transition: background 0.15s;
 
   &:hover {
-    background: ${({ $active }) => $active ? 'rgba(0, 180, 216, 0.12)' : 'rgba(0, 0, 0, 0.04)'};
+    background: ${({ theme }) => theme.colors.surfaceHover};
   }
 `;
 
-const TopicDot = styled.span<{ $color: string }>`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: ${({ $color }) => $color};
+const TopicIconWrapper = styled.span<{ $color: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  font-size: 12px;
+  color: ${({ $color }) => $color};
   flex-shrink: 0;
 `;
 
@@ -81,10 +84,10 @@ const SidebarTitle = styled.h2`
 export function Sidebar() {
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
   const topics = useEntriesStore(s => s.topics);
   const entries = useEntriesStore(s => s.decryptedEntries);
 
-  // Count entries per topic
   const countForTopic = (topicId: number) =>
     entries.filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === topicId).length;
 
@@ -112,7 +115,9 @@ export function Sidebar() {
             $active={selectedTopicId === topic.id}
             onClick={() => setSelectedTopicId(topic.id)}
           >
-            <TopicDot $color={topic.color || '#6b7280'} />
+            <TopicIconWrapper $color={headerColor}>
+              <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
+            </TopicIconWrapper>
             {topic.name}
             <TopicCount>{countForTopic(topic.id)}</TopicCount>
           </TopicItem>

@@ -16,7 +16,7 @@ import type { MilestoneEntryData, TaskEntryData } from '../../types/goals.js';
 const Card = styled.div<{ $editing?: boolean }>`
   border: 1px solid ${({ theme, $editing }) => $editing ? theme.colors.accent : theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
 `;
 
 const CardHeader = styled.div`

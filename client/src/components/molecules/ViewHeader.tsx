@@ -1,4 +1,6 @@
 import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 
 const Bar = styled.div`
   display: flex;
@@ -15,18 +17,26 @@ const TitleRow = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 20px;
-  font-weight: 700;
+  font-family: ${({ theme }) => theme.typography.h2.fontFamily};
+  font-size: ${({ theme }) => theme.typography.h2.fontSize};
+  font-weight: ${({ theme }) => theme.typography.h2.fontWeight};
   color: ${({ theme }) => theme.colors.text};
 `;
 
 const Back = styled.button`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.accent};
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.text};
   background: none;
   border: none;
   cursor: pointer;
-  &:hover { text-decoration: underline; }
+  &:hover { opacity: 0.7; }
 `;
 
 interface ViewHeaderProps {
@@ -43,7 +53,7 @@ export function ViewHeader({ title, backLabel = 'Back to Journal', onBack, right
         <Title>{title}</Title>
         {right}
       </TitleRow>
-      <Back onClick={onBack}>{backLabel}</Back>
+      <Back onClick={onBack}><FontAwesomeIcon icon={faChevronLeft} size="xs" /> {backLabel}</Back>
     </Bar>
   );
 }

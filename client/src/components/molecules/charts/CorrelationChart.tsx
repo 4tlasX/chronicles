@@ -4,13 +4,14 @@ import type { CorrelationResult } from '../../../utils/correlationAnalysis.js';
 const Card = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   padding: 16px;
 `;
 
 const Title = styled.h3`
-  font-size: 15px;
-  font-weight: 600;
+  font-family: ${({ theme }) => theme.typography.bodySm.fontFamily};
+  font-size: ${({ theme }) => theme.typography.bodySm.fontSize};
+  font-weight: ${({ theme }) => theme.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text};
   margin: 0 0 12px;
 `;

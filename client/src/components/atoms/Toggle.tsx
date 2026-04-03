@@ -11,7 +11,7 @@ const Track = styled.div<{ $checked: boolean }>`
   width: 40px;
   height: 22px;
   border-radius: 11px;
-  background: ${({ $checked, theme }) => $checked ? theme.colors.accent : theme.colors.border};
+  background: ${({ $checked, theme }) => $checked ? theme.colors.background : theme.colors.border};
   position: relative;
   transition: background 0.2s;
 `;

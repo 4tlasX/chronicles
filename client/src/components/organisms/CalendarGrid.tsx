@@ -53,8 +53,11 @@ const NavBtn = styled.button`
 `;
 
 const MonthLabel = styled.h2`
-  font-size: 18px;
-  font-weight: 600;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.text};
   min-width: 160px;
   text-align: center;
@@ -77,7 +80,7 @@ const WeekdayLabel = styled.div`
   text-align: center;
   font-size: 13px;
   font-weight: 500;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: ${({ theme }) => theme.colors.text};
   padding: 4px 0;
 `;
 
@@ -114,14 +117,15 @@ const DayCell = styled.div<{ $isOutside?: boolean; $isSelected?: boolean }>`
 const DayNumber = styled.div<{ $isToday?: boolean; $accentColor: string }>`
   font-size: 13px;
   font-weight: ${({ $isToday }) => $isToday ? 700 : 400};
-  color: ${({ $isToday }) => $isToday ? 'white' : 'inherit'};
+  color: inherit;
   width: 24px;
   height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: ${({ $isToday, $accentColor }) => $isToday ? $accentColor : 'transparent'};
+  background: transparent;
+  border: ${({ $isToday, theme }) => $isToday ? `1.5px solid ${theme.colors.text}` : 'none'};
   margin-bottom: 2px;
   flex-shrink: 0;
 `;

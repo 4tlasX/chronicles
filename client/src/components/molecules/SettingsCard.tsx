@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 const Card = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   overflow: hidden;
 `;
 

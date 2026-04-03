@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faStar } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { useUIStore } from '../../stores/uiStore.js';
 import { stripHtml } from '../../utils/stripHtml.js';
@@ -28,23 +28,19 @@ const Card = styled.button<{ $active?: boolean }>`
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 12px;
-  margin-bottom: 5px;
+  padding: 12px 24px 28px;
+  margin-bottom: 0;
   text-align: left;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background: ${({ $active }) =>
-    $active ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.9)'};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-left: ${({ $active }) =>
-    $active ? '2px solid #6b7280' : '1px solid transparent'};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  background: ${({ $active, theme }) =>
+    $active ? theme.colors.surfaceHover : 'transparent'};
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    background: ${({ $active }) =>
-      $active ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.6)'};
+    background: ${({ theme }) => theme.colors.surfaceHover};
   }
 `;
 
@@ -52,16 +48,15 @@ const HeaderRow = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
 `;
 
 const TopicBadge = styled.div<{ $bgColor: string }>`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  background: ${({ $bgColor }) => $bgColor}80;
+  padding: 0;
+  background: none;
   flex-shrink: 0;
   cursor: pointer;
 `;
@@ -70,15 +65,18 @@ const TopicIcon = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: ${({ theme }) => theme.colors.textSecondary};
   font-size: 11px;
   flex-shrink: 0;
 `;
 
 const TopicLabel = styled.span`
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
-  font-weight: ${({ theme }) => theme.fontWeight.medium};
-  color: white;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03rem;
+  color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
 const Timestamp = styled.span`
@@ -98,24 +96,27 @@ const Checkbox = styled.div<{ $checked?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  margin-top: 2px;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  margin-top: 5px;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   border: 2px solid ${({ theme, $checked }) =>
-    $checked ? theme.colors.accent : theme.colors.accentLight};
-  background: ${({ theme, $checked }) =>
-    $checked ? theme.colors.accent : 'transparent'};
+    $checked ? theme.colors.text : '#999'};
+  background: transparent;
   cursor: pointer;
   padding: 0;
-  color: white;
+  color: ${({ theme }) => theme.colors.text};
   font-size: 9px;
   line-height: 1;
 `;
 
 const PreviewText = styled.div<{ $completed?: boolean }>`
-  font-size: 14px;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
   color: ${({ $completed, theme }) =>
     $completed ? theme.colors.textMuted : theme.colors.textSecondary};
   text-decoration: ${({ $completed }) => ($completed ? 'line-through' : 'none')};
@@ -123,7 +124,7 @@ const PreviewText = styled.div<{ $completed?: boolean }>`
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  line-height: 1.4;
+  line-height: 1.5;
 `;
 
 const Footer = styled.div`
@@ -148,13 +149,13 @@ const TypeBadge = styled.span<{ $type: string }>`
   padding: 1px 8px;
   font-size: 11px;
   font-weight: ${({ theme }) => theme.fontWeight.medium};
-  border-radius: ${({ theme }) => theme.borderRadius.full}px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: ${({ $type }) => TYPE_COLORS[$type]?.bg || 'rgba(0,0,0,0.05)'};
   color: ${({ $type, theme }) => TYPE_COLORS[$type]?.text || theme.colors.textSecondary};
   text-transform: capitalize;
 `;
 
-const FavoriteStar = styled.button`
+const FavoriteStar = styled.span`
   margin-left: auto;
   color: #f59e0b;
   font-size: 12px;
@@ -187,15 +188,16 @@ export function EntryCard({
   isFavorite,
   customType,
 }: EntryCardProps) {
-  const headerColor = useUIStore(s => s.headerColor) || '#0F4C5C';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
   const plainText = stripHtml(content);
   const preview = plainText.slice(0, 160) || 'Untitled entry';
 
-  const formatted = new Date(date).toLocaleTimeString('en-US', {
+  const d = new Date(date);
+  const formatted = `${d.getMonth() + 1}/${d.getDate()} ${d.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
-  });
+  })}`;
 
   return (
     <Card $active={active} onClick={onClick}>
@@ -224,7 +226,7 @@ export function EntryCard({
               if (onToggleComplete) onToggleComplete(id, !isCompleted);
             }}
           >
-            {isCompleted && <FontAwesomeIcon icon={faCheck} size="xs" />}
+            {isCompleted && '✓'}
           </Checkbox>
         )}
         <PreviewText $completed={hasCheckbox && isCompleted}>{preview}</PreviewText>

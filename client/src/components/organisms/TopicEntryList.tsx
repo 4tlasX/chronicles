@@ -13,9 +13,7 @@ const Panel = styled.div<{ $hidden?: boolean }>`
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.9);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
   @media (max-width: 768px) {
     display: ${({ $hidden }) => $hidden ? 'none' : 'flex'};
   }
@@ -30,8 +28,9 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 18px;
-  font-weight: 600;
+  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-size: ${({ theme }) => theme.typography.h3.fontSize};
+  font-weight: ${({ theme }) => theme.typography.h3.fontWeight};
   color: ${({ theme }) => theme.colors.text};
 `;
 
@@ -50,12 +49,19 @@ const MobileBack = styled.button`
 `;
 
 const BackLink = styled.button`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.accent};
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.text};
   background: none;
   border: none;
   cursor: pointer;
-  &:hover { text-decoration: underline; }
+  &:hover { opacity: 0.7; }
   @media (max-width: 768px) { display: none; }
 `;
 
@@ -95,7 +101,7 @@ export function TopicEntryList({ title, entries, allTopics, headerColor, hiddenM
           </MobileBack>
           <Title>{title}</Title>
         </div>
-        <BackLink onClick={onBackToJournal}>Back to Journal</BackLink>
+        <BackLink onClick={onBackToJournal}><FontAwesomeIcon icon={faChevronLeft} size="xs" /> Back to Journal</BackLink>
       </Header>
 
       <ListArea>

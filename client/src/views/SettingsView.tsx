@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { SettingsTemplate } from '../components/templates/SettingsTemplate.js';
 import { SettingsCard, SettingsRow } from '../components/molecules/SettingsCard.js';
 import {
@@ -74,8 +74,12 @@ export function SettingsView() {
   const setFeatureFlags = useEntriesStore(s => s.setFeatureFlags);
   const headerColor = useUIStore(s => s.headerColor);
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
+  const themeMode = useUIStore(s => s.themeMode);
+  const setThemeMode = useUIStore(s => s.setThemeMode);
   const backgroundImage = useUIStore(s => s.backgroundImage);
   const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
+  const backgroundOpacity = useUIStore(s => s.backgroundOpacity);
+  const setBackgroundOpacity = useUIStore(s => s.setBackgroundOpacity);
   const navigate = useNavigate();
 
   // How to Use
@@ -113,7 +117,9 @@ export function SettingsView() {
       for (const s of settings) map[s.key] = s.value;
       if (typeof map.timezone === 'string') setTimezone(map.timezone);
       if (typeof map.headerColor === 'string') setHeaderColor(map.headerColor);
+      if (map.themeMode === 'light' || map.themeMode === 'dark') setThemeMode(map.themeMode);
       if (typeof map.backgroundImage === 'string') setBackgroundImage(map.backgroundImage);
+      if (typeof map.backgroundOpacity === 'string') setBackgroundOpacity(parseFloat(map.backgroundOpacity as string));
       const f: Record<string, boolean> = {};
       for (const feat of FEATURES) {
         f[feat.key] = map[feat.key] === true;
@@ -134,9 +140,19 @@ export function SettingsView() {
     await settingsApi.upsert('headerColor', color).catch(() => {});
   };
 
-  const handleBackgroundChange = async (image: string) => {
+  const handleThemeModeChange = async (mode: 'light' | 'dark') => {
+    setThemeMode(mode);
+    await settingsApi.upsert('themeMode', mode).catch(() => {});
+  };
+
+  const handleImageChange = async (image: string) => {
     setBackgroundImage(image);
     await settingsApi.upsert('backgroundImage', image).catch(() => {});
+  };
+
+  const handleOpacityChange = async (opacity: number) => {
+    setBackgroundOpacity(opacity);
+    await settingsApi.upsert('backgroundOpacity', String(opacity)).catch(() => {});
   };
 
   const handleFeatureToggle = async (key: string, value: boolean) => {
@@ -277,7 +293,7 @@ export function SettingsView() {
     <SettingsTemplate title="">
       <HeaderRow>
         <Title>Settings</Title>
-        <BackLink to="/">Back to Journal</BackLink>
+        <BackLink to="/"><FontAwesomeIcon icon={faChevronLeft} size="xs" /> Back to Journal</BackLink>
       </HeaderRow>
 
       {/* Account */}
@@ -322,15 +338,40 @@ export function SettingsView() {
       <SectionTitle>Theme</SectionTitle>
       <SettingsCard>
         <ColorSection>
+          <ColorSectionTitle>Appearance</ColorSectionTitle>
+          <ColorSectionDesc>Choose light or dark mode</ColorSectionDesc>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button
+              variant={themeMode === 'light' ? 'primary' : 'secondary'}
+              onClick={() => handleThemeModeChange('light')}
+              style={{ flex: 1 }}
+            >
+              Light
+            </Button>
+            <Button
+              variant={themeMode === 'dark' ? 'primary' : 'secondary'}
+              onClick={() => handleThemeModeChange('dark')}
+              style={{ flex: 1 }}
+            >
+              Dark
+            </Button>
+          </div>
+        </ColorSection>
+        <ColorSection>
           <ColorSectionTitle>Header and Accent Color</ColorSectionTitle>
           <ColorSectionDesc>Choose a color for the header bar and accents</ColorSectionDesc>
           <ColorPicker colors={HEADER_COLORS} selected={headerColor} onChange={handleHeaderColorChange} />
           <SelectedColorLabel>Selected: {selectedColorLabel}</SelectedColorLabel>
         </ColorSection>
         <ColorSection style={{ borderBottom: 'none' }}>
-          <ColorSectionTitle>Background Image</ColorSectionTitle>
-          <ColorSectionDesc>Choose a background image for the app</ColorSectionDesc>
-          <BackgroundPicker selected={backgroundImage} onChange={handleBackgroundChange} />
+          <ColorSectionTitle>Background Pattern</ColorSectionTitle>
+          <ColorSectionDesc>Choose a subtle paper texture for the background</ColorSectionDesc>
+          <BackgroundPicker
+            selected={backgroundImage}
+            opacity={backgroundOpacity}
+            onImageChange={handleImageChange}
+            onOpacityChange={handleOpacityChange}
+          />
         </ColorSection>
       </SettingsCard>
 

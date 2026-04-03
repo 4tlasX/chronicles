@@ -7,6 +7,8 @@ const Handle = styled.button`
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.colors.textMuted};
+  opacity: 0.85;
+  transition: opacity 0.15s, color 0.15s;
   background: none;
   border: none;
   cursor: grab;
@@ -15,7 +17,7 @@ const Handle = styled.button`
   flex-shrink: 0;
   padding: 2px;
   &:active { cursor: grabbing; }
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  &:hover { opacity: 1; color: ${({ theme }) => theme.colors.text}; }
 `;
 
 interface DragHandleProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}

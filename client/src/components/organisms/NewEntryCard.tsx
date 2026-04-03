@@ -47,7 +47,7 @@ const AddButton = styled.button<{ $color: string }>`
 const Card = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.accent};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   margin-bottom: 8px;
 `;
 

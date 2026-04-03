@@ -1,19 +1,32 @@
 import 'styled-components';
 
-// Re-declare the theme shape here to avoid cross-project reference issues
 declare module 'styled-components' {
   export interface DefaultTheme {
+    fontFamily: {
+      serif: string;
+      sans: string;
+      ui: string;
+      brand: string;
+    };
+    typography: {
+      display: { fontFamily: string; fontSize: string; fontWeight: number };
+      h1: { fontFamily: string; fontSize: string; fontWeight: number };
+      h2: { fontFamily: string; fontSize: string; fontWeight: number };
+      h3: { fontFamily: string; fontSize: string; fontWeight: number };
+      body: { fontFamily: string; fontSize: string; fontWeight: number };
+      bodySm: { fontFamily: string; fontSize: string; fontWeight: number };
+      caption: { fontFamily: string; fontSize: string; fontWeight: number };
+      brand: { fontFamily: string; fontSize: string; fontWeight: number; letterSpacing: string };
+    };
     colors: {
       accent: string;
       accentHover: string;
       accentLight: string;
-      header: string;
-      headerHover: string;
       background: string;
       surface: string;
       surfaceHover: string;
-      surfaceGlass: string;
-      surfaceGlassLight: string;
+      surfaceOverlay: string;
+      surfaceOverlayBlur: string;
       text: string;
       textSecondary: string;
       textMuted: string;
@@ -59,6 +72,7 @@ declare module 'styled-components' {
       sm: string;
       md: string;
       lg: string;
+      focus: string;
     };
     zIndex: {
       sidebar: number;

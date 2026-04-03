@@ -4,7 +4,9 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import styled from 'styled-components';
-import { useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPenNib } from '@fortawesome/free-solid-svg-icons';
 
 const EditorWrapper = styled.div`
   flex: 1;
@@ -14,10 +16,12 @@ const EditorWrapper = styled.div`
 
   .tiptap {
     flex: 1;
-    padding: ${({ theme }) => theme.spacing.md}px;
+    position: relative;
+    z-index: 1;
+    padding: 16px 56px 32px;
     outline: none;
-    font-size: ${({ theme }) => theme.fontSize.md}px;
-    line-height: 1.6;
+    font-size: 18px;
+    line-height: 1.85;
     color: ${({ theme }) => theme.colors.text};
 
     p.is-editor-empty:first-child::before {
@@ -28,10 +32,7 @@ const EditorWrapper = styled.div`
       height: 0;
     }
 
-    h1 { font-size: 1.5em; font-weight: 700; margin: 0.5em 0; }
-    h2 { font-size: 1.25em; font-weight: 600; margin: 0.5em 0; }
-    h3 { font-size: 1.1em; font-weight: 600; margin: 0.5em 0; }
-    ul, ol { padding-left: 1.5em; }
+ul, ol { padding-left: 1.5em; }
     blockquote {
       border-left: 3px solid ${({ theme }) => theme.colors.border};
       padding-left: 1em;
@@ -52,35 +53,62 @@ const EditorWrapper = styled.div`
   }
 `;
 
+const ToolbarRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 24px;
+  border-bottom: none;
+`;
+
+const ToolbarToggle = styled.button<{ $open: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+  margin-left: auto;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
 const Toolbar = styled.div`
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: ${({ theme }) => theme.spacing.sm}px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  margin-right: auto;
   flex-wrap: wrap;
 `;
 
 const ToolbarDivider = styled.div`
   width: 1px;
-  height: 20px;
+  height: 16px;
   background: ${({ theme }) => theme.colors.border};
-  margin: 0 4px;
+  margin: 0 8px;
 `;
 
 const ToolbarButton = styled.button<{ $active?: boolean }>`
-  padding: 4px 8px;
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  font-weight: ${({ $active, theme }) => $active ? theme.fontWeight.bold : theme.fontWeight.normal};
-  color: ${({ $active, theme }) => $active ? theme.colors.accent : theme.colors.textSecondary};
-  background: ${({ $active }) => $active ? 'rgba(0, 180, 216, 0.08)' : 'transparent'};
+  padding: 5px 8px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 12px;
+  font-weight: ${({ $active }) => $active ? 600 : 400};
+  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textSecondary};
+  background: transparent;
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   cursor: pointer;
-  transition: background 0.1s;
+  transition: color 0.15s;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.05);
+    color: ${({ theme }) => theme.colors.text};
   }
 `;
 
@@ -110,6 +138,7 @@ interface EditorProps {
 }
 
 export function Editor({ content, onChange, readOnly = false, placeholder = 'Start writing...', charLimit }: EditorProps) {
+  const [toolbarOpen, setToolbarOpen] = useState(false);
   // Store charLimit in a ref-like closure so the plugin always sees the latest value
   const limitRef = useMemo(() => ({ current: charLimit }), []);
   limitRef.current = charLimit;
@@ -148,67 +177,61 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
   return (
     <EditorWrapper>
       {!readOnly && (
-        <Toolbar>
-          <ToolbarButton
-            $active={editor.isActive('bold')}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-          >B</ToolbarButton>
-          <ToolbarButton
-            $active={editor.isActive('italic')}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-          ><em>I</em></ToolbarButton>
-          <ToolbarButton
-            $active={editor.isActive('strike')}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-          ><s>S</s></ToolbarButton>
-          <ToolbarButton
-            $active={editor.isActive('code')}
-            onClick={() => editor.chain().focus().toggleCode().run()}
-          >&lt;/&gt;</ToolbarButton>
-          <ToolbarDivider />
-          <ToolbarButton
-            $active={editor.isActive('heading', { level: 1 })}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          >H1</ToolbarButton>
-          <ToolbarButton
-            $active={editor.isActive('heading', { level: 2 })}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          >H2</ToolbarButton>
-          <ToolbarButton
-            $active={editor.isActive('heading', { level: 3 })}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          >H3</ToolbarButton>
-          <ToolbarDivider />
-          <ToolbarButton
-            $active={editor.isActive('bulletList')}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-          >• List</ToolbarButton>
-          <ToolbarButton
-            $active={editor.isActive('orderedList')}
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          >1. List</ToolbarButton>
-          <ToolbarDivider />
-          <ToolbarButton
-            $active={editor.isActive('blockquote')}
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          >"</ToolbarButton>
-          <ToolbarButton
-            $active={editor.isActive('codeBlock')}
-            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          >{'{}'}</ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          >—</ToolbarButton>
-          <ToolbarDivider />
-          <ToolbarButton
-            onClick={() => editor.chain().focus().undo().run()}
-            disabled={!editor.can().undo()}
-          >↩</ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().redo().run()}
-            disabled={!editor.can().redo()}
-          >↪</ToolbarButton>
-        </Toolbar>
+        <ToolbarRow>
+          {toolbarOpen && (
+            <Toolbar>
+              <ToolbarButton
+                $active={editor.isActive('bold')}
+                onClick={() => editor.chain().focus().toggleBold().run()}
+              >B</ToolbarButton>
+              <ToolbarButton
+                $active={editor.isActive('italic')}
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+              ><em>I</em></ToolbarButton>
+              <ToolbarButton
+                $active={editor.isActive('strike')}
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+              ><s>S</s></ToolbarButton>
+              <ToolbarButton
+                $active={editor.isActive('code')}
+                onClick={() => editor.chain().focus().toggleCode().run()}
+              >&lt;/&gt;</ToolbarButton>
+              <ToolbarDivider />
+              <ToolbarButton
+                $active={editor.isActive('bulletList')}
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+              >• List</ToolbarButton>
+              <ToolbarButton
+                $active={editor.isActive('orderedList')}
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              >1. List</ToolbarButton>
+              <ToolbarDivider />
+              <ToolbarButton
+                $active={editor.isActive('blockquote')}
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              >"</ToolbarButton>
+              <ToolbarButton
+                $active={editor.isActive('codeBlock')}
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+              >{'{}'}</ToolbarButton>
+              <ToolbarButton
+                onClick={() => editor.chain().focus().setHorizontalRule().run()}
+              >—</ToolbarButton>
+              <ToolbarDivider />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().undo().run()}
+                disabled={!editor.can().undo()}
+              >↩</ToolbarButton>
+              <ToolbarButton
+                onClick={() => editor.chain().focus().redo().run()}
+                disabled={!editor.can().redo()}
+              >↪</ToolbarButton>
+            </Toolbar>
+          )}
+          <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)}>
+            <FontAwesomeIcon icon={faPenNib} />
+          </ToolbarToggle>
+        </ToolbarRow>
       )}
       <EditorContent editor={editor} />
     </EditorWrapper>

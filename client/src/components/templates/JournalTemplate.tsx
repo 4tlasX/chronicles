@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import type { ReactNode } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { useUIStore } from '../../stores/uiStore.js';
 
 const ContentArea = styled.div`
   display: flex;
@@ -9,16 +10,14 @@ const ContentArea = styled.div`
   min-height: 0;
 `;
 
-const StyledSidePanel = styled.div<{ $hiddenMobile?: boolean }>`
+const StyledSidePanel = styled.div<{ $hiddenMobile?: boolean; $hasBackground?: boolean }>`
   width: 33%;
   min-width: 320px;
   max-width: 480px;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.8);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
   border-right: 1px solid ${({ theme }) => theme.colors.border};
 
   @media (max-width: 768px) {
@@ -29,14 +28,12 @@ const StyledSidePanel = styled.div<{ $hiddenMobile?: boolean }>`
   }
 `;
 
-const StyledEditorPanel = styled.div<{ $visibleMobile?: boolean }>`
+const StyledEditorPanel = styled.div<{ $visibleMobile?: boolean; $hasBackground?: boolean }>`
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.9);
+  background: ${({ $hasBackground, theme }) => $hasBackground ? theme.colors.surfaceOverlay : theme.colors.surfaceOverlay};
 
   @media (max-width: 768px) {
     display: ${({ $visibleMobile }) => $visibleMobile ? 'flex' : 'none'};
@@ -49,8 +46,12 @@ const StyledMobileBackButton = styled.button`
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.text};
   background: none;
   border: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
@@ -70,7 +71,8 @@ interface SidePanelProps {
 }
 
 export function SidePanel({ hiddenMobile, children }: SidePanelProps) {
-  return <StyledSidePanel $hiddenMobile={hiddenMobile}>{children}</StyledSidePanel>;
+  const hasBackground = !!useUIStore(s => s.backgroundImage);
+  return <StyledSidePanel $hiddenMobile={hiddenMobile} $hasBackground={hasBackground}>{children}</StyledSidePanel>;
 }
 
 interface EditorPanelProps {
@@ -79,7 +81,8 @@ interface EditorPanelProps {
 }
 
 export function EditorPanel({ visibleMobile, children }: EditorPanelProps) {
-  return <StyledEditorPanel $visibleMobile={visibleMobile}>{children}</StyledEditorPanel>;
+  const hasBackground = !!useUIStore(s => s.backgroundImage);
+  return <StyledEditorPanel $visibleMobile={visibleMobile} $hasBackground={hasBackground}>{children}</StyledEditorPanel>;
 }
 
 interface MobileBackButtonProps {

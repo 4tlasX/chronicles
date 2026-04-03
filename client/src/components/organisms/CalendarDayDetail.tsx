@@ -20,8 +20,9 @@ const Header = styled.div`
 `;
 
 const Title = styled.h3`
-  font-size: 15px;
-  font-weight: 600;
+  font-family: ${({ theme }) => theme.typography.bodySm.fontFamily};
+  font-size: ${({ theme }) => theme.typography.bodySm.fontSize};
+  font-weight: ${({ theme }) => theme.fontWeight.semibold};
   color: ${({ theme }) => theme.colors.text};
 `;
 

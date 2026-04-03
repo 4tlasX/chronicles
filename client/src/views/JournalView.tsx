@@ -39,9 +39,11 @@ export function JournalView() {
   const viewMode = useUIStore(s => s.viewMode);
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
-  const headerColor = useUIStore(s => s.headerColor) || '#0F4C5C';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
+  const setThemeMode = useUIStore(s => s.setThemeMode);
   const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
+  const setBackgroundOpacity = useUIStore(s => s.setBackgroundOpacity);
   const filterTopic = topics.find(t => t.id === selectedTopicId);
 
   const [selectedDate, setSelectedDate] = useState(() => new Date());
@@ -73,7 +75,9 @@ export function JournalView() {
         const settingsMap: Record<string, unknown> = {};
         for (const s of settingsData) settingsMap[s.key] = s.value;
         if (typeof settingsMap.headerColor === 'string') setHeaderColor(settingsMap.headerColor);
+        if (settingsMap.themeMode === 'light' || settingsMap.themeMode === 'dark') setThemeMode(settingsMap.themeMode);
         if (typeof settingsMap.backgroundImage === 'string') setBackgroundImage(settingsMap.backgroundImage);
+        if (typeof settingsMap.backgroundOpacity === 'string') setBackgroundOpacity(parseFloat(settingsMap.backgroundOpacity as string));
         // Extract feature flags and store them (must be set before setTopics so filtering works)
         const flags: Record<string, boolean> = {};
         for (const key of Object.keys(settingsMap)) {
@@ -276,9 +280,7 @@ export function JournalView() {
       <JournalTemplate
         sidePanel={
           <SidePanel hiddenMobile={showMobileEditor}>
-            <SidePadding>
-              <ViewTabs onDateTabClick={() => setCalendarExpanded(prev => !prev)} />
-            </SidePadding>
+            <ViewTabs onDateTabClick={() => setCalendarExpanded(prev => !prev)} />
             {filterTopic && (
               <TopicFilterBar
                 icon={getTopicIcon(filterTopic.icon)}

@@ -25,8 +25,7 @@ const Input = styled.input`
   font-size: ${({ theme }) => theme.fontSize.sm}px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.7);
+  background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   outline: none;
 

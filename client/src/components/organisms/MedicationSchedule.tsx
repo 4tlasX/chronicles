@@ -86,7 +86,7 @@ const TimeGroup = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
   overflow: hidden;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
 `;
 
 const TimeHeader = styled.div`
@@ -162,7 +162,7 @@ interface MedicationScheduleProps {
 export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#2d2c2a';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
 
   const [viewDate, setViewDate] = useState(() => toDateStr(new Date()));
   const [doseLogs, setDoseLogs] = useState<Record<string, DoseLogRecord>>({});

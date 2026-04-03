@@ -26,7 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
 const Card = styled.div<{ $isDragging?: boolean; $editing?: boolean }>`
   border: 1px solid ${({ theme, $editing }) => $editing ? theme.colors.accent : theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   opacity: ${({ $isDragging }) => $isDragging ? 0.7 : 1};
   box-shadow: ${({ $isDragging }) => $isDragging ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'};
 `;

@@ -8,13 +8,17 @@ export const HeaderRow = styled.div`
 `;
 
 export const Title = styled.h1`
-  font-size: 24px;
-  font-weight: 700;
+  font-family: ${({ theme }) => theme.typography.h1.fontFamily};
+  font-size: ${({ theme }) => theme.typography.h1.fontSize};
+  font-weight: ${({ theme }) => theme.typography.h1.fontWeight};
 `;
 
 export const SectionTitle = styled.h2`
-  font-size: 18px;
-  font-weight: 700;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: ${({ theme }) => theme.fontWeight.medium};
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.text};
   margin: 32px 0 12px;
 `;
@@ -26,8 +30,9 @@ export const SectionDescription = styled.p`
 `;
 
 export const DangerTitle = styled.h2`
-  font-size: 18px;
-  font-weight: 700;
+  font-family: ${({ theme }) => theme.typography.h2.fontFamily};
+  font-size: ${({ theme }) => theme.typography.h2.fontSize};
+  font-weight: ${({ theme }) => theme.typography.h2.fontWeight};
   color: ${({ theme }) => theme.colors.danger};
   margin: 32px 0 12px;
 `;
@@ -38,7 +43,7 @@ export const CollapsibleHeader = styled.button`
   justify-content: space-between;
   width: 100%;
   padding: 16px 20px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
   cursor: pointer;
@@ -62,7 +67,7 @@ export const CollapsibleBody = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-top: none;
   border-radius: 0 0 ${({ theme }) => theme.borderRadius.lg}px ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   font-size: 14px;
   line-height: 1.6;
   color: ${({ theme }) => theme.colors.textSecondary};
@@ -70,9 +75,9 @@ export const CollapsibleBody = styled.div`
 
 export const PrivacyCard = styled.div`
   padding: 16px 20px;
-  border: 1px solid #f5e6a3;
+  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: #fefce8;
+  background: ${({ theme }) => theme.colors.surface};
   font-size: 14px;
   line-height: 1.6;
   color: ${({ theme }) => theme.colors.text};
@@ -81,7 +86,7 @@ export const PrivacyCard = styled.div`
 export const DangerCard = styled.div`
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
   overflow: hidden;
 `;
 
@@ -91,7 +96,7 @@ export const PasswordForm = styled.div`
   gap: 12px;
   padding: 16px 20px;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
-  background: white;
+  background: ${({ theme }) => theme.colors.surface};
 `;
 
 export const SessionsList = styled.div`

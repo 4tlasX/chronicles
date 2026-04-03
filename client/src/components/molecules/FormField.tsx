@@ -5,6 +5,10 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.xs}px;
+
+  &:not(:first-child) {
+    margin-top: 8px;
+  }
 `;
 
 const ErrorText = styled.span`

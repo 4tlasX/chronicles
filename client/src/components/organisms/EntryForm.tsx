@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { stripHtml } from '../../utils/stripHtml.js';
-import { faChevronDown, faChevronUp, faBookmark, faShareNodes } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp, faChevronLeft, faChevronRight, faBookmark, faShareNodes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Editor } from './Editor.js';
 import { TopicSelector } from './TopicSelector.js';
@@ -79,9 +79,12 @@ const CustomFieldsHeader = styled.button`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 8px 12px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 8px 24px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: ${({ theme }) => theme.fontWeight.medium};
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.textSecondary};
   background: none;
   border: none;
@@ -91,9 +94,21 @@ const CustomFieldsHeader = styled.button`
   &:hover { background: rgba(255, 255, 255, 0.2); }
 `;
 
+const CollapseToggle = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.textMuted};
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
 const CustomFieldsBody = styled.div`
-  padding: 12px;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  padding: 16px 32px 24px;
 `;
 
 const EditorArea = styled.div<{ $expanded?: boolean }>`
@@ -106,43 +121,65 @@ const EditorArea = styled.div<{ $expanded?: boolean }>`
 const SaveRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 12px 16px;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   gap: 8px;
 `;
 
-const LeftActions = styled.div`
+const RightActions = styled.div`
   display: flex;
   gap: 8px;
-  margin-right: auto;
+  margin-left: auto;
 `;
 
 const ActionBtn = styled.button`
-  padding: 6px 16px;
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  background: white;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  padding: 0;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: background 0.15s;
-  &:hover { background: ${({ theme }) => theme.colors.surfaceHover}; }
+  transition: color 0.15s;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
+const DeleteBtn = styled.button`
+  padding: 0;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: rgba(239, 68, 68, 0.5);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+  &:hover { color: rgba(239, 68, 68, 0.7); }
 `;
 
 const SaveButton = styled.button<{ $disabled?: boolean }>`
-  padding: 8px 24px;
-  font-size: 14px;
+  padding: 4px 14px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 10px;
   font-weight: 600;
-  color: white;
-  background: ${({ theme, $disabled }) => $disabled ? theme.colors.border : theme.colors.accent};
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  text-transform: uppercase;
+  letter-spacing: 0.06rem;
+  color: ${({ theme, $disabled }) => $disabled ? theme.colors.border : theme.colors.text};
+  background: transparent;
+  border: 1px solid ${({ theme, $disabled }) => $disabled ? theme.colors.border : theme.colors.text};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   cursor: ${({ $disabled }) => $disabled ? 'not-allowed' : 'pointer'};
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 
   &:hover:not(:disabled) {
-    background: ${({ theme }) => theme.colors.accentHover};
+    background: ${({ theme }) => theme.colors.text};
+    color: ${({ theme }) => theme.colors.surface};
   }
 `;
 
@@ -311,7 +348,7 @@ export function EntryForm({
         {customType && (
           <CustomFieldsSection>
             <CustomFieldsHeader onClick={() => setFieldsExpanded(!fieldsExpanded)}>
-              <span>{selectedTopic?.name} Settings</span>
+              <span>{customType === 'task' ? 'Task Options' : customType === 'goal' ? 'Goal Type' : customType === 'milestone' ? 'Milestone Status' : customType === 'food' ? 'Meal Type' : customType === 'medication' ? 'Dosage' : customType === 'symptom' ? 'Severity' : customType === 'exercise' ? 'Exercise Type' : customType === 'event' ? 'Event Details' : customType === 'meeting' ? 'Meeting Details' : 'Settings'}</span>
               <FontAwesomeIcon icon={fieldsExpanded ? faChevronUp : faChevronDown} size="xs" />
             </CustomFieldsHeader>
             {fieldsExpanded && (
@@ -331,18 +368,21 @@ export function EntryForm({
         )}
         {/* Action bar — below custom fields, scrolls with content */}
         <SaveRow>
-          <LeftActions>
-            {isEditing && onDelete && (
-              <ActionBtn onClick={onDelete}>Delete</ActionBtn>
-            )}
-            {isEditing && (
-              <ActionBtn onClick={onNew}>Close</ActionBtn>
-            )}
-          </LeftActions>
+          {isEditing && onDelete && (
+            <DeleteBtn onClick={onDelete}>Delete</DeleteBtn>
+          )}
           {saveStatus && <StatusText $error={saveStatus === 'Save failed'}>{saveStatus}</StatusText>}
-          <SaveButton $disabled={!canSave || isSaving} disabled={!canSave || isSaving} onClick={onSave}>
-            {isSaving ? <><Spinner size={14} /> Saving...</> : 'Save'}
-          </SaveButton>
+          <RightActions>
+            {isEditing && (
+              <>
+                <ActionBtn onClick={onNew}>Close</ActionBtn>
+                <span style={{ width: 1, height: 16, background: 'currentColor', opacity: 0.2 }} />
+              </>
+            )}
+            <SaveButton $disabled={!canSave || isSaving} disabled={!canSave || isSaving} onClick={onSave}>
+              {isSaving ? <><Spinner size={14} /> Saving...</> : 'Save'}
+            </SaveButton>
+          </RightActions>
         </SaveRow>
       </ScrollArea>
     </FormWrapper>

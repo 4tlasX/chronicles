@@ -10,9 +10,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles = {
   primary: css`
-    background: ${({ theme }) => theme.colors.accent};
-    color: ${({ theme }) => theme.colors.textInverse};
-    &:hover:not(:disabled) { background: ${({ theme }) => theme.colors.accentHover}; }
+    background: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.text};
+    &:hover:not(:disabled) { opacity: 0.85; }
   `,
   secondary: css`
     background: ${({ theme }) => theme.colors.surface};

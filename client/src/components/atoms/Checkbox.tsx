@@ -15,22 +15,26 @@ const HiddenInput = styled.input`
 `;
 
 const Box = styled.div<{ $checked: boolean }>`
-  width: 16px;
-  height: 16px;
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  border: 2px solid ${({ $checked, theme }) => $checked ? theme.colors.accent : theme.colors.border};
-  background: ${({ $checked, theme }) => $checked ? theme.colors.accent : 'transparent'};
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  border: ${({ $checked, theme }) => $checked ? 'none' : `1.5px solid ${theme.colors.border}`};
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 10px;
-  transition: background 0.15s, border-color 0.15s;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 11px;
+  transition: color 0.15s, border-color 0.15s;
 `;
 
 const CheckLabel = styled.span`
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  color: ${({ theme }) => theme.colors.text};
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
 interface CheckboxProps {

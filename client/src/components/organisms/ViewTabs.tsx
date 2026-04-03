@@ -9,30 +9,27 @@ const tabs: { value: ViewMode; label: ReactNode }[] = [
   { value: 'date', label: 'Date' },
   { value: 'tasks', label: 'Tasks' },
   { value: 'all', label: 'All' },
-  { value: 'favorites', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><FontAwesomeIcon icon={faBookmark} size="xs" /> Bookmarks</span> },
+  { value: 'favorites', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 4px' }}><FontAwesomeIcon icon={faBookmark} size="xs" /> Bookmarks</span> },
   { value: 'search', label: 'Search' },
 ];
 
 const Container = styled.div`
   position: relative;
   display: flex;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.3);
-  padding: 4px;
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: transparent;
+  padding: 14px 8px;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const Slider = styled.div<{ $left: number; $width: number }>`
   position: absolute;
-  top: 4px;
-  bottom: 4px;
+  top: 10px;
+  bottom: 10px;
   left: ${({ $left }) => $left}px;
   width: ${({ $width }) => $width}px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.5);
+  background: transparent;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   transition: left 300ms ease-out, width 300ms ease-out;
@@ -47,8 +44,11 @@ const TabButton = styled.button<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 2px;
-  font-size: 13px;
+  padding: 6px 8px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
   font-weight: ${({ theme, $active }) => $active ? theme.fontWeight.medium : theme.fontWeight.normal};
   color: ${({ theme }) => theme.colors.text};
   background: transparent;
@@ -96,7 +96,9 @@ export function ViewTabs({ onDateTabClick }: ViewTabsProps = {}) {
           ref={(el) => { tabRefs.current[i] = el; }}
           $active={viewMode === tab.value}
           onClick={() => {
-            if (tab.value === 'date' && viewMode === 'date' && onDateTabClick) {
+            if (tab.value === 'search' && viewMode === 'search') {
+              setViewMode('all');
+            } else if (tab.value === 'date' && viewMode === 'date' && onDateTabClick) {
               onDateTabClick();
             } else {
               setViewMode(tab.value);
