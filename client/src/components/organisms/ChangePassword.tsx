@@ -72,7 +72,7 @@ export function ChangePassword() {
 
     setLoading(true);
     try {
-      const { salt, wrappedMK, wrapIv } = await rewrapMasterKey(newPassword);
+      const { salt, wrappedMK, wrapIv } = await rewrapMasterKey(newPassword, currentPassword);
 
       await authApi.changePassword({
         currentPassword,

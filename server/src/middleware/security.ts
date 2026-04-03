@@ -9,7 +9,7 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
   // Prevent MIME type sniffing
   res.setHeader('X-Content-Type-Options', 'nosniff');
   // Force HTTPS
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   // Prevent clickjacking
   res.setHeader('X-Frame-Options', 'DENY');
   // Control referrer leakage — no-referrer prevents share URLs (with #key fragment) from leaking

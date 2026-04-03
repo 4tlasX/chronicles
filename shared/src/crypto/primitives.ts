@@ -22,12 +22,13 @@ import {
 
 /**
  * Generate a new AES-256 master key
- * extractable=true because we need to wrap it with KEK and recovery key
+ * extractable=true during generation because we need to wrap it with KEK and recovery key.
+ * After wrapping, callers should convert to non-extractable via toNonExtractable().
  */
 export async function generateMasterKey(): Promise<CryptoKey> {
   return crypto.subtle.generateKey(
     { name: AES_ALGORITHM, length: AES_KEY_LENGTH },
-    true, // extractable — needed for wrapping
+    true, // extractable — required by Web Crypto for wrapKey('raw', ...)
     ['encrypt', 'decrypt']
   );
 }
@@ -103,13 +104,15 @@ export async function wrapKey(
 }
 
 /**
- * Unwrap (decrypt) the master key with a wrapping key
- * Returns a non-extractable key for encrypt/decrypt operations
+ * Unwrap (decrypt) the master key with a wrapping key.
+ * By default returns a non-extractable key for encrypt/decrypt operations.
+ * Pass extractable=true when the key needs to be re-wrapped (e.g., password change, recovery).
  */
 export async function unwrapKey(
   wrappedKey: ArrayBuffer,
   wrappingKey: CryptoKey,
-  iv: Uint8Array
+  iv: Uint8Array,
+  extractable: boolean = false
 ): Promise<CryptoKey> {
   return crypto.subtle.unwrapKey(
     'raw',
@@ -117,9 +120,33 @@ export async function unwrapKey(
     wrappingKey,
     { name: AES_ALGORITHM, iv: iv.buffer as ArrayBuffer },
     { name: AES_ALGORITHM, length: AES_KEY_LENGTH },
-    false, // non-extractable — key cannot be exported, stronger zero-knowledge
+    extractable,
     ['encrypt', 'decrypt']
   );
+}
+
+/**
+ * Convert an extractable CryptoKey to non-extractable.
+ * Used after wrapping operations to ensure the in-memory key cannot be exported.
+ */
+export async function toNonExtractable(key: CryptoKey): Promise<CryptoKey> {
+  const raw = await crypto.subtle.exportKey('raw', key);
+  const rawArray = new Uint8Array(raw);
+  try {
+    const nonExtractable = await crypto.subtle.importKey(
+      'raw',
+      raw,
+      { name: AES_ALGORITHM, length: AES_KEY_LENGTH },
+      false,
+      ['encrypt', 'decrypt']
+    );
+    return nonExtractable;
+  } finally {
+    // Multi-pass zeroing of exported key material
+    rawArray.fill(0);
+    crypto.getRandomValues(rawArray);
+    rawArray.fill(0);
+  }
 }
 
 /**

@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { securityHeaders } from './middleware/security.js';
 import { authMiddleware, cleanupSessions } from './middleware/auth.js';
+import { apiLimiter } from './middleware/rateLimiter.js';
 import authRoutes from './routes/auth.js';
 import entriesRoutes from './routes/entries.js';
 import topicsRoutes from './routes/topics.js';
@@ -25,6 +26,24 @@ if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_URL) {
   throw new Error('CLIENT_URL environment variable is required in production');
 }
 
+// Validate CLIENT_URL format
+if (process.env.CLIENT_URL) {
+  try {
+    const parsed = new URL(process.env.CLIENT_URL);
+    if (process.env.NODE_ENV === 'production' && parsed.protocol !== 'https:') {
+      throw new Error('CLIENT_URL must use HTTPS in production');
+    }
+    if (parsed.pathname !== '/' || parsed.search || parsed.hash) {
+      console.warn('WARNING: CLIENT_URL should be an origin (no path, query, or hash)');
+    }
+  } catch (err) {
+    if (err instanceof TypeError) {
+      throw new Error(`CLIENT_URL is not a valid URL: ${process.env.CLIENT_URL}`);
+    }
+    throw err;
+  }
+}
+
 // Middleware
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -41,11 +60,11 @@ app.get('/api/health', (_req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/entries', authMiddleware, entriesRoutes);
-app.use('/api/topics', authMiddleware, topicsRoutes);
-app.use('/api/settings', authMiddleware, settingsRoutes);
-app.use('/api/sessions', authMiddleware, sessionsRoutes);
-app.use('/api/doses', authMiddleware, dosesRoutes);
+app.use('/api/entries', authMiddleware, apiLimiter, entriesRoutes);
+app.use('/api/topics', authMiddleware, apiLimiter, topicsRoutes);
+app.use('/api/settings', authMiddleware, apiLimiter, settingsRoutes);
+app.use('/api/sessions', authMiddleware, apiLimiter, sessionsRoutes);
+app.use('/api/doses', authMiddleware, apiLimiter, dosesRoutes);
 app.use('/api/shares', sharesRoutes); // public GET by token; POST/DELETE use authMiddleware inline
 
 // Global error handler — sanitize errors in production

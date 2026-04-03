@@ -1,7 +1,15 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from 'react';
 import { encryptionService } from '@shared/crypto/encryptionService.js';
+import { toNonExtractable } from '@shared/crypto/primitives.js';
 import { PBKDF2_ITERATIONS } from '@shared/crypto/constants.js';
 import type { EncryptedPostData, DecryptedPost, EncryptedPost, SetupEncryptionResult } from '@shared/crypto/types.js';
+
+interface EncryptionParams {
+  kekSalt: string;
+  encryptedMasterKey: string;
+  kekWrapIv: string;
+  kekIterations: number;
+}
 
 interface EncryptionContextValue {
   isUnlocked: boolean;
@@ -12,7 +20,7 @@ interface EncryptionContextValue {
   decryptPost: (post: EncryptedPost) => Promise<DecryptedPost>;
   decryptPosts: (posts: EncryptedPost[]) => Promise<DecryptedPost[]>;
   unlockWithRecoveryKey: (recoveryKey: string, recoveryWrappedMK: string, recoveryWrapIv: string) => Promise<void>;
-  rewrapMasterKey: (newPassword: string) => Promise<{ salt: string; wrappedMK: string; wrapIv: string }>;
+  rewrapMasterKey: (newPassword: string, currentPassword?: string) => Promise<{ salt: string; wrappedMK: string; wrapIv: string }>;
 }
 
 const EncryptionContext = createContext<EncryptionContextValue | null>(null);
@@ -21,6 +29,8 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
   const [isUnlocked, setIsUnlocked] = useState(false);
   // CryptoKey stored in ref — non-extractable, lives only in memory
   const masterKeyRef = useRef<CryptoKey | null>(null);
+  // Stored encryption params for re-derivation during password change
+  const encryptionParamsRef = useRef<EncryptionParams | null>(null);
 
   const unlock = useCallback(async (
     password: string,
@@ -35,11 +45,13 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     }
     const key = await encryptionService.unwrapMasterKey(password, kekSalt, encryptedMasterKey, kekWrapIv, kekIterations);
     masterKeyRef.current = key;
+    encryptionParamsRef.current = { kekSalt, encryptedMasterKey, kekWrapIv, kekIterations };
     setIsUnlocked(true);
   }, []);
 
   const lock = useCallback(() => {
     masterKeyRef.current = null;
+    encryptionParamsRef.current = null;
     setIsUnlocked(false);
   }, []);
 
@@ -72,13 +84,42 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     recoveryWrappedMK: string,
     recoveryWrapIv: string
   ) => {
-    const key = await encryptionService.unwrapWithRecoveryKey(recoveryKey, recoveryWrappedMK, recoveryWrapIv);
-    masterKeyRef.current = key;
+    // Unwraps as extractable — needed for rewrap in recovery flow
+    const extractableKey = await encryptionService.unwrapWithRecoveryKey(recoveryKey, recoveryWrappedMK, recoveryWrapIv);
+    // Store extractable key temporarily for rewrap, then convert immediately
+    // The rewrapMasterKey callback will use this extractable key then convert it
+    masterKeyRef.current = extractableKey;
+    encryptionParamsRef.current = null; // Recovery path — no stored params
     setIsUnlocked(true);
   }, []);
 
-  const rewrapMasterKey = useCallback(async (newPassword: string) => {
-    return encryptionService.rewrapMasterKey(getKey(), newPassword);
+  const rewrapMasterKey = useCallback(async (newPassword: string, currentPassword?: string) => {
+    if (currentPassword && encryptionParamsRef.current) {
+      // Change-password flow: re-derive extractable key from stored params
+      const params = encryptionParamsRef.current;
+      const result = await encryptionService.rewrapFromParams(
+        currentPassword,
+        params.kekSalt,
+        params.encryptedMasterKey,
+        params.kekWrapIv,
+        params.kekIterations,
+        newPassword
+      );
+      // Update stored params with new values
+      encryptionParamsRef.current = {
+        kekSalt: result.salt,
+        encryptedMasterKey: result.wrappedMK,
+        kekWrapIv: result.wrapIv,
+        kekIterations: params.kekIterations,
+      };
+      return result;
+    }
+    // Recovery flow: key is already extractable, wrap directly then convert
+    const extractableKey = getKey();
+    const result = await encryptionService.rewrapMasterKey(extractableKey, newPassword);
+    // Convert to non-extractable immediately after rewrap for ongoing encrypt/decrypt
+    masterKeyRef.current = await toNonExtractable(extractableKey);
+    return result;
   }, []);
 
   // Clear master key on unmount
@@ -98,6 +139,30 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [lock]);
+
+  // Inactivity timeout: auto-lock after 15 minutes of no interaction
+  useEffect(() => {
+    const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
+    let inactivityTimer: ReturnType<typeof setTimeout>;
+
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      if (masterKeyRef.current) {
+        inactivityTimer = setTimeout(() => {
+          if (masterKeyRef.current) lock();
+        }, INACTIVITY_TIMEOUT_MS);
+      }
+    };
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach(event => document.addEventListener(event, resetTimer));
+    resetTimer();
+
+    return () => {
+      events.forEach(event => document.removeEventListener(event, resetTimer));
+      clearTimeout(inactivityTimer);
+    };
+  }, [lock, isUnlocked]);
 
   return (
     <EncryptionContext.Provider value={{

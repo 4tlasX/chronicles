@@ -32,6 +32,7 @@ interface AuthContextValue {
     recoveryWrappedMK: string;
     recoveryWrapIv: string;
     recoveryKeyHash: string;
+    recoveryKeySalt: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
@@ -16,12 +16,25 @@ export function RegisterView() {
     // Setup encryption — generates master key, wraps with password + recovery key
     const result = await setupEncryption(password);
 
-    // Hash the recovery key for server-side verification during recovery
-    const recoveryKeyHashBuffer = await crypto.subtle.digest(
-      'SHA-256',
-      new TextEncoder().encode(result.recoveryKey)
+    // Hash the recovery key with PBKDF2 (salted + iterated) for server-side verification
+    const recoveryKeySaltBytes = crypto.getRandomValues(new Uint8Array(16));
+    const recoveryKeySalt = Array.from(recoveryKeySaltBytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(result.recoveryKey),
+      'PBKDF2',
+      false,
+      ['deriveBits']
     );
-    const recoveryKeyHash = Array.from(new Uint8Array(recoveryKeyHashBuffer))
+    const derivedBits = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt: recoveryKeySaltBytes, iterations: 100000, hash: 'SHA-256' },
+      keyMaterial,
+      256
+    );
+    const recoveryKeyHash = Array.from(new Uint8Array(derivedBits))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
@@ -36,18 +49,25 @@ export function RegisterView() {
       recoveryWrappedMK: result.recoveryWrappedMK,
       recoveryWrapIv: result.recoveryWrapIv,
       recoveryKeyHash,
+      recoveryKeySalt,
     });
 
     // Show recovery key — user must save it
     setRecoveryKey(result.recoveryKey);
   };
 
+  const handleConfirm = useCallback(() => {
+    // Clear recovery key from memory before navigating
+    setRecoveryKey(null);
+    navigate('/');
+  }, [navigate]);
+
   if (recoveryKey) {
     return (
       <AuthTemplate title="Save Your Recovery Key">
         <RecoveryKeyDisplay
           recoveryKey={recoveryKey}
-          onConfirm={() => navigate('/')}
+          onConfirm={handleConfirm}
         />
       </AuthTemplate>
     );

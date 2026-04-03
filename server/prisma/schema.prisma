@@ -30,6 +30,8 @@ model Account {
   recoveryWrappedMK   Bytes?    @map("recovery_wrapped_mk")
   recoveryWrapIv      Bytes?    @map("recovery_wrap_iv")
   recoveryKeyHash     String?   @map("recovery_key_hash")
+  recoveryKeySalt     String?   @map("recovery_key_salt")
+  recoveryKeyUsedAt   DateTime? @map("recovery_key_used_at") @db.Timestamptz
 
   encryptionEnabled   Boolean   @default(false) @map("encryption_enabled")
 

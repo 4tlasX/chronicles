@@ -82,7 +82,9 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     prisma.session.update({
       where: { id: session.id },
       data: { lastActiveAt: new Date() },
-    }).catch(() => {}); // Non-critical, swallow errors
+    }).catch((err) => {
+      console.error('Session activity update failed:', err instanceof Error ? err.message : 'Unknown error');
+    });
   }
 
   // Attach auth info to request
@@ -122,7 +124,7 @@ export async function createSession(
     const verifierHash = crypto.createHash('sha256').update(verifier).digest('hex');
 
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30); // 30-day max lifetime
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7-day max lifetime
 
     try {
       await prisma.session.create({

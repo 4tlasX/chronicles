@@ -1,14 +1,9 @@
 import { prisma } from './prisma.js';
+import { escapeSchema } from './escapeSchema.js';
 
 // =============================================================================
 // Tenant Query Helpers
 // =============================================================================
-
-function escapeSchema(schemaName: string): string {
-  const escaped = schemaName.replace(/[^a-z0-9_]/gi, '');
-  if (!escaped || escaped.length < 3) throw new Error('Invalid schema name');
-  return escaped;
-}
 
 // =============================================================================
 // Types
@@ -298,10 +293,12 @@ export async function ensureDoseLogsTable(schemaName: string): Promise<void> {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
-    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_${s}_dose_logs_date ON ${s}.medication_dose_logs (date)`);
-    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_${s}_dose_logs_med_date ON ${s}.medication_dose_logs (medication_post_id, date)`);
+    // Index names use the validated+escaped schema name (escapeSchema enforces usr_N_hex format)
+    const idxPrefix = `idx_${s}`;
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS ${idxPrefix}_dose_logs_date ON ${s}.medication_dose_logs (date)`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS ${idxPrefix}_dose_logs_med_date ON ${s}.medication_dose_logs (medication_post_id, date)`);
     // Unique constraint for upsert ON CONFLICT support
-    await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS idx_${s}_dose_logs_unique ON ${s}.medication_dose_logs (medication_post_id, scheduled_time, date)`);
+    await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS ${idxPrefix}_dose_logs_unique ON ${s}.medication_dose_logs (medication_post_id, scheduled_time, date)`);
   }
 }
 

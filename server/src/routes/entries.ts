@@ -21,7 +21,7 @@ function serializePost(post: Record<string, unknown>) {
 router.get('/', async (req, res) => {
   try {
     const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 100, 1), 200);
-    const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
+    const offset = Math.min(Math.max(parseInt(req.query.offset as string) || 0, 0), 10000);
     const posts = await getAllPosts(req.auth!.tenantSchemaName, { limit, offset });
     res.json(posts.map(p => serializePost(p as unknown as Record<string, unknown>)));
   } catch (err) {

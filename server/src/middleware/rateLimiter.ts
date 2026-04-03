@@ -25,6 +25,20 @@ export const strictLimiter = rateLimit({
 });
 
 /**
+ * Authenticated API rate limiter — per-user throttling for data endpoints
+ * 300 requests per 15-minute window per user (falls back to IP if unauthenticated)
+ * Apply AFTER authMiddleware so req.auth is populated
+ */
+export const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req as any).auth?.accountId?.toString() || req.ip || 'unknown',
+  message: { error: 'Too many requests, please try again later' },
+});
+
+/**
  * Share lookup rate limiter — public share token lookups
  * 30 requests per 15-minute window per IP to prevent brute-force
  */

@@ -1,15 +1,10 @@
 import crypto from 'crypto';
 import { prisma } from './prisma.js';
+import { escapeSchema } from './escapeSchema.js';
 
 // =============================================================================
 // Tenant Schema Manager
 // =============================================================================
-
-function escapeSchemaName(schemaName: string): string {
-  const escaped = schemaName.replace(/[^a-z0-9_]/gi, '');
-  if (!escaped || escaped.length < 3) throw new Error('Invalid schema name');
-  return escaped;
-}
 
 async function generateSchemaName(): Promise<string> {
   const randomSuffix = crypto.randomBytes(3).toString('hex');
@@ -28,7 +23,7 @@ async function generateSchemaName(): Promise<string> {
 }
 
 function generateTenantSchemaStatements(schemaName: string): string[] {
-  const s = escapeSchemaName(schemaName);
+  const s = escapeSchema(schemaName);
 
   return [
     `CREATE SCHEMA ${s}`,
@@ -126,12 +121,12 @@ async function createTenantSchema(schemaName: string): Promise<void> {
 }
 
 async function dropTenantSchema(schemaName: string): Promise<void> {
-  const escaped = escapeSchemaName(schemaName);
+  const escaped = escapeSchema(schemaName);
   await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS ${escaped} CASCADE`);
 }
 
 async function tenantSchemaExists(schemaName: string): Promise<boolean> {
-  const escaped = escapeSchemaName(schemaName);
+  const escaped = escapeSchema(schemaName);
   const result = await prisma.$queryRaw<{ exists: boolean }[]>`
     SELECT EXISTS (
       SELECT 1 FROM information_schema.schemata
@@ -152,6 +147,7 @@ export interface EncryptionSetupParams {
   recoveryWrappedMK: Uint8Array;
   recoveryWrapIv: Uint8Array;
   recoveryKeyHash: string;
+  recoveryKeySalt: string;
 }
 
 export async function registerTenant(
@@ -175,6 +171,7 @@ export async function registerTenant(
         recoveryWrappedMK: new Uint8Array(encryptionParams.recoveryWrappedMK) as Uint8Array<ArrayBuffer>,
         recoveryWrapIv: new Uint8Array(encryptionParams.recoveryWrapIv) as Uint8Array<ArrayBuffer>,
         recoveryKeyHash: encryptionParams.recoveryKeyHash,
+        recoveryKeySalt: encryptionParams.recoveryKeySalt,
         encryptionEnabled: true,
       }),
     },
@@ -214,7 +211,7 @@ export async function getTenantSchema(userId: string): Promise<string | null> {
 }
 
 export {
-  escapeSchemaName,
+  escapeSchema,
   generateSchemaName,
   generateTenantSchemaStatements,
   createTenantSchema,

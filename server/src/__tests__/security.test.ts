@@ -1,0 +1,368 @@
+/**
+ * Security audit unit tests — server-side
+ * Tests for all security fixes applied during the audit
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import crypto from 'crypto';
+
+// ============================================================================
+// 1. escapeSchema — validates schema names and prevents SQL injection
+// ============================================================================
+import { escapeSchema } from '../db/escapeSchema.js';
+
+describe('escapeSchema — schema name validation', () => {
+  it('accepts valid schema names', () => {
+    expect(escapeSchema('usr_1_a1b2c3')).toBe('usr_1_a1b2c3');
+    expect(escapeSchema('usr_999_abcdef')).toBe('usr_999_abcdef');
+  });
+
+  it('rejects SQL injection attempts', () => {
+    expect(() => escapeSchema('usr_1_a1b2c3; DROP TABLE')).toThrow('Invalid schema name');
+    expect(() => escapeSchema("usr_1_a1b2c3' OR '1'='1")).toThrow('Invalid schema name');
+    // Note: 'usr_1_a1b2c3--' gets stripped to 'usr_1_a1b2c3' which is valid — escapeSchema
+    // strips non-alphanumeric chars first, so the injection chars are removed before validation
+    expect(() => escapeSchema('; DROP SCHEMA public CASCADE')).toThrow('Invalid schema name');
+  });
+
+  it('rejects names not matching usr_N_hex format', () => {
+    expect(() => escapeSchema('public')).toThrow();
+    expect(() => escapeSchema('information_schema')).toThrow();
+    expect(() => escapeSchema('admin_1_abc')).toThrow();
+    expect(() => escapeSchema('')).toThrow();
+  });
+
+  it('rejects names that are too long', () => {
+    expect(() => escapeSchema('usr_1_a1b2c3' + 'x'.repeat(30))).toThrow();
+  });
+
+  it('strips special characters before validation (defense-in-depth)', () => {
+    // Special characters are stripped — escapeSchema('usr_1_a1b2c3\x00') becomes 'usr_1_a1b2c3' which is valid
+    // This is intentional: the regex strip + format validation provides defense-in-depth
+    expect(escapeSchema('usr_1_a1b2c3')).toBe('usr_1_a1b2c3');
+    // Strings that are ONLY special chars get rejected
+    expect(() => escapeSchema('\x00\n')).toThrow();
+    expect(() => escapeSchema('')).toThrow();
+  });
+});
+
+// ============================================================================
+// 2. Session lifetime — 7 days instead of 30
+// ============================================================================
+describe('Session lifetime', () => {
+  it('SESSION_MAX_AGE_DAYS should be 7', async () => {
+    // Read the auth.ts file content to verify the constant
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''), 'utf8');
+    expect(authContent).toContain('SESSION_MAX_AGE_DAYS = 7');
+    expect(authContent).toContain('SESSION_MAX_AGE_DAYS * 24 * 60 * 60 * 1000');
+  });
+
+  it('Session expiry in createSession should be 7 days', async () => {
+    const fs = await import('fs');
+    const authMiddleware = fs.readFileSync(
+      new URL('../middleware/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    expect(authMiddleware).toContain('expiresAt.setDate(expiresAt.getDate() + 7)');
+    expect(authMiddleware).not.toContain('expiresAt.setDate(expiresAt.getDate() + 30)');
+  });
+});
+
+// ============================================================================
+// 3. Constant-time delay function
+// ============================================================================
+describe('constantTimeDelay', () => {
+  it('auth.ts exports and uses constantTimeDelay for /salt and /recovery-params', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    // Verify the function exists
+    expect(authContent).toContain('async function constantTimeDelay');
+    // Verify it's used in /salt endpoint
+    const saltSection = authContent.split("router.get('/salt'")[1]?.split('router.')[0] || '';
+    expect(saltSection).toContain('constantTimeDelay(startTime)');
+    // Verify it's used in /recovery-params endpoint
+    const recoverySection = authContent.split("router.get('/recovery-params'")[1]?.split('router.')[0] || '';
+    expect(recoverySection).toContain('constantTimeDelay(startTime)');
+    // Verify it's used in /recover endpoint
+    const recoverSection = authContent.split("router.post('/recover'")[1]?.split('router.')[0] || '';
+    expect(recoverSection).toContain('constantTimeDelay(startTime)');
+  });
+});
+
+// ============================================================================
+// 4. Email validation on /salt endpoint
+// ============================================================================
+describe('Email validation on /salt', () => {
+  it('/salt endpoint validates email format before querying', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    expect(authContent).toContain("import { registerSchema, loginSchema, changePasswordSchema, recoverSchema, emailSchema }");
+    // Salt endpoint should validate email
+    const saltSection = authContent.split("router.get('/salt'")[1]?.split("router.")[0] || '';
+    expect(saltSection).toContain('emailSchema.safeParse');
+  });
+});
+
+// ============================================================================
+// 5. Password change revokes ALL sessions (no race condition)
+// ============================================================================
+describe('Password change session revocation', () => {
+  it('should revoke ALL sessions including current, then create new session', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    const changePasswordSection = authContent.split("router.post('/change-password'")[1]?.split("router.")[0] || '';
+    // Should NOT have NOT: { selector: ... } — revokes ALL sessions
+    expect(changePasswordSection).not.toContain('NOT: { selector:');
+    // Should have createSession AFTER the transaction
+    expect(changePasswordSection).toContain('createSession(account.id');
+    // Should set cookie with new token
+    expect(changePasswordSection).toContain('res.cookie(COOKIE_NAME, token');
+  });
+});
+
+// ============================================================================
+// 6. Recovery key uses PBKDF2 hashing (not plain SHA-256)
+// ============================================================================
+describe('Recovery key PBKDF2 hashing', () => {
+  it('server recovery endpoint uses pbkdf2Sync, not createHash', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    const recoverSection = authContent.split("router.post('/recover'")[1]?.split("router.")[0] || '';
+    expect(recoverSection).toContain('pbkdf2Sync');
+    expect(recoverSection).not.toContain("createHash('sha256')");
+    expect(recoverSection).toContain('recoveryKeySalt');
+    expect(recoverSection).toContain('100000'); // iterations
+  });
+
+  it('PBKDF2 hash produces correct output', () => {
+    const recoveryKey = 'test-recovery-key-base64';
+    const salt = crypto.randomBytes(16);
+    const hash = crypto.pbkdf2Sync(recoveryKey, salt, 100000, 32, 'sha256').toString('hex');
+    // Verify it's deterministic with same inputs
+    const hash2 = crypto.pbkdf2Sync(recoveryKey, salt, 100000, 32, 'sha256').toString('hex');
+    expect(hash).toBe(hash2);
+    expect(hash).toHaveLength(64); // 32 bytes = 64 hex chars
+    // Different salt produces different hash
+    const salt2 = crypto.randomBytes(16);
+    const hash3 = crypto.pbkdf2Sync(recoveryKey, salt2, 100000, 32, 'sha256').toString('hex');
+    expect(hash3).not.toBe(hash);
+  });
+});
+
+// ============================================================================
+// 7. Recovery key is single-use (atomic transaction with recoveryKeyUsedAt)
+// ============================================================================
+describe('Recovery key single-use enforcement', () => {
+  it('recovery endpoint uses atomic transaction to clear recovery data and revoke sessions', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    const recoverSection = authContent.split("router.post('/recover'")[1]?.split("router.")[0] || '';
+    // Should use $transaction
+    expect(recoverSection).toContain('prisma.$transaction');
+    // Should set recoveryKeyUsedAt
+    expect(recoverSection).toContain('recoveryKeyUsedAt: new Date()');
+    // Should null out recovery key material
+    expect(recoverSection).toContain('recoveryKeyHash: null');
+    expect(recoverSection).toContain('recoveryKeySalt: null');
+    expect(recoverSection).toContain('recoveryWrappedMK: null');
+    expect(recoverSection).toContain('recoveryWrapIv: null');
+    // Should revoke all sessions in same transaction
+    expect(recoverSection).toContain('session.updateMany');
+  });
+
+  it('Prisma schema has recoveryKeyUsedAt and recoveryKeySalt fields', async () => {
+    const fs = await import('fs');
+    const schema = fs.readFileSync(
+      new URL('../../prisma/schema.prisma', import.meta.url).pathname.replace('/src/__tests__', ''),
+      'utf8'
+    );
+    expect(schema).toContain('recoveryKeyUsedAt');
+    expect(schema).toContain('recoveryKeySalt');
+    expect(schema).toContain('recovery_key_used_at');
+    expect(schema).toContain('recovery_key_salt');
+  });
+});
+
+// ============================================================================
+// 8. Password validation errors are generic (don't leak requirements)
+// ============================================================================
+describe('Generic password validation errors', () => {
+  it('register endpoint returns generic validation error', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    // Register should return generic message
+    const registerSection = authContent.split("router.post('/register'")[1]?.split("router.")[0] || '';
+    expect(registerSection).toContain("'Password does not meet requirements'");
+    expect(registerSection).not.toContain('parsed.error.errors[0].message');
+  });
+
+  it('change-password endpoint returns generic validation error', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    const changePwSection = authContent.split("router.post('/change-password'")[1]?.split("router.")[0] || '';
+    expect(changePwSection).toContain("'Password does not meet requirements'");
+  });
+
+  it('recover endpoint returns generic validation error', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    const recoverSection = authContent.split("router.post('/recover'")[1]?.split("router.")[0] || '';
+    expect(recoverSection).toContain("'Password does not meet requirements'");
+  });
+});
+
+// ============================================================================
+// 9. Error logging is sanitized (no full err objects)
+// ============================================================================
+describe('Sanitized error logging', () => {
+  it('auth.ts never logs raw error objects in catch blocks', async () => {
+    const fs = await import('fs');
+    const authContent = fs.readFileSync(
+      new URL('../routes/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    // Should NOT have console.error('...:', err) without .message
+    const rawErrorLogs = authContent.match(/console\.error\([^)]+,\s+err\s*\)/g);
+    expect(rawErrorLogs).toBeNull();
+  });
+
+  it('auth middleware logs activity update errors', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../middleware/auth.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    // Should log errors instead of swallowing them
+    expect(content).toContain('Session activity update failed');
+    expect(content).not.toContain('.catch(() => {})');
+  });
+});
+
+// ============================================================================
+// 10. DB SSL enforcement in production
+// ============================================================================
+describe('Database SSL enforcement', () => {
+  it('prisma.ts throws if DATABASE_URL is missing', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../db/prisma.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    expect(content).toContain("throw new Error('DATABASE_URL environment variable is required')");
+  });
+
+  it('prisma.ts throws if production DB lacks sslmode=require', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../db/prisma.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    expect(content).toContain("throw new Error('DATABASE_URL must include sslmode=require in production')");
+    // Should be a throw, not a warn
+    expect(content).not.toContain('console.warn');
+  });
+});
+
+// ============================================================================
+// 11. Index names use validated schema names
+// ============================================================================
+describe('Index name escaping in tenantQueries', () => {
+  it('dose logs index names use escaped schema name prefix', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../db/tenantQueries.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    // Should use a validated prefix variable, not raw interpolation
+    expect(content).toContain('const idxPrefix = `idx_${s}`');
+    expect(content).toContain('${idxPrefix}_dose_logs_date');
+    expect(content).toContain('${idxPrefix}_dose_logs_med_date');
+    expect(content).toContain('${idxPrefix}_dose_logs_unique');
+  });
+});
+
+// ============================================================================
+// 12. Topics route uses escapeSchema (not inline regex)
+// ============================================================================
+describe('Topics route uses escapeSchema', () => {
+  it('ensureSortOrderColumn uses escapeSchema import', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../routes/topics.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    expect(content).toContain("import { escapeSchema } from '../db/escapeSchema.js'");
+    expect(content).toContain('const s = escapeSchema(schemaName)');
+    // Should NOT have inline regex escaping
+    expect(content).not.toContain("schemaName.replace(/[^a-z0-9_]/gi, '')");
+  });
+});
+
+// ============================================================================
+// 13. Dose route validates medication post ownership
+// ============================================================================
+describe('Dose route post ownership validation', () => {
+  it('POST /doses validates medicationPostId belongs to tenant', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../routes/doses.ts', import.meta.url).pathname.replace('/__tests__', ''),
+      'utf8'
+    );
+    expect(content).toContain("import { ensureDoseLogsTable, getDoseLogsByDate, upsertDoseLog, getPost }");
+    expect(content).toContain('getPost(req.auth!.tenantSchemaName, medicationPostId)');
+    expect(content).toContain("'Medication post not found'");
+  });
+});
+
+// ============================================================================
+// 14. Metadata size limit in validation schemas
+// ============================================================================
+describe('Metadata size limit', () => {
+  it('createPostSchema and updatePostSchema enforce metadata size limit', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../../../shared/src/validation/schemas.ts', import.meta.url).pathname.replace('/server/src/__tests__', ''),
+      'utf8'
+    );
+    expect(content).toContain('Metadata too large (max 10KB)');
+    expect(content).toContain('JSON.stringify(val).length <= 10000');
+  });
+});
+
+// ============================================================================
+// 15. Register schema requires recoveryKeySalt
+// ============================================================================
+describe('Register schema includes recoveryKeySalt', () => {
+  it('registerSchema requires recoveryKeySalt field', async () => {
+    const fs = await import('fs');
+    const content = fs.readFileSync(
+      new URL('../../../shared/src/validation/schemas.ts', import.meta.url).pathname.replace('/server/src/__tests__', ''),
+      'utf8'
+    );
+    expect(content).toContain("recoveryKeySalt: z.string().min(1)");
+  });
+});

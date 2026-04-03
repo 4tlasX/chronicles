@@ -3,11 +3,11 @@ import { createTaxonomy, getTaxonomy, getAllTaxonomies, updateTaxonomy, deleteTa
 import { createTaxonomySchema, updateTaxonomySchema } from '@chronicles/shared';
 import { prisma } from '../db/prisma.js';
 import { parseId } from '../middleware/parseId.js';
+import { escapeSchema } from '../db/escapeSchema.js';
 
 /** JIT migration: add sort_order column if missing (for schemas created before this feature). */
 async function ensureSortOrderColumn(schemaName: string): Promise<void> {
-  const s = schemaName.replace(/[^a-z0-9_]/gi, '');
-  if (!s || s.length < 3) throw new Error('Invalid schema name');
+  const s = escapeSchema(schemaName);
   const result = await prisma.$queryRawUnsafe<{ exists: boolean }[]>(
     `SELECT EXISTS (
        SELECT 1 FROM information_schema.columns

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { ensureDoseLogsTable, getDoseLogsByDate, upsertDoseLog } from '../db/tenantQueries.js';
+import { ensureDoseLogsTable, getDoseLogsByDate, upsertDoseLog, getPost } from '../db/tenantQueries.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -43,11 +43,18 @@ router.post('/', async (req, res) => {
     }
 
     const { medicationPostId, scheduledTime, date, status, takenAt } = parsed.data;
+
+    // Validate that the medication post exists in this tenant's schema
+    await ensureDoseLogsTable(req.auth!.tenantSchemaName);
+    const post = await getPost(req.auth!.tenantSchemaName, medicationPostId);
+    if (!post) {
+      res.status(404).json({ error: 'Medication post not found' });
+      return;
+    }
+
     const resolvedTakenAt = status === 'taken'
       ? (takenAt || new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }))
       : null;
-
-    await ensureDoseLogsTable(req.auth!.tenantSchemaName);
     const log = await upsertDoseLog(
       req.auth!.tenantSchemaName,
       medicationPostId,

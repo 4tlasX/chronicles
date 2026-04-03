@@ -20,6 +20,7 @@ export const registerSchema = z.object({
   recoveryWrappedMK: z.string().min(1),
   recoveryWrapIv: z.string().min(1),
   recoveryKeyHash: z.string().min(1),
+  recoveryKeySalt: z.string().min(1),
 });
 
 export const loginSchema = z.object({
@@ -52,9 +53,14 @@ export const createShareSchema = z.object({
 });
 
 // Post validation
+const metadataSchema = z.record(z.unknown()).optional().refine(
+  (val) => !val || JSON.stringify(val).length <= 10000,
+  { message: 'Metadata too large (max 10KB)' }
+);
+
 export const createPostSchema = z.object({
   content: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: metadataSchema,
   contentEncrypted: z.string().optional(),
   contentIv: z.string().optional(),
   metadataEncrypted: z.string().optional(),
@@ -73,7 +79,7 @@ export const createPostSchema = z.object({
 
 export const updatePostSchema = z.object({
   content: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: metadataSchema,
   contentEncrypted: z.string().optional(),
   contentIv: z.string().optional(),
   metadataEncrypted: z.string().optional(),

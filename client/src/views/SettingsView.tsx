@@ -168,7 +168,7 @@ export function SettingsView() {
     if (newPw.length < 12) { setPwMessage('Minimum 12 characters'); setPwError(true); return; }
     setPwLoading(true);
     try {
-      const { salt, wrappedMK, wrapIv } = await rewrapMasterKey(newPw);
+      const { salt, wrappedMK, wrapIv } = await rewrapMasterKey(newPw, currentPw);
       await authApi.changePassword({ currentPassword: currentPw, newPassword: newPw, newEncryptedMasterKey: wrappedMK, newKekSalt: salt, newKekWrapIv: wrapIv });
       setPwMessage('Password changed'); setCurrentPw(''); setNewPw(''); setConfirmPw(''); setShowPassword(false);
     } catch (err) { setPwMessage(err instanceof Error ? err.message : 'Failed'); setPwError(true); }
@@ -368,9 +368,7 @@ export function SettingsView() {
           <ColorSectionDesc>Choose a subtle paper texture for the background</ColorSectionDesc>
           <BackgroundPicker
             selected={backgroundImage}
-            opacity={backgroundOpacity}
             onImageChange={handleImageChange}
-            onOpacityChange={handleOpacityChange}
           />
         </ColorSection>
       </SettingsCard>

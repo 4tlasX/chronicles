@@ -70,6 +70,7 @@ export const auth = {
     recoveryWrappedMK: string;
     recoveryWrapIv: string;
     recoveryKeyHash: string;
+    recoveryKeySalt: string;
   }) => request<{ user: { email: string; username: string } }>('/auth/register', { method: 'POST', body: data }),
 
   login: (data: { email: string; password: string }) =>

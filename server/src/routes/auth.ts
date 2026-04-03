@@ -5,20 +5,30 @@ import { prisma } from '../db/prisma.js';
 import { registerTenant } from '../db/schemaManager.js';
 import { createSession, revokeSession, revokeAllSessions, authMiddleware } from '../middleware/auth.js';
 import { authLimiter, strictLimiter } from '../middleware/rateLimiter.js';
-import { registerSchema, loginSchema, changePasswordSchema, recoverSchema } from '@chronicles/shared';
+import { registerSchema, loginSchema, changePasswordSchema, recoverSchema, emailSchema } from '@chronicles/shared';
+import { logSecurityEvent } from '../utils/securityLogger.js';
 
 const router = Router();
 
 const BCRYPT_ROUNDS = 12;
 const IS_PRODUCTION = process.env.NODE_ENV !== 'development';
 const COOKIE_NAME = IS_PRODUCTION ? '__Host-chronicle_session' : 'chronicle_session';
+const SESSION_MAX_AGE_DAYS = 7;
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: IS_PRODUCTION,
-  sameSite: 'lax' as const,
-  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  sameSite: 'strict' as const,
+  maxAge: SESSION_MAX_AGE_DAYS * 24 * 60 * 60 * 1000,
   path: '/',
 };
+
+/** Enforce a constant-time floor on endpoint response time to prevent timing-based enumeration */
+async function constantTimeDelay(startTime: number, minMs = 200): Promise<void> {
+  const elapsed = Date.now() - startTime;
+  if (elapsed < minMs) {
+    await new Promise(resolve => setTimeout(resolve, minMs - elapsed));
+  }
+}
 
 // =============================================================================
 // POST /api/auth/register
@@ -27,11 +37,11 @@ router.post('/register', authLimiter, async (req, res) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.errors[0].message });
+      res.status(400).json({ error: 'Password does not meet requirements' });
       return;
     }
 
-    const { email: rawEmail, username, password, encryptedMasterKey, kekSalt, kekWrapIv, recoveryWrappedMK, recoveryWrapIv, recoveryKeyHash } = parsed.data;
+    const { email: rawEmail, username, password, encryptedMasterKey, kekSalt, kekWrapIv, recoveryWrappedMK, recoveryWrapIv, recoveryKeyHash, recoveryKeySalt } = parsed.data;
     const email = rawEmail.toLowerCase();
 
     // Check for existing account
@@ -39,7 +49,10 @@ router.post('/register', authLimiter, async (req, res) => {
       where: { OR: [{ email }, { username }] },
     });
     if (existing) {
-      res.status(409).json({ error: 'An account with this email or username already exists' });
+      logSecurityEvent('register_duplicate', { ip: req.ip });
+      // Constant-time delay to prevent timing-based enumeration
+      await bcrypt.hash('dummy', BCRYPT_ROUNDS);
+      res.status(409).json({ error: 'Registration could not be completed. Please try different credentials.' });
       return;
     }
 
@@ -52,6 +65,7 @@ router.post('/register', authLimiter, async (req, res) => {
       recoveryWrappedMK: new Uint8Array(Buffer.from(recoveryWrappedMK, 'base64')),
       recoveryWrapIv: new Uint8Array(Buffer.from(recoveryWrapIv, 'base64')),
       recoveryKeyHash,
+      recoveryKeySalt,
     });
 
     // Create session
@@ -60,12 +74,13 @@ router.post('/register', authLimiter, async (req, res) => {
       userAgent: req.headers['user-agent'],
     });
 
+    logSecurityEvent('register_success', { accountId: account.id, ip: req.ip });
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
     res.status(201).json({
       user: { email: account.email, username: account.username },
     });
   } catch (err) {
-    console.error('Registration error:', err);
+    console.error('Registration error:', err instanceof Error ? err.message : 'Unknown error');
     res.status(500).json({ error: 'Registration failed' });
   }
 });
@@ -108,7 +123,7 @@ router.get('/me', authMiddleware, async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Me error:', err);
+    console.error('Me error:', err instanceof Error ? err.message : 'Unknown error');
     res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
@@ -129,6 +144,7 @@ router.post('/login', authLimiter, async (req, res) => {
     const normalizedEmail = email.toLowerCase();
     const account = await prisma.account.findUnique({ where: { email: normalizedEmail } });
     if (!account) {
+      logSecurityEvent('login_failed_no_account', { ip: req.ip });
       // Constant-time delay to prevent timing-based email enumeration
       await bcrypt.hash('dummy', BCRYPT_ROUNDS);
       res.status(401).json({ error: 'Invalid credentials' });
@@ -137,6 +153,7 @@ router.post('/login', authLimiter, async (req, res) => {
 
     const valid = await bcrypt.compare(password, account.passwordHash);
     if (!valid) {
+      logSecurityEvent('login_failed_bad_password', { accountId: account.id, ip: req.ip });
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
@@ -146,6 +163,7 @@ router.post('/login', authLimiter, async (req, res) => {
       userAgent: req.headers['user-agent'],
     });
 
+    logSecurityEvent('login_success', { accountId: account.id, ip: req.ip });
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
     res.json({
       user: { email: account.email, username: account.username },
@@ -160,7 +178,7 @@ router.post('/login', authLimiter, async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Login error:', err instanceof Error ? err.message : 'Unknown error');
     res.status(500).json({ error: 'Login failed' });
   }
 });
@@ -171,10 +189,11 @@ router.post('/login', authLimiter, async (req, res) => {
 router.post('/logout', authMiddleware, async (req, res) => {
   try {
     await revokeSession(req.auth!.selector, 'user_logout');
+    logSecurityEvent('logout', { accountId: req.auth!.accountId, ip: req.ip });
     res.clearCookie(COOKIE_NAME);
     res.json({ success: true });
   } catch (err) {
-    console.error('Logout error:', err);
+    console.error('Logout error:', err instanceof Error ? err.message : 'Unknown error');
     res.status(500).json({ error: 'Logout failed' });
   }
 });
@@ -183,10 +202,16 @@ router.post('/logout', authMiddleware, async (req, res) => {
 // GET /api/auth/salt — Get encryption params for key derivation
 // =============================================================================
 router.get('/salt', authLimiter, async (req, res) => {
+  const startTime = Date.now();
   try {
     const rawEmail = req.query.email as string;
-    if (!rawEmail) {
+    if (!rawEmail || typeof rawEmail !== 'string' || rawEmail.length > 254) {
       res.status(400).json({ error: 'Email required' });
+      return;
+    }
+    const emailParsed = emailSchema.safeParse(rawEmail);
+    if (!emailParsed.success) {
+      res.status(400).json({ error: 'Invalid email' });
       return;
     }
     const email = rawEmail.toLowerCase();
@@ -208,6 +233,7 @@ router.get('/salt', authLimiter, async (req, res) => {
       const fakeSalt = crypto.randomBytes(16).toString('base64');
       const fakeWrappedKey = crypto.randomBytes(48).toString('base64');
       const fakeIv = crypto.randomBytes(12).toString('base64');
+      await constantTimeDelay(startTime);
       res.json({
         encryptionEnabled: true,
         kekSalt: fakeSalt,
@@ -218,6 +244,7 @@ router.get('/salt', authLimiter, async (req, res) => {
       return;
     }
 
+    await constantTimeDelay(startTime);
     res.json({
       encryptionEnabled: account.encryptionEnabled,
       kekSalt: account.kekSalt ? Buffer.from(account.kekSalt).toString('base64') : null,
@@ -226,7 +253,7 @@ router.get('/salt', authLimiter, async (req, res) => {
       kekIterations: account.kekIterations,
     });
   } catch (err) {
-    console.error('Salt error:', err);
+    console.error('Salt error:', err instanceof Error ? err.message : 'Unknown error');
     res.status(500).json({ error: 'Failed to fetch encryption params' });
   }
 });
@@ -238,7 +265,7 @@ router.post('/change-password', strictLimiter, authMiddleware, async (req, res) 
   try {
     const parsed = changePasswordSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.errors[0].message });
+      res.status(400).json({ error: 'Password does not meet requirements' });
       return;
     }
 
@@ -251,13 +278,14 @@ router.post('/change-password', strictLimiter, authMiddleware, async (req, res) 
 
     const valid = await bcrypt.compare(currentPassword, account.passwordHash);
     if (!valid) {
+      logSecurityEvent('password_change_failed', { accountId: account.id, ip: req.ip });
       res.status(401).json({ error: 'Current password incorrect' });
       return;
     }
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-    // Atomic: update password + revoke sessions in a single transaction
+    // Atomic: update password + revoke ALL sessions (including current) in a single transaction
     await prisma.$transaction([
       prisma.account.update({
         where: { id: account.id },
@@ -272,15 +300,22 @@ router.post('/change-password', strictLimiter, authMiddleware, async (req, res) 
         where: {
           accountId: account.id,
           revokedAt: null,
-          NOT: { selector: req.auth!.selector },
         },
         data: { revokedAt: new Date(), revokedReason: 'password_change' },
       }),
     ]);
 
+    // Create a fresh session after revoking all old ones (prevents race condition)
+    const token = await createSession(account.id, account.tenantSchemaName, {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    logSecurityEvent('password_change', { accountId: account.id, ip: req.ip });
+    res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
     res.json({ success: true });
   } catch (err) {
-    console.error('Change password error:', err);
+    console.error('Change password error:', err instanceof Error ? err.message : 'Unknown error');
     res.status(500).json({ error: 'Password change failed' });
   }
 });
@@ -289,10 +324,11 @@ router.post('/change-password', strictLimiter, authMiddleware, async (req, res) 
 // POST /api/auth/recover — Password recovery using recovery key
 // =============================================================================
 router.post('/recover', strictLimiter, async (req, res) => {
+  const startTime = Date.now();
   try {
     const parsed = recoverSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.errors[0].message });
+      res.status(400).json({ error: 'Password does not meet requirements' });
       return;
     }
 
@@ -303,48 +339,57 @@ router.post('/recover', strictLimiter, async (req, res) => {
     if (!account) {
       // Constant-time delay to prevent timing-based enumeration
       await bcrypt.hash('dummy', BCRYPT_ROUNDS);
+      await constantTimeDelay(startTime);
       res.status(401).json({ error: 'Recovery failed' });
       return;
     }
 
-    // Verify recovery key: hash the provided key and compare to stored hash
-    const providedHash = crypto.createHash('sha256').update(recoveryKey).digest('hex');
+    if (!account.recoveryKeyHash || !account.recoveryKeySalt) {
+      // Legacy accounts without recoveryKeyHash or accounts that already used recovery
+      logSecurityEvent('recovery_failed', { accountId: account.id, ip: req.ip, details: { reason: 'no_recovery_hash' } });
+      await constantTimeDelay(startTime);
+      res.status(401).json({ error: 'Recovery failed' });
+      return;
+    }
 
-    if (account.recoveryKeyHash) {
-      // Normal path: verify against stored hash
-      if (!crypto.timingSafeEqual(Buffer.from(providedHash), Buffer.from(account.recoveryKeyHash))) {
-        res.status(401).json({ error: 'Recovery failed' });
-        return;
-      }
-    } else {
-      // Legacy accounts without recoveryKeyHash: reject recovery attempts.
-      // Accounts must have server-side key verification. Users with legacy accounts
-      // should contact support or re-register.
+    // Verify recovery key using PBKDF2 (salted + iterated)
+    const recoveryKeySalt = Buffer.from(account.recoveryKeySalt, 'hex');
+    const providedHash = crypto.pbkdf2Sync(recoveryKey, recoveryKeySalt, 100000, 32, 'sha256').toString('hex');
+
+    if (!crypto.timingSafeEqual(Buffer.from(providedHash), Buffer.from(account.recoveryKeyHash))) {
+      logSecurityEvent('recovery_failed', { accountId: account.id, ip: req.ip });
+      await constantTimeDelay(startTime);
       res.status(401).json({ error: 'Recovery failed' });
       return;
     }
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
-    // Invalidate old recovery key material — recovery key is single-use
-    // Clear recoveryWrappedMK and recoveryWrapIv so the old recovery key can't be reused
-    await prisma.account.update({
-      where: { id: account.id },
-      data: {
-        passwordHash,
-        encryptedMasterKey: new Uint8Array(Buffer.from(newEncryptedMasterKey, 'base64')),
-        kekSalt: new Uint8Array(Buffer.from(newKekSalt, 'base64')),
-        kekWrapIv: new Uint8Array(Buffer.from(newKekWrapIv, 'base64')),
-        recoveryKeyHash: providedHash,
-        recoveryWrappedMK: null,
-        recoveryWrapIv: null,
-      },
-    });
+    // Atomic: update password + invalidate recovery key + revoke sessions in single transaction
+    await prisma.$transaction([
+      prisma.account.update({
+        where: { id: account.id },
+        data: {
+          passwordHash,
+          encryptedMasterKey: new Uint8Array(Buffer.from(newEncryptedMasterKey, 'base64')),
+          kekSalt: new Uint8Array(Buffer.from(newKekSalt, 'base64')),
+          kekWrapIv: new Uint8Array(Buffer.from(newKekWrapIv, 'base64')),
+          recoveryKeyHash: null,
+          recoveryKeySalt: null,
+          recoveryWrappedMK: null,
+          recoveryWrapIv: null,
+          recoveryKeyUsedAt: new Date(),
+        },
+      }),
+      prisma.session.updateMany({
+        where: { accountId: account.id, revokedAt: null },
+        data: { revokedAt: new Date(), revokedReason: 'recovery' },
+      }),
+    ]);
 
-    // Revoke all existing sessions
-    await revokeAllSessions(account.id, undefined, 'password_change');
+    logSecurityEvent('recovery_success', { accountId: account.id, ip: req.ip });
 
-    // Create new session
+    // Create new session after revoking all old ones
     const token = await createSession(account.id, account.tenantSchemaName, {
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
@@ -364,7 +409,7 @@ router.post('/recover', strictLimiter, async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Recovery error:', err);
+    console.error('Recovery error:', err instanceof Error ? err.message : 'Unknown error');
     res.status(500).json({ error: 'Recovery failed' });
   }
 });
@@ -373,10 +418,16 @@ router.post('/recover', strictLimiter, async (req, res) => {
 // GET /api/auth/recovery-params — Get recovery key params for password reset
 // =============================================================================
 router.get('/recovery-params', authLimiter, async (req, res) => {
+  const startTime = Date.now();
   try {
     const rawEmail = req.query.email as string;
-    if (!rawEmail) {
+    if (!rawEmail || typeof rawEmail !== 'string' || rawEmail.length > 254) {
       res.status(400).json({ error: 'Email required' });
+      return;
+    }
+    const emailParsed = emailSchema.safeParse(rawEmail);
+    if (!emailParsed.success) {
+      res.status(400).json({ error: 'Invalid email' });
       return;
     }
     const email = rawEmail.toLowerCase();
@@ -394,6 +445,7 @@ router.get('/recovery-params', authLimiter, async (req, res) => {
       // Return fake params to prevent account enumeration
       const fakeWrappedKey = crypto.randomBytes(48).toString('base64');
       const fakeIv = crypto.randomBytes(12).toString('base64');
+      await constantTimeDelay(startTime);
       res.json({
         recoveryWrappedMK: fakeWrappedKey,
         recoveryWrapIv: fakeIv,
@@ -401,12 +453,13 @@ router.get('/recovery-params', authLimiter, async (req, res) => {
       return;
     }
 
+    await constantTimeDelay(startTime);
     res.json({
       recoveryWrappedMK: account.recoveryWrappedMK ? Buffer.from(account.recoveryWrappedMK).toString('base64') : null,
       recoveryWrapIv: account.recoveryWrapIv ? Buffer.from(account.recoveryWrapIv).toString('base64') : null,
     });
   } catch (err) {
-    console.error('Recovery params error:', err);
+    console.error('Recovery params error:', err instanceof Error ? err.message : 'Unknown error');
     res.status(500).json({ error: 'Failed to fetch recovery params' });
   }
 });

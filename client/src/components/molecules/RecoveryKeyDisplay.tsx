@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button } from '../atoms/Button.js';
 
@@ -32,6 +32,13 @@ interface RecoveryKeyDisplayProps {
 
 export function RecoveryKeyDisplay({ recoveryKey, onConfirm }: RecoveryKeyDisplayProps) {
   const [copied, setCopied] = useState(false);
+
+  // Clear clipboard on unmount to prevent recovery key lingering
+  useEffect(() => {
+    return () => {
+      navigator.clipboard.writeText('').catch(() => {});
+    };
+  }, []);
 
   // Format key as groups of 4 hex chars separated by dashes
   const formatted = recoveryKey.match(/.{1,4}/g)?.join('-') ?? recoveryKey;

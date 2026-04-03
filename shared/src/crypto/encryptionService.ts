@@ -15,6 +15,7 @@ import {
   importRawKey,
   wrapKey,
   unwrapKey,
+  toNonExtractable,
   encrypt,
   decrypt,
 } from './primitives.js';
@@ -32,25 +33,33 @@ class EncryptionService {
    * Set up encryption for a new user (called during registration)
    */
   async setupEncryption(password: string): Promise<SetupEncryptionResult> {
-    const masterKey = await generateMasterKey();
+    const extractableKey = await generateMasterKey();
 
     // Wrap with password-derived KEK
     const salt = generateSalt();
     const kek = await deriveKEK(password, salt, PBKDF2_ITERATIONS);
     const wrapIv = generateIv();
-    const wrappedMKBuffer = await wrapKey(masterKey, kek, wrapIv);
+    const wrappedMKBuffer = await wrapKey(extractableKey, kek, wrapIv);
 
     // Wrap with recovery key
     const recoveryKeyBytes = generateRecoveryKey();
     const recoveryKeyObj = await importRawKey(recoveryKeyBytes);
     const recoveryWrapIv = generateIv();
-    const recoveryWrappedMKBuffer = await wrapKey(masterKey, recoveryKeyObj, recoveryWrapIv);
+    const recoveryWrappedMKBuffer = await wrapKey(extractableKey, recoveryKeyObj, recoveryWrapIv);
+
+    // Convert to non-extractable for in-memory use (encrypt/decrypt only)
+    const masterKey = await toNonExtractable(extractableKey);
+
+    // Capture base64 before zeroing
+    const recoveryKeyBase64 = uint8ArrayToBase64(recoveryKeyBytes);
+    // Zero recovery key raw bytes — only the base64 string is returned for user display
+    recoveryKeyBytes.fill(0);
 
     return {
       salt: uint8ArrayToBase64(salt),
       wrappedMK: uint8ArrayToBase64(new Uint8Array(wrappedMKBuffer)),
       wrapIv: uint8ArrayToBase64(wrapIv),
-      recoveryKey: uint8ArrayToBase64(recoveryKeyBytes),
+      recoveryKey: recoveryKeyBase64,
       recoveryWrappedMK: uint8ArrayToBase64(new Uint8Array(recoveryWrappedMKBuffer)),
       recoveryWrapIv: uint8ArrayToBase64(recoveryWrapIv),
       masterKey,
@@ -76,7 +85,8 @@ class EncryptionService {
   }
 
   /**
-   * Unwrap master key using recovery key (password reset flow)
+   * Unwrap master key using recovery key (password reset flow).
+   * Returns extractable key so it can be re-wrapped with a new password.
    */
   async unwrapWithRecoveryKey(
     recoveryKeyBase64: string,
@@ -88,7 +98,7 @@ class EncryptionService {
     const recoveryWrapIv = base64ToUint8Array(recoveryWrapIvBase64);
 
     const recoveryKeyObj = await importRawKey(recoveryKeyBytes);
-    return unwrapKey(recoveryWrappedMK.buffer as ArrayBuffer, recoveryKeyObj, recoveryWrapIv);
+    return unwrapKey(recoveryWrappedMK.buffer as ArrayBuffer, recoveryKeyObj, recoveryWrapIv, true);
   }
 
   /**
@@ -108,6 +118,38 @@ class EncryptionService {
       wrappedMK: uint8ArrayToBase64(new Uint8Array(wrappedMKBuffer)),
       wrapIv: uint8ArrayToBase64(wrapIv),
     };
+  }
+
+  /**
+   * Re-wrap master key for password change (when only non-extractable key is in memory).
+   * Re-derives the extractable key from stored encryption params + current password,
+   * wraps with new password, then discards the extractable key.
+   */
+  async rewrapFromParams(
+    currentPassword: string,
+    kekSaltBase64: string,
+    encryptedMKBase64: string,
+    kekWrapIvBase64: string,
+    kekIterations: number,
+    newPassword: string
+  ): Promise<RewrapResult> {
+    // Unwrap as extractable so we can re-wrap
+    const salt = base64ToUint8Array(kekSaltBase64);
+    const wrappedMK = base64ToUint8Array(encryptedMKBase64);
+    const wrapIv = base64ToUint8Array(kekWrapIvBase64);
+    const kek = await deriveKEK(currentPassword, salt, kekIterations);
+    const extractableKey = await unwrapKey(wrappedMK.buffer as ArrayBuffer, kek, wrapIv, true);
+
+    try {
+      // Wrap with new password
+      const result = await this.rewrapMasterKey(extractableKey, newPassword);
+      return result;
+    } finally {
+      // Zero intermediate buffers to reduce key material exposure window
+      salt.fill(0);
+      wrappedMK.fill(0);
+      wrapIv.fill(0);
+    }
   }
 
   /**
@@ -166,7 +208,8 @@ class EncryptionService {
       } else {
         metadata = parsed;
       }
-    } catch {
+    } catch (err) {
+      console.warn(`Metadata parsing failed for post ${post.id}:`, err instanceof Error ? err.message : 'Unknown error');
       metadata = {};
     }
 
