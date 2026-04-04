@@ -38,7 +38,8 @@ const TopBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 45px;
+  min-height: 46px;
+  max-height: 46px;
   padding: 0 24px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;

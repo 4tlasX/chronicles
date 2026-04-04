@@ -18,7 +18,8 @@ const Container = styled.div`
   display: flex;
   align-items: center;
   background: transparent;
-  height: 45px;
+  min-height: 46px;
+  max-height: 46px;
   padding: 0 8px;
   border-radius: 0;
   border: none;
