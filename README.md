@@ -28,7 +28,7 @@ A journal for those too busy to journal with zero-knowledge encryption. Chronicl
 <img width="1382" height="725" alt="Screenshot 2026-04-03 at 4 43 44 PM" src="https://github.com/user-attachments/assets/71dda451-827b-4e19-8bcd-03294f87519c" />
 <img width="1382" height="725" alt="Screenshot 2026-04-03 at 4 43 44 PM" src="https://github.com/user-attachments/assets/eb02bfdf-b24e-4bc9-becb-d87c8e354ef9" />
 <img width="1371" height="733" alt="Screenshot 2026-04-03 at 4 44 02 PM" src="https://github.com/user-attachments/assets/f81fa555-b840-4d9d-a8fd-a48d33cd2934" />
-<img width="1377" height="744" alt="Screenshot 2026-04-02 at 11 07 13 PM" src="https://github.com/user-attachments/assets/1114a924-bf13-4b0c-93ea-e7412c6de9db" />
+<img width="1380" height="721" alt="Screenshot 2026-04-03 at 5 01 45 PM" src="https://github.com/user-attachments/assets/dd39611a-fe6a-4cba-9482-eeddcd5ce294" />
 <img width="1375" height="721" alt="Screenshot 2026-04-03 at 4 44 37 PM" src="https://github.com/user-attachments/assets/dd8ef232-d0a1-4395-915b-62d8c6eb002b" />
 <img width="1376" height="723" alt="Screenshot 2026-04-03 at 4 45 10 PM" src="https://github.com/user-attachments/assets/64827b0b-67d3-4ad7-b5db-a2e8f82274d1" />
 <img width="1380" height="723" alt="Screenshot 2026-04-03 at 4 45 28 PM" src="https://github.com/user-attachments/assets/90d1a3cb-43c2-4664-9604-8464b4ded8f7" />
