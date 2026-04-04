@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import type { ReactNode } from 'react';
 
 const Wrapper = styled.label`
   display: flex;
@@ -40,7 +41,7 @@ const CheckLabel = styled.span`
 interface CheckboxProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
-  label?: string;
+  label?: ReactNode;
 }
 
 export function Checkbox({ checked, onChange, label }: CheckboxProps) {

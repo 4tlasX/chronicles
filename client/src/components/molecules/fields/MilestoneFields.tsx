@@ -18,6 +18,12 @@ const Wrapper = styled.div`
 const Row = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.sm}px;
+
+  & > * {
+    flex: 1;
+    min-width: 0;
+    margin-top: 0 !important;
+  }
 `;
 
 const LinkedTasksSection = styled.div`

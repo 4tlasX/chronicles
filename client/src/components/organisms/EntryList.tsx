@@ -45,6 +45,7 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   const selectedEntryId = useUIStore(s => s.selectedEntryId);
   const setSelectedEntryId = useUIStore(s => s.setSelectedEntryId);
   const viewMode = useUIStore(s => s.viewMode);
+  const selectedDate = useUIStore(s => s.selectedDate);
   const searchKeyword = useUIStore(s => s.searchKeyword);
   const searchDateFrom = useUIStore(s => s.searchDateFrom);
   const searchDateTo = useUIStore(s => s.searchDateTo);
@@ -99,6 +100,15 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
       if (taxId && !enabledTopicIds.has(taxId)) return false;
 
       // View mode filters
+      if (viewMode === 'date') {
+        const entryDate = new Date(entry.createdAt);
+        if (
+          entryDate.getFullYear() !== selectedDate.getFullYear() ||
+          entryDate.getMonth() !== selectedDate.getMonth() ||
+          entryDate.getDate() !== selectedDate.getDate()
+        ) return false;
+      }
+
       if (viewMode === 'tasks') {
         const taxId = meta?._taxonomyId as number | undefined;
         const topic = taxId ? topics.find(t => t.id === taxId) : undefined;
@@ -136,7 +146,7 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
 
       return true;
     });
-  }, [entries, topics, enabledTopicIds, selectedTopicId, viewMode, searchKeyword, searchDateFrom, searchDateTo]);
+  }, [entries, topics, enabledTopicIds, selectedTopicId, selectedDate, viewMode, searchKeyword, searchDateFrom, searchDateTo]);
 
   if (filteredEntries.length === 0) {
     return <EmptyState>No entries yet</EmptyState>;

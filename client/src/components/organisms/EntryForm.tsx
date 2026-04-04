@@ -42,6 +42,35 @@ const TopBar = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
+const MobileBackBtn = styled.button`
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  margin-right: 8px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.text};
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  &:hover { opacity: 0.7; }
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+`;
+
+const ExpandLabel = styled.span`
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
 const ExpandControl = styled.div`
   display: flex;
   align-items: center;
@@ -219,6 +248,7 @@ interface EntryFormProps {
   onNew: () => void;
   onBookmark?: () => void;
   onShare?: () => void;
+  onBack?: () => void;
   isEditing: boolean;
   isSaving: boolean;
   saveStatus: string;
@@ -230,7 +260,7 @@ interface EntryFormProps {
 export function EntryForm({
   entryId, content, onContentChange, topicId, onTopicChange, topics,
   customFields, onCustomFieldsChange, onSave, onDelete, onNew,
-  onBookmark, onShare,
+  onBookmark, onShare, onBack,
   isEditing, isSaving, saveStatus, placeholder = 'Start writing...',
   expanded = false, onExpandChange,
 }: EntryFormProps) {
@@ -316,7 +346,7 @@ export function EntryForm({
           <Checkbox
             checked={expanded}
             onChange={(val) => onExpandChange?.(val)}
-            label={`Expand entry (${charCount}/200)`}
+            label={<><ExpandLabel>Expand entry </ExpandLabel>({charCount}/200)</>}
           />
           <IconBtn
             type="button"

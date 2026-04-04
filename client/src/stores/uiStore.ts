@@ -19,6 +19,10 @@ interface UIState {
   viewMode: 'date' | 'all' | 'tasks' | 'favorites' | 'search';
   setViewMode: (mode: UIState['viewMode']) => void;
 
+  // Selected date for date view
+  selectedDate: Date;
+  setSelectedDate: (date: Date) => void;
+
   // Selected topic filter
   selectedTopicId: number | null;
   setSelectedTopicId: (id: number | null) => void;
@@ -57,8 +61,11 @@ export const useUIStore = create<UIState>((set) => ({
   setSearchDateTo: (date) => set({ searchDateTo: date }),
   clearSearch: () => set({ searchKeyword: '', searchDateFrom: '', searchDateTo: '', isSearchActive: false }),
 
-  viewMode: 'date',
+  viewMode: 'all',
   setViewMode: (mode) => set({ viewMode: mode }),
+
+  selectedDate: new Date(),
+  setSelectedDate: (date) => set({ selectedDate: date }),
 
   selectedTopicId: null,
   setSelectedTopicId: (id) => set({ selectedTopicId: id }),

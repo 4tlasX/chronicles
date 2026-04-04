@@ -393,7 +393,7 @@ export function Header() {
 
   const handleNewEntry = () => {
     useUIStore.getState().setSelectedEntryId(null);
-    useUIStore.getState().setShowMobileEditor(false);
+    useUIStore.getState().setShowMobileEditor(true);
     navigate('/');
   };
 
@@ -428,7 +428,12 @@ export function Header() {
     <>
       <HeaderBar $bgColor={bgColor} $light={light}>
         <LeftSection>
-          <Logo to="/">
+          <Logo to="/" onClick={() => {
+            useUIStore.getState().setViewMode('all');
+            useUIStore.getState().setSelectedTopicId(null);
+            useUIStore.getState().setSelectedEntryId(null);
+            useUIStore.getState().setShowMobileEditor(false);
+          }}>
             <LogoText $light={light}>Chronicles</LogoText>
           </Logo>
           <Divider />

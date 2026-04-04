@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState, type ReactNode } from 'react';
-import styled, { keyframes } from 'styled-components';
+import { useRef, useEffect, useLayoutEffect, useState, useCallback, type ReactNode } from 'react';
+import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { useUIStore } from '../../stores/uiStore.js';
@@ -9,7 +9,7 @@ const tabs: { value: ViewMode; label: ReactNode }[] = [
   { value: 'date', label: 'Date' },
   { value: 'tasks', label: 'Tasks' },
   { value: 'all', label: 'All' },
-  { value: 'favorites', label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 4px' }}><FontAwesomeIcon icon={faBookmark} size="xs" /> Bookmarks</span> },
+  { value: 'favorites', label: <><FontAwesomeIcon icon={faBookmark} size="xs" /> Bookmarks</> },
   { value: 'search', label: 'Search' },
 ];
 
@@ -44,6 +44,7 @@ const TabButton = styled.button<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 5px;
   padding: 6px 8px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   font-size: 11px;
@@ -74,7 +75,7 @@ export function ViewTabs({ onDateTabClick }: ViewTabsProps = {}) {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [sliderStyle, setSliderStyle] = useState({ left: 0, width: 0 });
 
-  useEffect(() => {
+  const updateSlider = useCallback(() => {
     const activeIndex = tabs.findIndex((t) => t.value === viewMode);
     const activeTab = tabRefs.current[activeIndex];
     if (activeTab && containerRef.current) {
@@ -86,6 +87,15 @@ export function ViewTabs({ onDateTabClick }: ViewTabsProps = {}) {
       });
     }
   }, [viewMode]);
+
+  useLayoutEffect(() => {
+    updateSlider();
+  }, [updateSlider]);
+
+  useEffect(() => {
+    window.addEventListener('resize', updateSlider);
+    return () => window.removeEventListener('resize', updateSlider);
+  }, [updateSlider]);
 
   return (
     <Container ref={containerRef}>

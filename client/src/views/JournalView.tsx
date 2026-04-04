@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getTopicIcon } from '../utils/topicIcons.js';
 import { AppTemplate } from '../components/templates/AppTemplate.js';
-import { JournalTemplate, SidePanel, EditorPanel, MobileBackButton } from '../components/templates/JournalTemplate.js';
+import { JournalTemplate, SidePanel, EditorPanel } from '../components/templates/JournalTemplate.js';
 import { LoadingCenter } from '../components/atoms/LoadingCenter.js';
 import { EmptyEditor } from '../components/atoms/EmptyEditor.js';
 import { SidePadding } from '../components/atoms/SidePadding.js';
@@ -46,7 +46,8 @@ export function JournalView() {
   const setBackgroundOpacity = useUIStore(s => s.setBackgroundOpacity);
   const filterTopic = topics.find(t => t.id === selectedTopicId);
 
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const selectedDate = useUIStore(s => s.selectedDate);
+  const setSelectedDate = useUIStore(s => s.setSelectedDate);
   const [calendarExpanded, setCalendarExpanded] = useState(false);
   const [editorContent, setEditorContent] = useState('');
   const [editorTopicId, setEditorTopicId] = useState<number | null>(null);
@@ -305,7 +306,6 @@ export function JournalView() {
         }
         editorPanel={
           <EditorPanel visibleMobile={showMobileEditor}>
-            <MobileBackButton onClick={handleMobileBack} />
             <EntryForm
               entryId={selectedEntryId}
               content={editorContent}
@@ -320,6 +320,7 @@ export function JournalView() {
               onNew={handleNew}
               onBookmark={handleBookmark}
               onShare={() => setShareOpen(true)}
+              onBack={handleMobileBack}
               isEditing={selectedEntryId !== null}
               isSaving={isSaving}
               saveStatus={saveStatus}

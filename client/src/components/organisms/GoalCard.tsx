@@ -34,7 +34,7 @@ const Card = styled.div<{ $isDragging?: boolean; $editing?: boolean }>`
 const CardHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 12px 14px;
   cursor: pointer;
   border-radius: ${({ theme }) => theme.borderRadius.lg}px ${({ theme }) => theme.borderRadius.lg}px 0 0;
@@ -55,6 +55,14 @@ const Title = styled.div<{ $completed?: boolean }>`
 const TypeLabel = styled.span`
   font-size: 11px;
   color: ${({ theme }) => theme.colors.textMuted};
+  flex-shrink: 0;
+  line-height: 1;
+`;
+
+const MetaGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
 `;
 
@@ -219,9 +227,11 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
       <CardHeader onClick={onSelect}>
         <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
         <Title $completed={goal.goalStatus === 'completed'}>{goal.title}</Title>
-        <TypeLabel>{goal.goalType === 'short_term' ? 'Short' : 'Long'}</TypeLabel>
-        <Badge color={STATUS_COLORS[goal.goalStatus] || '#9ca3af'} capitalize>{goal.goalStatus}</Badge>
-        {goal.targetDate && <TypeLabel>{goal.targetDate}</TypeLabel>}
+        <MetaGroup>
+          <Badge color={STATUS_COLORS[goal.goalStatus] || '#9ca3af'} capitalize>{goal.goalStatus}</Badge>
+          <TypeLabel>{goal.goalType === 'short_term' ? 'Short-term' : 'Long-term'}</TypeLabel>
+          {goal.targetDate && <TypeLabel>{goal.targetDate}</TypeLabel>}
+        </MetaGroup>
       </CardHeader>
 
       {linkedMilestones.length > 0 && !isEditing && (
