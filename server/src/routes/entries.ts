@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
       return;
     }
 
-    const { taxonomyIds, ...postData } = parsed.data;
+    const { taxonomyIds, createdAt, ...postData } = parsed.data;
     const input: Record<string, unknown> = {};
 
     if (postData.isEncrypted) {
@@ -51,6 +51,10 @@ router.post('/', async (req, res) => {
     } else {
       input.content = postData.content;
       input.metadata = postData.metadata;
+    }
+
+    if (createdAt) {
+      input.createdAt = new Date(createdAt);
     }
 
     const post = await createPost(req.auth!.tenantSchemaName, input as Parameters<typeof createPost>[1]);

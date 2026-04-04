@@ -171,6 +171,7 @@ export interface CreatePostInput {
   metadataEncrypted?: Buffer;
   metadataIv?: Buffer;
   isEncrypted?: boolean;
+  createdAt?: Date;
 }
 
 const POST_SELECT = `id, content, metadata,
@@ -182,6 +183,19 @@ export async function createPost(schemaName: string, input: CreatePostInput): Pr
   const s = escapeSchema(schemaName);
 
   if (input.isEncrypted) {
+    if (input.createdAt) {
+      const result = await prisma.$queryRawUnsafe<TenantPost[]>(
+        `INSERT INTO ${s}.posts (content_encrypted, content_iv, metadata_encrypted, metadata_iv, is_encrypted, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, TRUE, $5, $5)
+         RETURNING ${POST_SELECT}`,
+        input.contentEncrypted,
+        input.contentIv,
+        input.metadataEncrypted,
+        input.metadataIv,
+        input.createdAt
+      );
+      return result[0];
+    }
     const result = await prisma.$queryRawUnsafe<TenantPost[]>(
       `INSERT INTO ${s}.posts (content_encrypted, content_iv, metadata_encrypted, metadata_iv, is_encrypted)
        VALUES ($1, $2, $3, $4, TRUE)
@@ -190,6 +204,18 @@ export async function createPost(schemaName: string, input: CreatePostInput): Pr
       input.contentIv,
       input.metadataEncrypted,
       input.metadataIv
+    );
+    return result[0];
+  }
+
+  if (input.createdAt) {
+    const result = await prisma.$queryRawUnsafe<TenantPost[]>(
+      `INSERT INTO ${s}.posts (content, metadata, is_encrypted, created_at, updated_at)
+       VALUES ($1, $2::jsonb, FALSE, $3, $3)
+       RETURNING ${POST_SELECT}`,
+      input.content ?? '',
+      JSON.stringify(input.metadata ?? {}),
+      input.createdAt
     );
     return result[0];
   }

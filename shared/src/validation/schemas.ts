@@ -67,6 +67,7 @@ export const createPostSchema = z.object({
   metadataIv: z.string().optional(),
   isEncrypted: z.boolean().optional(),
   taxonomyIds: z.array(z.number()).optional(),
+  createdAt: z.string().optional(),
 }).refine(
   (data) => {
     if (data.isEncrypted) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { SettingsTemplate } from '../components/templates/SettingsTemplate.js';
@@ -24,10 +24,63 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useNavigate } from 'react-router-dom';
-import { auth as authApi, settings as settingsApi, sessions as sessionsApi, topics as topicsApi } from '../services/api.js';
+import { auth as authApi, settings as settingsApi, sessions as sessionsApi, topics as topicsApi, entries as entriesApi } from '../services/api.js';
 import { seedTestData } from '../utils/seedTestData.js';
 import { HEADER_COLORS } from '@shared/theme/accentColors';
 import { stripHtml } from '../utils/stripHtml.js';
+
+function parseCsvRow(line: string): string[] {
+  const fields: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        fields.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  fields.push(current);
+  return fields;
+}
+
+function splitCsvLines(text: string): string[] {
+  const lines: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+      current += ch;
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (ch === '\r' && i + 1 < text.length && text[i + 1] === '\n') i++;
+      if (current.trim()) lines.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) lines.push(current);
+  return lines;
+}
 
 const TIMEZONES = [
   { value: 'Pacific/Honolulu', label: 'Hawaii (HST)' },
@@ -283,6 +336,121 @@ export function SettingsView() {
     }
   };
 
+  // Import CSV
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState('');
+  const importFileRef = useRef<HTMLInputElement>(null);
+
+  const handleImportCsv = async (file: File) => {
+    setImporting(true);
+    setImportResult('');
+    try {
+      const text = await file.text();
+      const lines = splitCsvLines(text);
+      if (lines.length < 2) throw new Error('CSV file is empty or has no data rows');
+
+      const headers = parseCsvRow(lines[0]).map(h => h.trim());
+      const dateIdx = headers.findIndex(h => h.toLowerCase() === 'date');
+      const contentIdx = headers.findIndex(h => h.toLowerCase() === 'content');
+      const topicIdx = headers.findIndex(h => h.toLowerCase() === 'topic');
+      const bookmarkedIdx = headers.findIndex(h => h.toLowerCase() === 'bookmarked');
+
+      if (contentIdx === -1) throw new Error('CSV must have a "Content" column');
+      if (dateIdx === -1) throw new Error('CSV must have a "Date" column');
+
+      // Build topic name → id map (case-insensitive)
+      const topicNameMap = new Map<string, number>();
+      for (const t of allTopics) {
+        topicNameMap.set(t.name.toLowerCase(), t.id);
+      }
+
+      // Known non-custom-field columns
+      const skipHeaders = new Set(['id', 'date', 'updated', 'topic', 'content', 'bookmarked']);
+
+      let imported = 0;
+      let skipped = 0;
+      const total = lines.length - 1;
+
+      for (let i = 1; i < lines.length; i++) {
+        const fields = parseCsvRow(lines[i]);
+        const content = fields[contentIdx]?.trim();
+        const dateStr = fields[dateIdx]?.trim();
+
+        if (!content || !dateStr) { skipped++; continue; }
+
+        // Build metadata
+        const metadata: Record<string, unknown> = {};
+        const customFields: Record<string, unknown> = {};
+
+        // Topic
+        if (topicIdx !== -1 && fields[topicIdx]?.trim()) {
+          const topicId = topicNameMap.get(fields[topicIdx].trim().toLowerCase());
+          if (topicId) metadata._taxonomyId = topicId;
+        }
+
+        // Bookmarked
+        if (bookmarkedIdx !== -1 && fields[bookmarkedIdx]?.trim().toLowerCase() === 'yes') {
+          customFields._isFavorite = true;
+        }
+
+        // Custom fields from extra columns
+        for (let h = 0; h < headers.length; h++) {
+          if (skipHeaders.has(headers[h].toLowerCase()) || h >= fields.length) continue;
+          const val = fields[h]?.trim();
+          if (!val) continue;
+          if (val.toLowerCase() === 'yes') customFields[headers[h]] = true;
+          else if (val.toLowerCase() === 'no') customFields[headers[h]] = false;
+          else customFields[headers[h]] = val;
+        }
+
+        if (Object.keys(customFields).length > 0) {
+          metadata._customFields = customFields;
+        }
+
+        // Wrap plain text in HTML paragraphs for TipTap
+        const htmlContent = content.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('');
+
+        // Encrypt
+        const encrypted = await encryptPost(htmlContent, metadata);
+
+        // Parse date
+        const createdAt = new Date(dateStr).toISOString();
+
+        // Create entry via API
+        const taxonomyIds = metadata._taxonomyId ? [metadata._taxonomyId as number] : [];
+        const result = await entriesApi.create({
+          contentEncrypted: encrypted.contentEncrypted,
+          contentIv: encrypted.contentIv,
+          metadataEncrypted: encrypted.metadataEncrypted,
+          metadataIv: encrypted.metadataIv,
+          isEncrypted: true,
+          taxonomyIds,
+          createdAt,
+        });
+
+        // Add to local store
+        addDecryptedEntry({
+          id: result.id as number,
+          content: htmlContent,
+          metadata,
+          isEncrypted: true,
+          createdAt: new Date(result.createdAt as string),
+          updatedAt: new Date((result.updatedAt || result.createdAt) as string),
+        });
+
+        imported++;
+        setImportResult(`Importing ${imported} of ${total}...`);
+      }
+
+      setImportResult(`Imported ${imported} entries${skipped > 0 ? `, ${skipped} skipped` : ''}`);
+    } catch (err) {
+      setImportResult(`Failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setImporting(false);
+      if (importFileRef.current) importFileRef.current.value = '';
+    }
+  };
+
   const handleSignOut = async () => {
     lock(); clearAll(); await logout(); navigate('/login');
   };
@@ -466,6 +634,28 @@ export function SettingsView() {
             </ActionButton>
           }
         />
+        <SettingsRow
+          title="Import Entries"
+          description="Import entries from a CSV file (Date, Topic, Content, Bookmarked)"
+          action={
+            <>
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".csv"
+                style={{ display: 'none' }}
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImportCsv(file);
+                }}
+              />
+              <ActionButton onClick={() => importFileRef.current?.click()} disabled={importing}>
+                {importing ? <Spinner size={14} /> : 'Import CSV'}
+              </ActionButton>
+            </>
+          }
+        />
+        {importResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: importResult.startsWith('Failed') ? '#ef4444' : '#22c55e' }}>{importResult}</div>}
       </SettingsCard>
 
       {/* Privacy */}
