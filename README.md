@@ -24,16 +24,13 @@ A journal for those too busy to journal with zero-knowledge encryption. Chronicl
 - Split-token sessions — database leaks cannot reconstruct valid session tokens
 
 ## Screenshots
-<img width="1238" height="717" alt="Screenshot 2026-04-03 at 4 43 06 PM" src="https://github.com/user-attachments/assets/8308f4ec-9098-4142-8786-c067a1955c23" />
-<img width="1382" height="725" alt="Screenshot 2026-04-03 at 4 43 44 PM" src="https://github.com/user-attachments/assets/71dda451-827b-4e19-8bcd-03294f87519c" />
-<img width="1382" height="725" alt="Screenshot 2026-04-03 at 4 43 44 PM" src="https://github.com/user-attachments/assets/eb02bfdf-b24e-4bc9-becb-d87c8e354ef9" />
-<img width="1371" height="733" alt="Screenshot 2026-04-03 at 4 44 02 PM" src="https://github.com/user-attachments/assets/f81fa555-b840-4d9d-a8fd-a48d33cd2934" />
-<img width="1380" height="721" alt="Screenshot 2026-04-03 at 5 01 45 PM" src="https://github.com/user-attachments/assets/dd39611a-fe6a-4cba-9482-eeddcd5ce294" />
-<img width="1375" height="721" alt="Screenshot 2026-04-03 at 4 44 37 PM" src="https://github.com/user-attachments/assets/dd8ef232-d0a1-4395-915b-62d8c6eb002b" />
-<img width="1376" height="723" alt="Screenshot 2026-04-03 at 4 45 10 PM" src="https://github.com/user-attachments/assets/64827b0b-67d3-4ad7-b5db-a2e8f82274d1" />
-<img width="1380" height="723" alt="Screenshot 2026-04-03 at 4 45 28 PM" src="https://github.com/user-attachments/assets/90d1a3cb-43c2-4664-9604-8464b4ded8f7" />
-<img width="1379" height="729" alt="Screenshot 2026-04-03 at 4 45 45 PM" src="https://github.com/user-attachments/assets/216e2ad0-dd09-4f52-8ea4-8e53ceec6c29" />
-<img width="1380" height="733" alt="Screenshot 2026-04-03 at 4 46 29 PM" src="https://github.com/user-attachments/assets/1962ae88-a44a-4379-ad69-1b19b6ff4f0c" />
+<img width="1328" height="729" alt="Screenshot 2026-04-03 at 5 38 57 PM" src="https://github.com/user-attachments/assets/8a4fa389-7693-487c-995e-1ae4c1aeae1f" />
+<img width="1328" height="730" alt="Screenshot 2026-04-03 at 5 39 10 PM" src="https://github.com/user-attachments/assets/2042994b-a4aa-455c-a273-bb4f7c402f8d" />
+<img width="1332" height="725" alt="Screenshot 2026-04-03 at 5 39 39 PM" src="https://github.com/user-attachments/assets/ddd72d03-9e71-4513-b257-c4454389c1ff" />
+<img width="1329" height="719" alt="Screenshot 2026-04-03 at 5 40 12 PM" src="https://github.com/user-attachments/assets/c849c9ee-8dc0-4649-821d-3947ecfc3b08" />
+<img width="1327" height="718" alt="Screenshot 2026-04-03 at 5 40 36 PM" src="https://github.com/user-attachments/assets/467bdd0f-6955-40c1-a7de-7e8da4ffb078" />
+<img width="1328" height="731" alt="Screenshot 2026-04-03 at 5 40 53 PM" src="https://github.com/user-attachments/assets/1471f0d8-1a5a-4d95-9f7c-e953d1d50e4a" />
+<img width="1324" height="727" alt="Screenshot 2026-04-03 at 5 41 16 PM" src="https://github.com/user-attachments/assets/e31f1a7a-3254-4e47-8f26-7d781d566e95" />
 
 ## Architecture
 
