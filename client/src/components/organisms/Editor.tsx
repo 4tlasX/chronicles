@@ -20,7 +20,7 @@ const EditorWrapper = styled.div`
     z-index: 1;
     padding: 16px 24px 32px;
     outline: none;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1.85;
     color: ${({ theme }) => theme.colors.text};
 

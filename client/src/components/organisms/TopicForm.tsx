@@ -4,6 +4,7 @@ import { TextInput } from '../atoms/TextInput.js';
 import { Button } from '../atoms/Button.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { FormField } from '../molecules/FormField.js';
+import { IconPicker } from '../molecules/IconPicker.js';
 
 const TOPIC_COLORS = [
   '#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EC4899',
@@ -53,12 +54,14 @@ interface TopicFormProps {
 export function TopicForm({
   initialName = '',
   initialColor = TOPIC_COLORS[0],
+  initialIcon = 'book',
   onSubmit,
   onCancel,
   submitLabel = 'Create Topic',
 }: TopicFormProps) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
+  const [icon, setIcon] = useState<string | null>(initialIcon);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -68,7 +71,7 @@ export function TopicForm({
     setError('');
     setLoading(true);
     try {
-      await onSubmit({ name: name.trim(), color });
+      await onSubmit({ name: name.trim(), color, icon: icon || undefined });
       setName('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed');
@@ -86,6 +89,9 @@ export function TopicForm({
           placeholder="e.g. Work, Personal, Ideas"
           autoFocus
         />
+      </FormField>
+      <FormField label="Icon">
+        <IconPicker selectedIcon={icon} onSelectIcon={setIcon} />
       </FormField>
       <FormField label="Color">
         <ColorRow>

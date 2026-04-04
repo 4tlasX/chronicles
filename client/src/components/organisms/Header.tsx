@@ -9,12 +9,13 @@ import { useEncryption } from '../../contexts/EncryptionContext.js';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 function isLightColor(hex: string): boolean {
+  if (hex === 'transparent') return false;
   const c = hex.replace('#', '');
   const r = parseInt(c.substring(0, 2), 16);
   const g = parseInt(c.substring(2, 4), 16);
   const b = parseInt(c.substring(4, 6), 16);
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.65;
+  return luminance > 0.75;
 }
 
 const HeaderBar = styled.header<{ $bgColor: string; $light: boolean }>`
@@ -363,7 +364,7 @@ function NavDropdown({ label, items, activePath, bgColor, light }: NavDropdownPr
         </DropdownChevron>
       </DropdownTrigger>
       {open && (
-        <DropdownMenu $bgColor={bgColor || '#4A5568'} style={closing ? { opacity: 0, transform: 'translateY(-4px)', transition: 'opacity 0.15s, transform 0.15s' } : undefined}>
+        <DropdownMenu $bgColor={bgColor || '#4E6E7E'} style={closing ? { opacity: 0, transform: 'translateY(-4px)', transition: 'opacity 0.15s, transform 0.15s' } : undefined}>
           {items.map(item => (
             <DropdownItem key={item.to} to={item.to} $light={light} onClick={() => { closeMenu(); }}>
               {item.label}
@@ -398,7 +399,7 @@ export function Header() {
   };
 
   const isActive = (path: string) => location.pathname === path;
-  const bgColor = headerColor || '#4A5568';
+  const bgColor = headerColor || '#4E6E7E';
   const light = isLightColor(bgColor);
 
   // Feature-gated nav items

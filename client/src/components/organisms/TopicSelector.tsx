@@ -127,7 +127,7 @@ export function TopicSelector({ selectedId, onSelect, topics }: TopicSelectorPro
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
 
   const selected = topics.find(t => t.id === selectedId);
 

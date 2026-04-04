@@ -122,7 +122,7 @@ export function TopicSelectorDropdown({
 }: TopicSelectorDropdownProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState('');
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
 
   useEffect(() => {
     if (!isOpen) {

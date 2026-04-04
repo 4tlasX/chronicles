@@ -77,7 +77,7 @@ export const useUIStore = create<UIState>((set) => ({
   setShowMobileEditor: (show) => set({ showMobileEditor: show }),
 
   themeMode: 'light',
-  headerColor: '#4A5568',
+  headerColor: '#4E6E7E',
   accentColor: '#00b4d8',
   backgroundImage: '',
   backgroundOpacity: 0.7,

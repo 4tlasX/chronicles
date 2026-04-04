@@ -188,7 +188,7 @@ export function EntryCard({
   isFavorite,
   customType,
 }: EntryCardProps) {
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
   const plainText = stripHtml(content);
   const preview = plainText.slice(0, 160) || 'Untitled entry';
 
