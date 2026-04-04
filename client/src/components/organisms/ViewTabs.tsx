@@ -16,8 +16,10 @@ const tabs: { value: ViewMode; label: ReactNode }[] = [
 const Container = styled.div`
   position: relative;
   display: flex;
+  align-items: center;
   background: transparent;
-  padding: 14px 8px;
+  height: 45px;
+  padding: 0 8px;
   border-radius: 0;
   border: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
@@ -25,8 +27,8 @@ const Container = styled.div`
 
 const Slider = styled.div<{ $left: number; $width: number }>`
   position: absolute;
-  top: 10px;
-  bottom: 10px;
+  top: 6px;
+  bottom: 6px;
   left: ${({ $left }) => $left}px;
   width: ${({ $width }) => $width}px;
   background: transparent;
