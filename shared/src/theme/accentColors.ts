@@ -9,11 +9,12 @@ export interface ColorOption {
 
 export const HEADER_COLORS: ColorOption[] = [
   { value: '#000000', label: 'Black' },
-  { value: '#1B2A4A', label: 'Navy' },
-  { value: '#0F4C5C', label: 'Deep Teal' },
-  { value: '#1A7A6D', label: 'Teal' },
-  { value: '#2D6A4F', label: 'Forest' },
+  { value: '#3B4460', label: 'Navy' },
+  { value: '#3A5A5C', label: 'Deep Teal' },
+  { value: '#4D7A6D', label: 'Teal' },
+  { value: '#4A6B52', label: 'Forest' },
   { value: '#582C4D', label: 'Plum' },
+  { value: '#5C4470', label: 'Purple' },
   { value: '#7C3238', label: 'Wine' },
   { value: '#8B5E3C', label: 'Saddle' },
   { value: '#4A5568', label: 'Slate' },
