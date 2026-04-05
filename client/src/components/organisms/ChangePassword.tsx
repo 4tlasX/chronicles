@@ -5,6 +5,7 @@ import { ActionButton } from '../atoms/SettingsAtoms.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { FormField } from '../molecules/FormField.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
+import { useAuth } from '../../contexts/AuthContext.js';
 import { auth as authApi } from '../../services/api.js';
 
 const Section = styled.div`
@@ -46,6 +47,7 @@ const Message = styled.div<{ $error?: boolean }>`
 
 export function ChangePassword() {
   const { rewrapMasterKey } = useEncryption();
+  const { encryptionData } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -72,7 +74,13 @@ export function ChangePassword() {
 
     setLoading(true);
     try {
-      const { salt, wrappedMK, wrapIv } = await rewrapMasterKey(newPassword, currentPassword);
+      const fallbackParams = encryptionData ? {
+        kekSalt: encryptionData.kekSalt,
+        encryptedMasterKey: encryptionData.encryptedMasterKey,
+        kekWrapIv: encryptionData.kekWrapIv,
+        kekIterations: encryptionData.kekIterations,
+      } : undefined;
+      const { salt, wrappedMK, wrapIv } = await rewrapMasterKey(newPassword, currentPassword, fallbackParams);
 
       await authApi.changePassword({
         currentPassword,

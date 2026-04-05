@@ -4,7 +4,7 @@ import { toNonExtractable } from '@shared/crypto/primitives.js';
 import { PBKDF2_ITERATIONS } from '@shared/crypto/constants.js';
 import type { EncryptedPostData, DecryptedPost, EncryptedPost, SetupEncryptionResult } from '@shared/crypto/types.js';
 
-interface EncryptionParams {
+export interface EncryptionParams {
   kekSalt: string;
   encryptedMasterKey: string;
   kekWrapIv: string;
@@ -20,7 +20,7 @@ interface EncryptionContextValue {
   decryptPost: (post: EncryptedPost) => Promise<DecryptedPost>;
   decryptPosts: (posts: EncryptedPost[]) => Promise<DecryptedPost[]>;
   unlockWithRecoveryKey: (recoveryKey: string, recoveryWrappedMK: string, recoveryWrapIv: string) => Promise<void>;
-  rewrapMasterKey: (newPassword: string, currentPassword?: string) => Promise<{ salt: string; wrappedMK: string; wrapIv: string }>;
+  rewrapMasterKey: (newPassword: string, currentPassword?: string, params?: EncryptionParams) => Promise<{ salt: string; wrappedMK: string; wrapIv: string }>;
 }
 
 const EncryptionContext = createContext<EncryptionContextValue | null>(null);
@@ -98,10 +98,11 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     setIsUnlocked(true);
   }, []);
 
-  const rewrapMasterKey = useCallback(async (newPassword: string, currentPassword?: string) => {
-    if (currentPassword && encryptionParamsRef.current) {
+  const rewrapMasterKey = useCallback(async (newPassword: string, currentPassword?: string, externalParams?: EncryptionParams) => {
+    const storedParams = encryptionParamsRef.current || externalParams;
+    if (currentPassword && storedParams) {
       // Change-password flow: re-derive extractable key from stored params
-      const params = encryptionParamsRef.current;
+      const params = storedParams;
       const result = await encryptionService.rewrapFromParams(
         currentPassword,
         params.kekSalt,
