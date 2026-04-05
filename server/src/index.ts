@@ -21,8 +21,8 @@ import { initSharesTable } from './db/shareQueries.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Require CLIENT_URL in production to prevent misconfigured CORS
-if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_URL) {
+// Require CLIENT_URL in production (unless on Vercel where it's same-origin)
+if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_URL && !process.env.VERCEL) {
   throw new Error('CLIENT_URL environment variable is required in production');
 }
 
@@ -46,7 +46,7 @@ if (process.env.CLIENT_URL) {
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: process.env.CLIENT_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173'),
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));
@@ -77,19 +77,22 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Init shares table + cleanup expired sessions on startup and periodically
+// Init shares table + cleanup expired sessions on startup
 initSharesTable().catch(err => console.error('Failed to init shares table:', err));
 cleanupSessions().then(count => {
   if (count > 0) console.log(`Cleaned up ${count} expired/revoked sessions`);
 }).catch(() => {});
 
-// Run session cleanup every 6 hours
-setInterval(() => {
-  cleanupSessions().catch(() => {});
-}, 6 * 60 * 60 * 1000);
+// Only listen when running as a standalone server (not Vercel serverless)
+if (!process.env.VERCEL) {
+  // Run session cleanup every 6 hours
+  setInterval(() => {
+    cleanupSessions().catch(() => {});
+  }, 6 * 60 * 60 * 1000);
 
-app.listen(PORT, () => {
-  console.log(`Chronicles API running on port ${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Chronicles API running on port ${PORT}`);
+  });
+}
 
 export default app;

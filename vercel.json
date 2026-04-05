@@ -1,10 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build --workspace=shared && cd client && npx vite build",
+  "buildCommand": "npm run build --workspace=shared && cd server && npx prisma generate && cd ../client && npx vite build",
   "outputDirectory": "client/dist",
   "installCommand": "npm install",
   "framework": "vite",
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.ts" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
