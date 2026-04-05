@@ -143,13 +143,17 @@ interface EditorProps {
   readOnly?: boolean;
   placeholder?: string;
   charLimit?: number;
+  onEnterSave?: () => void;
 }
 
-export function Editor({ content, onChange, readOnly = false, placeholder = 'Start writing...', charLimit }: EditorProps) {
+export function Editor({ content, onChange, readOnly = false, placeholder = 'Start writing...', charLimit, onEnterSave }: EditorProps) {
   const [toolbarOpen, setToolbarOpen] = useState(false);
   // Store charLimit in a ref-like closure so the plugin always sees the latest value
   const limitRef = useMemo(() => ({ current: charLimit }), []);
   limitRef.current = charLimit;
+
+  const saveRef = useMemo(() => ({ current: onEnterSave }), []);
+  saveRef.current = onEnterSave;
 
   const charLimitExtension = useMemo(() =>
     Extension.create({
@@ -160,11 +164,29 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
     }),
   []);
 
+  const enterSaveExtension = useMemo(() =>
+    Extension.create({
+      name: 'enterSave',
+      addKeyboardShortcuts() {
+        return {
+          Enter: () => {
+            if (saveRef.current) {
+              saveRef.current();
+              return true;
+            }
+            return false;
+          },
+        };
+      },
+    }),
+  []);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Placeholder.configure({ placeholder }),
       charLimitExtension,
+      enterSaveExtension,
     ],
     content,
     editable: !readOnly,

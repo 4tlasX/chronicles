@@ -205,6 +205,45 @@ export function JournalView() {
     setShowMobileEditor(false);
   };
 
+  // Global keyboard shortcuts — read store directly to avoid stale refs
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+N or Cmd+N → new entry
+      if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({});
+        setShowMobileEditor(false);
+        return;
+      }
+      // Shift+N (when not in editable) → new entry
+      if (e.key === 'N' && e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const tag = (e.target as HTMLElement)?.tagName;
+        const editable = (e.target as HTMLElement)?.isContentEditable;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || editable) return;
+        e.preventDefault();
+        setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({});
+        setShowMobileEditor(false);
+        return;
+      }
+      // Ctrl+D / Cmd+D → delete selected entry with confirmation
+      if (e.key === 'd' && (e.ctrlKey || e.metaKey)) {
+        const currentId = useUIStore.getState().selectedEntryId;
+        if (!currentId) return;
+        e.preventDefault();
+        if (window.confirm('Delete this entry?')) {
+          entriesApi.delete(currentId).then(() => {
+            useEntriesStore.getState().removeEntry(currentId);
+            useUIStore.getState().setSelectedEntryId(null);
+            useUIStore.getState().setShowMobileEditor(false);
+            setEditorContent(''); setEditorTopicId(null); setCustomFields({});
+          }).catch(err => console.error('Delete failed:', err));
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, []);
+
   /** Toggle bookmark on the currently open entry (from EntryForm toolbar) */
   const handleBookmark = useCallback(async () => {
     if (!selectedEntryId) return;

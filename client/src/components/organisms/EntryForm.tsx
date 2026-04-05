@@ -373,7 +373,7 @@ export function EntryForm({
       <ScrollArea>
         {/* Editor (toolbar + content) — compact by default, taller when expanded */}
         <EditorArea $expanded={expanded}>
-          <Editor content={content} onChange={handleContentChange} placeholder={placeholder} charLimit={expanded ? undefined : 200} />
+          <Editor content={content} onChange={handleContentChange} placeholder={placeholder} charLimit={expanded ? undefined : 200} onEnterSave={!expanded && canSave && !isSaving ? onSave : undefined} />
         </EditorArea>
 
         {/* Custom fields section (collapsible) — below editor */}
