@@ -9,7 +9,7 @@ const FEATURE_TOPIC_MAP: Record<string, string[]> = {
   goalsEnabled: ['Goal'],
   milestonesEnabled: ['Milestone'],
   exerciseEnabled: ['Exercise'],
-  allergiesEnabled: ['Allergy and Sensitivities'],
+  allergiesEnabled: ['Allergy'],
 };
 
 /** Set of all topic names gated by a feature flag. */

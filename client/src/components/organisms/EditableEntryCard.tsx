@@ -266,7 +266,8 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
     .map(f => {
       const v = cf[f.key];
       if (v == null) return null;
-      return { label: f.label, value: typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v) };
+      const formatted = typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v).replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+      return { label: f.label, value: formatted };
     })
     .filter((m): m is { label: string; value: string } => m != null);
 

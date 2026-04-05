@@ -17,6 +17,7 @@ import { SymptomFields, type SymptomFieldValues } from '../molecules/fields/Symp
 import { ExerciseFields, type ExerciseFieldValues } from '../molecules/fields/ExerciseFields.js';
 import { EventFields, type EventFieldValues } from '../molecules/fields/EventFields.js';
 import { MeetingFields, type MeetingFieldValues } from '../molecules/fields/MeetingFields.js';
+import { AllergyFields, type AllergyFieldValues } from '../molecules/fields/AllergyFields.js';
 
 /* ── Styled components ── */
 
@@ -227,6 +228,7 @@ const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
   food: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
+  allergy: 'allergy',
 };
 
 function getCustomType(topicName: string | undefined): string | null {
@@ -391,7 +393,7 @@ export function EntryForm({
         {customType && (
           <CustomFieldsSection>
             <CustomFieldsHeader onClick={() => setFieldsExpanded(!fieldsExpanded)}>
-              <span>{customType === 'task' ? 'Task Options' : customType === 'goal' ? 'Goal Type' : customType === 'milestone' ? 'Milestone Status' : customType === 'food' ? 'Meal Type' : customType === 'medication' ? 'Dosage' : customType === 'symptom' ? 'Severity' : customType === 'exercise' ? 'Exercise Type' : customType === 'event' ? 'Event Details' : customType === 'meeting' ? 'Meeting Details' : 'Settings'}</span>
+              <span>{customType === 'task' ? 'Task Options' : customType === 'goal' ? 'Goal Type' : customType === 'milestone' ? 'Milestone Status' : customType === 'food' ? 'Meal Type' : customType === 'medication' ? 'Dosage' : customType === 'symptom' ? 'Severity' : customType === 'exercise' ? 'Exercise Type' : customType === 'event' ? 'Event Details' : customType === 'meeting' ? 'Meeting Details' : customType === 'allergy' ? 'Allergy Details' : 'Settings'}</span>
               <FontAwesomeIcon icon={fieldsExpanded ? faChevronUp : faChevronDown} size="xs" />
             </CustomFieldsHeader>
             {fieldsExpanded && (
@@ -405,6 +407,7 @@ export function EntryForm({
                 {customType === 'exercise' && <ExerciseFields values={{ exerciseType: 'running', duration: '', intensity: 'medium', distance: '', distanceUnit: 'miles', calories: '', performedDate: '', performedTime: '', notes: '', ...customFields } as ExerciseFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
                 {customType === 'event' && <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as EventFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
                 {customType === 'meeting' && <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as MeetingFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
+                {customType === 'allergy' && <AllergyFields values={{ allergen: '', severity: 5, reaction: '', occurredDate: '', occurredTime: '', notes: '', ...customFields } as AllergyFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
               </CustomFieldsBody>
             )}
           </CustomFieldsSection>

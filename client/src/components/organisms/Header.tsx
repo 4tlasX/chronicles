@@ -439,6 +439,7 @@ export function Header() {
   if (ff.foodEnabled) healthItems.push({ label: 'Food', to: '/health/food' });
   if (ff.medicationEnabled) healthItems.push({ label: 'Symptoms', to: '/health/symptoms' });
   if (ff.exerciseEnabled) healthItems.push({ label: 'Exercise', to: '/health/exercise' });
+  if (ff.allergiesEnabled) healthItems.push({ label: 'Allergies', to: '/health/allergies' });
   if (healthItems.length > 0) healthItems.push({ label: 'Reporting', to: '/health/reporting' });
 
   const mobileNav = (to: string, label: string) => (
@@ -565,6 +566,7 @@ export function Header() {
                   {ff.foodEnabled && mobileNav('/health/food', 'Food')}
                   {ff.medicationEnabled && mobileNav('/health/symptoms', 'Symptoms')}
                   {ff.exerciseEnabled && mobileNav('/health/exercise', 'Exercise')}
+                  {ff.allergiesEnabled && mobileNav('/health/allergies', 'Allergies')}
                   {mobileNav('/health/reporting', 'Reporting')}
                 </>
               )}

@@ -2,6 +2,7 @@ import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { ViewHeader } from '../components/molecules/ViewHeader.js';
+import { PrintButton } from '../components/atoms/PrintButton.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { MedicationSchedule } from '../components/organisms/MedicationSchedule.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
@@ -18,7 +19,7 @@ export function MedicationScheduleView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Medication Schedule" onBack={() => navigate('/')} />
+      <ViewHeader title="Medication Schedule" onBack={() => navigate('/')} right={<PrintButton />} />
       <MedicationSchedule isReady={isReady} />
     </ContentTemplate>
   );

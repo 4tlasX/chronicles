@@ -81,3 +81,12 @@ export interface MeetingFieldValues {
   phone: string;
   notes: string;
 }
+
+export interface AllergyFieldValues {
+  allergen: string;
+  severity: number;
+  reaction: string;
+  occurredDate: string;
+  occurredTime: string;
+  notes: string;
+}

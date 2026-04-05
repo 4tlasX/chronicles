@@ -38,6 +38,7 @@ const DEFAULT_TOPICS = [
   { name: 'Books', icon: 'book', color: '#8B5CF6' },
   { name: 'TV/Movies', icon: 'film', color: '#F59E0B' },
   { name: 'Quote', icon: 'quote-left', color: '#6366F1' },
+  { name: 'Allergy', icon: 'triangle-exclamation', color: '#F97316' },
 ];
 
 async function ensureDefaultTopics(schemaName: string): Promise<void> {

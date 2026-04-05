@@ -4,7 +4,41 @@ import { EmptyState } from '../components/atoms/EmptyState.js';
 import { ScrollList } from '../components/atoms/ScrollList.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { DateGroup, DateGroupLabel } from '../components/atoms/DateGroupLabel.js';
+import styled from 'styled-components';
 import { Badge } from '../components/atoms/Badge.js';
+import { PrintButton } from '../components/atoms/PrintButton.js';
+
+const SummaryBar = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px 24px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  @media (max-width: 768px) { padding: 12px 16px; gap: 16px; }
+  @media (max-width: 480px) { padding: 10px 12px; gap: 12px; flex-wrap: wrap; }
+`;
+
+const SumItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+`;
+
+const SumLabel = styled.span`
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
+const SumValue = styled.span`
+  font-size: 15px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text};
+`;
 import { ViewHeader } from '../components/molecules/ViewHeader.js';
 import { FilterTabs } from '../components/molecules/FilterTabs.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
@@ -26,14 +60,22 @@ const DATE_FILTERS = [
 
 /* ── View ── */
 
+interface SummaryField {
+  key: string;
+  label: string;
+  format?: (total: number) => string;
+}
+
 interface TopicEntriesViewProps {
   title: string;
   topicNames: string[];
   metaFields?: { key: string; label: string }[];
   showDateFilter?: boolean;
+  printable?: boolean;
+  summaryFields?: SummaryField[];
 }
 
-export function TopicEntriesView({ title, topicNames, metaFields = [], showDateFilter = true }: TopicEntriesViewProps) {
+export function TopicEntriesView({ title, topicNames, metaFields = [], showDateFilter = true, printable = false, summaryFields = [] }: TopicEntriesViewProps) {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
@@ -83,6 +125,19 @@ export function TopicEntriesView({ title, topicNames, metaFields = [], showDateF
     return taxId ? allTopics.find(t => t.id === taxId) : undefined;
   };
 
+  const summaries = useMemo(() => {
+    if (summaryFields.length === 0) return [];
+    return summaryFields.map(sf => {
+      let total = 0;
+      for (const entry of filtered) {
+        const cf = ((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>) || {};
+        const v = cf[sf.key];
+        if (v != null) total += parseFloat(String(v)) || 0;
+      }
+      return { label: sf.label, value: sf.format ? sf.format(total) : String(total) };
+    });
+  }, [filtered, summaryFields]);
+
   if (needsUnlock) return (<><ContentTemplate><EmptyState message="Unlock your journal to continue" /></ContentTemplate><UnlockDialog onUnlock={handleUnlock} /></>);
   if (isLoading || !isReady) return (<ContentTemplate><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}><Spinner size={40} /></div></ContentTemplate>);
 
@@ -91,15 +146,26 @@ export function TopicEntriesView({ title, topicNames, metaFields = [], showDateF
       <ViewHeader
         title={title}
         onBack={() => navigate('/')}
-        right={<Badge>({filtered.length})</Badge>}
+        right={<><Badge>({filtered.length})</Badge>{printable && <PrintButton />}</>}
       />
 
-      {showDateFilter && <FilterTabs options={DATE_FILTERS} active={dateFilter} onChange={setDateFilter} />}
+      {showDateFilter && <div data-print-hide><FilterTabs options={DATE_FILTERS} active={dateFilter} onChange={setDateFilter} /></div>}
+
+      {summaries.length > 0 && (dateFilter === 'today' || dateFilter === 'week') && (
+        <SummaryBar>
+          {summaries.map(s => (
+            <SumItem key={s.label}>
+              <SumLabel>{s.label}</SumLabel>
+              <SumValue>{s.value}</SumValue>
+            </SumItem>
+          ))}
+        </SummaryBar>
+      )}
 
       <ScrollList $padding="0" $gap="0">
         {topicNames.length === 1 && (() => {
           const t = allTopics.find(tp => tp.name.toLowerCase() === topicNames[0].toLowerCase());
-          return t ? <NewEntryCard topic={t} headerColor={headerColor} /> : null;
+          return t ? <div data-print-hide><NewEntryCard topic={t} headerColor={headerColor} /></div> : null;
         })()}
         {filtered.length === 0 ? (
           <EmptyState message={`No ${title.toLowerCase()} entries yet.`} />

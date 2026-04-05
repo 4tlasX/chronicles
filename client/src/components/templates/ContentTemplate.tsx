@@ -28,9 +28,9 @@ export function ContentTemplate({ children }: ContentTemplateProps) {
   const hasBackground = !!useUIStore(s => s.backgroundImage);
   return (
     <>
-      <Background />
+      <div data-print-hide><Background /></div>
       <Layout>
-        <Header />
+        <div data-print-hide><Header /></div>
         <Main $hasBackground={hasBackground}>{children}</Main>
       </Layout>
     </>

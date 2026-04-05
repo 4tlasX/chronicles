@@ -64,6 +64,29 @@ export const GlobalStyle = createGlobalStyle`
     }
   }
 
+  /* Print styles — hide app chrome, show content */
+  @media print {
+    body {
+      background: white !important;
+      color: black !important;
+    }
+
+    [data-print-hide] {
+      display: none !important;
+    }
+
+    main {
+      overflow: visible !important;
+      height: auto !important;
+    }
+
+    /* Remove fixed heights so content flows */
+    html, body, #root, #root > * {
+      height: auto !important;
+      overflow: visible !important;
+    }
+  }
+
   /* Screen-reader only utility */
   .sr-only {
     position: absolute;

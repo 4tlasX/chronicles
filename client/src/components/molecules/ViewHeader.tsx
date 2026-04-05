@@ -58,7 +58,7 @@ export function ViewHeader({ title, backLabel = 'Back to Journal', onBack, right
         <Title>{title}</Title>
         {right}
       </TitleRow>
-      <Back onClick={onBack}><FontAwesomeIcon icon={faChevronLeft} size="xs" /> {backLabel}</Back>
+      <Back onClick={onBack} data-print-hide><FontAwesomeIcon icon={faChevronLeft} size="xs" /> {backLabel}</Back>
     </Bar>
   );
 }
