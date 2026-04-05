@@ -9,17 +9,16 @@ const Panel = styled.div`
 `;
 
 const EditorWrap = styled.div`
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 
   /* Compact the TipTap editor for inline use */
   & > div { min-height: unset; }
   && .tiptap {
     min-height: 60px;
-    padding: 8px 24px 8px 50px;
+    padding: 8px 48px 8px 50px;
     font-size: 14px;
     line-height: 1.6;
-    @media (max-width: 768px) { padding: 8px 16px 8px 40px; }
-    @media (max-width: 480px) { padding: 8px 12px; }
+    @media (max-width: 768px) { padding: 8px 40px 8px 40px; }
+    @media (max-width: 480px) { padding: 8px 36px 8px 12px; }
   }
 `;
 
@@ -33,11 +32,11 @@ const Actions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 24px 8px 50px;
+  padding: 16px 24px 8px 50px;
   border-radius: 0;
   flex-wrap: wrap;
-  @media (max-width: 768px) { padding: 8px 16px 8px 40px; }
-  @media (max-width: 480px) { padding: 8px 12px; gap: 8px; }
+  @media (max-width: 768px) { padding: 16px 16px 8px 40px; }
+  @media (max-width: 480px) { padding: 12px 12px 8px; gap: 8px; }
 `;
 
 const ActionBtn = styled.button`

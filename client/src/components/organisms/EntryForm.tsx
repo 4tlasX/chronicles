@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { stripHtml } from '../../utils/stripHtml.js';
-import { faChevronDown, faChevronUp, faChevronLeft, faChevronRight, faBookmark, faShareNodes } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp, faChevronLeft, faChevronRight, faBookmark, faShareNodes, faPenNib } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Editor } from './Editor.js';
 import { TopicSelector } from './TopicSelector.js';
@@ -269,6 +269,7 @@ export function EntryForm({
 }: EntryFormProps) {
   const isFavorite = !!customFields._isFavorite;
   const [fieldsExpanded, setFieldsExpanded] = useState(true);
+  const [toolbarOpen, setToolbarOpen] = useState(false);
   const entries = useEntriesStore(s => s.decryptedEntries);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
 
@@ -368,13 +369,22 @@ export function EntryForm({
           >
             <FontAwesomeIcon icon={faShareNodes} />
           </IconBtn>
+          <IconBtn
+            type="button"
+            $active={toolbarOpen}
+            aria-label="Toggle formatting toolbar"
+            aria-expanded={toolbarOpen}
+            onClick={() => setToolbarOpen(!toolbarOpen)}
+          >
+            <FontAwesomeIcon icon={faPenNib} />
+          </IconBtn>
         </ExpandControl>
       </TopBar>
 
       <ScrollArea>
         {/* Editor (toolbar + content) — compact by default, taller when expanded */}
         <EditorArea $expanded={expanded}>
-          <Editor content={content} onChange={handleContentChange} placeholder={placeholder} charLimit={expanded ? undefined : 200} onEnterSave={!expanded && canSave && !isSaving ? onSave : undefined} />
+          <Editor content={content} onChange={handleContentChange} placeholder={placeholder} charLimit={expanded ? undefined : 200} onEnterSave={!expanded && canSave && !isSaving ? onSave : undefined} toolbarOpen={toolbarOpen} onToolbarToggle={setToolbarOpen} hideToolbarToggle />
         </EditorArea>
 
         {/* Custom fields section (collapsible) — below editor */}

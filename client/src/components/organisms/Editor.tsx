@@ -145,10 +145,15 @@ interface EditorProps {
   placeholder?: string;
   charLimit?: number;
   onEnterSave?: () => void;
+  toolbarOpen?: boolean;
+  onToolbarToggle?: (open: boolean) => void;
+  hideToolbarToggle?: boolean;
 }
 
-export function Editor({ content, onChange, readOnly = false, placeholder = 'Start writing...', charLimit, onEnterSave }: EditorProps) {
-  const [toolbarOpen, setToolbarOpen] = useState(false);
+export function Editor({ content, onChange, readOnly = false, placeholder = 'Start writing...', charLimit, onEnterSave, toolbarOpen: externalToolbarOpen, onToolbarToggle, hideToolbarToggle }: EditorProps) {
+  const [internalToolbarOpen, setInternalToolbarOpen] = useState(false);
+  const toolbarOpen = externalToolbarOpen ?? internalToolbarOpen;
+  const setToolbarOpen = onToolbarToggle ?? setInternalToolbarOpen;
   // Store charLimit in a ref-like closure so the plugin always sees the latest value
   const limitRef = useMemo(() => ({ current: charLimit }), []);
   limitRef.current = charLimit;
@@ -207,7 +212,7 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
 
   return (
     <EditorWrapper>
-      {!readOnly && (
+      {!readOnly && (toolbarOpen || !hideToolbarToggle) && (
         <ToolbarRow $collapsed={!toolbarOpen}>
           {toolbarOpen && (
             <Toolbar>
@@ -278,9 +283,9 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
               >↪</ToolbarButton>
             </Toolbar>
           )}
-          <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)} aria-label="Toggle formatting toolbar" aria-expanded={toolbarOpen}>
+          {!hideToolbarToggle && <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)} aria-label="Toggle formatting toolbar" aria-expanded={toolbarOpen}>
             <FontAwesomeIcon icon={faPenNib} />
-          </ToolbarToggle>
+          </ToolbarToggle>}
         </ToolbarRow>
       )}
       <EditorContent editor={editor} />
