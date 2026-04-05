@@ -9,8 +9,8 @@
     "client"
   ],
   "scripts": {
-    "build": "npm run build --workspace=shared && npm run generate:prisma && npm run build --workspace=server && npm run build --workspace=client",
-    "start": "node server/dist/index.js",
+    "build": "npm run build --workspace=shared && npm run generate:prisma && npm run build --workspace=client",
+    "start": "node --import tsx server/src/index.ts",
     "generate:prisma": "cd server && npx prisma generate",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm run dev --workspace=server",
