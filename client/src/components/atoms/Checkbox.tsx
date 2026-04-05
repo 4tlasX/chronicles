@@ -21,8 +21,8 @@ const HiddenInput = styled.input`
 `;
 
 const Box = styled.div<{ $checked: boolean }>`
-  width: 20px;
-  height: 20px;
+  width: ${({ $checked }) => $checked ? '20px' : '15px'};
+  height: ${({ $checked }) => $checked ? '20px' : '15px'};
   border-radius: 3px;
   border: ${({ $checked, theme }) => $checked ? 'none' : `1.5px solid ${theme.colors.border}`};
   background: transparent;
@@ -30,9 +30,9 @@ const Box = styled.div<{ $checked: boolean }>`
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.colors.text};
-  font-size: 14px;
+  font-size: ${({ $checked }) => $checked ? '14px' : '11px'};
   flex-shrink: 0;
-  transition: border-color 0.15s;
+  transition: all 0.15s;
 `;
 
 const CheckLabel = styled.span`
