@@ -13,6 +13,7 @@ import { ActionButton, SignOutButton, SelectedColorLabel, BackLink } from '../co
 import { Toggle } from '../components/atoms/Toggle.js';
 import { Select } from '../components/atoms/Select.js';
 import { PasswordInput } from '../components/atoms/PasswordInput.js';
+import { TextInput } from '../components/atoms/TextInput.js';
 import { Button } from '../components/atoms/Button.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { FormField } from '../components/molecules/FormField.js';
@@ -138,6 +139,14 @@ export function SettingsView() {
   // How to Use
   const [showHowToUse, setShowHowToUse] = useState(false);
 
+  // Email
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [emailPassword, setEmailPassword] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailMessage, setEmailMessage] = useState('');
+  const [emailError, setEmailError] = useState(false);
+
   // Timezone
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
 
@@ -183,6 +192,25 @@ export function SettingsView() {
   }, []);
 
   // Handlers
+  const handleChangeEmail = async () => {
+    if (!newEmail.trim()) return;
+    setEmailLoading(true);
+    setEmailMessage('');
+    setEmailError(false);
+    try {
+      const result = await authApi.changeEmail({ newEmail: newEmail.trim() });
+      setEmailMessage('Email updated');
+      setEditingEmail(false);
+      setNewEmail('');
+      if (user) (user as Record<string, unknown>).email = result.email;
+    } catch (err) {
+      setEmailError(true);
+      setEmailMessage(err instanceof Error ? err.message : 'Failed to change email');
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
   const handleTimezoneChange = async (tz: string) => {
     setTimezone(tz);
     await settingsApi.upsert('timezone', tz).catch(() => {});
@@ -467,7 +495,38 @@ export function SettingsView() {
       {/* Account */}
       <SectionTitle>Account</SectionTitle>
       <SettingsCard>
-        <SettingsRow title="Email" description={user?.email || 'Unknown'} />
+        <SettingsRow
+          title="Email"
+          description={!editingEmail ? (user?.email || 'Unknown') : undefined}
+          action={
+            !editingEmail ? (
+              <ActionButton onClick={() => { setEditingEmail(true); setNewEmail(user?.email || ''); setEmailMessage(''); }}>
+                Change
+              </ActionButton>
+            ) : (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <ActionButton onClick={handleChangeEmail} disabled={emailLoading || !newEmail.trim()}>
+                  {emailLoading ? <Spinner size={14} /> : 'Save'}
+                </ActionButton>
+                <ActionButton onClick={() => { setEditingEmail(false); setNewEmail(''); setEmailMessage(''); }}>
+                  Cancel
+                </ActionButton>
+              </div>
+            )
+          }
+        >
+          {editingEmail && (
+            <TextInput
+              value={newEmail}
+              onChange={e => setNewEmail(e.target.value)}
+              placeholder="New email address"
+              type="email"
+              autoFocus
+              style={{ marginTop: 4 }}
+            />
+          )}
+        </SettingsRow>
+        {emailMessage && <div style={{ padding: '0 0 12px', fontSize: 13, color: emailError ? '#ef4444' : '#22c55e' }}>{emailMessage}</div>}
       </SettingsCard>
 
       {/* How to Use */}
@@ -483,7 +542,6 @@ export function SettingsView() {
         <CollapsibleBody>
           <p><strong>Chronicles</strong> is designed as a simple daily log. Capture the key moments of your day in less than 10-15 minutes, then use topics to organize and find them later.</p>
           <p style={{ marginTop: 12 }}><strong>Topics</strong> are how you categorize entries — like tags or folders. Each has an icon and color. Some topics (Task, Goal, Food, etc.) show extra fields.</p>
-          <p style={{ marginTop: 12 }}><strong>Quick Entry</strong> in the sidebar lets you add entries fast. Select a topic, type, and press Add or Enter.</p>
           <p style={{ marginTop: 12 }}><strong>Views:</strong> Date shows one day at a time. Tasks filters to todo items. All shows everything. Bookmarks shows favorites. Search lets you filter by text and date.</p>
         </CollapsibleBody>
       )}
@@ -510,16 +568,27 @@ export function SettingsView() {
           <ColorSectionDesc>Choose light or dark mode</ColorSectionDesc>
           <div style={{ display: 'flex', gap: 8 }}>
             <Button
-              variant={themeMode === 'light' ? 'primary' : 'secondary'}
+              variant="secondary"
               onClick={() => handleThemeModeChange('light')}
-              style={{ flex: 1 }}
+              style={{
+                flex: 1,
+                background: themeMode === 'light' ? '#ecebe7' : 'transparent',
+                border: themeMode === 'light' ? '1px solid #b5b3ae' : undefined,
+                fontWeight: themeMode === 'light' ? 600 : 400,
+              }}
             >
               Light
             </Button>
             <Button
-              variant={themeMode === 'dark' ? 'primary' : 'secondary'}
+              variant="secondary"
               onClick={() => handleThemeModeChange('dark')}
-              style={{ flex: 1 }}
+              style={{
+                flex: 1,
+                background: themeMode === 'dark' ? '#1a1b1d' : 'transparent',
+                color: themeMode === 'dark' ? 'white' : undefined,
+                border: themeMode === 'dark' ? 'none' : undefined,
+                fontWeight: themeMode === 'dark' ? 600 : 400,
+              }}
             >
               Dark
             </Button>
@@ -561,9 +630,9 @@ export function SettingsView() {
             <FormField label="Confirm New Password">
               <PasswordInput value={confirmPw} onChange={e => setConfirmPw(e.target.value)} autoComplete="new-password" />
             </FormField>
-            <Button onClick={handleChangePassword} disabled={pwLoading}>
+            <ActionButton onClick={handleChangePassword} disabled={pwLoading}>
               {pwLoading ? <Spinner size={14} /> : 'Update Password'}
-            </Button>
+            </ActionButton>
           </PasswordForm>
         )}
         <SettingsRow
@@ -597,7 +666,7 @@ export function SettingsView() {
             key={feat.key}
             title={feat.title}
             description={feat.description}
-            action={<Toggle checked={features[feat.key] ?? false} onChange={v => handleFeatureToggle(feat.key, v)} />}
+            action={<Toggle checked={features[feat.key] ?? false} onChange={v => handleFeatureToggle(feat.key, v)} activeColor={themeMode === 'dark' ? '#2D2C2A' : '#ecebe7'} />}
           />
         ))}
       </SettingsCard>
@@ -664,8 +733,7 @@ export function SettingsView() {
         <strong>Zero-Knowledge Encryption:</strong> Your journal entries are encrypted in your browser before being sent to the server. We cannot read your data. If you lose your password, your data cannot be recovered.
       </PrivacyCard>
 
-      {/* Danger Zone */}
-      <DangerTitle>Danger Zone</DangerTitle>
+      <DangerTitle />
       <DangerCard>
         <SettingsRow
           title="Sign Out"

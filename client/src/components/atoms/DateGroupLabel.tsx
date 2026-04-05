@@ -7,10 +7,12 @@ export const DateGroup = styled.div`
 
 /** Uppercase date header for grouped lists. */
 export const DateGroupLabel = styled.div`
-  padding: 8px 20px 4px;
+  padding: 8px 24px 4px;
   font-size: 12px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textMuted};
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  @media (max-width: 768px) { padding: 8px 16px 4px; }
+  @media (max-width: 480px) { padding: 8px 12px 4px; }
 `;

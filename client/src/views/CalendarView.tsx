@@ -8,8 +8,6 @@ import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
-import { getTopicIcon } from '../utils/topicIcons.js';
-import { stripHtml } from '../utils/stripHtml.js';
 import { useNavigate } from 'react-router-dom';
 
 function toDateStr(d: Date): string {
@@ -59,43 +57,35 @@ export function CalendarView() {
 
   const selectedEntries = useMemo(() => {
     if (!selectedDate) return [];
-    const raw = entriesByDate.get(selectedDate) || [];
-    return raw.map(entry => {
-      const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
-      const topic = taxId ? allTopics.find(t => t.id === taxId) : undefined;
-      return {
-        id: entry.id,
-        preview: stripHtml(entry.content).slice(0, 100) || 'Empty entry',
-        topicName: topic?.name,
-        topicIcon: topic ? getTopicIcon(topic.icon) : undefined,
-      };
-    });
-  }, [selectedDate, entriesByDate, allTopics]);
+    return entriesByDate.get(selectedDate) || [];
+  }, [selectedDate, entriesByDate]);
 
   if (needsUnlock) return (<><ContentTemplate><EmptyState message="Unlock your journal to view calendar" /></ContentTemplate><UnlockDialog onUnlock={handleUnlock} /></>);
   if (isLoading || !isReady) return (<ContentTemplate><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}><Spinner size={40} /></div></ContentTemplate>);
 
   return (
     <ContentTemplate>
-      <CalendarGrid
-        currentMonth={currentMonth}
-        selectedDate={selectedDate}
-        entriesByDate={entriesByDate}
-        accentColor={headerColor}
-        onPrevMonth={goToPrev}
-        onNextMonth={goToNext}
-        onDayClick={handleDayClick}
-        onEntryClick={handleEntryClick}
-        getTopicName={getTopicName}
-      />
+      {!selectedDate && (
+        <CalendarGrid
+          currentMonth={currentMonth}
+          selectedDate={selectedDate}
+          entriesByDate={entriesByDate}
+          accentColor={headerColor}
+          onPrevMonth={goToPrev}
+          onNextMonth={goToNext}
+          onDayClick={handleDayClick}
+          onEntryClick={handleEntryClick}
+          getTopicName={getTopicName}
+        />
+      )}
 
       {selectedDate && (
         <CalendarDayDetail
           dateStr={selectedDate}
           entries={selectedEntries}
+          allTopics={allTopics}
           accentColor={headerColor}
           onClose={() => setSelectedDate(null)}
-          onEntryClick={handleEntryClick}
         />
       )}
     </ContentTemplate>

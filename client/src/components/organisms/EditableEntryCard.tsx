@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheck, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { InlineEditPanel } from '../molecules/InlineEditPanel.js';
 import { Editor } from './Editor.js';
 import { TaskFields } from '../molecules/fields/TaskFields.js';
@@ -37,24 +38,27 @@ function getCustomType(topicName: string | undefined): string | null {
 /* ── Styled ── */
 
 const Card = styled.div<{ $editing?: boolean }>`
-  border: 1px solid ${({ theme, $editing }) => $editing ? theme.colors.accent : theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: ${({ theme }) => theme.colors.surface};
-  margin-bottom: 4px;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
+  background: transparent;
+  min-width: 0;
 `;
 
 const PreviewRow = styled.button`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 16px 24px 20px;
   text-align: left;
   background: none;
   border: none;
   cursor: pointer;
   transition: background 0.1s;
   &:hover { background: rgba(0, 0, 0, 0.02); }
+  @media (max-width: 768px) { padding: 14px 16px 18px; }
+  @media (max-width: 480px) { padding: 12px 12px 16px; gap: 8px; flex-wrap: wrap; }
 `;
 
 const IconWrap = styled.span<{ $color: string }>`
@@ -91,6 +95,59 @@ const DateLabel = styled.span`
   color: ${({ theme }) => theme.colors.textMuted};
   flex-shrink: 0;
   margin-top: 2px;
+  margin-left: 12px;
+`;
+
+const TaskCheckButton = styled.button<{ $state: 'none' | 'progress' | 'done'; $color: string }>`
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 50%;
+  border: 2px solid ${({ $state, $color, theme }) =>
+    $state === 'done' ? $color :
+    $state === 'progress' ? $color :
+    theme.colors.border};
+  background: ${({ $state, $color }) =>
+    $state === 'done' ? $color :
+    $state === 'progress' ? `${$color}30` :
+    'transparent'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+  padding: 0;
+  transition: all 0.15s;
+  color: ${({ $state }) => $state === 'done' ? 'white' : 'inherit'};
+  font-size: 10px;
+  &:hover { opacity: 0.8; }
+`;
+
+const RightInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  @media (max-width: 480px) { display: none; }
+`;
+
+const StatusLabel = styled.span<{ $clickable?: boolean }>`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: ${({ theme }) => theme.colors.text};
+  ${({ $clickable }) => $clickable && `cursor: pointer; &:hover { opacity: 0.6; }`}
+`;
+
+const DeadlineLabel = styled.span<{ $overdue?: boolean }>`
+  font-size: 11px;
+  color: ${({ $overdue }) => $overdue ? '#ef4444' : '#6b7280'};
+  white-space: nowrap;
+  @media (max-width: 480px) { white-space: normal; }
 `;
 
 /* ── Component ── */
@@ -104,24 +161,64 @@ interface EditableEntryCardProps {
   onClose: () => void;
   onDeleted: () => void;
   metaFields?: { key: string; label: string }[];
+  onStatusClick?: (status: string) => void;
+  showAsPlain?: boolean;
 }
 
-export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSelect, onClose, onDeleted, metaFields = [] }: EditableEntryCardProps) {
+export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain }: EditableEntryCardProps) {
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const removeEntry = useEntriesStore(s => s.removeEntry);
+  const allEntries = useEntriesStore(s => s.decryptedEntries);
+  const allTopics = useEntriesStore(s => s.allTopics);
+
+  const goalOptions = useMemo(() => {
+    const goalTopicId = allTopics.find(t => t.name.toLowerCase() === 'goal')?.id;
+    if (!goalTopicId) return [];
+    return allEntries
+      .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === goalTopicId)
+      .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 80) || 'Untitled goal' }));
+  }, [allEntries, allTopics]);
 
   const meta = entry.metadata as Record<string, unknown>;
   const cf = (meta?._customFields as Record<string, unknown>) || {};
   const taxonomyId = (meta?._taxonomyId as number) || 0;
   const customType = getCustomType(topic?.name);
   const preview = stripHtml(entry.content).slice(0, 120) || 'Empty entry';
-  const dateStr = new Date(entry.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const d = new Date(entry.createdAt);
+  const dateStr = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 
   const [editContent, setEditContent] = useState(entry.content);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>(cf);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
+
+  // Task status: not started → in progress → completed → not started
+  const taskState = cf.isCompleted ? 'done' : cf.isInProgress ? 'progress' : 'none';
+
+  const handleTaskCycle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    let newCf: Record<string, unknown>;
+    if (!cf.isInProgress && !cf.isCompleted) {
+      newCf = { ...cf, isInProgress: true, isCompleted: false };
+    } else if (cf.isInProgress && !cf.isCompleted) {
+      newCf = { ...cf, isInProgress: false, isCompleted: true };
+    } else {
+      newCf = { ...cf, isInProgress: false, isCompleted: false };
+    }
+    const metadata: Record<string, unknown> = { _taxonomyId: taxonomyId, _customFields: newCf };
+    try {
+      const encrypted = await encryptPost(entry.content, metadata);
+      await entriesApi.update(entry.id, {
+        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+        taxonomyIds: taxonomyId ? [taxonomyId] : [],
+      });
+      updateDecryptedEntry(entry.id, { metadata });
+    } catch (err) {
+      console.error('Task status update failed:', err);
+    }
+  };
 
   useEffect(() => {
     if (isEditing) {
@@ -177,9 +274,9 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
     if (!customType) return null;
     const onChange = (v: Record<string, unknown>) => setCustomFields(v as Record<string, unknown>);
     switch (customType) {
-      case 'task': return <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentMilestoneId: null, ...customFields } as never} onChange={onChange as never} />;
+      case 'task': return <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentMilestoneId: null, deadline: '', ...customFields } as never} onChange={onChange as never} />;
       case 'goal': return <GoalFields values={{ goalType: 'short_term', goalStatus: 'active', targetDate: '', ...customFields } as never} onChange={onChange as never} />;
-      case 'milestone': return <MilestoneFields values={{ milestoneStatus: 'active', targetDate: '', isCompleted: false, parentGoalId: null, ...customFields } as never} onChange={onChange as never} goalOptions={[]} />;
+      case 'milestone': return <MilestoneFields values={{ milestoneStatus: 'active', targetDate: '', isCompleted: false, parentGoalId: null, ...customFields } as never} onChange={onChange as never} goalOptions={goalOptions} />;
       case 'food': return <FoodFields values={{ mealType: 'breakfast', consumedDate: '', consumedTime: '', ingredients: '', calories: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
       case 'medication': return <MedicationFields values={{ dosage: '', frequency: 'once_daily', scheduleTimes: ['08:00'], isActive: true, notes: '', ...customFields } as never} onChange={onChange as never} />;
       case 'symptom': return <SymptomFields values={{ severity: 5, occurredDate: '', occurredTime: '', duration: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
@@ -193,7 +290,17 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   return (
     <Card $editing={isEditing}>
       <PreviewRow onClick={onSelect}>
-        {topic && (
+        {customType === 'task' && !showAsPlain ? (
+          <TaskCheckButton
+            $state={taskState}
+            $color={headerColor}
+            onClick={handleTaskCycle}
+            title={taskState === 'none' ? 'Click: In Progress' : taskState === 'progress' ? 'Click: Completed' : 'Click: Not Started'}
+          >
+            {taskState === 'done' && <FontAwesomeIcon icon={faCheck} />}
+            {taskState === 'progress' && <FontAwesomeIcon icon={faMinus} />}
+          </TaskCheckButton>
+        ) : topic && (
           <IconWrap $color={headerColor}>
             <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
           </IconWrap>
@@ -204,11 +311,32 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
             <Meta>{metaValues.map(m => <span key={m.label}>{m.label}: {m.value}</span>)}</Meta>
           )}
         </Content>
-        <DateLabel>{dateStr}</DateLabel>
+        {(customType === 'task' || customType === 'goal' || customType === 'milestone') && !showAsPlain ? (
+          <RightInfo>
+            <StatusLabel $clickable={!!onStatusClick} onClick={onStatusClick ? (e) => {
+              e.stopPropagation();
+              const s = cf.isCompleted || cf.goalStatus === 'completed' ? 'completed' :
+                cf.isInProgress || cf.milestoneStatus === 'in_progress' ? 'in_progress' : 'not_started';
+              onStatusClick(s);
+            } : undefined}>
+              {cf.isCompleted || cf.goalStatus === 'completed' ? 'Completed' :
+               cf.isInProgress || cf.milestoneStatus === 'in_progress' ? 'In Progress' :
+               'Not Started'}
+            </StatusLabel>
+            {(cf.deadline || cf.targetDate) && (
+              <DeadlineLabel $overdue={new Date(cf.deadline as string || cf.targetDate as string) < new Date()}>
+                {(() => { const dt = new Date((cf.deadline || cf.targetDate) as string + 'T00:00:00'); return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()}`; })()}
+              </DeadlineLabel>
+            )}
+          </RightInfo>
+        ) : (
+          <DateLabel>{dateStr}</DateLabel>
+        )}
       </PreviewRow>
 
       {isEditing && (
         <InlineEditPanel
+          title={customType ? `Editing ${topic?.name || customType}` : undefined}
           editor={<Editor content={editContent} onChange={setEditContent} placeholder="Edit entry..." />}
           fields={renderFields()}
           accentColor={headerColor}

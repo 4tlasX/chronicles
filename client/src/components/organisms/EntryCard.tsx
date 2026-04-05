@@ -218,7 +218,7 @@ export function EntryCard({
       </HeaderRow>
 
       <ContentArea>
-        {hasCheckbox && (
+        {false && hasCheckbox && (
           <Checkbox
             $checked={isCompleted}
             onClick={(e) => {
@@ -229,7 +229,7 @@ export function EntryCard({
             {isCompleted && '✓'}
           </Checkbox>
         )}
-        <PreviewText $completed={hasCheckbox && isCompleted}>{preview}</PreviewText>
+        <PreviewText>{preview}</PreviewText>
       </ContentArea>
 
       {((!topicName && customType) || isFavorite) && (

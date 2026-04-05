@@ -2,9 +2,9 @@ import styled from 'styled-components';
 import type { ReactNode } from 'react';
 
 const Card = styled.div`
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: ${({ theme }) => theme.colors.surface};
+  border: none;
+  border-radius: 0;
+  background: transparent;
   overflow: hidden;
 `;
 
@@ -12,7 +12,7 @@ const Row = styled.div<{ $noBorder?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 16px 0;
   border-bottom: ${({ $noBorder, theme }) => $noBorder ? 'none' : `1px solid ${theme.colors.border}`};
   gap: 16px;
 

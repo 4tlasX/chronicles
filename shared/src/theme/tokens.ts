@@ -118,12 +118,12 @@ export const darkTheme = {
     surfaceOverlay: 'rgba(26, 27, 29, 0.92)',
     surfaceOverlayBlur: 'rgba(26, 27, 29, 0.82)',
 
-    text: '#e8e5df',
-    textSecondary: '#a0a0a0',
-    textMuted: '#707070',
+    text: '#b1b1b1',
+    textSecondary: '#938f8f',
+    textMuted: '#938f8f',
     textInverse: '#2e2f31',
 
-    border: '#3e3f44',
+    border: '#2e2f33',
     borderFocus: '#5a9bbe',
 
     accent: '#4281a4',

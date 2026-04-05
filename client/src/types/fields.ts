@@ -5,6 +5,7 @@ export interface TaskFieldValues {
   isCompleted: boolean;
   isAutoMigrating: boolean;
   parentMilestoneId: number | null;
+  deadline: string;
 }
 
 export interface GoalFieldValues {

@@ -37,8 +37,9 @@ const Header = styled.div`
 
 const Title = styled.h2`
   font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: ${({ theme }) => theme.typography.h3.fontSize};
-  font-weight: ${({ theme }) => theme.typography.h3.fontWeight};
+  font-size: 1.25rem;
+  font-weight: 500;
+  font-style: italic;
   color: ${({ theme }) => theme.colors.text};
 `;
 
@@ -84,9 +85,9 @@ const AllItem = styled.button<{ $active?: boolean }>`
   &:hover { background: rgba(0, 0, 0, 0.04); }
 `;
 
-const CountBadge = styled.span<{ $color?: string }>`
+const CountBadge = styled.span`
   font-size: 12px;
-  color: ${({ $color, theme }) => $color || theme.colors.textMuted};
+  color: ${({ theme }) => theme.colors.text};
   font-weight: 400;
   margin-left: auto;
 `;
@@ -160,7 +161,7 @@ export function TopicSidebarPanel({
       <List>
         <AllItem $active={selectedTopicId === null} onClick={() => onSelectTopic(null)}>
           All Entries
-          <CountBadge $color={headerColor}>({totalEntryCount})</CountBadge>
+          <CountBadge>({totalEntryCount})</CountBadge>
         </AllItem>
 
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>

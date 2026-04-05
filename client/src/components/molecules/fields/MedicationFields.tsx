@@ -14,12 +14,14 @@ export type { MedicationFieldValues } from '../../../types/fields.js';
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm}px;
+  gap: 24px;
 `;
 
 const Row = styled.div`
   display: flex;
-  gap: ${({ theme }) => theme.spacing.sm}px;
+  gap: 16px;
+  align-items: flex-start;
+  & > * { flex: 1; min-width: 0; margin-top: 0; }
 `;
 
 const TimeRow = styled.div`
@@ -29,16 +31,17 @@ const TimeRow = styled.div`
 `;
 
 const TimeInput = styled.input`
-  padding: 6px 12px;
+  padding: 6px 0;
   font-size: ${({ theme }) => theme.fontSize.sm}px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  background: ${({ theme }) => theme.colors.surface};
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
+  background: transparent;
   color: ${({ theme }) => theme.colors.text};
   outline: none;
 
   &:focus {
-    border-color: ${({ theme }) => theme.colors.borderFocus};
+    border-bottom-color: ${({ theme }) => theme.colors.text};
   }
 `;
 
@@ -112,7 +115,7 @@ export function MedicationFields({ values, onChange }: MedicationFieldsProps) {
           <FontAwesomeIcon icon={faPlus} /> Add time
         </Button>
       </FormField>
-      <div style={{ marginTop: 4 }}>
+      <div>
         <Checkbox
           checked={values.isActive}
           onChange={v => onChange({ ...values, isActive: v })}

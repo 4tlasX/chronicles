@@ -1,16 +1,15 @@
 import styled from 'styled-components';
 
-const StyledBadge = styled.span<{ $color?: string; $capitalize?: boolean }>`
+const StyledBadge = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
-  font-weight: ${({ theme }) => theme.fontWeight.medium};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: ${({ $color }) => $color ? `${$color}15` : 'rgba(0,0,0,0.05)'};
-  color: ${({ $color, theme }) => $color || theme.colors.textSecondary};
-  text-transform: ${({ $capitalize }) => $capitalize ? 'capitalize' : 'none'};
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.text};
 `;
 
 interface BadgeProps {
@@ -19,6 +18,6 @@ interface BadgeProps {
   capitalize?: boolean;
 }
 
-export function Badge({ children, color, capitalize }: BadgeProps) {
-  return <StyledBadge $color={color} $capitalize={capitalize}>{children}</StyledBadge>;
+export function Badge({ children }: BadgeProps) {
+  return <StyledBadge>{children}</StyledBadge>;
 }

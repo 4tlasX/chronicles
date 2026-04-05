@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { EmptyState } from '../atoms/EmptyState.js';
 import { EditableEntryCard } from './EditableEntryCard.js';
 import { NewEntryCard } from './NewEntryCard.js';
@@ -29,8 +29,9 @@ const Header = styled.div`
 
 const Title = styled.h1`
   font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: ${({ theme }) => theme.typography.h3.fontSize};
-  font-weight: ${({ theme }) => theme.typography.h3.fontWeight};
+  font-size: 1.25rem;
+  font-weight: 500;
+  font-style: italic;
   color: ${({ theme }) => theme.colors.text};
 `;
 
@@ -38,13 +39,17 @@ const MobileBack = styled.button`
   display: none;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.text};
   background: none;
   border: none;
   cursor: pointer;
   padding: 4px 0;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  &:hover { opacity: 0.7; }
   @media (max-width: 768px) { display: flex; }
 `;
 
@@ -94,13 +99,10 @@ export function TopicEntryList({ title, entries, allTopics, headerColor, hiddenM
   return (
     <Panel $hidden={hiddenMobile}>
       <Header>
-        <div>
-          <MobileBack onClick={onMobileBack}>
-            <FontAwesomeIcon icon={faChevronLeft} size="xs" />
-            Back to Topics
-          </MobileBack>
-          <Title>{title}</Title>
-        </div>
+        <Title>{title}</Title>
+        <MobileBack onClick={onMobileBack}>
+          <FontAwesomeIcon icon={faChevronLeft} size="xs" /> Topics
+        </MobileBack>
         <BackLink onClick={onBackToJournal}><FontAwesomeIcon icon={faChevronLeft} size="xs" /> Back to Journal</BackLink>
       </Header>
 
@@ -119,6 +121,7 @@ export function TopicEntryList({ title, entries, allTopics, headerColor, hiddenM
               onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
               onClose={() => setEditingId(null)}
               onDeleted={() => setEditingId(null)}
+              showAsPlain
             />
           ))
         )}

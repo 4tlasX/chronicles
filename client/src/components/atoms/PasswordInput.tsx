@@ -12,23 +12,31 @@ const Wrapper = styled.div`
 
 const StyledInput = styled.input<{ $error?: boolean }>`
   width: 100%;
-  padding: ${({ theme }) => theme.spacing.sm}px ${({ theme }) => theme.spacing.md}px;
+  padding: 8px 0;
   padding-right: 48px;
-  font-size: ${({ theme }) => theme.fontSize.md}px;
-  border: 1px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  background: ${({ theme }) => theme.colors.surface};
+  font-size: 14px;
+  border: none;
+  border-bottom: 1px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.border};
+  border-radius: 0;
+  background: transparent;
   color: ${({ theme }) => theme.colors.text};
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s;
 
   &:focus {
-    border-color: ${({ theme }) => theme.colors.borderFocus};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.accentLight};
+    border-bottom-color: ${({ theme }) => theme.colors.text};
   }
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.textMuted};
+  }
+
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #faf8f2 inset;
+    -webkit-text-fill-color: ${({ theme }) => theme.colors.text};
+    transition: background-color 5000s ease-in-out 0s;
   }
 `;
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Toggle } from '../atoms/Toggle.js';
 import { settings as settingsApi } from '../../services/api.js';
+import { useUIStore } from '../../stores/uiStore.js';
 
 const Section = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing.xl}px;
@@ -29,6 +30,7 @@ const features = [
 ];
 
 export function FeatureToggles() {
+  const themeMode = useUIStore(s => s.themeMode);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export function FeatureToggles() {
             checked={flags[f.key] ?? false}
             onChange={v => handleToggle(f.key, v)}
             label={f.label}
+            activeColor={themeMode === 'dark' ? '#2D2C2A' : '#ecebe7'}
           />
         ))}
       </ToggleList>

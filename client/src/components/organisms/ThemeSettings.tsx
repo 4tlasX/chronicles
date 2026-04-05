@@ -22,20 +22,20 @@ const ThemeModeToggle = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing.lg}px;
 `;
 
-const ModeButton = styled.button<{ $active: boolean }>`
+const ModeButton = styled.button<{ $active: boolean; $mode?: string }>`
   flex: 1;
   padding: ${({ theme }) => theme.spacing.sm}px ${({ theme }) => theme.spacing.md}px;
   font-size: ${({ theme }) => theme.fontSize.sm}px;
   font-weight: ${({ $active, theme }) => $active ? theme.fontWeight.semibold : theme.fontWeight.normal};
-  color: ${({ $active, theme }) => $active ? theme.colors.textInverse : theme.colors.text};
-  background: ${({ $active, theme }) => $active ? theme.colors.accent : theme.colors.surfaceHover};
-  border: 1px solid ${({ $active, theme }) => $active ? theme.colors.accent : theme.colors.border};
+  color: ${({ $active, $mode, theme }) => $active && $mode === 'dark' ? theme.colors.textInverse : theme.colors.text};
+  background: ${({ $active, $mode }) => $active && $mode === 'light' ? '#ecebe7' : $active ? '#2D2C2A' : 'transparent'};
+  border: 1px solid ${({ $active, $mode, theme }) => $active && $mode === 'light' ? '#b5b3ae' : $active ? '#2D2C2A' : theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   cursor: pointer;
   transition: all 0.15s;
 
   &:hover {
-    border-color: ${({ theme }) => theme.colors.accent};
+    border-color: ${({ theme }) => theme.colors.text};
   }
 `;
 
@@ -74,10 +74,10 @@ export function ThemeSettings() {
       <Section>
         <SectionTitle>Theme</SectionTitle>
         <ThemeModeToggle>
-          <ModeButton $active={themeMode === 'light'} onClick={() => handleThemeModeChange('light')}>
+          <ModeButton $active={themeMode === 'light'} $mode="light" onClick={() => handleThemeModeChange('light')}>
             Light
           </ModeButton>
-          <ModeButton $active={themeMode === 'dark'} onClick={() => handleThemeModeChange('dark')}>
+          <ModeButton $active={themeMode === 'dark'} $mode="dark" onClick={() => handleThemeModeChange('dark')}>
             Dark
           </ModeButton>
         </ThemeModeToggle>

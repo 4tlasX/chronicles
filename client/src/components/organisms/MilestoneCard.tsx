@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleCheck, faCircle, faCircleHalfStroke, faLink, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faMinus, faLink, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { ProgressBar } from '../atoms/ProgressBar.js';
 import { Badge } from '../atoms/Badge.js';
 import { Checkbox } from '../atoms/Checkbox.js';
@@ -14,24 +14,61 @@ import { entries as entriesApi } from '../../services/api.js';
 import type { MilestoneEntryData, TaskEntryData } from '../../types/goals.js';
 
 const Card = styled.div<{ $editing?: boolean }>`
-  border: 1px solid ${({ theme, $editing }) => $editing ? theme.colors.accent : theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: ${({ theme }) => theme.colors.surface};
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
+  background: transparent;
+  min-width: 0;
 `;
 
 const CardHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 14px;
+  padding: 16px 24px 20px;
   cursor: pointer;
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px ${({ theme }) => theme.borderRadius.lg}px 0 0;
+  @media (max-width: 768px) { padding: 14px 16px 18px; }
+  @media (max-width: 480px) { padding: 12px 12px 16px; gap: 6px; flex-wrap: wrap; }
 `;
 
-const StatusIcon = styled.span<{ $color: string }>`
-  color: ${({ $color }) => $color};
-  font-size: 14px;
+const ContentWrap = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const Meta = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-top: 2px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  @media (max-width: 480px) { display: none; }
+`;
+
+const MilestoneCheckButton = styled.button<{ $state: 'none' | 'progress' | 'done'; $color: string }>`
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 50%;
+  border: 2px solid ${({ $state, $color, theme }) =>
+    $state === 'done' ? $color :
+    $state === 'progress' ? $color :
+    theme.colors.border};
+  background: ${({ $state, $color }) =>
+    $state === 'done' ? $color :
+    $state === 'progress' ? `${$color}30` :
+    'transparent'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   flex-shrink: 0;
+  padding: 0;
+  transition: all 0.15s;
+  color: ${({ $state }) => $state === 'done' ? 'white' : 'inherit'};
+  font-size: 10px;
+  &:hover { opacity: 0.8; }
 `;
 
 const Title = styled.div<{ $completed?: boolean }>`
@@ -47,8 +84,12 @@ const Title = styled.div<{ $completed?: boolean }>`
 `;
 
 const TypeLabel = styled.span`
-  font-size: 11px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: ${({ theme }) => theme.colors.text};
   flex-shrink: 0;
 `;
 
@@ -87,7 +128,9 @@ const RemoveBtn = styled.button`
 `;
 
 const TaskCountLabel = styled.div`
-  padding: 8px 14px;
+  padding: 16px 24px 8px;
+  @media (max-width: 768px) { padding: 16px 16px 8px; }
+  @media (max-width: 480px) { padding: 16px 12px 8px; }
   font-size: 12px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.textMuted};
@@ -100,7 +143,8 @@ const TaskSectionLabel = styled.div`
   color: ${({ theme }) => theme.colors.textMuted};
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-top: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
   margin-bottom: 4px;
 `;
 
@@ -110,37 +154,61 @@ const LinkedGoalLabel = styled.div`
   gap: 4px;
   font-size: 11px;
   color: ${({ theme }) => theme.colors.textMuted};
-  padding: 0 14px 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  @media (max-width: 480px) { display: none; }
 `;
 
 const AddTaskRow = styled.form`
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 16px 0;
+`;
+
+const LinkSelect = styled.select`
+  flex: 1;
   padding: 4px 0;
+  font-size: 13px;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  &:focus { border-bottom-color: ${({ theme }) => theme.colors.text}; }
 `;
 
 const AddTaskInput = styled.input`
   flex: 1;
-  padding: 4px 8px;
+  padding: 4px 0;
   font-size: 13px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
   outline: none;
-  &:focus { border-color: ${({ theme }) => theme.colors.accent}; }
+  &:focus { border-bottom-color: ${({ theme }) => theme.colors.text}; }
+  &::placeholder { color: ${({ theme }) => theme.colors.textMuted}; }
 `;
 
 const AddTaskBtn = styled.button<{ $color: string }>`
   padding: 4px 10px;
-  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
   font-weight: 600;
-  color: white;
-  background: ${({ $color }) => $color};
-  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.text};
+  background: none;
+  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   cursor: pointer;
   white-space: nowrap;
-  &:hover { opacity: 0.9; }
+  &:hover { background: rgba(0,0,0,0.04); }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
@@ -157,9 +225,10 @@ interface MilestoneCardProps {
   onToggleTask: (t: TaskEntryData) => void;
   onUnlinkTask: (t: TaskEntryData) => void;
   onCreateTask: (milestoneId: number, title: string) => Promise<void>;
+  onLinkTask?: (milestoneId: number, taskId: number) => void;
 }
 
-export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, headerColor, isEditing, onSelect, onClose, onSaved, onToggleTask, onUnlinkTask, onCreateTask }: MilestoneCardProps) {
+export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, headerColor, isEditing, onSelect, onClose, onSaved, onToggleTask, onUnlinkTask, onCreateTask, onLinkTask }: MilestoneCardProps) {
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const removeEntry = useEntriesStore(s => s.removeEntry);
@@ -192,11 +261,36 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
   }, [isEditing, milestone.content, milestone.milestoneStatus, milestone.targetDate, milestone.isCompleted, milestone.parentGoalId]);
 
   const linkedTasks = tasks.filter(t => t.parentMilestoneId === milestone.id);
+  const availableTasks = tasks.filter(t => t.parentMilestoneId !== milestone.id);
   const completedCount = linkedTasks.filter(t => t.isCompleted).length;
   const progress = linkedTasks.length > 0 ? Math.round((completedCount / linkedTasks.length) * 100) : 0;
 
-  const statusIcon = milestone.isCompleted ? faCircleCheck : milestone.milestoneStatus === 'active' ? faCircleHalfStroke : faCircle;
-  const statusColor = milestone.isCompleted ? '#6366f1' : milestone.milestoneStatus === 'active' ? '#10b981' : '#9ca3af';
+  // Three-click cycle: not started → active (in progress) → completed → not started
+  const checkState = milestone.isCompleted ? 'done' : milestone.milestoneStatus === 'active' ? 'progress' : 'none';
+
+  const handleStatusCycle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    let newCf: Record<string, unknown>;
+    if (checkState === 'none') {
+      newCf = { ...milestone.customFields, milestoneStatus: 'active', isCompleted: false };
+    } else if (checkState === 'progress') {
+      newCf = { ...milestone.customFields, milestoneStatus: 'completed', isCompleted: true };
+    } else {
+      newCf = { ...milestone.customFields, milestoneStatus: 'archived', isCompleted: false };
+    }
+    const metadata: Record<string, unknown> = { _taxonomyId: milestone.taxonomyId, _customFields: newCf };
+    try {
+      const encrypted = await encryptPost(milestone.content, metadata);
+      await entriesApi.update(milestone.id, {
+        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+        taxonomyIds: [milestone.taxonomyId],
+      });
+      updateDecryptedEntry(milestone.id, { metadata });
+    } catch (err) {
+      console.error('Milestone status update failed:', err);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true); setStatus('');
@@ -225,32 +319,34 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
   return (
     <Card $editing={isEditing}>
       <CardHeader onClick={onSelect}>
-        <StatusIcon $color={statusColor}>
-          <FontAwesomeIcon icon={statusIcon} />
-        </StatusIcon>
-        <Title $completed={milestone.isCompleted}>{milestone.title}</Title>
-        <Badge color={statusColor} capitalize>
-          {milestone.isCompleted ? 'Completed' : milestone.milestoneStatus}
-        </Badge>
-        {milestone.targetDate && <TypeLabel>{milestone.targetDate}</TypeLabel>}
+        <MilestoneCheckButton
+          $state={checkState}
+          $color={headerColor}
+          onClick={handleStatusCycle}
+          title={checkState === 'none' ? 'Click: In Progress' : checkState === 'progress' ? 'Click: Completed' : 'Click: Not Started'}
+        >
+          {checkState === 'done' && <FontAwesomeIcon icon={faCheck} />}
+          {checkState === 'progress' && <FontAwesomeIcon icon={faMinus} />}
+        </MilestoneCheckButton>
+        <ContentWrap>
+          <Title $completed={milestone.isCompleted}>{milestone.title}</Title>
+          <Meta>
+            <span>Status: {milestone.isCompleted ? 'Completed' : (milestone.milestoneStatus || '').replace(/_/g, ' ')}</span>
+            {linkedTasks.length > 0 && <span>Progress: {progress}%</span>}
+            {milestone.targetDate && <span>Target: {new Date(milestone.targetDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
+          </Meta>
+        </ContentWrap>
+        {goalTitle && !isEditing && (
+          <LinkedGoalLabel>
+            <FontAwesomeIcon icon={faLink} style={{ fontSize: 10 }} />
+            Goal: {goalTitle}
+          </LinkedGoalLabel>
+        )}
       </CardHeader>
-
-      {goalTitle && !isEditing && (
-        <LinkedGoalLabel>
-          <FontAwesomeIcon icon={faLink} style={{ fontSize: 10 }} />
-          Goal: {goalTitle}
-        </LinkedGoalLabel>
-      )}
-
-      {linkedTasks.length > 0 && !isEditing && (
-        <>
-          <ProgressBar percent={progress} color={headerColor} />
-          <TaskCountLabel>Tasks ({completedCount}/{linkedTasks.length})</TaskCountLabel>
-        </>
-      )}
 
       {isEditing && (
         <InlineEditPanel
+          title="Editing Milestone"
           editor={<Editor content={editContent} onChange={setEditContent} placeholder="Milestone description..." />}
           fields={
             <>
@@ -273,6 +369,22 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
                   </RemoveBtn>
                 </TaskRow>
               ))}
+              {onLinkTask && (
+                <AddTaskRow onSubmit={e => e.preventDefault()}>
+                  <LinkSelect
+                    value=""
+                    onChange={e => {
+                      const id = parseInt(e.target.value);
+                      if (id) onLinkTask(milestone.id, id);
+                    }}
+                  >
+                    <option value="">Link task...</option>
+                    {availableTasks.map(t => (
+                      <option key={t.id} value={t.id}>{t.title}</option>
+                    ))}
+                  </LinkSelect>
+                </AddTaskRow>
+              )}
               <AddTaskRow onSubmit={async e => {
                 e.preventDefault();
                 if (!newTaskTitle.trim() || creatingTask) return;
@@ -285,7 +397,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
                 <AddTaskInput
                   value={newTaskTitle}
                   onChange={e => setNewTaskTitle(e.target.value)}
-                  placeholder="Add a task..."
+                  placeholder="Or create new task..."
                   disabled={creatingTask}
                 />
                 <AddTaskBtn $color={headerColor} type="submit" disabled={!newTaskTitle.trim() || creatingTask}>

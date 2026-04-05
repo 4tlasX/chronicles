@@ -1,35 +1,41 @@
+import { useState } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { EmptyState } from '../atoms/EmptyState.js';
+import { EditableEntryCard } from './EditableEntryCard.js';
+import type { DecryptedPost } from '@shared/crypto/types';
+import type { Topic } from '../../types/topics.js';
 
 const Panel = styled.div`
   border-top: 1px solid ${({ theme }) => theme.colors.border};
-  max-height: 300px;
+  flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 12px 24px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const Title = styled.h3`
-  font-family: ${({ theme }) => theme.typography.bodySm.fontFamily};
-  font-size: ${({ theme }) => theme.typography.bodySm.fontSize};
-  font-weight: ${({ theme }) => theme.fontWeight.semibold};
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: ${({ theme }) => theme.colors.text};
 `;
 
-const Count = styled.span`
-  font-size: 13px;
+const Count = styled.div`
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
-  margin-left: 8px;
+  margin-top: 2px;
 `;
 
 const CloseBtn = styled.button`
@@ -48,75 +54,37 @@ const CloseBtn = styled.button`
 
 const List = styled.div`
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   flex: 1;
+  padding-bottom: 48px;
 `;
-
-const Row = styled.button`
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  width: 100%;
-  padding: 10px 16px;
-  text-align: left;
-  background: none;
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  cursor: pointer;
-  transition: background 0.1s;
-  &:hover { background: rgba(0, 0, 0, 0.02); }
-  &:last-child { border-bottom: none; }
-`;
-
-const ColorBar = styled.div<{ $color: string }>`
-  width: 3px;
-  min-height: 24px;
-  border-radius: 2px;
-  background: ${({ $color }) => $color};
-  flex-shrink: 0;
-  align-self: stretch;
-`;
-
-const Content = styled.div`
-  flex: 1;
-  min-width: 0;
-`;
-
-const EntryTitle = styled.div`
-  font-size: 14px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.text};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const EntryMeta = styled.div`
-  font-size: 12px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  text-transform: capitalize;
-`;
-
-import type { DetailEntry } from '../../types/ui.js';
 
 interface CalendarDayDetailProps {
   dateStr: string;
-  entries: DetailEntry[];
+  entries: DecryptedPost[];
+  allTopics: Topic[];
   accentColor: string;
   onClose: () => void;
-  onEntryClick: (id: number) => void;
 }
 
-export function CalendarDayDetail({ dateStr, entries, accentColor, onClose, onEntryClick }: CalendarDayDetailProps) {
+export function CalendarDayDetail({ dateStr, entries, allTopics, accentColor, onClose }: CalendarDayDetailProps) {
+  const [editingId, setEditingId] = useState<number | null>(null);
+
   const dateLabel = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
+
+  const getTopicForEntry = (entry: DecryptedPost) => {
+    const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
+    return taxId ? allTopics.find(t => t.id === taxId) : undefined;
+  };
 
   return (
     <Panel>
       <Header>
         <div>
           <Title>{dateLabel}</Title>
-          <Count>{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</Count>
+          <Count>{entries.length} {entries.length === 1 ? 'Entry' : 'Entries'}</Count>
         </div>
         <CloseBtn onClick={onClose}>
           <FontAwesomeIcon icon={faXmark} />
@@ -128,18 +96,17 @@ export function CalendarDayDetail({ dateStr, entries, accentColor, onClose, onEn
           <EmptyState message="No entries for this day." />
         ) : (
           entries.map(entry => (
-            <Row key={entry.id} onClick={() => onEntryClick(entry.id)}>
-              <ColorBar $color={accentColor} />
-              <Content>
-                <EntryTitle>{entry.preview}</EntryTitle>
-                {entry.topicName && entry.topicIcon && (
-                  <EntryMeta>
-                    <FontAwesomeIcon icon={entry.topicIcon} style={{ marginRight: 4, fontSize: 11 }} />
-                    {entry.topicName}
-                  </EntryMeta>
-                )}
-              </Content>
-            </Row>
+            <EditableEntryCard
+              key={entry.id}
+              entry={entry}
+              topic={getTopicForEntry(entry)}
+              headerColor={accentColor}
+              isEditing={editingId === entry.id}
+              onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
+              onClose={() => setEditingId(null)}
+              onDeleted={() => setEditingId(null)}
+              showAsPlain
+            />
           ))
         )}
       </List>

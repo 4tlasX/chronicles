@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBullseye, faFlag } from '@fortawesome/free-solid-svg-icons';
+import { faBullseye, faFlag, faCheck, faListCheck } from '@fortawesome/free-solid-svg-icons';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -15,6 +15,8 @@ import { FilterTabs } from '../components/molecules/FilterTabs.js';
 import { TabBar } from '../components/molecules/TabBar.js';
 import { GoalCard } from '../components/organisms/GoalCard.js';
 import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
+import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
+import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
@@ -22,7 +24,7 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 import { entries as entriesApi } from '../services/api.js';
 import { stripHtml } from '../utils/stripHtml.js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { GoalEntry, MilestoneEntryData, TaskEntryData } from '../types/goals.js';
 
 /* ── Filter options ── */
@@ -42,8 +44,16 @@ const MILESTONE_FILTERS = [
   { value: 'completed' as const, label: 'Completed' },
 ];
 
+const TASK_FILTERS = [
+  { value: 'all' as const, label: 'All' },
+  { value: 'not_started' as const, label: 'Not Started' },
+  { value: 'in_progress' as const, label: 'In Progress' },
+  { value: 'completed' as const, label: 'Completed' },
+];
+
 type GoalFilter = typeof GOAL_FILTERS[number]['value'];
 type MilestoneFilter = typeof MILESTONE_FILTERS[number]['value'];
+type TaskFilter = typeof TASK_FILTERS[number]['value'];
 
 export function GoalsView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
@@ -53,11 +63,21 @@ export function GoalsView() {
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
   const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
   const navigate = useNavigate();
+  const location = useLocation();
   const { encryptPost } = useEncryption();
 
-  const [tab, setTab] = useState<'goals' | 'milestones'>('goals');
+  const tabFromPath = location.pathname.endsWith('/milestones') ? 'milestones' as const
+    : location.pathname.endsWith('/tasks') ? 'tasks' as const
+    : location.pathname.endsWith('/todos') ? 'todos' as const : 'goals' as const;
+  const [tab, setTab] = useState<'goals' | 'milestones' | 'tasks' | 'todos'>(tabFromPath);
+
+  useEffect(() => {
+    setTab(tabFromPath);
+  }, [tabFromPath]);
   const [goalFilter, setGoalFilter] = useState<GoalFilter>('active');
   const [milestoneFilter, setMilestoneFilter] = useState<MilestoneFilter>('all');
+  const [taskFilter, setTaskFilter] = useState<TaskFilter>('all');
+  const [todoFilter, setTodoFilter] = useState<TaskFilter>('all');
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const sensors = useSensors(
@@ -109,6 +129,8 @@ export function GoalsView() {
           customFields: cf, taxonomyId: taskTopicId };
       });
   }, [entries, taskTopicId]);
+
+  const todos = useMemo(() => tasks.filter(t => !t.parentMilestoneId), [tasks]);
 
   const goalOptions = useMemo(() => goals.map(g => ({ id: g.id, title: g.title })), [goals]);
   const goalTitles = useMemo(() => new Map(goals.map(g => [g.id, g.title])), [goals]);
@@ -266,6 +288,19 @@ export function GoalsView() {
     });
   }, [taskTopicId, encryptPost, addDecryptedEntry]);
 
+  const handleLinkMilestone = useCallback(async (goalId: number, milestoneId: number) => {
+    const m = milestones.find(ms => ms.id === milestoneId);
+    if (!m) return;
+    await persistEntry(m.id, m.content, m.taxonomyId, { ...m.customFields, parentGoalId: goalId });
+  }, [milestones, persistEntry]);
+
+  const handleLinkTask = useCallback(async (milestoneId: number, taskId: number) => {
+    const t = tasks.find(ts => ts.id === taskId);
+    if (!t) return;
+    if (!taskTopicId) return;
+    await persistEntry(t.id, t.content, t.taxonomyId, { ...t.customFields, parentMilestoneId: milestoneId });
+  }, [tasks, taskTopicId, persistEntry]);
+
   const handleCreateMilestone = useCallback(async (goalId: number, title: string) => {
     if (!milestoneTopicId) return;
     const content = `<p>${title}</p>`;
@@ -296,18 +331,39 @@ export function GoalsView() {
   const TABS = [
     { value: 'goals' as const, label: <><FontAwesomeIcon icon={faBullseye} size="sm" /> Goals ({goals.length})</> },
     { value: 'milestones' as const, label: <><FontAwesomeIcon icon={faFlag} size="sm" /> Milestones ({milestones.length})</> },
+    { value: 'tasks' as const, label: <><FontAwesomeIcon icon={faCheck} size="sm" /> Tasks ({tasks.length})</> },
+    { value: 'todos' as const, label: <><FontAwesomeIcon icon={faListCheck} size="sm" /> Todos ({todos.length})</> },
   ];
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Goals & Milestones" onBack={() => navigate('/')} />
+      <ViewHeader title="Planning" onBack={() => navigate('/')} />
 
-      <TabBar tabs={TABS} active={tab} onChange={v => { setTab(v); setEditingId(null); }} accentColor={headerColor} />
+      <TabBar tabs={TABS} active={tab} onChange={v => {
+        setTab(v); setEditingId(null);
+        navigate(v === 'goals' ? '/goals' : `/goals/${v}`, { replace: true });
+
+      }} accentColor={headerColor} />
 
       {tab === 'goals' && <FilterTabs options={GOAL_FILTERS} active={goalFilter} onChange={setGoalFilter} />}
       {tab === 'milestones' && <FilterTabs options={MILESTONE_FILTERS} active={milestoneFilter} onChange={setMilestoneFilter} />}
+      {tab === 'tasks' && <FilterTabs options={TASK_FILTERS} active={taskFilter} onChange={setTaskFilter} />}
+      {tab === 'todos' && <FilterTabs options={TASK_FILTERS} active={todoFilter} onChange={setTodoFilter} />}
 
-      <ScrollList>
+      <ScrollList $padding="0" $gap="0">
+        {tab === 'goals' && (() => {
+          const t = allTopics.find(tp => tp.id === goalTopicId);
+          return t ? <NewEntryCard topic={t} headerColor={headerColor} onCreated={(id) => setEditingId(id)} /> : null;
+        })()}
+        {tab === 'milestones' && (() => {
+          const t = allTopics.find(tp => tp.id === milestoneTopicId);
+          return t ? <NewEntryCard topic={t} headerColor={headerColor} onCreated={(id) => setEditingId(id)} /> : null;
+        })()}
+        {tab === 'tasks' && (() => {
+          const t = allTopics.find(tp => tp.id === taskTopicId);
+          return t ? <NewEntryCard topic={t} headerColor={headerColor} onCreated={(id) => setEditingId(id)} /> : null;
+        })()}
+
         {tab === 'goals' && (filteredGoals.length === 0
           ? <EmptyState message="No goals found." submessage="Create a journal entry with the Goal topic to get started." />
           : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -317,6 +373,7 @@ export function GoalsView() {
                     isEditing={editingId === g.id} onSelect={() => handleSelect(g.id)}
                     onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
                     onToggleMilestone={handleToggleMilestone} onUnlinkMilestone={handleUnlinkMilestone}
+                    onLinkMilestone={handleLinkMilestone}
                     onCreateMilestone={handleCreateMilestone} />
                 ))}
               </SortableContext>
@@ -332,9 +389,76 @@ export function GoalsView() {
                 isEditing={editingId === m.id} onSelect={() => handleSelect(m.id)}
                 onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
                 onToggleTask={handleToggleTask} onUnlinkTask={handleUnlinkTask}
-                onCreateTask={handleCreateTask} />
+                onCreateTask={handleCreateTask}
+                onLinkTask={handleLinkTask} />
             ))
         )}
+
+        {tab === 'tasks' && (() => {
+          const filteredTasks = tasks.filter(t => {
+            if (taskFilter === 'all') return true;
+            if (taskFilter === 'completed') return t.isCompleted;
+            if (taskFilter === 'in_progress') return !t.isCompleted && !!(t.customFields as Record<string, unknown>).isInProgress;
+            if (taskFilter === 'not_started') return !t.isCompleted && !(t.customFields as Record<string, unknown>).isInProgress;
+            return true;
+          });
+          return filteredTasks.length === 0
+            ? <EmptyState message="No tasks found." submessage={taskFilter === 'all' ? 'Create a journal entry with the Task topic to get started.' : 'No tasks match this filter.'} />
+            : filteredTasks.map(t => {
+                const entry = entries.find(e => e.id === t.id);
+                if (!entry) return null;
+                const topic = allTopics.find(tp => tp.id === t.taxonomyId);
+                return (
+                  <EditableEntryCard
+                    key={t.id}
+                    entry={entry}
+                    topic={topic}
+                    headerColor={headerColor}
+                    isEditing={editingId === t.id}
+                    onSelect={() => handleSelect(t.id)}
+                    onClose={() => setEditingId(null)}
+                    onDeleted={() => setEditingId(null)}
+                    metaFields={[{ key: 'isCompleted', label: 'Completed' }, { key: 'isInProgress', label: 'In Progress' }]}
+                    onStatusClick={(s) => setTaskFilter(s as TaskFilter)}
+                  />
+                );
+              });
+        })()}
+
+        {tab === 'todos' && (() => {
+          const t = allTopics.find(tp => tp.id === taskTopicId);
+          return t ? <NewEntryCard topic={t} headerColor={headerColor} onCreated={(id) => setEditingId(id)} /> : null;
+        })()}
+        {tab === 'todos' && (() => {
+          const filteredTodos = todos.filter(t => {
+            if (todoFilter === 'all') return true;
+            if (todoFilter === 'completed') return t.isCompleted;
+            if (todoFilter === 'in_progress') return !t.isCompleted && !!(t.customFields as Record<string, unknown>).isInProgress;
+            if (todoFilter === 'not_started') return !t.isCompleted && !(t.customFields as Record<string, unknown>).isInProgress;
+            return true;
+          });
+          return filteredTodos.length === 0
+            ? <EmptyState message="No todos found." submessage={todoFilter === 'all' ? 'Create a task without linking it to a milestone or goal.' : 'No todos match this filter.'} />
+            : filteredTodos.map(t => {
+                const entry = entries.find(e => e.id === t.id);
+                if (!entry) return null;
+                const topic = allTopics.find(tp => tp.id === t.taxonomyId);
+                return (
+                  <EditableEntryCard
+                    key={t.id}
+                    entry={entry}
+                    topic={topic}
+                    headerColor={headerColor}
+                    isEditing={editingId === t.id}
+                    onSelect={() => handleSelect(t.id)}
+                    onClose={() => setEditingId(null)}
+                    onDeleted={() => setEditingId(null)}
+                    metaFields={[{ key: 'isCompleted', label: 'Completed' }, { key: 'isInProgress', label: 'In Progress' }]}
+                    onStatusClick={(s) => setTodoFilter(s as TaskFilter)}
+                  />
+                );
+              });
+        })()}
       </ScrollList>
     </ContentTemplate>
   );

@@ -29,6 +29,14 @@ const StyledInput = styled.input<{ $error?: boolean }>`
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #faf8f2 inset;
+    -webkit-text-fill-color: ${({ theme }) => theme.colors.text};
+    transition: background-color 5000s ease-in-out 0s;
+  }
 `;
 
 export function TextInput({ error, ...props }: TextInputProps) {

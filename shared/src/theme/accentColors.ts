@@ -69,7 +69,6 @@ export const HEADER_COLORS: ColorOption[] = [
   { value: '#C4A882', label: 'Camel' },
   { value: '#D4C4A0', label: 'Sand' },
   { value: '#E8DCC4', label: 'Parchment' },
-  { value: 'transparent', label: 'Transparent' },
 ];
 
 /**

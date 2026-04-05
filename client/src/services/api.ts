@@ -106,6 +106,9 @@ export const auth = {
     newKekWrapIv: string;
   }) => request<{ success: boolean }>('/auth/change-password', { method: 'POST', body: data }),
 
+  changeEmail: (data: { newEmail: string }) =>
+    request<{ success: boolean; email: string }>('/auth/change-email', { method: 'POST', body: data }),
+
   getRecoveryParams: (email: string) =>
     request<{
       recoveryWrappedMK: string | null;

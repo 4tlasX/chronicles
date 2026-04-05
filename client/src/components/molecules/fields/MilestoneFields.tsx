@@ -12,17 +12,16 @@ export type { MilestoneFieldValues } from '../../../types/fields.js';
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm}px;
+  gap: 24px;
 `;
 
 const Row = styled.div`
   display: flex;
-  gap: ${({ theme }) => theme.spacing.sm}px;
+  gap: 16px;
 
   & > * {
     flex: 1;
     min-width: 0;
-    margin-top: 0 !important;
   }
 `;
 
@@ -153,11 +152,6 @@ export function MilestoneFields({ values, onChange, goalOptions, linkedTasks = [
           />
         </FormField>
       </Row>
-      <LinkedTasksSection>
-        <LinkedTasksLabel>
-          Linked Tasks: {linkedTasks.filter(t => t.isCompleted).length}/{linkedTasks.length} completed
-        </LinkedTasksLabel>
-      </LinkedTasksSection>
     </Wrapper>
   );
 }

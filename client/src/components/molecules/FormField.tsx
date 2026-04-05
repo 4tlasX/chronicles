@@ -4,11 +4,7 @@ import { Label } from '../atoms/Label.js';
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.xs}px;
-
-  &:not(:first-child) {
-    margin-top: 8px;
-  }
+  gap: 6px;
 `;
 
 const ErrorText = styled.span`
@@ -21,11 +17,12 @@ interface FormFieldProps {
   error?: string;
   htmlFor?: string;
   children: React.ReactNode;
+  style?: React.CSSProperties;
 }
 
-export function FormField({ label, error, htmlFor, children }: FormFieldProps) {
+export function FormField({ label, error, htmlFor, children, style }: FormFieldProps) {
   return (
-    <Wrapper>
+    <Wrapper style={style}>
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
       {error && <ErrorText>{error}</ErrorText>}

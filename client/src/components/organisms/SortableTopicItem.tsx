@@ -54,6 +54,9 @@ const Actions = styled.div`
   display: flex;
   gap: 2px;
   flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+  ${Row}:hover & { opacity: 1; }
 `;
 
 const ActionBtn = styled.button`

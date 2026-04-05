@@ -18,7 +18,9 @@ const DateNav = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: 12px 24px;
+  @media (max-width: 768px) { padding: 12px 16px; }
+  @media (max-width: 480px) { padding: 10px 12px; }
 `;
 
 const NavButton = styled.button`
@@ -36,13 +38,18 @@ const NavButton = styled.button`
 `;
 
 const DateLabel = styled.span`
-  font-size: 15px;
-  font-weight: 500;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: ${({ theme }) => theme.colors.text};
 `;
 
 const ProgressWrapper = styled.div`
-  padding: 0 20px 16px;
+  padding: 0 24px 16px;
+  @media (max-width: 768px) { padding: 0 16px 14px; }
+  @media (max-width: 480px) { padding: 0 12px 12px; }
 `;
 
 const ProgressStats = styled.div`
@@ -78,38 +85,46 @@ const AllDoneMsg = styled.p<{ $color: string }>`
 const HelpText = styled.p`
   font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
-  padding: 0 20px 8px;
+  padding: 0 24px 8px;
+  @media (max-width: 768px) { padding: 0 16px 8px; }
+  @media (max-width: 480px) { padding: 0 12px 8px; }
 `;
 
 const TimeGroup = styled.div`
-  margin: 0 20px 12px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
+  margin: 0 0 0;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
   overflow: hidden;
-  background: ${({ theme }) => theme.colors.surface};
+  background: transparent;
 `;
 
 const TimeHeader = styled.div`
-  padding: 8px 14px;
+  padding: 8px 24px;
   font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
   background: rgba(0, 0, 0, 0.02);
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  @media (max-width: 768px) { padding: 8px 16px; }
+  @media (max-width: 480px) { padding: 8px 12px; font-size: 13px; }
 `;
 
 const DoseRow = styled.div<{ $taken: boolean }>`
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 10px 24px;
+  @media (max-width: 768px) { padding: 10px 16px; }
+  @media (max-width: 480px) { padding: 8px 12px; gap: 8px; }
   background: ${({ $taken }) => $taken ? 'rgba(0,0,0,0.02)' : 'transparent'};
   & + & { border-top: 1px solid ${({ theme }) => theme.colors.border}; }
 `;
 
 const DoseCheckButton = styled.button<{ $taken: boolean; $color: string }>`
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   border-radius: 50%;
   border: 2px solid ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.border};
   background: ${({ $taken, $color }) => $taken ? $color : 'transparent'};
@@ -121,7 +136,9 @@ const DoseCheckButton = styled.button<{ $taken: boolean; $color: string }>`
   transition: all 0.15s;
   color: white;
   font-size: 12px;
-  &:disabled { opacity: 0.5; }
+  padding: 0;
+  &:disabled { opacity: 0.5; cursor: wait; }
+  &:hover:not(:disabled) { opacity: 0.8; }
 `;
 
 const DoseInfo = styled.div`
@@ -142,12 +159,13 @@ const DoseTakenAt = styled.span<{ $color: string }>`
   color: ${({ $color }) => $color};
 `;
 
-const StatusBadge = styled.span<{ $color: string }>`
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: ${({ $color }) => `${$color}20`};
-  color: ${({ $color }) => $color};
+const StatusBadge = styled.span`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.text};
   flex-shrink: 0;
 `;
 
@@ -168,6 +186,7 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
   const [doseLogs, setDoseLogs] = useState<Record<string, DoseLogRecord>>({});
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [savingDose, setSavingDose] = useState<string | null>(null);
+  const [doseError, setDoseError] = useState<string | null>(null);
 
   const medicationTopicId = useMemo(
     () => allTopics.find(t => t.name.toLowerCase() === 'medication')?.id,
@@ -220,9 +239,12 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
   }, [isReady, fetchLogs]);
 
   const handleCheckDose = async (dose: ScheduledDose, checked: boolean) => {
-    const key = `${dose.medicationPostId}-${dose.time}`;
+    // Normalize time to HH:MM for API validation
+    const normalizedTime = dose.time.substring(0, 5).padStart(5, '0');
+    const key = `${dose.medicationPostId}-${normalizedTime}`;
     const newStatus = checked ? 'taken' : 'pending';
     setSavingDose(key);
+    setDoseError(null);
 
     try {
       const takenAt = newStatus === 'taken'
@@ -231,7 +253,7 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
 
       const { log } = await dosesApi.log({
         medicationPostId: dose.medicationPostId,
-        scheduledTime: dose.time,
+        scheduledTime: normalizedTime,
         date: viewDate,
         status: newStatus,
         takenAt,
@@ -241,18 +263,19 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
       setDoseLogs(prev => ({ ...prev, [key]: normalizedLog }));
     } catch (err) {
       console.error('Failed to update dose:', err);
+      setDoseError(`Failed to update ${dose.medicationName}`);
     } finally {
       setSavingDose(null);
     }
   };
 
   const getDoseStatus = (dose: ScheduledDose): string => {
-    const key = `${dose.medicationPostId}-${dose.time}`;
+    const key = `${dose.medicationPostId}-${dose.time.substring(0, 5)}`;
     return doseLogs[key]?.status || 'pending';
   };
 
   const getDoseLog = (dose: ScheduledDose): DoseLogRecord | undefined => {
-    const key = `${dose.medicationPostId}-${dose.time}`;
+    const key = `${dose.medicationPostId}-${dose.time.substring(0, 5)}`;
     return doseLogs[key];
   };
 
@@ -302,6 +325,7 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
       )}
 
       <HelpText>Click the circle to mark a medication as taken for this day.</HelpText>
+      {doseError && <div style={{ padding: '0 20px 8px', fontSize: 13, color: '#ef4444' }}>{doseError}</div>}
 
       {loadingLogs ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spinner size={30} /></div>
@@ -337,7 +361,7 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
                       <DoseTakenAt $color={headerColor}>(taken at {log.takenAt})</DoseTakenAt>
                     )}
                   </DoseInfo>
-                  <StatusBadge $color={headerColor}>
+                  <StatusBadge>
                     {isSaving ? 'Saving...' : isTaken ? 'Taken' : 'Pending'}
                   </StatusBadge>
                 </DoseRow>

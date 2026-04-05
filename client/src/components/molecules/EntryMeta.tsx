@@ -25,7 +25,7 @@ export function EntryMeta({ date, topicName, topicColor }: EntryMetaProps) {
   return (
     <Wrapper>
       <span>{formatted}</span>
-      {topicName && <Badge color={topicColor}>{topicName}</Badge>}
+      {topicName && <Badge>{topicName}</Badge>}
     </Wrapper>
   );
 }

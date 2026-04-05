@@ -6,8 +6,10 @@ const Bar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 16px 24px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  @media (max-width: 768px) { padding: 14px 16px; }
+  @media (max-width: 480px) { padding: 12px 12px; }
 `;
 
 const TitleRow = styled.div`
@@ -17,10 +19,12 @@ const TitleRow = styled.div`
 `;
 
 const Title = styled.h1`
-  font-family: ${({ theme }) => theme.typography.h2.fontFamily};
-  font-size: ${({ theme }) => theme.typography.h2.fontSize};
-  font-weight: ${({ theme }) => theme.typography.h2.fontWeight};
+  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-size: 1.25rem;
+  font-weight: 500;
+  font-style: italic;
   color: ${({ theme }) => theme.colors.text};
+  @media (max-width: 480px) { font-size: 1.1rem; }
 `;
 
 const Back = styled.button`
@@ -37,6 +41,7 @@ const Back = styled.button`
   border: none;
   cursor: pointer;
   &:hover { opacity: 0.7; }
+  @media (max-width: 480px) { display: none; }
 `;
 
 interface ViewHeaderProps {

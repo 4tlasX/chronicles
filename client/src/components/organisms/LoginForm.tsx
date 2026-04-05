@@ -72,7 +72,7 @@ export function LoginForm({ onSubmit, onForgotPassword }: LoginFormProps) {
         />
       </FormField>
 
-      <Button type="submit" fullWidth disabled={loading}>
+      <Button type="submit" fullWidth disabled={loading} variant="secondary">
         {loading ? <Spinner size={18} /> : 'Sign in'}
       </Button>
 

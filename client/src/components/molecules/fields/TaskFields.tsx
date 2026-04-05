@@ -1,5 +1,6 @@
 import { Checkbox } from '../../atoms/Checkbox.js';
 import { Select } from '../../atoms/Select.js';
+import { TextInput } from '../../atoms/TextInput.js';
 import { FormField } from '../FormField.js';
 import styled from 'styled-components';
 import type { TaskFieldValues } from '../../../types/fields.js';
@@ -9,14 +10,13 @@ export type { TaskFieldValues } from '../../../types/fields.js';
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.lg}px;
+  gap: 24px;
 `;
 
 const CheckboxGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.lg}px;
-  margin-top: ${({ theme }) => theme.spacing.sm}px;
+  gap: 12px;
 `;
 
 interface TaskFieldsProps {
@@ -41,6 +41,13 @@ export function TaskFields({ values, onChange, milestoneOptions = [] }: TaskFiel
           </Select>
         </FormField>
       )}
+      <FormField label="Deadline">
+        <TextInput
+          type="date"
+          value={values.deadline || ''}
+          onChange={e => onChange({ ...values, deadline: e.target.value })}
+        />
+      </FormField>
       <CheckboxGroup>
         <Checkbox
           checked={values.isInProgress}

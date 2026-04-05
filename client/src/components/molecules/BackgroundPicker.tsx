@@ -16,15 +16,15 @@ const Thumbnail = styled.div<{ $selected: boolean }>`
   width: 100%;
   aspect-ratio: 16 / 10;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  border: 2px solid ${({ $selected, theme }) => $selected ? theme.colors.accent : theme.colors.border};
-  background: ${({ theme }) => theme.colors.background};
+  border: none;
+  background: ${({ theme }) => theme.colors.background === '#1a1b1d' ? '#2a2b2d' : '#faf8f2'};
   cursor: pointer;
   overflow: hidden;
   transition: border-color 0.15s;
   position: relative;
 
   &:hover {
-    border-color: ${({ theme }) => theme.colors.accent};
+    opacity: 0.8;
   }
 `;
 

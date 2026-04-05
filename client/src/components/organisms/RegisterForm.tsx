@@ -110,7 +110,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
         />
       </FormField>
 
-      <Button type="submit" fullWidth disabled={loading}>
+      <Button type="submit" fullWidth disabled={loading} variant="secondary">
         {loading ? <Spinner size={18} /> : 'Create account'}
       </Button>
     </Form>

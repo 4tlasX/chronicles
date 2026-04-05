@@ -47,6 +47,8 @@ export function App() {
               <Route path="/calendar" element={<R><CalendarView /></R>} />
               <Route path="/goals" element={<R><GoalsView /></R>} />
               <Route path="/goals/milestones" element={<R><GoalsView /></R>} />
+              <Route path="/goals/tasks" element={<R><GoalsView /></R>} />
+              <Route path="/goals/todos" element={<R><GoalsView /></R>} />
 
               {/* Health */}
               <Route path="/health" element={<R><TopicEntriesView title="Health" topicNames={['Medication', 'Symptom', 'Food', 'Exercise']} /></R>} />

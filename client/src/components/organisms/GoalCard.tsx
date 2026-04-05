@@ -24,20 +24,37 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const Card = styled.div<{ $isDragging?: boolean; $editing?: boolean }>`
-  border: 1px solid ${({ theme, $editing }) => $editing ? theme.colors.accent : theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: ${({ theme }) => theme.colors.surface};
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
+  background: transparent;
   opacity: ${({ $isDragging }) => $isDragging ? 0.7 : 1};
   box-shadow: ${({ $isDragging }) => $isDragging ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'};
+  min-width: 0;
 `;
 
 const CardHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 16px 24px 20px;
   cursor: pointer;
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px ${({ theme }) => theme.borderRadius.lg}px 0 0;
+  @media (max-width: 768px) { padding: 14px 16px 18px; }
+  @media (max-width: 480px) { padding: 12px 12px 16px; gap: 8px; }
+`;
+
+const ContentWrap = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const Meta = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-top: 2px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 `;
 
 const Title = styled.div<{ $completed?: boolean }>`
@@ -53,8 +70,12 @@ const Title = styled.div<{ $completed?: boolean }>`
 `;
 
 const TypeLabel = styled.span`
-  font-size: 11px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: ${({ theme }) => theme.colors.text};
   flex-shrink: 0;
   line-height: 1;
 `;
@@ -67,7 +88,9 @@ const MetaGroup = styled.div`
 `;
 
 const MilestoneCountLabel = styled.div`
-  padding: 8px 14px;
+  padding: 16px 24px 8px;
+  @media (max-width: 768px) { padding: 16px 16px 8px; }
+  @media (max-width: 480px) { padding: 16px 12px 8px; }
   font-size: 12px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.textMuted};
@@ -80,7 +103,8 @@ const MilestoneSectionLabel = styled.div`
   color: ${({ theme }) => theme.colors.textMuted};
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-top: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
   margin-bottom: 4px;
 `;
 
@@ -122,26 +146,48 @@ const AddRow = styled.form`
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 16px 0;
+`;
+
+const LinkSelect = styled.select`
+  flex: 1;
   padding: 4px 0;
+  font-size: 13px;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  &:focus { border-bottom-color: ${({ theme }) => theme.colors.text}; }
 `;
 
 const AddInput = styled.input`
   flex: 1;
-  padding: 4px 8px;
+  padding: 4px 0;
   font-size: 13px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
   outline: none;
-  &:focus { border-color: ${({ theme }) => theme.colors.accent}; }
+  &:focus { border-bottom-color: ${({ theme }) => theme.colors.text}; }
+  &::placeholder { color: ${({ theme }) => theme.colors.textMuted}; }
 `;
 
 const AddBtn = styled.button<{ $color: string }>`
   padding: 4px 10px;
-  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
   font-weight: 600;
-  color: white;
-  background: ${({ $color }) => $color};
-  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.text};
+  background: none;
+  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   cursor: pointer;
   white-space: nowrap;
@@ -159,10 +205,11 @@ interface GoalCardProps {
   onSaved: () => void;
   onToggleMilestone: (m: MilestoneEntryData) => void;
   onUnlinkMilestone: (m: MilestoneEntryData) => void;
+  onLinkMilestone: (goalId: number, milestoneId: number) => void;
   onCreateMilestone: (goalId: number, title: string) => Promise<void>;
 }
 
-export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, onClose, onSaved, onToggleMilestone, onUnlinkMilestone, onCreateMilestone }: GoalCardProps) {
+export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, onClose, onSaved, onToggleMilestone, onUnlinkMilestone, onLinkMilestone, onCreateMilestone }: GoalCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: goal.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -195,6 +242,8 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
   const [creatingMilestone, setCreatingMilestone] = useState(false);
 
   const linkedMilestones = milestones.filter(m => m.parentGoalId === goal.id);
+  const linkedIds = new Set(linkedMilestones.map(m => m.id));
+  const availableMilestones = milestones.filter(m => !linkedIds.has(m.id));
   const completedCount = linkedMilestones.filter(m => m.isCompleted).length;
   const progress = linkedMilestones.length > 0 ? Math.round((completedCount / linkedMilestones.length) * 100) : 0;
 
@@ -226,23 +275,19 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
     <Card ref={setNodeRef} style={style} $isDragging={isDragging} $editing={isEditing}>
       <CardHeader onClick={onSelect}>
         <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
-        <Title $completed={goal.goalStatus === 'completed'}>{goal.title}</Title>
-        <MetaGroup>
-          <Badge color={STATUS_COLORS[goal.goalStatus] || '#9ca3af'} capitalize>{goal.goalStatus}</Badge>
-          <TypeLabel>{goal.goalType === 'short_term' ? 'Short-term' : 'Long-term'}</TypeLabel>
-          {goal.targetDate && <TypeLabel>{goal.targetDate}</TypeLabel>}
-        </MetaGroup>
+        <ContentWrap>
+          <Title $completed={goal.goalStatus === 'completed'}>{goal.title}</Title>
+          <Meta>
+            <span>Status: {(goal.goalStatus || '').replace(/_/g, ' ')}</span>
+            {linkedMilestones.length > 0 && <span>Progress: {progress}%</span>}
+            {goal.targetDate && <span>Target: {new Date(goal.targetDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
+          </Meta>
+        </ContentWrap>
       </CardHeader>
-
-      {linkedMilestones.length > 0 && !isEditing && (
-        <>
-          <ProgressBar percent={progress} color={headerColor} />
-          <MilestoneCountLabel>Milestones ({completedCount}/{linkedMilestones.length})</MilestoneCountLabel>
-        </>
-      )}
 
       {isEditing && (
         <InlineEditPanel
+          title="Editing Goal"
           editor={<Editor content={editContent} onChange={setEditContent} placeholder="Goal description..." />}
           fields={
             <>
@@ -269,10 +314,32 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
                   setNewMilestoneTitle('');
                 } finally { setCreatingMilestone(false); }
               }}>
+                <LinkSelect
+                  value=""
+                  onChange={e => {
+                    const id = parseInt(e.target.value);
+                    if (id) onLinkMilestone(goal.id, id);
+                  }}
+                >
+                  <option value="">Link milestone...</option>
+                  {availableMilestones.map(m => (
+                    <option key={m.id} value={m.id}>{m.title}</option>
+                  ))}
+                </LinkSelect>
+              </AddRow>
+              <AddRow onSubmit={async e => {
+                e.preventDefault();
+                if (!newMilestoneTitle.trim() || creatingMilestone) return;
+                setCreatingMilestone(true);
+                try {
+                  await onCreateMilestone(goal.id, newMilestoneTitle.trim());
+                  setNewMilestoneTitle('');
+                } finally { setCreatingMilestone(false); }
+              }}>
                 <AddInput
                   value={newMilestoneTitle}
                   onChange={e => setNewMilestoneTitle(e.target.value)}
-                  placeholder="Add a milestone..."
+                  placeholder="Or create new milestone..."
                   disabled={creatingMilestone}
                 />
                 <AddBtn $color={headerColor} type="submit" disabled={!newMilestoneTitle.trim() || creatingMilestone}>

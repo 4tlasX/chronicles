@@ -20,15 +20,17 @@ const Card = styled.div`
   width: 100%;
   max-width: 380px;
   padding: ${({ theme }) => theme.spacing.xl}px;
-  background: ${({ theme }) => theme.colors.surface};
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
+  background: ${({ theme }) => theme.colors.background === '#1a1b1d' ? '#1a1b1d' : '#faf8f2'};
+  border-radius: 0;
   box-shadow: ${({ theme }) => theme.shadow.lg};
 `;
 
 const Title = styled.h2`
-  font-family: ${({ theme }) => theme.typography.h3.fontFamily};
-  font-size: ${({ theme }) => theme.typography.h3.fontSize};
-  font-weight: ${({ theme }) => theme.typography.h3.fontWeight};
+  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-size: 1.25rem;
+  font-weight: 500;
+  font-style: italic;
+  color: ${({ theme }) => theme.colors.text};
   margin-bottom: ${({ theme }) => theme.spacing.sm}px;
 `;
 
@@ -91,7 +93,7 @@ export function UnlockDialog({ onUnlock }: UnlockDialogProps) {
               autoComplete="current-password"
             />
           </FormField>
-          <Button type="submit" fullWidth disabled={loading}>
+          <Button type="submit" fullWidth disabled={loading} variant="secondary">
             {loading ? <Spinner size={18} /> : 'Unlock'}
           </Button>
         </Form>

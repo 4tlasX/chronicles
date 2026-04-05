@@ -13,12 +13,13 @@ const EditorWrapper = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 200px;
+  position: relative;
 
   .tiptap {
     flex: 1;
     position: relative;
     z-index: 1;
-    padding: 16px 24px 32px;
+    padding: 16px 48px 32px 24px;
     outline: none;
     font-size: 16px;
     line-height: 1.85;
@@ -53,19 +54,26 @@ ul, ol { padding-left: 1.5em; }
   }
 `;
 
-const ToolbarRow = styled.div`
+const ToolbarRow = styled.div<{ $collapsed: boolean }>`
   display: flex;
   align-items: center;
   justify-content: flex-end;
   padding: 0 24px;
   border-bottom: none;
+  ${({ $collapsed }) => $collapsed && `
+    position: absolute;
+    top: 5px;
+    right: 0;
+    z-index: 2;
+    padding: 4px 16px;
+  `}
 `;
 
 const ToolbarToggle = styled.button<{ $open: boolean }>`
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 0;
+  padding: ${({ $open }) => $open ? '10px 0' : '4px 0'};
   font-family: ${({ theme }) => theme.fontFamily.ui};
   font-size: 11px;
   font-weight: 400;
@@ -75,7 +83,7 @@ const ToolbarToggle = styled.button<{ $open: boolean }>`
   background: none;
   border: none;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: color 0.15s, padding 0.15s;
   margin-left: auto;
   &:hover { color: ${({ theme }) => theme.colors.text}; }
 `;
@@ -177,7 +185,7 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
   return (
     <EditorWrapper>
       {!readOnly && (
-        <ToolbarRow>
+        <ToolbarRow $collapsed={!toolbarOpen}>
           {toolbarOpen && (
             <Toolbar>
               <ToolbarButton

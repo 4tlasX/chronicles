@@ -10,15 +10,16 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles = {
   primary: css`
-    background: ${({ theme }) => theme.colors.background};
-    color: ${({ theme }) => theme.colors.text};
-    &:hover:not(:disabled) { opacity: 0.85; }
-  `,
-  secondary: css`
-    background: ${({ theme }) => theme.colors.surface};
+    background: transparent;
     color: ${({ theme }) => theme.colors.text};
     border: 1px solid ${({ theme }) => theme.colors.border};
-    &:hover:not(:disabled) { background: ${({ theme }) => theme.colors.surfaceHover}; }
+    &:hover:not(:disabled) { background: rgba(0,0,0,0.03); }
+  `,
+  secondary: css`
+    background: transparent;
+    color: ${({ theme }) => theme.colors.text};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    &:hover:not(:disabled) { background: rgba(0,0,0,0.03); }
   `,
   danger: css`
     background: ${({ theme }) => theme.colors.danger};
@@ -33,24 +34,25 @@ const variantStyles = {
 };
 
 const StyledButton = styled.button<{ $variant: Variant; $fullWidth: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${({ theme }) => theme.spacing.sm}px;
-  padding: ${({ theme }) => theme.spacing.sm}px ${({ theme }) => theme.spacing.lg}px;
-  font-size: ${({ theme }) => theme.fontSize.md}px;
-  font-weight: ${({ theme }) => theme.fontWeight.medium};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
-  width: ${({ $fullWidth }) => $fullWidth ? '100%' : 'auto'};
+  && {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: ${({ theme }) => theme.spacing.sm}px;
+    padding: ${({ theme }) => theme.spacing.sm}px ${({ theme }) => theme.spacing.lg}px;
+    font-size: ${({ theme }) => theme.fontSize.md}px;
+    font-weight: ${({ theme }) => theme.fontWeight.medium};
+    border-radius: ${({ theme }) => theme.borderRadius.md}px;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    width: ${({ $fullWidth }) => $fullWidth ? '100%' : 'auto'};
 
-  ${({ $variant }) => variantStyles[$variant]}
+    ${({ $variant }) => variantStyles[$variant]}
 
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
 `;
 

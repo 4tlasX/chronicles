@@ -34,6 +34,7 @@ export function LoginView() {
   return (
     <AuthTemplate
       title="Chronicles"
+      brand
       footer={<>New here? <Link to="/register">Create an account</Link></>}
     >
       <LoginForm

@@ -7,7 +7,7 @@ const Handle = styled.button`
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.colors.textMuted};
-  opacity: 0.85;
+  opacity: 0.35;
   transition: opacity 0.15s, color 0.15s;
   background: none;
   border: none;

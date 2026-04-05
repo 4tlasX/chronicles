@@ -2,23 +2,30 @@ import styled from 'styled-components';
 
 const Row = styled.div`
   display: flex;
+  justify-content: center;
   gap: 4px;
-  padding: 8px 20px;
+  padding: 8px 24px;
+  @media (max-width: 768px) { padding: 8px 16px; justify-content: flex-start; }
+  @media (max-width: 480px) { padding: 8px 12px; justify-content: flex-start; }
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   overflow-x: auto;
+  &::-webkit-scrollbar { display: none; }
 `;
 
 const Btn = styled.button<{ $active?: boolean }>`
   padding: 4px 12px;
-  font-size: 13px;
-  font-weight: ${({ $active }) => $active ? 600 : 400};
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: ${({ $active }) => $active ? 700 : 500};
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textMuted};
-  background: ${({ $active }) => $active ? 'rgba(0,0,0,0.06)' : 'transparent'};
+  background: none;
   border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
   cursor: pointer;
   white-space: nowrap;
-  &:hover { background: rgba(0, 0, 0, 0.04); }
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
 `;
 
 interface FilterTabsProps<T extends string> {

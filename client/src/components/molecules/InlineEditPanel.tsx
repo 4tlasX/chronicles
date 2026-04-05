@@ -3,7 +3,9 @@ import { Spinner } from '../atoms/Spinner.js';
 
 const Panel = styled.div`
   border-top: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface || '#fafafa'};
+  background: transparent;
+  padding-top: 8px;
+  padding-bottom: 12px;
 `;
 
 const EditorWrap = styled.div`
@@ -13,56 +15,50 @@ const EditorWrap = styled.div`
   & > div { min-height: unset; }
   .tiptap {
     min-height: 60px;
-    max-height: 240px;
-    overflow-y: auto;
-    padding: 8px 12px;
+    padding: 8px 24px;
+    font-size: 14px;
+    @media (max-width: 768px) { padding: 8px 16px; }
+    @media (max-width: 480px) { padding: 8px 12px; }
   }
 `;
 
 const FieldsWrap = styled.div`
-  padding: 12px 14px;
+  padding: 12px 24px 20px;
+  @media (max-width: 768px) { padding: 12px 16px 18px; }
+  @media (max-width: 480px) { padding: 10px 12px 16px; }
 `;
 
 const Actions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0 0 ${({ theme }) => theme.borderRadius.lg}px ${({ theme }) => theme.borderRadius.lg}px;
+  padding: 8px 24px;
+  border-radius: 0;
+  flex-wrap: wrap;
+  @media (max-width: 768px) { padding: 8px 16px; }
+  @media (max-width: 480px) { padding: 8px 12px; gap: 6px; }
 `;
 
-const SaveBtn = styled.button<{ $color: string }>`
-  padding: 6px 20px;
-  font-size: 13px;
-  font-weight: 600;
-  color: white;
-  background: ${({ $color }) => $color};
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  cursor: pointer;
-  &:hover { opacity: 0.9; }
-`;
-
-const CancelBtn = styled.button`
+const ActionBtn = styled.button`
   padding: 6px 16px;
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.text};
   background: none;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   cursor: pointer;
+  transition: background 0.15s;
   &:hover { background: rgba(0,0,0,0.04); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
-const DeleteBtn = styled.button`
-  padding: 6px 16px;
-  font-size: 13px;
+const DeleteBtn = styled(ActionBtn)`
   color: ${({ theme }) => theme.colors.danger};
-  background: none;
-  border: 1px solid rgba(239,68,68,0.3);
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  cursor: pointer;
+  border-color: rgba(239,68,68,0.3);
   margin-left: auto;
   &:hover { background: rgba(239,68,68,0.05); }
 `;
@@ -70,6 +66,18 @@ const DeleteBtn = styled.button`
 const Status = styled.span<{ $error?: boolean }>`
   font-size: 12px;
   color: ${({ $error }) => $error ? '#ef4444' : '#22c55e'};
+`;
+
+const EditTitle = styled.div`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.textMuted};
+  padding: 0 24px 8px;
+  @media (max-width: 768px) { padding: 0 16px 8px; }
+  @media (max-width: 480px) { padding: 0 12px 8px; }
 `;
 
 interface InlineEditPanelProps {
@@ -81,18 +89,20 @@ interface InlineEditPanelProps {
   onSave: () => void;
   onCancel: () => void;
   onDelete: () => void;
+  title?: string;
 }
 
-export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, onDelete }: InlineEditPanelProps) {
+export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, onDelete, title }: InlineEditPanelProps) {
   return (
     <Panel>
+      {title && <EditTitle>{title}</EditTitle>}
       <EditorWrap>{editor}</EditorWrap>
       {fields && <FieldsWrap>{fields}</FieldsWrap>}
       <Actions>
-        <SaveBtn $color={accentColor} onClick={onSave} disabled={saving}>
+        <ActionBtn onClick={onSave} disabled={saving}>
           {saving ? <Spinner size={14} /> : 'Save'}
-        </SaveBtn>
-        <CancelBtn onClick={onCancel}>Cancel</CancelBtn>
+        </ActionBtn>
+        <ActionBtn onClick={onCancel}>Cancel</ActionBtn>
         {status && <Status $error={status.toLowerCase().includes('fail')}>{status}</Status>}
         <DeleteBtn onClick={onDelete}>Delete</DeleteBtn>
       </Actions>

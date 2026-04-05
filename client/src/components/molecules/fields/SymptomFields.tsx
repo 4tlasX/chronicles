@@ -10,12 +10,14 @@ export type { SymptomFieldValues } from '../../../types/fields.js';
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm}px;
+  gap: 24px;
 `;
 
 const Row = styled.div`
   display: flex;
-  gap: ${({ theme }) => theme.spacing.sm}px;
+  gap: 16px;
+  align-items: flex-start;
+  & > * { flex: 1; min-width: 0; }
 `;
 
 interface SymptomFieldsProps {

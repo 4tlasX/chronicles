@@ -91,12 +91,12 @@ export function TopicEntriesView({ title, topicNames, metaFields = [], showDateF
       <ViewHeader
         title={title}
         onBack={() => navigate('/')}
-        right={<Badge color={headerColor}>({filtered.length})</Badge>}
+        right={<Badge>({filtered.length})</Badge>}
       />
 
       {showDateFilter && <FilterTabs options={DATE_FILTERS} active={dateFilter} onChange={setDateFilter} />}
 
-      <ScrollList $padding="8px 20px" $gap="0">
+      <ScrollList $padding="0" $gap="0">
         {topicNames.length === 1 && (() => {
           const t = allTopics.find(tp => tp.name.toLowerCase() === topicNames[0].toLowerCase());
           return t ? <NewEntryCard topic={t} headerColor={headerColor} /> : null;
@@ -105,24 +105,19 @@ export function TopicEntriesView({ title, topicNames, metaFields = [], showDateF
           <EmptyState message={`No ${title.toLowerCase()} entries yet.`} />
         ) : (
           [...grouped.entries()].map(([dateStr, dayEntries]) => (
-            <DateGroup key={dateStr}>
-              <DateGroupLabel>
-                {new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-              </DateGroupLabel>
-              {dayEntries.map(entry => (
-                <EditableEntryCard
-                  key={entry.id}
-                  entry={entry}
-                  topic={getTopicForEntry(entry)}
-                  headerColor={headerColor}
-                  isEditing={editingId === entry.id}
-                  onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
-                  onClose={() => setEditingId(null)}
-                  onDeleted={() => setEditingId(null)}
-                  metaFields={metaFields}
-                />
-              ))}
-            </DateGroup>
+            dayEntries.map(entry => (
+              <EditableEntryCard
+                key={entry.id}
+                entry={entry}
+                topic={getTopicForEntry(entry)}
+                headerColor={headerColor}
+                isEditing={editingId === entry.id}
+                onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
+                onClose={() => setEditingId(null)}
+                onDeleted={() => setEditingId(null)}
+                metaFields={metaFields}
+              />
+            ))
           ))
         )}
       </ScrollList>

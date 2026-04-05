@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import styled from 'styled-components';
 import { PasswordInput } from '../atoms/PasswordInput.js';
-import { Button } from '../atoms/Button.js';
+import { ActionButton } from '../atoms/SettingsAtoms.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { FormField } from '../molecules/FormField.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
@@ -132,9 +132,9 @@ export function ChangePassword() {
               autoComplete="new-password"
             />
           </FormField>
-          <Button type="submit" disabled={loading}>
+          <ActionButton type="submit" disabled={loading}>
             {loading ? <Spinner size={14} /> : 'Update Password'}
-          </Button>
+          </ActionButton>
         </Form>
       )}
     </Section>

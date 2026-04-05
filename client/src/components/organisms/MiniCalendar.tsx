@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { useUIStore } from '../../stores/uiStore.js';
 
 interface MiniCalendarProps {
   selectedDate: Date;
@@ -96,6 +97,7 @@ const DayButton = styled.button<{
   $isSelected?: boolean;
   $isOutside?: boolean;
   $hasEntry?: boolean;
+  $accentColor?: string;
 }>`
   position: relative;
   display: flex;
@@ -105,11 +107,11 @@ const DayButton = styled.button<{
   width: 28px;
   height: 28px;
   margin: 0 auto;
-  font-size: 12px;
+  font-size: ${({ $isToday }) => $isToday ? '14px' : '12px'};
   font-weight: ${({ $isToday, theme }) => $isToday ? theme.fontWeight.bold : theme.fontWeight.normal};
-  color: ${({ $isOutside, theme }) => $isOutside ? theme.colors.border : theme.colors.text};
+  color: ${({ $isToday, $isOutside, $accentColor, theme }) => $isToday ? ($accentColor || theme.colors.text) : $isOutside ? theme.colors.border : theme.colors.text};
   background: transparent;
-  border: ${({ $isToday, theme }) => $isToday ? `1.5px solid ${theme.colors.border}` : 'none'};
+  border: none;
   border-radius: 50%;
   cursor: pointer;
   line-height: 1;
@@ -117,6 +119,8 @@ const DayButton = styled.button<{
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
+
+  ${({ $isOutside }) => $isOutside && 'visibility: hidden;'}
 `;
 
 const EntryDot = styled.span`
@@ -149,6 +153,7 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates, expanded 
   const [currentMonth, setCurrentMonth] = useState(() => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
   const [collapsed, setCollapsed] = useState(!expanded);
   const today = useMemo(() => new Date(), []);
+  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
 
   const days = useMemo(() => {
     const year = currentMonth.getFullYear();
@@ -232,6 +237,7 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates, expanded 
                   $isSelected={isSelected}
                   $isOutside={isOutside}
                   $hasEntry={hasEntry}
+                  $accentColor={headerColor}
                   onClick={() => onSelectDate(date)}
                 >
                   {date.getDate()}

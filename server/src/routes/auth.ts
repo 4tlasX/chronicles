@@ -324,6 +324,42 @@ router.post('/change-password', strictLimiter, authMiddleware, async (req, res) 
 });
 
 // =============================================================================
+// POST /api/auth/change-email — Change email address
+// =============================================================================
+router.post('/change-email', async (req, res) => {
+  try {
+    const { newEmail } = req.body;
+    if (!newEmail) {
+      res.status(400).json({ error: 'Email is required' });
+      return;
+    }
+
+    const normalizedEmail = newEmail.toLowerCase().trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      res.status(400).json({ error: 'Invalid email format' });
+      return;
+    }
+
+    // Check if email is already taken
+    const existing = await prisma.account.findUnique({ where: { email: normalizedEmail } });
+    if (existing && existing.id !== req.auth!.accountId) {
+      res.status(409).json({ error: 'Email already in use' });
+      return;
+    }
+
+    await prisma.account.update({
+      where: { id: req.auth!.accountId },
+      data: { email: normalizedEmail },
+    });
+
+    res.json({ success: true, email: normalizedEmail });
+  } catch (err) {
+    console.error('Change email error:', err instanceof Error ? err.message : 'Unknown error');
+    res.status(500).json({ error: 'Email change failed' });
+  }
+});
+
+// =============================================================================
 // POST /api/auth/recover — Password recovery using recovery key
 // =============================================================================
 router.post('/recover', strictLimiter, async (req, res) => {

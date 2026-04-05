@@ -7,11 +7,11 @@ const Wrapper = styled.label`
   cursor: pointer;
 `;
 
-const Track = styled.div<{ $checked: boolean }>`
+const Track = styled.div<{ $checked: boolean; $activeColor?: string }>`
   width: 40px;
   height: 22px;
   border-radius: 11px;
-  background: ${({ $checked, theme }) => $checked ? theme.colors.background : theme.colors.border};
+  background: ${({ $checked, $activeColor, theme }) => $checked ? ($activeColor || theme.colors.border) : theme.colors.border};
   position: relative;
   transition: background 0.2s;
 `;
@@ -44,9 +44,10 @@ interface ToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label?: string;
+  activeColor?: string;
 }
 
-export function Toggle({ checked, onChange, label }: ToggleProps) {
+export function Toggle({ checked, onChange, label, activeColor }: ToggleProps) {
   return (
     <Wrapper>
       <HiddenInput
@@ -54,7 +55,7 @@ export function Toggle({ checked, onChange, label }: ToggleProps) {
         checked={checked}
         onChange={e => onChange(e.target.checked)}
       />
-      <Track $checked={checked}>
+      <Track $checked={checked} $activeColor={activeColor}>
         <Thumb $checked={checked} />
       </Track>
       {label && <ToggleLabel>{label}</ToggleLabel>}

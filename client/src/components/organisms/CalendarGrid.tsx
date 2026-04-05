@@ -92,9 +92,9 @@ const DaysGrid = styled.div`
 
 const DayCell = styled.div<{ $isOutside?: boolean; $isSelected?: boolean }>`
   aspect-ratio: 1;
-  padding: 4px;
+  padding: 6px 8px;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-width: 0 1px 1px 0;
+  border-width: 0 0 1px 0;
   cursor: pointer;
   background: ${({ $isSelected }) => $isSelected ? 'rgba(0,0,0,0.03)' : 'transparent'};
   outline: ${({ $isSelected }) => $isSelected ? '2px solid #e5e6ea' : 'none'};
@@ -106,7 +106,7 @@ const DayCell = styled.div<{ $isOutside?: boolean; $isSelected?: boolean }>`
   @media (max-width: 768px) {
     aspect-ratio: auto;
     min-height: 44px;
-    display: flex;
+    display: ${({ $isOutside }) => $isOutside ? 'none' : 'flex'};
     align-items: flex-start;
     gap: 8px;
     padding: 8px 12px;
@@ -115,17 +115,9 @@ const DayCell = styled.div<{ $isOutside?: boolean; $isSelected?: boolean }>`
 `;
 
 const DayNumber = styled.div<{ $isToday?: boolean; $accentColor: string }>`
-  font-size: 13px;
+  font-size: ${({ $isToday }) => $isToday ? '15px' : '13px'};
   font-weight: ${({ $isToday }) => $isToday ? 700 : 400};
-  color: inherit;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: transparent;
-  border: ${({ $isToday, theme }) => $isToday ? `1.5px solid ${theme.colors.text}` : 'none'};
+  color: ${({ $isToday, $accentColor }) => $isToday ? $accentColor : 'inherit'};
   margin-bottom: 2px;
   flex-shrink: 0;
 `;
@@ -147,6 +139,7 @@ const DayItems = styled.div`
   overflow: hidden;
   flex: 1;
   min-height: 0;
+  @media (max-width: 768px) { display: none; }
 `;
 
 const DayItem = styled.div`
@@ -163,6 +156,14 @@ const MoreLabel = styled.div`
   font-size: 11px;
   color: ${({ theme }) => theme.colors.textMuted};
   padding: 1px 4px;
+`;
+
+const MobileEntryCount = styled.span`
+  display: none;
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-left: auto;
+  @media (max-width: 768px) { display: inline; }
 `;
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -211,21 +212,26 @@ export function CalendarGrid({
             const dow = WEEKDAYS[date.getDay()];
 
             return (
-              <DayCell key={i} $isOutside={isOutside} $isSelected={isSelected} onClick={() => onDayClick(dateStr)}>
-                <MobileDayLabel $isOutside={isOutside}>{dow}</MobileDayLabel>
-                <DayNumber $isToday={isToday} $accentColor={accentColor}>{date.getDate()}</DayNumber>
-                <DayItems>
-                  {dayEntries.slice(0, 3).map(entry => {
-                    const topicName = getTopicName(entry);
-                    const preview = stripHtml(entry.content).slice(0, 40) || 'Entry';
-                    return (
-                      <DayItem key={entry.id} onClick={e => { e.stopPropagation(); onEntryClick(entry.id); }}>
-                        {topicName ? `${topicName}: ` : ''}{preview}
-                      </DayItem>
-                    );
-                  })}
-                  {dayEntries.length > 3 && <MoreLabel>+{dayEntries.length - 3} more</MoreLabel>}
-                </DayItems>
+              <DayCell key={i} $isOutside={isOutside} $isSelected={!isOutside && isSelected} onClick={() => !isOutside && onDayClick(dateStr)}>
+                {!isOutside && (
+                  <>
+                    <MobileDayLabel>{dow}</MobileDayLabel>
+                    <DayNumber $isToday={isToday} $accentColor={accentColor}>{date.getDate()}</DayNumber>
+                    {dayEntries.length > 0 && <MobileEntryCount>{dayEntries.length} {dayEntries.length === 1 ? 'entry' : 'entries'}</MobileEntryCount>}
+                    <DayItems>
+                      {dayEntries.slice(0, 3).map(entry => {
+                        const topicName = getTopicName(entry);
+                        const preview = stripHtml(entry.content).slice(0, 40) || 'Entry';
+                        return (
+                          <DayItem key={entry.id} onClick={e => { e.stopPropagation(); onEntryClick(entry.id); }}>
+                            {topicName ? `${topicName}: ` : ''}{preview}
+                          </DayItem>
+                        );
+                      })}
+                      {dayEntries.length > 3 && <MoreLabel>+{dayEntries.length - 3} more</MoreLabel>}
+                    </DayItems>
+                  </>
+                )}
               </DayCell>
             );
           })}

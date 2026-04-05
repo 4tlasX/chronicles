@@ -35,6 +35,7 @@ const LeftSection = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  @media (max-width: 480px) { gap: 6px; }
 `;
 
 const Logo = styled(Link)`
@@ -47,11 +48,13 @@ const LogoText = styled.span<{ $light?: boolean }>`
   font-family: ${({ theme }) => theme.fontFamily.serif};
   font-size: 24px;
   font-weight: 100;
+  font-style: italic;
   text-transform: uppercase;
   letter-spacing: 0.12rem;
   color: inherit;
   text-shadow: ${({ $light }) => $light ? 'none' : '1px 1px 5px #00000080'};
   margin-bottom: 0.5rem;
+  @media (max-width: 480px) { font-size: 20px; margin-bottom: 0.3rem; }
 `;
 
 const NewEntryButton = styled.button<{ $light?: boolean }>`
@@ -60,6 +63,7 @@ const NewEntryButton = styled.button<{ $light?: boolean }>`
   gap: 6px;
   padding: 5px 12px;
   font-size: 12px;
+  @media (max-width: 480px) { font-size: 22px; padding: 5px 2px; }
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.09rem;
@@ -70,6 +74,10 @@ const NewEntryButton = styled.button<{ $light?: boolean }>`
   transition: color 0.15s;
 
   &:hover { color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'}; }
+`;
+
+const NewEntryLabel = styled.span`
+  @media (max-width: 480px) { display: none; }
 `;
 
 const Divider = styled.div`
@@ -404,10 +412,12 @@ export function Header() {
 
   // Feature-gated nav items
   const ff = featureFlags;
-  // Goals dropdown items — each gated by its own flag
+  // Planning dropdown items — each gated by its own flag
   const goalsItems: { label: string; to: string }[] = [];
   if (ff.goalsEnabled) goalsItems.push({ label: 'Goals', to: '/goals' });
   if (ff.milestonesEnabled) goalsItems.push({ label: 'Milestones', to: '/goals/milestones' });
+  goalsItems.push({ label: 'Tasks', to: '/goals/tasks' });
+  goalsItems.push({ label: 'Todos', to: '/goals/todos' });
 
   const healthItems: { label: string; to: string }[] = [];
   if (ff.medicationEnabled) {
@@ -440,7 +450,7 @@ export function Header() {
           <Divider />
           <NewEntryButton $light={light} onClick={handleNewEntry}>
             <FontAwesomeIcon icon={faPlus} size="sm" />
-            New Entry
+            <NewEntryLabel>New Entry</NewEntryLabel>
           </NewEntryButton>
         </LeftSection>
 
@@ -449,7 +459,7 @@ export function Header() {
           <NavLink to="/calendar" $active={isActive('/calendar')} $light={light}>Calendar</NavLink>
           {goalsItems.length > 0 && (
             <NavDropdown
-              label="Goals"
+              label="Planning"
               activePath={location.pathname}
               items={goalsItems}
               bgColor={bgColor}
@@ -515,9 +525,11 @@ export function Header() {
           {goalsItems.length > 0 && (
             <>
               <DrawerDivider />
-              <DrawerSectionLabel>Goals</DrawerSectionLabel>
+              <DrawerSectionLabel>Planning</DrawerSectionLabel>
               {ff.goalsEnabled && mobileNav('/goals', 'Goals')}
               {ff.milestonesEnabled && mobileNav('/goals/milestones', 'Milestones')}
+              {mobileNav('/goals/tasks', 'Tasks')}
+              {mobileNav('/goals/todos', 'Todos')}
             </>
           )}
           {healthItems.length > 0 && (

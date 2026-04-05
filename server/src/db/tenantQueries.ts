@@ -300,6 +300,8 @@ export interface DoseLog {
 /** JIT migration: create medication_dose_logs table if missing. */
 export async function ensureDoseLogsTable(schemaName: string): Promise<void> {
   const s = escapeSchema(schemaName);
+  const idxPrefix = `idx_${s}`;
+
   const result = await prisma.$queryRawUnsafe<{ exists: boolean }[]>(
     `SELECT EXISTS (
        SELECT 1 FROM information_schema.tables
@@ -319,13 +321,12 @@ export async function ensureDoseLogsTable(schemaName: string): Promise<void> {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
-    // Index names use the validated+escaped schema name (escapeSchema enforces usr_N_hex format)
-    const idxPrefix = `idx_${s}`;
-    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS ${idxPrefix}_dose_logs_date ON ${s}.medication_dose_logs (date)`);
-    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS ${idxPrefix}_dose_logs_med_date ON ${s}.medication_dose_logs (medication_post_id, date)`);
-    // Unique constraint for upsert ON CONFLICT support
-    await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS ${idxPrefix}_dose_logs_unique ON ${s}.medication_dose_logs (medication_post_id, scheduled_time, date)`);
   }
+
+  // Always ensure indexes exist (handles tables created before indexes were added)
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS ${idxPrefix}_dose_logs_date ON ${s}.medication_dose_logs (date)`);
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS ${idxPrefix}_dose_logs_med_date ON ${s}.medication_dose_logs (medication_post_id, date)`);
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS ${idxPrefix}_dose_logs_unique ON ${s}.medication_dose_logs (medication_post_id, scheduled_time, date)`);
 }
 
 export async function getDoseLogsByDate(schemaName: string, date: string): Promise<DoseLog[]> {
