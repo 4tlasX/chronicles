@@ -121,7 +121,7 @@ export const ICON_MAP: Record<string, IconDefinition> = Object.fromEntries(
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  gap: 4px;
+  gap: 6px;
   max-height: 128px;
   overflow-y: auto;
   padding: 4px;
@@ -167,7 +167,7 @@ export function IconPicker({ selectedIcon, onSelectIcon }: IconPickerProps) {
         <IconBtn key={name} $selected={selectedIcon === name} onClick={() => onSelectIcon(name)} title={name}>
           <FontAwesomeIcon
             icon={icon}
-            style={{ fontSize: 14, color: selectedIcon === name ? '#374151' : '#6B7280' }}
+            style={{ fontSize: 14, color: selectedIcon === name ? '#1f2937' : '#4b5563' }}
           />
         </IconBtn>
       ))}

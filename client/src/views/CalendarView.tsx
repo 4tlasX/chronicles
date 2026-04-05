@@ -8,7 +8,6 @@ import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
-import { useNavigate } from 'react-router-dom';
 
 function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -19,9 +18,6 @@ export function CalendarView() {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
   const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
-  const setSelectedEntryId = useUIStore(s => s.setSelectedEntryId);
-  const navigate = useNavigate();
-
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
@@ -48,9 +44,12 @@ export function CalendarView() {
   }, []);
 
   const handleEntryClick = useCallback((entryId: number) => {
-    setSelectedEntryId(entryId);
-    navigate('/');
-  }, [setSelectedEntryId, navigate]);
+    const entry = entries.find(e => e.id === entryId);
+    if (entry) {
+      const d = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt);
+      setSelectedDate(toDateStr(d));
+    }
+  }, [entries]);
 
   const goToPrev = () => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
   const goToNext = () => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));

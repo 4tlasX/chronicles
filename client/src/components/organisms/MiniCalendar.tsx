@@ -58,8 +58,8 @@ const NavButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   background: transparent;
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;

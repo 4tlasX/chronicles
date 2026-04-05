@@ -2,7 +2,6 @@ import styled from 'styled-components';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { TextInput } from '../atoms/TextInput.js';
 import { DateInput } from '../atoms/DateInput.js';
-import { Button } from '../atoms/Button.js';
 import { Icon } from '../atoms/Icon.js';
 import { FormField } from '../molecules/FormField.js';
 import { useUIStore } from '../../stores/uiStore.js';
@@ -27,9 +26,27 @@ const DateRow = styled.div`
   }
 `;
 
-const ClearRow = styled.div`
+const SearchRow = styled.div`
+  position: relative;
+`;
+
+const ClearBtn = styled.button`
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px;
+  min-width: 28px;
+  min-height: 28px;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.colors.textMuted};
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
 `;
 
 export function SearchPanel() {
@@ -47,11 +64,19 @@ export function SearchPanel() {
     <Panel>
       <div style={{ marginBottom: 8 }}>
         <FormField label="Search">
-          <TextInput
-            value={searchKeyword}
-            onChange={e => setSearchKeyword(e.target.value)}
-            placeholder="Search entries..."
-          />
+          <SearchRow>
+            <TextInput
+              value={searchKeyword}
+              onChange={e => setSearchKeyword(e.target.value)}
+              placeholder="Search entries..."
+              style={{ paddingRight: hasFilters ? 32 : undefined }}
+            />
+            {hasFilters && (
+              <ClearBtn onClick={clearSearch} aria-label="Clear search">
+                <Icon icon={faXmark} size="sm" />
+              </ClearBtn>
+            )}
+          </SearchRow>
         </FormField>
       </div>
       <DateRow>
@@ -68,13 +93,6 @@ export function SearchPanel() {
           />
         </FormField>
       </DateRow>
-      {hasFilters && (
-        <ClearRow>
-          <Button variant="ghost" onClick={clearSearch}>
-            <Icon icon={faXmark} size="sm" /> Clear
-          </Button>
-        </ClearRow>
-      )}
     </Panel>
   );
 }

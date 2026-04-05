@@ -82,9 +82,9 @@ const MetaRow = styled.div`
 `;
 
 function getCorrelationColor(c: number): string {
-  if (c >= 75) return '#ef4444';
-  if (c >= 50) return '#f97316';
-  return '#eab308';
+  if (c >= 75) return '#9B4444';
+  if (c >= 50) return '#B5704F';
+  return '#B8965A';
 }
 
 function getCorrelationBg(c: number): string {

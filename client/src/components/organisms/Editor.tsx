@@ -73,19 +73,20 @@ const ToolbarToggle = styled.button<{ $open: boolean }>`
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: ${({ $open }) => $open ? '10px 0' : '4px 0'};
+  padding: ${({ $open }) => $open ? '10px 4px' : '6px 4px'};
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  color: ${({ theme }) => theme.colors.textMuted};
+  opacity: 0.5;
   background: none;
   border: none;
   cursor: pointer;
-  transition: color 0.15s, padding 0.15s;
+  transition: color 0.15s, opacity 0.15s, padding 0.15s;
   margin-left: auto;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  &:hover { color: ${({ theme }) => theme.colors.text}; opacity: 0.8; }
 `;
 
 const Toolbar = styled.div`
@@ -106,7 +107,7 @@ const ToolbarDivider = styled.div`
 const ToolbarButton = styled.button<{ $active?: boolean }>`
   padding: 5px 8px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 12px;
+  font-size: 14px;
   font-weight: ${({ $active }) => $active ? 600 : 400};
   color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textSecondary};
   background: transparent;
@@ -212,53 +213,72 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
             <Toolbar>
               <ToolbarButton
                 $active={editor.isActive('bold')}
+                aria-pressed={editor.isActive('bold')}
+                aria-label="Bold"
                 onClick={() => editor.chain().focus().toggleBold().run()}
               >B</ToolbarButton>
               <ToolbarButton
                 $active={editor.isActive('italic')}
+                aria-pressed={editor.isActive('italic')}
+                aria-label="Italic"
                 onClick={() => editor.chain().focus().toggleItalic().run()}
               ><em>I</em></ToolbarButton>
               <ToolbarButton
                 $active={editor.isActive('strike')}
+                aria-pressed={editor.isActive('strike')}
+                aria-label="Strikethrough"
                 onClick={() => editor.chain().focus().toggleStrike().run()}
               ><s>S</s></ToolbarButton>
               <ToolbarButton
                 $active={editor.isActive('code')}
+                aria-pressed={editor.isActive('code')}
+                aria-label="Inline code"
                 onClick={() => editor.chain().focus().toggleCode().run()}
               >&lt;/&gt;</ToolbarButton>
               <ToolbarDivider />
               <ToolbarButton
                 $active={editor.isActive('bulletList')}
+                aria-pressed={editor.isActive('bulletList')}
+                aria-label="Bullet list"
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
               >• List</ToolbarButton>
               <ToolbarButton
                 $active={editor.isActive('orderedList')}
+                aria-pressed={editor.isActive('orderedList')}
+                aria-label="Ordered list"
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
               >1. List</ToolbarButton>
               <ToolbarDivider />
               <ToolbarButton
                 $active={editor.isActive('blockquote')}
+                aria-pressed={editor.isActive('blockquote')}
+                aria-label="Blockquote"
                 onClick={() => editor.chain().focus().toggleBlockquote().run()}
               >"</ToolbarButton>
               <ToolbarButton
                 $active={editor.isActive('codeBlock')}
+                aria-pressed={editor.isActive('codeBlock')}
+                aria-label="Code block"
                 onClick={() => editor.chain().focus().toggleCodeBlock().run()}
               >{'{}'}</ToolbarButton>
               <ToolbarButton
+                aria-label="Horizontal rule"
                 onClick={() => editor.chain().focus().setHorizontalRule().run()}
               >—</ToolbarButton>
               <ToolbarDivider />
               <ToolbarButton
+                aria-label="Undo"
                 onClick={() => editor.chain().focus().undo().run()}
                 disabled={!editor.can().undo()}
               >↩</ToolbarButton>
               <ToolbarButton
+                aria-label="Redo"
                 onClick={() => editor.chain().focus().redo().run()}
                 disabled={!editor.can().redo()}
               >↪</ToolbarButton>
             </Toolbar>
           )}
-          <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)}>
+          <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)} aria-label="Toggle formatting toolbar" aria-expanded={toolbarOpen}>
             <FontAwesomeIcon icon={faPenNib} />
           </ToolbarToggle>
         </ToolbarRow>

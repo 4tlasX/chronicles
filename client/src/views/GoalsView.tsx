@@ -1,6 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBullseye, faFlag, faCheck, faListCheck } from '@fortawesome/free-solid-svg-icons';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -12,7 +10,7 @@ import { ScrollList } from '../components/atoms/ScrollList.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { ViewHeader } from '../components/molecules/ViewHeader.js';
 import { FilterTabs } from '../components/molecules/FilterTabs.js';
-import { TabBar } from '../components/molecules/TabBar.js';
+import { Select } from '../components/atoms/Select.js';
 import { GoalCard } from '../components/organisms/GoalCard.js';
 import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
@@ -328,22 +326,35 @@ export function GoalsView() {
     return (<ContentTemplate><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}><Spinner size={40} /></div></ContentTemplate>);
   }
 
-  const TABS = [
-    { value: 'goals' as const, label: <><FontAwesomeIcon icon={faBullseye} size="sm" /> Goals ({goals.length})</> },
-    { value: 'milestones' as const, label: <><FontAwesomeIcon icon={faFlag} size="sm" /> Milestones ({milestones.length})</> },
-    { value: 'tasks' as const, label: <><FontAwesomeIcon icon={faCheck} size="sm" /> Tasks ({tasks.length})</> },
-    { value: 'todos' as const, label: <><FontAwesomeIcon icon={faListCheck} size="sm" /> Todos ({todos.length})</> },
+  const TAB_OPTIONS = [
+    { value: 'goals', label: `Goals (${goals.length})` },
+    { value: 'milestones', label: `Milestones (${milestones.length})` },
+    { value: 'tasks', label: `Tasks (${tasks.length})` },
+    { value: 'todos', label: `Todos (${todos.length})` },
   ];
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Planning" onBack={() => navigate('/')} />
-
-      <TabBar tabs={TABS} active={tab} onChange={v => {
-        setTab(v); setEditingId(null);
-        navigate(v === 'goals' ? '/goals' : `/goals/${v}`, { replace: true });
-
-      }} accentColor={headerColor} />
+      <ViewHeader
+        title="Planning"
+        onBack={() => navigate('/')}
+        right={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ width: 1, height: 20, background: 'currentColor', opacity: 0.15 }} />
+            <Select
+              value={tab}
+              onChange={e => {
+                const v = e.target.value as typeof tab;
+                setTab(v); setEditingId(null);
+                navigate(v === 'goals' ? '/goals' : `/goals/${v}`, { replace: true });
+              }}
+              style={{ width: 180, border: '1px solid transparent', borderRadius: 4, backgroundColor: 'rgba(0,0,0,0.04)', padding: '6px 24px 6px 8px' }}
+            >
+              {TAB_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </Select>
+          </div>
+        }
+      />
 
       {tab === 'goals' && <FilterTabs options={GOAL_FILTERS} active={goalFilter} onChange={setGoalFilter} />}
       {tab === 'milestones' && <FilterTabs options={MILESTONE_FILTERS} active={milestoneFilter} onChange={setMilestoneFilter} />}

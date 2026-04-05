@@ -5,7 +5,7 @@ const Wrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 

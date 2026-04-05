@@ -5,7 +5,7 @@ const StyledBadge = styled.span`
   align-items: center;
   gap: 4px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;

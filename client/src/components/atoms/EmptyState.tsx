@@ -11,12 +11,12 @@ const Wrapper = styled.div`
   gap: 4px;
 `;
 
-const Message = styled.span`
+const Message = styled.p`
   font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
-const Sub = styled.span`
+const Sub = styled.p`
   font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;

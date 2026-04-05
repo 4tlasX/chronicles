@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { lightTheme, darkTheme } from '@shared/theme/tokens';
@@ -23,9 +24,23 @@ function R({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
 }
 
+function hexToRgb(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `${r}, ${g}, ${b}`;
+}
+
 export function App() {
   const themeMode = useUIStore(s => s.themeMode);
+  const headerColor = useUIStore(s => s.headerColor);
   const activeTheme = themeMode === 'dark' ? darkTheme : lightTheme;
+
+  useEffect(() => {
+    const color = headerColor || '#4E6E7E';
+    document.documentElement.style.setProperty('--focus-color', color);
+    document.documentElement.style.setProperty('--focus-color-rgb', hexToRgb(color));
+  }, [headerColor]);
 
   return (
     <ThemeProvider theme={activeTheme}>

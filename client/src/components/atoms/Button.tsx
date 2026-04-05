@@ -49,6 +49,11 @@ const StyledButton = styled.button<{ $variant: Variant; $fullWidth: boolean }>`
 
     ${({ $variant }) => variantStyles[$variant]}
 
+    &:focus-visible {
+      outline: 2px solid ${({ theme }) => theme.colors.borderFocus};
+      outline-offset: 2px;
+    }
+
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;

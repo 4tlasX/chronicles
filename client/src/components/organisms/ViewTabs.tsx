@@ -1,15 +1,13 @@
-import { useRef, useEffect, useLayoutEffect, useState, useCallback, type ReactNode } from 'react';
+import { useRef, useEffect, useLayoutEffect, useState, useCallback, type ReactNode, type KeyboardEvent } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { useUIStore } from '../../stores/uiStore.js';
 import type { ViewMode } from '../../types/ui.js';
 
-const tabs: { value: ViewMode; label: ReactNode }[] = [
+const tabs: { value: ViewMode; label: ReactNode; flex?: number }[] = [
   { value: 'date', label: 'Date' },
   { value: 'tasks', label: 'Tasks' },
-  { value: 'all', label: 'All' },
-  { value: 'favorites', label: <><FontAwesomeIcon icon={faBookmark} size="xs" /> Bookmarks</> },
+  { value: 'all', label: 'All', flex: 0.5 },
+  { value: 'favorites', label: 'Bookmarks', flex: 1.5 },
   { value: 'search', label: 'Search' },
 ];
 
@@ -100,24 +98,45 @@ export function ViewTabs({ onDateTabClick }: ViewTabsProps = {}) {
     return () => window.removeEventListener('resize', updateSlider);
   }, [updateSlider]);
 
+  const handleTabClick = useCallback((tab: typeof tabs[number]) => {
+    if (tab.value === 'search' && viewMode === 'search') {
+      setViewMode('all');
+    } else if (tab.value === 'date' && viewMode === 'date' && onDateTabClick) {
+      onDateTabClick();
+    } else {
+      setViewMode(tab.value);
+      if (tab.value === 'date' && onDateTabClick) onDateTabClick();
+    }
+  }, [viewMode, setViewMode, onDateTabClick]);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent, index: number) => {
+    let nextIndex: number | null = null;
+    if (e.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') nextIndex = 0;
+    else if (e.key === 'End') nextIndex = tabs.length - 1;
+
+    if (nextIndex !== null) {
+      e.preventDefault();
+      tabRefs.current[nextIndex]?.focus();
+      handleTabClick(tabs[nextIndex]);
+    }
+  }, [handleTabClick]);
+
   return (
-    <Container ref={containerRef}>
+    <Container ref={containerRef} role="tablist">
       <Slider $left={sliderStyle.left} $width={sliderStyle.width} />
       {tabs.map((tab, i) => (
         <TabButton
           key={tab.value}
           ref={(el) => { tabRefs.current[i] = el; }}
+          role="tab"
+          aria-selected={viewMode === tab.value}
+          tabIndex={viewMode === tab.value ? 0 : -1}
           $active={viewMode === tab.value}
-          onClick={() => {
-            if (tab.value === 'search' && viewMode === 'search') {
-              setViewMode('all');
-            } else if (tab.value === 'date' && viewMode === 'date' && onDateTabClick) {
-              onDateTabClick();
-            } else {
-              setViewMode(tab.value);
-              if (tab.value === 'date' && onDateTabClick) onDateTabClick();
-            }
-          }}
+          style={tab.flex ? { flex: tab.flex } : undefined}
+          onClick={() => handleTabClick(tab)}
+          onKeyDown={e => handleKeyDown(e, i)}
         >
           {tab.label}
         </TabButton>

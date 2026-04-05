@@ -48,7 +48,7 @@ const HeaderRow = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 `;
 
 const TopicBadge = styled.div<{ $bgColor: string }>`
@@ -112,7 +112,7 @@ const Checkbox = styled.div<{ $checked?: boolean }>`
 `;
 
 const PreviewText = styled.div<{ $completed?: boolean }>`
-  font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: ${({ theme }) => theme.fontFamily.sans};
   font-size: 15px;
   font-weight: 500;
   letter-spacing: 0;
@@ -135,12 +135,12 @@ const Footer = styled.div`
 `;
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  task: { bg: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6' },
-  goal: { bg: 'rgba(139, 92, 246, 0.15)', text: '#8b5cf6' },
-  food: { bg: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b' },
-  medication: { bg: 'rgba(16, 185, 129, 0.15)', text: '#10b981' },
-  exercise: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
-  symptom: { bg: 'rgba(236, 72, 153, 0.15)', text: '#ec4899' },
+  task: { bg: 'rgba(59, 130, 246, 0.15)', text: '#2563eb' },
+  goal: { bg: 'rgba(139, 92, 246, 0.15)', text: '#7c3aed' },
+  food: { bg: 'rgba(245, 158, 11, 0.15)', text: '#b45309' },
+  medication: { bg: 'rgba(16, 185, 129, 0.15)', text: '#047857' },
+  exercise: { bg: 'rgba(239, 68, 68, 0.15)', text: '#9B4444' },
+  symptom: { bg: 'rgba(236, 72, 153, 0.15)', text: '#be185d' },
 };
 
 const TypeBadge = styled.span<{ $type: string }>`
@@ -157,7 +157,7 @@ const TypeBadge = styled.span<{ $type: string }>`
 
 const FavoriteStar = styled.span`
   margin-left: auto;
-  color: #f59e0b;
+  color: ${({ theme }) => theme.colors.warning};
   font-size: 12px;
   background: none;
   border: none;

@@ -47,7 +47,7 @@ const Card = styled.div<{ $editing?: boolean }>`
 
 const PreviewRow = styled.button`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   width: 100%;
   padding: 16px 24px 20px;
@@ -64,7 +64,7 @@ const PreviewRow = styled.button`
 const IconWrap = styled.span<{ $color: string }>`
   color: ${({ $color }) => $color};
   font-size: 14px;
-  margin-top: 2px;
+  margin-top: 3px;
   flex-shrink: 0;
 `;
 
@@ -74,7 +74,8 @@ const Content = styled.div`
 `;
 
 const Preview = styled.div`
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.5;
   color: ${({ theme }) => theme.colors.text};
   white-space: nowrap;
   overflow: hidden;
@@ -84,7 +85,7 @@ const Preview = styled.div`
 const Meta = styled.div`
   font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
-  margin-top: 2px;
+  margin-top: 4px;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -145,7 +146,7 @@ const StatusLabel = styled.span<{ $clickable?: boolean }>`
 
 const DeadlineLabel = styled.span<{ $overdue?: boolean }>`
   font-size: 11px;
-  color: ${({ $overdue }) => $overdue ? '#ef4444' : '#6b7280'};
+  color: ${({ $overdue, theme }) => $overdue ? theme.colors.danger : theme.colors.textMuted};
   white-space: nowrap;
   @media (max-width: 480px) { white-space: normal; }
 `;

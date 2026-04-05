@@ -91,9 +91,9 @@ const LegendItem = styled.div`
 `;
 
 function getSeverityColor(severity: number): string {
-  if (severity <= 3) return '#22c55e';
-  if (severity <= 6) return '#eab308';
-  return '#ef4444';
+  if (severity <= 3) return '#5A8A6A';
+  if (severity <= 6) return '#B8965A';
+  return '#9B4444';
 }
 
 function formatDate(dateStr: string): string {
@@ -151,9 +151,9 @@ export function SeverityTrendChart({ data, title }: SeverityTrendChartProps) {
         </XAxis>
       </ChartWrapper>
       <Legend>
-        <LegendItem><LegendDot $color="#22c55e" /><span>Mild (1-3)</span></LegendItem>
-        <LegendItem><LegendDot $color="#eab308" /><span>Moderate (4-6)</span></LegendItem>
-        <LegendItem><LegendDot $color="#ef4444" /><span>Severe (7-10)</span></LegendItem>
+        <LegendItem><LegendDot $color="#5A8A6A" /><span>Mild (1-3)</span></LegendItem>
+        <LegendItem><LegendDot $color="#B8965A" /><span>Moderate (4-6)</span></LegendItem>
+        <LegendItem><LegendDot $color="#9B4444" /><span>Severe (7-10)</span></LegendItem>
       </Legend>
     </Card>
   );

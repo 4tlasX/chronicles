@@ -87,6 +87,8 @@ const WeekdayLabel = styled.div`
 const DaysGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  border-left: 1px solid ${({ theme }) => theme.colors.border};
   @media (max-width: 768px) { grid-template-columns: 1fr; }
 `;
 
@@ -94,7 +96,7 @@ const DayCell = styled.div<{ $isOutside?: boolean; $isSelected?: boolean }>`
   aspect-ratio: 1;
   padding: 6px 8px;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-width: 0 0 1px 0;
+  border-width: 0 1px 1px 0;
   cursor: pointer;
   background: ${({ $isSelected }) => $isSelected ? 'rgba(0,0,0,0.03)' : 'transparent'};
   outline: ${({ $isSelected }) => $isSelected ? '2px solid #e5e6ea' : 'none'};

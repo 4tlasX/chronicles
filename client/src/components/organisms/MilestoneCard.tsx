@@ -23,7 +23,7 @@ const Card = styled.div<{ $editing?: boolean }>`
 
 const CardHeader = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   padding: 16px 24px 20px;
   cursor: pointer;
@@ -169,7 +169,7 @@ const AddTaskRow = styled.form`
 const LinkSelect = styled.select`
   flex: 1;
   padding: 4px 0;
-  font-size: 13px;
+  font-size: 14px;
   border: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 0;
@@ -184,7 +184,7 @@ const LinkSelect = styled.select`
 const AddTaskInput = styled.input`
   flex: 1;
   padding: 4px 0;
-  font-size: 13px;
+  font-size: 14px;
   border: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 0;
@@ -198,7 +198,7 @@ const AddTaskInput = styled.input`
 const AddTaskBtn = styled.button<{ $color: string }>`
   padding: 4px 10px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;

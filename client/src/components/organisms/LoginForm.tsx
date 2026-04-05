@@ -47,7 +47,7 @@ export function LoginForm({ onSubmit, onForgotPassword }: LoginFormProps) {
 
   return (
     <Form onSubmit={handleSubmit}>
-      {error && <ErrorBanner>{error}</ErrorBanner>}
+      {error && <ErrorBanner role="alert">{error}</ErrorBanner>}
 
       <FormField label="Email" htmlFor="email">
         <TextInput

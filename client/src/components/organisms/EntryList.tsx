@@ -125,12 +125,14 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
         if (meta?._taxonomyId !== selectedTopicId) return false;
       }
 
-      // Keyword search (client-side on decrypted content)
+      // Keyword search (client-side on decrypted content + topic name)
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         const contentMatch = entry.content.toLowerCase().includes(keyword);
         const metadataMatch = JSON.stringify(entry.metadata).toLowerCase().includes(keyword);
-        if (!contentMatch && !metadataMatch) return false;
+        const topic = taxId ? topics.find(t => t.id === taxId) : undefined;
+        const topicMatch = topic?.name?.toLowerCase().includes(keyword) ?? false;
+        if (!contentMatch && !metadataMatch && !topicMatch) return false;
       }
 
       // Date range

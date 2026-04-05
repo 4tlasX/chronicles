@@ -20,7 +20,7 @@ const StyledSelect = styled.select`
   background-size: 1.2em 1.2em;
 
   &:focus {
-    border-bottom-color: ${({ theme }) => theme.colors.text};
+    border-bottom-color: var(--focus-color, ${({ theme }) => theme.colors.text});
   }
 `;
 

@@ -75,7 +75,7 @@ const BodyRow = styled.div`
 
 const Input = styled.input`
   flex: 1;
-  padding: 10px 0;
+  padding: 10px 8px;
   border: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 0;

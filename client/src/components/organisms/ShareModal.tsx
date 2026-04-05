@@ -242,7 +242,7 @@ export function ShareModal({ entryContent, onClose }: ShareModalProps) {
       {shareUrl ? (
         <UrlRow>
           <UrlInput readOnly value={shareUrl} onClick={e => (e.target as HTMLInputElement).select()} />
-          <CopyBtn $copied={copied} onClick={handleCopy}>
+          <CopyBtn $copied={copied} onClick={handleCopy} aria-label={copied ? 'Link copied' : 'Copy share link'}>
             <FontAwesomeIcon icon={copied ? faCheck : faCopy} />
             {copied ? 'Copied!' : 'Copy'}
           </CopyBtn>
@@ -265,12 +265,12 @@ export function ShareModal({ entryContent, onClose }: ShareModalProps) {
           <SharesList>
             {existingShares.map(s => (
               <ShareItem key={s.token}>
-                <FontAwesomeIcon icon={faShareNodes} style={{ color: '#9ca3af', fontSize: 11 }} />
+                <FontAwesomeIcon icon={faShareNodes} style={{ color: '#6b7280', fontSize: 11 }} />
                 <ShareMeta>
                   Created {new Date(s.createdAt).toLocaleDateString()}
                   {s.expiresAt && ` · Expires ${new Date(s.expiresAt).toLocaleDateString()}`}
                 </ShareMeta>
-                <RevokeBtn onClick={() => handleRevoke(s.token)} title="Revoke link">
+                <RevokeBtn onClick={() => handleRevoke(s.token)} aria-label="Revoke share link">
                   <FontAwesomeIcon icon={faTrash} />
                 </RevokeBtn>
               </ShareItem>

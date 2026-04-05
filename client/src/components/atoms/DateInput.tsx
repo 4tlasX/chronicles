@@ -12,8 +12,8 @@ const StyledInput = styled.input`
   outline: none;
 
   &:focus {
-    border-color: ${({ theme }) => theme.colors.borderFocus};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.accentLight};
+    border-color: var(--focus-color, ${({ theme }) => theme.colors.borderFocus});
+    box-shadow: 0 0 0 3px rgba(var(--focus-color-rgb, 78, 110, 126), 0.12);
   }
 `;
 

@@ -87,7 +87,7 @@ const IconBtn = styled.button<{ $active?: boolean }>`
   justify-content: center;
   width: 28px;
   height: 28px;
-  color: ${({ $active, theme }) => $active ? '#f59e0b' : theme.colors.textMuted};
+  color: ${({ $active, theme }) => $active ? theme.colors.warning : theme.colors.textMuted};
   background: none;
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
@@ -96,7 +96,7 @@ const IconBtn = styled.button<{ $active?: boolean }>`
   transition: color 0.15s, background 0.15s;
 
   &:hover {
-    color: ${({ $active, theme }) => $active ? '#d97706' : theme.colors.text};
+    color: ${({ $active, theme }) => $active ? theme.colors.warning : theme.colors.text};
     background: rgba(0, 0, 0, 0.05);
   }
 `;
@@ -165,46 +165,47 @@ const RightActions = styled.div`
 `;
 
 const ActionBtn = styled.button`
-  padding: 0;
+  padding: 6px 16px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 10px;
-  font-weight: 400;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05rem;
+  letter-spacing: 0.08em;
   color: ${({ theme }) => theme.colors.textMuted};
-  background: transparent;
-  border: none;
+  background: none;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
   cursor: pointer;
-  transition: color 0.15s;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  transition: background 0.15s;
+  &:hover { background: rgba(0,0,0,0.04); color: ${({ theme }) => theme.colors.text}; border-color: rgba(0,0,0,0.04); }
 `;
 
 const DeleteBtn = styled.button`
   padding: 0;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: rgba(239, 68, 68, 0.5);
-  background: transparent;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.danger};
+  background: none;
   border: none;
   cursor: pointer;
-  transition: color 0.15s;
-  &:hover { color: rgba(239, 68, 68, 0.7); }
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.7; }
 `;
 
 const SaveButton = styled.button<{ $disabled?: boolean }>`
   padding: 4px 14px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06rem;
   color: ${({ theme, $disabled }) => $disabled ? theme.colors.border : theme.colors.text};
   background: transparent;
   border: 1px solid ${({ theme, $disabled }) => $disabled ? theme.colors.border : theme.colors.text};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
   cursor: ${({ $disabled }) => $disabled ? 'not-allowed' : 'pointer'};
   transition: background 0.15s, color 0.15s;
 
@@ -216,7 +217,7 @@ const SaveButton = styled.button<{ $disabled?: boolean }>`
 
 const StatusText = styled.span<{ $error?: boolean }>`
   font-size: 13px;
-  color: ${({ $error }) => $error ? '#ef4444' : '#22c55e'};
+  color: ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.success};
   margin-right: auto;
 `;
 
@@ -353,7 +354,7 @@ export function EntryForm({
           <IconBtn
             type="button"
             $active={isFavorite}
-            title={isFavorite ? 'Remove bookmark' : 'Bookmark'}
+            aria-label={isFavorite ? 'Remove bookmark' : 'Bookmark entry'}
             onClick={() => entryId && onBookmark?.()}
             style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
           >
@@ -361,7 +362,7 @@ export function EntryForm({
           </IconBtn>
           <IconBtn
             type="button"
-            title="Share"
+            aria-label="Share entry"
             onClick={() => entryId && onShare?.()}
             style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
           >
@@ -406,10 +407,7 @@ export function EntryForm({
           {saveStatus && <StatusText $error={saveStatus === 'Save failed'}>{saveStatus}</StatusText>}
           <RightActions>
             {isEditing && (
-              <>
-                <ActionBtn onClick={onNew}>Close</ActionBtn>
-                <span style={{ width: 1, height: 16, background: 'currentColor', opacity: 0.2 }} />
-              </>
+              <ActionBtn onClick={onNew}>Close</ActionBtn>
             )}
             <SaveButton $disabled={!canSave || isSaving} disabled={!canSave || isSaving} onClick={onSave}>
               {isSaving ? <><Spinner size={14} /> Saving...</> : 'Save'}

@@ -235,15 +235,15 @@ const ImpactArrow = styled.div`
 const ImpactChange = styled.div<{ $positive: boolean; $neutral: boolean }>`
   font-size: 13px;
   font-weight: 500;
-  color: ${({ $positive, $neutral }) => $neutral ? '#6b7280' : $positive ? '#22c55e' : '#ef4444'};
+  color: ${({ $positive, $neutral, theme }) => $neutral ? theme.colors.textMuted : $positive ? theme.colors.success : theme.colors.danger};
 `;
 
 /* ── Helpers ── */
 
 function strengthColor(c: number): string {
-  if (c >= 75) return '#ef4444';
-  if (c >= 50) return '#f97316';
-  return '#eab308';
+  if (c >= 75) return '#9B4444';
+  if (c >= 50) return '#B5704F';
+  return '#B8965A';
 }
 
 /* ── Props ── */

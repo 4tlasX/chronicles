@@ -8,7 +8,7 @@ const Chip = styled.span<{ $color: string }>`
   gap: 6px;
   padding: 2px 8px;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   color: white;
   text-transform: uppercase;
@@ -25,7 +25,7 @@ interface TopicBadgeProps {
 export function TopicBadge({ name, color, icon }: TopicBadgeProps) {
   return (
     <Chip $color={color}>
-      {icon && <FontAwesomeIcon icon={icon} style={{ fontSize: 10 }} />}
+      {icon && <FontAwesomeIcon icon={icon} style={{ fontSize: 11 }} />}
       {name}
     </Chip>
   );

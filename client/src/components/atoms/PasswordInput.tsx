@@ -24,7 +24,7 @@ const StyledInput = styled.input<{ $error?: boolean }>`
   transition: border-color 0.15s;
 
   &:focus {
-    border-bottom-color: ${({ theme }) => theme.colors.text};
+    border-bottom-color: var(--focus-color, ${({ theme }) => theme.colors.text});
   }
 
   &::placeholder {

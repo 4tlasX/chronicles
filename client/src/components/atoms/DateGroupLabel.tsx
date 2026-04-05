@@ -6,7 +6,7 @@ export const DateGroup = styled.div`
 `;
 
 /** Uppercase date header for grouped lists. */
-export const DateGroupLabel = styled.div`
+export const DateGroupLabel = styled.h3`
   padding: 8px 24px 4px;
   font-size: 12px;
   font-weight: 600;

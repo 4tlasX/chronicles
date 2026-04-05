@@ -40,8 +40,8 @@ const UnlinkBtn = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   color: ${({ theme }) => theme.colors.textMuted};
   background: none;
   border: none;
@@ -65,11 +65,11 @@ interface SubItemRowProps {
 export function SubItemRow({ icon, iconColor, title, isCompleted, statusLabel, onToggleStatus, onUnlink }: SubItemRowProps) {
   return (
     <Row>
-      <StatusBtn $color={iconColor} title={`${statusLabel} — click to change`} onClick={e => { e.stopPropagation(); onToggleStatus(); }}>
+      <StatusBtn $color={iconColor} aria-label={`${statusLabel} — click to change`} onClick={e => { e.stopPropagation(); onToggleStatus(); }}>
         <FontAwesomeIcon icon={icon} />
       </StatusBtn>
       <Title $completed={isCompleted}>{title}</Title>
-      <UnlinkBtn title="Remove" onClick={e => { e.stopPropagation(); onUnlink(); }}>
+      <UnlinkBtn aria-label="Remove item" onClick={e => { e.stopPropagation(); onUnlink(); }}>
         <FontAwesomeIcon icon={faXmark} />
       </UnlinkBtn>
     </Row>

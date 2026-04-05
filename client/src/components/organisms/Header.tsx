@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { faPlus, faArrowRightFromBracket, faChevronDown, faBars, faXmark, faSliders, faLink } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowRightFromBracket, faChevronDown, faChevronUp, faBars, faXmark, faSliders } from '@fortawesome/free-solid-svg-icons';
+import { faNoteSticky } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
@@ -178,7 +179,7 @@ const DropdownItem = styled(Link)<{ $light?: boolean }>`
 
   &:hover {
     color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'};
-    background: ${({ $light }) => $light ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.1)'};
+    background: ${({ $light }) => $light ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.2)'};
   }
 `;
 
@@ -294,19 +295,28 @@ const DrawerLink = styled(Link)<{ $active?: boolean }>`
   &:hover { background: rgba(255,255,255,0.1); }
 `;
 
-const DrawerSectionLabel = styled.div`
-  padding: 16px 20px 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
+const DrawerSectionLabel = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.75);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+  &:hover { background: rgba(255,255,255,0.1); }
 `;
 
 const DrawerDivider = styled.div`
   height: 1px;
   background: rgba(255, 255, 255, 0.15);
-  margin: 4px 0;
 `;
 
 const DrawerLogout = styled.button`
@@ -392,6 +402,8 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [drawerSections, setDrawerSections] = useState<Record<string, boolean>>({ planning: false, health: false, quicklinks: false });
+  const toggleDrawerSection = (key: string) => setDrawerSections(prev => ({ ...prev, [key]: !prev[key] }));
 
   const handleLogout = async () => {
     setMobileMenuOpen(false);
@@ -456,6 +468,7 @@ export function Header() {
 
         <Nav>
           <NavLink to="/" $active={isActive('/')} $light={light}>Journal</NavLink>
+          <NavLink to="/topics" $active={isActive('/topics')} $light={light}>Topics</NavLink>
           <NavLink to="/calendar" $active={isActive('/calendar')} $light={light}>Calendar</NavLink>
           {goalsItems.length > 0 && (
             <NavDropdown
@@ -477,11 +490,9 @@ export function Header() {
             />
           )}
 
-          <NavLink to="/topics" $active={isActive('/topics')} $light={light}>Topics</NavLink>
-
           {(ff.entertainmentEnabled || ff.inspirationEnabled) && (
             <NavDropdown
-              label={<FontAwesomeIcon icon={faLink} />}
+              label={<FontAwesomeIcon icon={faNoteSticky} size="lg" style={{ opacity: 0.5 }} />}
               activePath={location.pathname}
               bgColor={bgColor}
               light={light}
@@ -521,43 +532,64 @@ export function Header() {
         </DrawerHeader>
         <DrawerNav>
           {mobileNav('/', 'Journal')}
+          {mobileNav('/topics', 'Topics')}
           {mobileNav('/calendar', 'Calendar')}
           {goalsItems.length > 0 && (
             <>
               <DrawerDivider />
-              <DrawerSectionLabel>Planning</DrawerSectionLabel>
-              {ff.goalsEnabled && mobileNav('/goals', 'Goals')}
-              {ff.milestonesEnabled && mobileNav('/goals/milestones', 'Milestones')}
-              {mobileNav('/goals/tasks', 'Tasks')}
-              {mobileNav('/goals/todos', 'Todos')}
+              <DrawerSectionLabel onClick={() => toggleDrawerSection('planning')}>
+                <span>Planning</span>
+                <FontAwesomeIcon icon={drawerSections.planning ? faChevronUp : faChevronDown} size="xs" />
+              </DrawerSectionLabel>
+              {drawerSections.planning && (
+                <>
+                  {ff.goalsEnabled && mobileNav('/goals', 'Goals')}
+                  {ff.milestonesEnabled && mobileNav('/goals/milestones', 'Milestones')}
+                  {mobileNav('/goals/tasks', 'Tasks')}
+                  {mobileNav('/goals/todos', 'Todos')}
+                </>
+              )}
             </>
           )}
           {healthItems.length > 0 && (
             <>
               <DrawerDivider />
-              <DrawerSectionLabel>Health</DrawerSectionLabel>
-              {ff.medicationEnabled && mobileNav('/health/meds', 'Meds List')}
-              {ff.medicationEnabled && mobileNav('/health/schedule', 'Meds Schedule')}
-              {ff.foodEnabled && mobileNav('/health/food', 'Food')}
-              {ff.medicationEnabled && mobileNav('/health/symptoms', 'Symptoms')}
-              {ff.exerciseEnabled && mobileNav('/health/exercise', 'Exercise')}
-              {mobileNav('/health/reporting', 'Reporting')}
+              <DrawerSectionLabel onClick={() => toggleDrawerSection('health')}>
+                <span>Health</span>
+                <FontAwesomeIcon icon={drawerSections.health ? faChevronUp : faChevronDown} size="xs" />
+              </DrawerSectionLabel>
+              {drawerSections.health && (
+                <>
+                  {ff.medicationEnabled && mobileNav('/health/meds', 'Meds List')}
+                  {ff.medicationEnabled && mobileNav('/health/schedule', 'Meds Schedule')}
+                  {ff.foodEnabled && mobileNav('/health/food', 'Food')}
+                  {ff.medicationEnabled && mobileNav('/health/symptoms', 'Symptoms')}
+                  {ff.exerciseEnabled && mobileNav('/health/exercise', 'Exercise')}
+                  {mobileNav('/health/reporting', 'Reporting')}
+                </>
+              )}
             </>
           )}
           {(ff.entertainmentEnabled || ff.inspirationEnabled) && (
             <>
               <DrawerDivider />
-              <DrawerSectionLabel>Quick Links</DrawerSectionLabel>
-              {ff.entertainmentEnabled && mobileNav('/entertainment/music', 'Music')}
-              {ff.entertainmentEnabled && mobileNav('/entertainment/books', 'Books')}
-              {ff.entertainmentEnabled && mobileNav('/entertainment/tv', 'TV/Movies')}
-              {ff.inspirationEnabled && mobileNav('/inspiration/research', 'Research')}
-              {ff.inspirationEnabled && mobileNav('/inspiration/ideas', 'Ideas')}
-              {ff.inspirationEnabled && mobileNav('/inspiration/quotes', 'Quotes')}
+              <DrawerSectionLabel onClick={() => toggleDrawerSection('quicklinks')}>
+                <span>Quick Links</span>
+                <FontAwesomeIcon icon={drawerSections.quicklinks ? faChevronUp : faChevronDown} size="xs" />
+              </DrawerSectionLabel>
+              {drawerSections.quicklinks && (
+                <>
+                  {ff.entertainmentEnabled && mobileNav('/entertainment/music', 'Music')}
+                  {ff.entertainmentEnabled && mobileNav('/entertainment/books', 'Books')}
+                  {ff.entertainmentEnabled && mobileNav('/entertainment/tv', 'TV/Movies')}
+                  {ff.inspirationEnabled && mobileNav('/inspiration/research', 'Research')}
+                  {ff.inspirationEnabled && mobileNav('/inspiration/ideas', 'Ideas')}
+                  {ff.inspirationEnabled && mobileNav('/inspiration/quotes', 'Quotes')}
+                </>
+              )}
             </>
           )}
           <DrawerDivider />
-          {mobileNav('/topics', 'Topics')}
           {mobileNav('/settings', 'Settings')}
           <DrawerDivider />
           <DrawerLogout onClick={handleLogout}>Logout</DrawerLogout>

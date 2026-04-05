@@ -42,7 +42,9 @@ const Input = styled.input`
 const ClearButton = styled.button`
   position: absolute;
   right: 8px;
-  padding: 2px 4px;
+  padding: 6px;
+  min-width: 28px;
+  min-height: 28px;
   color: ${({ theme }) => theme.colors.textMuted};
   background: none;
   border: none;
@@ -72,15 +74,16 @@ export function SearchInput({ value, onChange, placeholder = 'Search...', deboun
 
   return (
     <Wrapper>
-      <SearchIcon><FontAwesomeIcon icon={faSearch} /></SearchIcon>
+      <SearchIcon aria-hidden="true"><FontAwesomeIcon icon={faSearch} /></SearchIcon>
       <Input
         type="text"
         value={local}
         onChange={e => handleChange(e.target.value)}
         placeholder={placeholder}
+        aria-label="Search entries"
       />
       {local && (
-        <ClearButton onClick={() => { setLocal(''); onChange(''); }}>
+        <ClearButton onClick={() => { setLocal(''); onChange(''); }} aria-label="Clear search">
           <FontAwesomeIcon icon={faXmark} />
         </ClearButton>
       )}

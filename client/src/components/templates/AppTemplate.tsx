@@ -5,6 +5,31 @@ import { Sidebar } from '../organisms/Sidebar.js';
 import { Background } from '../organisms/Background.js';
 import { useUIStore } from '../../stores/uiStore.js';
 
+const SkipLink = styled.a`
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: ${({ theme }) => theme.fontSize.sm}px;
+  text-decoration: none;
+  border: 2px solid ${({ theme }) => theme.colors.borderFocus};
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+
+  &:focus {
+    position: fixed;
+    left: 8px;
+    top: 8px;
+    width: auto;
+    height: auto;
+  }
+`;
+
 const Layout = styled.div`
   display: flex;
   flex-direction: column;
@@ -39,10 +64,11 @@ export function AppTemplate({ children, hideSidebar, transparentContent }: AppTe
     <>
       <Background />
       <Layout>
+        <SkipLink href="#main-content">Skip to content</SkipLink>
         <Header />
         <Body>
           {!hideSidebar && <Sidebar />}
-          <MainContent $transparent={transparentContent}>{children}</MainContent>
+          <MainContent id="main-content" $transparent={transparentContent}>{children}</MainContent>
         </Body>
       </Layout>
     </>

@@ -13,18 +13,19 @@ const EditorWrap = styled.div`
 
   /* Compact the TipTap editor for inline use */
   & > div { min-height: unset; }
-  .tiptap {
+  && .tiptap {
     min-height: 60px;
-    padding: 8px 24px;
+    padding: 8px 24px 8px 50px;
     font-size: 14px;
-    @media (max-width: 768px) { padding: 8px 16px; }
+    line-height: 1.6;
+    @media (max-width: 768px) { padding: 8px 16px 8px 40px; }
     @media (max-width: 480px) { padding: 8px 12px; }
   }
 `;
 
 const FieldsWrap = styled.div`
-  padding: 12px 24px 20px;
-  @media (max-width: 768px) { padding: 12px 16px 18px; }
+  padding: 12px 24px 20px 50px;
+  @media (max-width: 768px) { padding: 12px 16px 18px 40px; }
   @media (max-width: 480px) { padding: 10px 12px 16px; }
 `;
 
@@ -32,17 +33,17 @@ const Actions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 24px;
+  padding: 8px 24px 8px 50px;
   border-radius: 0;
   flex-wrap: wrap;
-  @media (max-width: 768px) { padding: 8px 16px; }
-  @media (max-width: 480px) { padding: 8px 12px; gap: 6px; }
+  @media (max-width: 768px) { padding: 8px 16px 8px 40px; }
+  @media (max-width: 480px) { padding: 8px 12px; gap: 8px; }
 `;
 
 const ActionBtn = styled.button`
   padding: 6px 16px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -58,25 +59,25 @@ const ActionBtn = styled.button`
 
 const DeleteBtn = styled(ActionBtn)`
   color: ${({ theme }) => theme.colors.danger};
-  border-color: rgba(239,68,68,0.3);
+  border-color: ${({ theme }) => theme.colors.danger};
   margin-left: auto;
-  &:hover { background: rgba(239,68,68,0.05); }
+  &:hover { background: rgba(155, 68, 68, 0.05); color: ${({ theme }) => theme.colors.dangerHover}; }
 `;
 
 const Status = styled.span<{ $error?: boolean }>`
   font-size: 12px;
-  color: ${({ $error }) => $error ? '#ef4444' : '#22c55e'};
+  color: ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.success};
 `;
 
 const EditTitle = styled.div`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: ${({ theme }) => theme.colors.textMuted};
-  padding: 0 24px 8px;
-  @media (max-width: 768px) { padding: 0 16px 8px; }
+  padding: 0 24px 8px 50px;
+  @media (max-width: 768px) { padding: 0 16px 8px 40px; }
   @media (max-width: 480px) { padding: 0 12px 8px; }
 `;
 

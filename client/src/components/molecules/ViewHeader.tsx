@@ -20,7 +20,7 @@ const TitleRow = styled.div`
 
 const Title = styled.h1`
   font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 1.25rem;
+  font-size: 1.375rem;
   font-weight: 500;
   font-style: italic;
   color: ${({ theme }) => theme.colors.text};
@@ -41,7 +41,7 @@ const Back = styled.button`
   border: none;
   cursor: pointer;
   &:hover { opacity: 0.7; }
-  @media (max-width: 480px) { display: none; }
+  @media (max-width: 768px) { display: none; }
 `;
 
 interface ViewHeaderProps {

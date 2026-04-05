@@ -14,5 +14,5 @@ const StyledSpinner = styled.div<{ $size: number }>`
 `;
 
 export function Spinner({ size = 24 }: { size?: number }) {
-  return <StyledSpinner $size={size} />;
+  return <StyledSpinner $size={size} role="status" aria-label="Loading" />;
 }

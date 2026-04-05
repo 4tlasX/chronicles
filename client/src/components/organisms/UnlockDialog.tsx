@@ -1,9 +1,11 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useRef, useId, type FormEvent } from 'react';
 import styled from 'styled-components';
+import { createPortal } from 'react-dom';
 import { PasswordInput } from '../atoms/PasswordInput.js';
 import { Button } from '../atoms/Button.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { FormField } from '../molecules/FormField.js';
+import { useFocusTrap } from '../../hooks/useFocusTrap.js';
 
 const Overlay = styled.div`
   position: fixed;
@@ -31,7 +33,7 @@ const Title = styled.h2`
   font-weight: 500;
   font-style: italic;
   color: ${({ theme }) => theme.colors.text};
-  margin-bottom: ${({ theme }) => theme.spacing.sm}px;
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
 `;
 
 const Description = styled.p`
@@ -59,6 +61,11 @@ export function UnlockDialog({ onUnlock }: UnlockDialogProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const errorId = useId();
+
+  useFocusTrap(cardRef, true);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -73,31 +80,31 @@ export function UnlockDialog({ onUnlock }: UnlockDialogProps) {
     }
   };
 
-  return (
+  return createPortal(
     <Overlay>
-      <Card>
-        <Title>Unlock Your Journal</Title>
-        <Description>
-          Enter your password to decrypt your entries.
-        </Description>
+      <Card ref={cardRef} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <Title id={titleId}>Unlock Your Journal</Title>
         <Form onSubmit={handleSubmit}>
-          {error && <ErrorText>{error}</ErrorText>}
-          <FormField label="Password" htmlFor="unlock-pw">
+          {error && <ErrorText role="alert" id={errorId}>{error}</ErrorText>}
+          <div>
             <PasswordInput
               id="unlock-pw"
+              aria-label="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
               autoFocus
               autoComplete="current-password"
+              aria-describedby={error ? errorId : undefined}
             />
-          </FormField>
+          </div>
           <Button type="submit" fullWidth disabled={loading} variant="secondary">
             {loading ? <Spinner size={18} /> : 'Unlock'}
           </Button>
         </Form>
       </Card>
-    </Overlay>
+    </Overlay>,
+    document.body,
   );
 }

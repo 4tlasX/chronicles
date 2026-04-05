@@ -15,6 +15,7 @@ import { SearchPanel } from '../components/organisms/SearchPanel.js';
 import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { ShareModal } from '../components/organisms/ShareModal.js';
+import { ConfirmDialog } from '../components/molecules/ConfirmDialog.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { useAuth } from '../contexts/AuthContext.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
@@ -56,6 +57,7 @@ export function JournalView() {
   const [saveStatus, setSaveStatus] = useState('');
   const [entryExpanded, setEntryExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
 
   const handleUnlock = useCallback(async (password: string) => {
     if (!encryptionData?.kekSalt || !encryptionData?.encryptedMasterKey || !encryptionData?.kekWrapIv) {
@@ -230,14 +232,7 @@ export function JournalView() {
         const currentId = useUIStore.getState().selectedEntryId;
         if (!currentId) return;
         e.preventDefault();
-        if (window.confirm('Delete this entry?')) {
-          entriesApi.delete(currentId).then(() => {
-            useEntriesStore.getState().removeEntry(currentId);
-            useUIStore.getState().setSelectedEntryId(null);
-            useUIStore.getState().setShowMobileEditor(false);
-            setEditorContent(''); setEditorTopicId(null); setCustomFields({});
-          }).catch(err => console.error('Delete failed:', err));
-        }
+        setPendingDeleteId(currentId);
       }
     };
     window.addEventListener('keydown', onKeyDown, true);
@@ -376,6 +371,26 @@ export function JournalView() {
           onClose={() => setShareOpen(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        title="Delete Entry"
+        message="Are you sure you want to delete this entry? This cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={() => {
+          if (pendingDeleteId) {
+            entriesApi.delete(pendingDeleteId).then(() => {
+              useEntriesStore.getState().removeEntry(pendingDeleteId);
+              useUIStore.getState().setSelectedEntryId(null);
+              useUIStore.getState().setShowMobileEditor(false);
+              setEditorContent(''); setEditorTopicId(null); setCustomFields({});
+            }).catch(err => console.error('Delete failed:', err));
+          }
+          setPendingDeleteId(null);
+        }}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </AppTemplate>
   );
 }

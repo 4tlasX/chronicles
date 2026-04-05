@@ -63,7 +63,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
 
   return (
     <Form onSubmit={handleSubmit}>
-      {error && <ErrorBanner>{error}</ErrorBanner>}
+      {error && <ErrorBanner role="alert">{error}</ErrorBanner>}
 
       <FormField label="Email" htmlFor="reg-email" error={fieldErrors.email}>
         <TextInput

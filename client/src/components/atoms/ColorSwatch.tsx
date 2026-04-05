@@ -13,14 +13,20 @@ const Swatch = styled.button<{ $color: string; $selected: boolean }>`
   &:hover {
     transform: scale(1.1);
   }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.borderFocus};
+    outline-offset: 2px;
+  }
 `;
 
 interface ColorSwatchProps {
   color: string;
   selected: boolean;
   onClick: () => void;
+  'aria-label'?: string;
 }
 
-export function ColorSwatch({ color, selected, onClick }: ColorSwatchProps) {
-  return <Swatch $color={color} $selected={selected} onClick={onClick} />;
+export function ColorSwatch({ color, selected, onClick, 'aria-label': ariaLabel }: ColorSwatchProps) {
+  return <Swatch $color={color} $selected={selected} onClick={onClick} aria-label={ariaLabel} />;
 }

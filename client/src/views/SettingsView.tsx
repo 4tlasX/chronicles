@@ -526,7 +526,7 @@ export function SettingsView() {
             />
           )}
         </SettingsRow>
-        {emailMessage && <div style={{ padding: '0 0 12px', fontSize: 13, color: emailError ? '#ef4444' : '#22c55e' }}>{emailMessage}</div>}
+        {emailMessage && <div style={{ padding: '0 0 12px', fontSize: 13, color: emailError ? '#9B4444' : '#5A8A6A' }}>{emailMessage}</div>}
       </SettingsCard>
 
       {/* How to Use */}
@@ -536,13 +536,36 @@ export function SettingsView() {
           <CollapsibleTitle>Getting Started Guide</CollapsibleTitle>
           <CollapsibleDesc>Learn how to use Chronicles effectively</CollapsibleDesc>
         </div>
-        <FontAwesomeIcon icon={showHowToUse ? faChevronUp : faChevronDown} color="#9ca3af" />
+        <FontAwesomeIcon icon={showHowToUse ? faChevronUp : faChevronDown} color="#6b7280" />
       </CollapsibleHeader>
       {showHowToUse && (
         <CollapsibleBody>
-          <p><strong>Chronicles</strong> is designed as a simple daily log. Capture the key moments of your day in less than 10-15 minutes, then use topics to organize and find them later.</p>
-          <p style={{ marginTop: 12 }}><strong>Topics</strong> are how you categorize entries — like tags or folders. Each has an icon and color. Some topics (Task, Goal, Food, etc.) show extra fields.</p>
-          <p style={{ marginTop: 12 }}><strong>Views:</strong> Date shows one day at a time. Tasks filters to todo items. All shows everything. Bookmarks shows favorites. Search lets you filter by text and date.</p>
+          <p><strong>Chronicles</strong> is a zero-knowledge encrypted journal — your entries are encrypted on your device before they ever leave it. No one, not even the server, can read your data.</p>
+
+          <p style={{ marginTop: 16 }}><strong>Getting Started</strong></p>
+          <ul style={{ marginTop: 8, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <li>Click <strong>New Entry</strong> in the header or press <strong>Ctrl+N</strong> (Cmd+N) to start writing.</li>
+            <li>Assign a <strong>topic</strong> from the dropdown in the editor to categorize your entry. Topics like Task, Goal, Food, and Medication unlock extra fields.</li>
+            <li>Use <strong>Ctrl+D</strong> (Cmd+D) to delete the selected entry, and <strong>Enter</strong> to save in compact mode.</li>
+          </ul>
+
+          <p style={{ marginTop: 16 }}><strong>Topics</strong></p>
+          <p style={{ marginTop: 4 }}>Topics organize your entries with icons and colors. Manage them from the <strong>Topics</strong> page in the navigation. Some topics are special — selecting Task, Goal, Milestone, Food, Medication, Symptom, Exercise, Event, or Meeting will reveal additional fields for tracking details.</p>
+
+          <p style={{ marginTop: 16 }}><strong>Quick Tab Filters</strong></p>
+          <ul style={{ marginTop: 8, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <li><strong>Date</strong> — browse entries one day at a time. Tap the date tab to toggle the mini calendar.</li>
+            <li><strong>Tasks</strong> — shows only task entries so you can focus on what needs doing.</li>
+            <li><strong>All</strong> — every entry in reverse chronological order.</li>
+            <li><strong>Bookmarks</strong> — entries you've starred for quick reference.</li>
+            <li><strong>Search</strong> — filter by keyword and date range across all entries.</li>
+          </ul>
+
+          <p style={{ marginTop: 16 }}><strong>Planning &amp; Health</strong></p>
+          <p style={{ marginTop: 4 }}>Enable features like Goals, Milestones, Medication Tracking, Food Logging, and more from the <strong>Features</strong> section below. Each feature adds a dedicated view accessible from the navigation bar.</p>
+
+          <p style={{ marginTop: 16 }}><strong>Security</strong></p>
+          <p style={{ marginTop: 4 }}>Your master encryption key never leaves your browser. If you forget your password, use your <strong>recovery key</strong> (shown once at registration) to regain access. You can manage active sessions and change your password from the Security section below.</p>
         </CollapsibleBody>
       )}
 
@@ -620,7 +643,7 @@ export function SettingsView() {
         />
         {showPassword && (
           <PasswordForm>
-            {pwMessage && <div style={{ fontSize: 13, color: pwError ? '#ef4444' : '#22c55e' }}>{pwMessage}</div>}
+            {pwMessage && <div style={{ fontSize: 13, color: pwError ? '#9B4444' : '#5A8A6A' }}>{pwMessage}</div>}
             <FormField label="Current Password">
               <PasswordInput value={currentPw} onChange={e => setCurrentPw(e.target.value)} autoComplete="current-password" />
             </FormField>
@@ -683,7 +706,7 @@ export function SettingsView() {
             </ActionButton>
           }
         />
-        {seedResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: '#22c55e' }}>{seedResult}</div>}
+        {seedResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: '#5A8A6A' }}>{seedResult}</div>}
         <SettingsRow
           title="Seed Test Data"
           description="Create 18 test entries across all topic types with custom fields and linking"
@@ -693,7 +716,7 @@ export function SettingsView() {
             </ActionButton>
           }
         />
-        {seedEntriesResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: seedEntriesResult.startsWith('Failed') ? '#ef4444' : '#22c55e' }}>{seedEntriesResult}</div>}
+        {seedEntriesResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: seedEntriesResult.startsWith('Failed') ? '#9B4444' : '#5A8A6A' }}>{seedEntriesResult}</div>}
         <SettingsRow
           title="Export Entries"
           description="Download all entries as a decrypted CSV file"
@@ -724,7 +747,7 @@ export function SettingsView() {
             </>
           }
         />
-        {importResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: importResult.startsWith('Failed') ? '#ef4444' : '#22c55e' }}>{importResult}</div>}
+        {importResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: importResult.startsWith('Failed') ? '#9B4444' : '#5A8A6A' }}>{importResult}</div>}
       </SettingsCard>
 
       {/* Privacy */}

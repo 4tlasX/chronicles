@@ -88,23 +88,23 @@ export const lightTheme = {
     textInverse: '#ffffff',
 
     border: '#d4cfc5',
-    borderFocus: '#4281a4',
+    borderFocus: '#8B6B4A',
 
-    accent: '#4281a4',
-    accentHover: '#2e6184',
-    accentLight: '#d6e9f4',
+    accent: '#4E6E7E',
+    accentHover: '#3B5E6E',
+    accentLight: 'rgba(78, 110, 126, 0.12)',
 
-    danger: '#ef4444',
-    dangerHover: '#dc2626',
-    success: '#22c55e',
-    warning: '#f59e0b',
-    info: '#3b82f6',
+    danger: '#9B4444',
+    dangerHover: '#7A3B3F',
+    success: '#5A8A6A',
+    warning: '#B8965A',
+    info: '#5C6B8A',
   },
   shadow: {
     sm: '0 1px 2px rgba(0, 0, 0, 0.04)',
     md: '0 2px 8px rgba(0, 0, 0, 0.06)',
     lg: '0 4px 12px rgba(0, 0, 0, 0.08)',
-    focus: '0 0 0 2px #d6e9f4',
+    focus: '0 0 0 2px rgba(139, 107, 74, 0.2)',
   },
 } as const;
 
@@ -119,28 +119,28 @@ export const darkTheme = {
     surfaceOverlayBlur: 'rgba(26, 27, 29, 0.82)',
 
     text: '#b1b1b1',
-    textSecondary: '#938f8f',
-    textMuted: '#938f8f',
+    textSecondary: '#a8a4a4',
+    textMuted: '#a8a4a4',
     textInverse: '#2e2f31',
 
     border: '#2e2f33',
-    borderFocus: '#5a9bbe',
+    borderFocus: '#A67C52',
 
-    accent: '#4281a4',
-    accentHover: '#5a9bbe',
-    accentLight: 'rgba(66, 129, 164, 0.2)',
+    accent: '#6B8BA4',
+    accentHover: '#7B9EB2',
+    accentLight: 'rgba(107, 139, 164, 0.2)',
 
-    danger: '#f87171',
-    dangerHover: '#ef4444',
-    success: '#4ade80',
-    warning: '#fbbf24',
-    info: '#60a5fa',
+    danger: '#C47A7A',
+    dangerHover: '#A45A5A',
+    success: '#7BAA8A',
+    warning: '#D4B47A',
+    info: '#7B9EB2',
   },
   shadow: {
     sm: '0 1px 2px rgba(0, 0, 0, 0.1)',
     md: '0 2px 8px rgba(0, 0, 0, 0.15)',
     lg: '0 4px 12px rgba(0, 0, 0, 0.2)',
-    focus: '0 0 0 2px rgba(66, 129, 164, 0.2)',
+    focus: '0 0 0 2px rgba(166, 124, 82, 0.25)',
   },
 } as const;
 

@@ -13,11 +13,16 @@ const HiddenInput = styled.input`
   opacity: 0;
   width: 0;
   height: 0;
+
+  &:focus-visible + div {
+    outline: 2px solid ${({ theme }) => theme.colors.borderFocus};
+    outline-offset: 2px;
+  }
 `;
 
 const Box = styled.div<{ $checked: boolean }>`
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 3px;
   border: ${({ $checked, theme }) => $checked ? 'none' : `1.5px solid ${theme.colors.border}`};
   background: transparent;

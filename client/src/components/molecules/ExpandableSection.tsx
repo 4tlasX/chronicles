@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
@@ -37,14 +37,15 @@ interface ExpandableSectionProps {
 
 export function ExpandableSection({ label, defaultExpanded = false, children }: ExpandableSectionProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const bodyId = useId();
 
   return (
     <Section>
-      <Header onClick={() => setExpanded(!expanded)}>
+      <Header onClick={() => setExpanded(!expanded)} aria-expanded={expanded} aria-controls={bodyId}>
         <span>{label}</span>
         <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} size="xs" />
       </Header>
-      {expanded && <Body>{children}</Body>}
+      {expanded && <Body id={bodyId}>{children}</Body>}
     </Section>
   );
 }

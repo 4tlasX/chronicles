@@ -5,7 +5,7 @@ const StyledButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 12px;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   color: ${({ theme }) => theme.colors.textSecondary};
   background: transparent;
@@ -16,6 +16,11 @@ const StyledButton = styled.button`
   &:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.4);
     color: ${({ theme }) => theme.colors.text};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.borderFocus};
+    outline-offset: 2px;
   }
 
   &:disabled {

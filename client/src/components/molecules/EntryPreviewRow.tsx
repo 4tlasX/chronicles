@@ -7,7 +7,7 @@ const Row = styled.button`
   align-items: flex-start;
   gap: 12px;
   width: 100%;
-  padding: 10px 20px;
+  padding: 12px 24px;
   text-align: left;
   background: none;
   border: none;
@@ -31,7 +31,8 @@ const Content = styled.div`
 `;
 
 const Preview = styled.div`
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.5;
   color: ${({ theme }) => theme.colors.text};
   white-space: nowrap;
   overflow: hidden;
@@ -41,7 +42,7 @@ const Preview = styled.div`
 const Meta = styled.div`
   font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
-  margin-top: 2px;
+  margin-top: 4px;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;

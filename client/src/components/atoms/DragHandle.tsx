@@ -15,7 +15,7 @@ const Handle = styled.button`
   font-size: 12px;
   touch-action: none;
   flex-shrink: 0;
-  padding: 2px;
+  padding: 8px;
   &:active { cursor: grabbing; }
   &:hover { opacity: 1; color: ${({ theme }) => theme.colors.text}; }
 `;
@@ -24,7 +24,7 @@ interface DragHandleProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
 
 export function DragHandle(props: DragHandleProps) {
   return (
-    <Handle type="button" {...props}>
+    <Handle type="button" aria-label="Drag to reorder" aria-roledescription="sortable" {...props}>
       <FontAwesomeIcon icon={faGripVertical} />
     </Handle>
   );

@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import type { ReactNode } from 'react';
+import { useRef, useCallback, type ReactNode, type KeyboardEvent } from 'react';
 
 const Row = styled.div`
   display: flex;
@@ -10,8 +10,8 @@ const Row = styled.div`
 `;
 
 const TabButton = styled.button<{ $active?: boolean; $color: string }>`
-  flex: 1;
-  padding: 10px;
+  flex: none;
+  padding: 10px 16px;
   font-family: 'Montserrat', sans-serif;
   font-size: 11px;
   font-weight: ${({ $active }) => $active ? 700 : 500};
@@ -30,7 +30,7 @@ const TabButton = styled.button<{ $active?: boolean; $color: string }>`
   @media (max-width: 480px) {
     flex: none;
     padding: 10px 14px;
-    font-size: 10px;
+    font-size: 11px;
     gap: 4px;
   }
   &:hover { color: ${({ theme }) => theme.colors.text}; }
@@ -49,10 +49,36 @@ interface TabBarProps<T extends string> {
 }
 
 export function TabBar<T extends string>({ tabs, active, onChange, accentColor }: TabBarProps<T>) {
+  const tabElRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent, index: number) => {
+    let nextIndex: number | null = null;
+    if (e.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') nextIndex = 0;
+    else if (e.key === 'End') nextIndex = tabs.length - 1;
+
+    if (nextIndex !== null) {
+      e.preventDefault();
+      tabElRefs.current[nextIndex]?.focus();
+      onChange(tabs[nextIndex].value);
+    }
+  }, [tabs, onChange]);
+
   return (
-    <Row>
-      {tabs.map(tab => (
-        <TabButton key={tab.value} $active={active === tab.value} $color={accentColor} onClick={() => onChange(tab.value)}>
+    <Row role="tablist">
+      {tabs.map((tab, i) => (
+        <TabButton
+          key={tab.value}
+          ref={el => { tabElRefs.current[i] = el; }}
+          role="tab"
+          aria-selected={active === tab.value}
+          tabIndex={active === tab.value ? 0 : -1}
+          $active={active === tab.value}
+          $color={accentColor}
+          onClick={() => onChange(tab.value)}
+          onKeyDown={e => handleKeyDown(e, i)}
+        >
           {tab.label}
         </TabButton>
       ))}

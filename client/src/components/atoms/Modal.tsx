@@ -1,5 +1,7 @@
 import styled from 'styled-components';
-import type { ReactNode } from 'react';
+import { useId, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { useFocusTrap } from '../../hooks/useFocusTrap.js';
 
 const Overlay = styled.div`
   position: fixed;
@@ -43,7 +45,9 @@ const Title = styled.h3`
 `;
 
 const CloseButton = styled.button`
-  padding: 4px 8px;
+  padding: 8px 12px;
+  min-width: 32px;
+  min-height: 32px;
   font-size: ${({ theme }) => theme.fontSize.lg}px;
   color: ${({ theme }) => theme.colors.textMuted};
   background: none;
@@ -75,20 +79,33 @@ interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, size = 'md', children, footer }: ModalProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+
+  useFocusTrap(contentRef, open, onClose);
+
   if (!open) return null;
 
-  return (
+  return createPortal(
     <Overlay onClick={onClose}>
-      <Content $size={size} onClick={e => e.stopPropagation()}>
+      <Content
+        ref={contentRef}
+        $size={size}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        onClick={e => e.stopPropagation()}
+      >
         {title && (
           <Header>
-            <Title>{title}</Title>
-            <CloseButton onClick={onClose}>&times;</CloseButton>
+            <Title id={titleId}>{title}</Title>
+            <CloseButton onClick={onClose} aria-label="Close">&times;</CloseButton>
           </Header>
         )}
         <Body>{children}</Body>
         {footer && <Footer>{footer}</Footer>}
       </Content>
-    </Overlay>
+    </Overlay>,
+    document.body,
   );
 }

@@ -31,10 +31,10 @@ const NavButton = styled.button`
   height: 36px;
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  background: rgba(0, 0, 0, 0.05);
+  background: transparent;
   color: ${({ theme }) => theme.colors.text};
   cursor: pointer;
-  &:hover { background: rgba(0, 0, 0, 0.1); }
+  &:hover { color: ${({ theme }) => theme.colors.textSecondary}; }
 `;
 
 const DateLabel = styled.span`
@@ -122,9 +122,9 @@ const DoseRow = styled.div<{ $taken: boolean }>`
 `;
 
 const DoseCheckButton = styled.button<{ $taken: boolean; $color: string }>`
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
+  width: 19px;
+  height: 19px;
+  min-width: 19px;
   border-radius: 50%;
   border: 2px solid ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.border};
   background: ${({ $taken, $color }) => $taken ? $color : 'transparent'};
@@ -135,7 +135,8 @@ const DoseCheckButton = styled.button<{ $taken: boolean; $color: string }>`
   flex-shrink: 0;
   transition: all 0.15s;
   color: white;
-  font-size: 12px;
+  font-size: 10px;
+  line-height: 1;
   padding: 0;
   &:disabled { opacity: 0.5; cursor: wait; }
   &:hover:not(:disabled) { opacity: 0.8; }
@@ -325,7 +326,7 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
       )}
 
       <HelpText>Click the circle to mark a medication as taken for this day.</HelpText>
-      {doseError && <div style={{ padding: '0 20px 8px', fontSize: 13, color: '#ef4444' }}>{doseError}</div>}
+      {doseError && <div style={{ padding: '0 20px 8px', fontSize: 13, color: '#9B4444' }}>{doseError}</div>}
 
       {loadingLogs ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spinner size={30} /></div>
