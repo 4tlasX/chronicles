@@ -6,13 +6,13 @@
   "installCommand": "npm install",
   "framework": "vite",
   "functions": {
-    "api/index.mts": {
+    "api/index.mjs": {
       "maxDuration": 30,
       "includeFiles": "server/**"
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.mts" },
+    { "source": "/api/(.*)", "destination": "/api/index.mjs" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
