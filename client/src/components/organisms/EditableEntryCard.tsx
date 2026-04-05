@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faMinus } from '@fortawesome/free-solid-svg-icons';
@@ -45,7 +45,7 @@ const Card = styled.div<{ $editing?: boolean }>`
   min-width: 0;
 `;
 
-const PreviewRow = styled.button`
+const PreviewRow = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -221,13 +221,15 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
     }
   };
 
+  const prevEditingRef = useRef(false);
   useEffect(() => {
-    if (isEditing) {
+    if (isEditing && !prevEditingRef.current) {
       setEditContent(entry.content);
       setCustomFields((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {});
       setStatus('');
     }
-  }, [isEditing, entry.content, entry.metadata]);
+    prevEditingRef.current = isEditing;
+  }, [isEditing]);
 
   const handleSave = async () => {
     setSaving(true); setStatus('');
@@ -291,7 +293,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
 
   return (
     <Card $editing={isEditing}>
-      <PreviewRow onClick={onSelect}>
+      <PreviewRow role="button" tabIndex={0} onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}>
         {customType === 'task' && !showAsPlain ? (
           <TaskCheckButton
             $state={taskState}

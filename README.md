@@ -1,36 +1,43 @@
 # Chronicles - In Active Design/Development
 
-A journal for those too busy to journal with zero-knowledge encryption. Chronicles is designed as a simple daily log. The core philosophy is to capture the key moments of your day briefly in less than 10-15 minutes, then use topics to organize and find them later.
+A zero-knowledge encrypted journal for those too busy to journal. Capture the key moments of your day, organize with topics, and track health, goals, and more — all encrypted on your device before it ever leaves the browser.
 
 ## Features
 
-- **Encrypted Journal Entries** - Rich text editor with client-side encryption
+- **Zero-Knowledge Encryption** - AES-256-GCM client-side encryption with non-extractable keys
+- **Rich Text Editor** - TipTap-based editor with formatting toolbar
 - **Topic Organization** - Categorize entries with custom topics, icons, and colors
-- **Goals & Milestones** - Track goals with milestone progress
-- **Medical Tracking** - Log medications, symptoms, food (with calorie tracking), and schedules
-- **Calendar View** - Visual overview of entries by date
-- **Entry Sharing** - Share specific entries via secure public links
-- **Bookmarks** - Mark and quickly access important entries
-- **Mobile Responsive** - Works on desktop and mobile devices
-- **Customizable colors and background** - Choose from a variety of colors and background images
+- **Quick Tab Filters** - Date, Tasks, All, Bookmarks, and Search views
+- **Goals & Milestones** - Track goals with milestone progress and task linking
+- **Health Tracking** - Medications, symptoms, food, exercise, and allergies
+- **Medication Schedule** - Daily dose tracking with time-based scheduling
+- **Health Reporting** - Correlation analysis, severity trends, and exercise impact charts with date range filtering
+- **Calendar View** - Visual month overview with day detail panel
+- **Entry Sharing** - Share entries via encrypted public links
+- **Printable Views** - Print medication lists, symptoms, and allergy records
+- **PWA Support** - Installable as a standalone app with offline shell caching
+- **Keyboard Shortcuts** - Ctrl+N (new entry), Ctrl+D (delete), Enter to save
+- **Customizable Theme** - 40+ muted vintage header colors, 28 background images, light/dark mode
+- **Mobile Responsive** - Collapsible navigation, touch-friendly tap targets
+- **Accessible** - ARIA roles, focus management, keyboard navigation, reduced motion support
 
 ## Privacy
 
 - All entry content is encrypted in the browser before transmission
 - Recovery key system allows password reset without compromising zero-knowledge design
 - Schema-per-user database isolation (not row-level security)
-- Session Management - Revoke sessions at any time if you see an unfamiliar device
+- Session management — view and revoke active sessions from any device
 - Non-extractable CryptoKeys — master key cannot be exported from the browser's crypto subsystem
 - Split-token sessions — database leaks cannot reconstruct valid session tokens
 
 ## Screenshots
-<img width="1430" height="719" alt="Screenshot 2026-04-04 at 7 35 22 PM" src="https://github.com/user-attachments/assets/06ce36c5-f24f-450b-9762-365c920d5908" />
-<img width="1432" height="725" alt="Screenshot 2026-04-04 at 7 36 07 PM" src="https://github.com/user-attachments/assets/9d1c516a-edcd-47ef-953d-57798b4b86d5" />
-<img width="1430" height="723" alt="Screenshot 2026-04-04 at 7 36 33 PM" src="https://github.com/user-attachments/assets/0690d1b6-4d2c-40f4-b0d2-cb20fc1e0632" />
-<img width="1428" height="729" alt="Screenshot 2026-04-04 at 7 36 59 PM" src="https://github.com/user-attachments/assets/0f629e6f-b325-4fce-b156-2e3f52456824" />
-<img width="1432" height="726" alt="Screenshot 2026-04-04 at 7 48 08 PM" src="https://github.com/user-attachments/assets/6169bf21-0d3a-4e97-bf31-78044b3033f5" />
-<img width="1427" height="716" alt="Screenshot 2026-04-04 at 7 37 37 PM" src="https://github.com/user-attachments/assets/2700db50-5ec3-457c-9648-e3c76d012ba9" />
-<img width="1441" height="725" alt="Screenshot 2026-04-04 at 7 38 50 PM" src="https://github.com/user-attachments/assets/a8ff425d-37cf-4b3b-a5b1-f75a5700b97a" />
+<img width="1430" height="719" alt="Screenshot 2026-04-04 at 7 35 22 PM" src="https://github.com/user-attachments/assets/06ce36c5-f24f-450b-9762-365c920d5908" />
+<img width="1432" height="725" alt="Screenshot 2026-04-04 at 7 36 07 PM" src="https://github.com/user-attachments/assets/9d1c516a-edcd-47ef-953d-57798b4b86d5" />
+<img width="1430" height="723" alt="Screenshot 2026-04-04 at 7 36 33 PM" src="https://github.com/user-attachments/assets/0690d1b6-4d2c-40f4-b0d2-cb20fc1e0632" />
+<img width="1428" height="729" alt="Screenshot 2026-04-04 at 7 36 59 PM" src="https://github.com/user-attachments/assets/0f629e6f-b325-4fce-b156-2e3f52456824" />
+<img width="1432" height="726" alt="Screenshot 2026-04-04 at 7 48 08 PM" src="https://github.com/user-attachments/assets/6169bf21-0d3a-4e97-bf31-78044b3033f5" />
+<img width="1427" height="716" alt="Screenshot 2026-04-04 at 7 37 37 PM" src="https://github.com/user-attachments/assets/2700db50-5ec3-457c-9648-e3c76d012ba9" />
+<img width="1441" height="725" alt="Screenshot 2026-04-04 at 7 38 50 PM" src="https://github.com/user-attachments/assets/a8ff425d-37cf-4b3b-a5b1-f75a5700b97a" />
 
 
 ## Architecture
@@ -40,86 +47,79 @@ This is a complete rebuild combining the best of the original Chronicles UI with
 - **Client**: React 19 SPA (Vite) — no Next.js, ready for React Native
 - **Server**: Express 5 API with TypeScript
 - **Shared**: Crypto, types, validation, and theme tokens shared across platforms
-- **Components**: Atomic Design (atoms → molecules → organisms → templates → views)
-- **Styling**: styled-components (CSS-in-JS) — works on both web and React Native
+- **Components**: Atomic Design (atoms -> molecules -> organisms -> templates -> views)
+- **Styling**: styled-components (CSS-in-JS) with muted vintage design tokens
 
 ```
 chronicles-rebuild/
-├── client/          # React SPA (Vite + styled-components)
+├── client/          # React SPA (Vite + styled-components + PWA)
 ├── server/          # Express API (Prisma + PostgreSQL)
 ├── shared/          # Shared code (crypto, types, theme)
-└── docs/            # BLUEPRINT.md — full architectural plan
+└── docs/            # BLUEPRINT.md, ACCESSIBILITY_UX_PLAN.md
 ```
 
 ## How It Works
 
-Chronicles is designed as a simple daily log. The core philosophy is to capture the key moments of your day briefly in less than 10-15 minutes, then use topics to organize and find them later.
-
-**Important**: You can only add entries for today or edit past entries. You cannot create entries for future dates. This keeps Chronicles focused as a record of what happened, not a planning tool. However, you can use it to track goals, milestones, events, and ideas.
+Chronicles is a daily journal. Capture moments, organize with topics, and track what matters to you.
 
 ### Topics
 
-Topics are how you categorize entries. Think of them as tags or folders.
+Topics categorize your entries — like tags or folders. Each has an icon and color.
 
-**Default Topics**: Chronicles comes with several built-in topics that have special functionality:
-- **Task** - Todo items with completion tracking
-- **Goal** - Long-term objectives with milestone support
-- **Milestone** - Checkpoints within goals
-- **Medication** - Medication schedules and tracking
-- **Food** - Meal logging with ingredients and calorie tracking
-- **Symptom** - Health symptom tracking with severity
-- **Exercise** - Daily logs of exercise types and duration
-- **Event** - Calendar events with date/time/location
-- **Meeting** - Meetings with attendees and agenda
-- **Music** - Track music you're listening to
-- **Books** - Log books you're reading
-- **TV/Movies** - Track shows and films
-- **Research** - Save research notes and findings
-- **Idea** - Capture ideas for later
-- **Quote** - Save inspiring quotes
+**Default Topics** with special fields:
+- **Task** - Todo items with completion tracking and auto-migration
+- **Goal** - Objectives with milestone progress tracking
+- **Milestone** - Checkpoints within goals, linkable to tasks
+- **Medication** - Schedules with dosage, frequency, and dose logging
+- **Food** - Meal logging with ingredients, calories, and meal type
+- **Symptom** - Severity tracking (1-10 scale) with duration
+- **Exercise** - Type, duration, intensity, and distance tracking
+- **Allergy** - Allergen, severity, and reaction tracking
+- **Event** - Date/time, location, and contact details
+- **Meeting** - Attendees, topic, location, and scheduling
+- **Music / Books / TV/Movies** - Entertainment tracking
+- **Research / Idea / Quote** - Inspiration collection
 
-You can create your own topics for anything else (Work, Personal, Ideas, etc.).
+You can create your own topics for anything else.
 
-### Special Entry Types
+### Navigation
 
-When you select certain topics, additional settings appear:
+- **Journal** - Main entry view with quick tab filters (Date, Tasks, All, Bookmarks, Search)
+- **Topics** - Manage and browse entries by topic
+- **Calendar** - Month view with clickable days for detail
+- **Planning** - Goals, milestones, tasks, and todos (dropdown selector)
+- **Health** - Medications, schedule, food, exercise, symptoms, allergies, and reporting
+- **Quick Links** - Entertainment and inspiration collections
 
-#### Tasks
-- **Completed** - Check when the task is done
-- **Auto-migrate if incomplete** - Uncompleted tasks automatically move to the current day at midnight
-- **Link to Milestones** - Connect tasks to milestones to track progress toward goals
+### Keyboard Shortcuts
 
-#### Goals
-- **Type** - Short-term or Long-term
-- **Status** - Active, Completed, or Archived
-- **Target Date** - Optional deadline
-- **Progress** - Automatically calculated from linked milestones
+| Shortcut | Action |
+|----------|--------|
+| Ctrl/Cmd + N | New entry |
+| Ctrl/Cmd + D | Delete selected entry |
+| Enter | Save entry (compact mode) |
+| Shift + N | New entry (when not typing) |
 
-#### Medications
-- **Dosage** - Amount per dose (e.g., "500mg")
-- **Frequency** - Once daily, twice daily, three times daily, as needed, or custom
-- **Schedule Times** - Specific times for each dose
-- **Active** - Toggle when starting/stopping a medication
+### Health Reporting
 
-#### Food
-- **Meal Type** - Breakfast, lunch, dinner, or snack
-- **Time Consumed** - When you ate
-- **Ingredients** - Comma-separated list (used for correlation analysis with symptoms)
-- **Calories** - Estimated calorie count for the meal
+Analyze health data with correlation analysis:
+- **Symptom frequency** and **severity trends** over time
+- **Food-symptom correlations** — identify trigger ingredients
+- **Exercise impact** on symptom patterns
+- **Calorie summaries** by meal type
+- **Date range filtering** — Today, Week, Month, Year, or custom date range
 
-#### Symptoms
-- **Severity** - Scale of 1-10 (mild to severe)
-- **Time Occurred** - When the symptom started
-- **Duration** - How long it lasted (in minutes)
+### Printable Views
+
+Medication lists, symptom logs, and allergy records can be printed directly from the browser for sharing with healthcare providers.
 
 ### Settings
 
-- **Sessions** - View and revoke active sessions on other devices
-- **Change Password** - Update your password (master key is re-wrapped, data is not re-encrypted)
-- **Feature Toggles** - Enable/disable features like the medical tracker
-- **Theme Customization**:
-  - **Header Color** - Choose from 18 colors (Dark, Navy, Teal, Coral, etc.) or transparent
-  - **Background Image** - Select from 28 curated images from Unsplash artists
+- **Sessions** - View and revoke active sessions
+- **Password** - Change password (master key re-wrapped, data not re-encrypted)
+- **Features** - Enable/disable health tracking, planning, entertainment, and more
+- **Theme** - 40+ header colors, 28 background images, light/dark mode
+- **Data** - Seed test data, export/import entries
 
 ## Getting Started
 
@@ -160,12 +160,10 @@ When you select certain topics, additional settings appear:
 
 **Password requirements:**
 - Minimum 12 characters
-- At least one uppercase letter
-- At least one lowercase letter
-- At least one number
+- At least one uppercase letter, lowercase letter, and number
 
 **Recovery Key:**
-At registration, you'll receive a recovery key (formatted as hex with dashes). This key is shown only once — save it securely. If you forget your password, this key is the only way to recover your account.
+At registration, you'll receive a recovery key (formatted as hex with dashes). Save it securely — it's the only way to recover your account if you forget your password.
 
 ## Commands
 
@@ -185,8 +183,10 @@ npm run test:coverage    # Run tests with coverage
 - **Database**: PostgreSQL (schema-per-user isolation)
 - **Encryption**: Web Crypto API (AES-256-GCM, PBKDF2-SHA256 600k iterations)
 - **Auth**: Split-token sessions (selector + SHA-256 verifier hash)
+- **PWA**: vite-plugin-pwa with Workbox (shell caching, no encrypted data cached)
+- **Accessibility**: ARIA roles, focus trapping, keyboard navigation, prefers-reduced-motion
 - **Testing**: Vitest, React Testing Library, supertest
 
 ## License
 
-© 2025 Claudette Raynor | All Rights Reserved. You may not use this for any commercial purpose. You can download this application for personal use only, but you may not modify it.
+All Rights Reserved. You may not use this for any commercial purpose. You can download this application for personal use only, but you may not modify it.
