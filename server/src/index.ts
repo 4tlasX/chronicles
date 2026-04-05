@@ -1,4 +1,6 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { securityHeaders } from './middleware/security.js';
@@ -21,10 +23,7 @@ import { initSharesTable } from './db/shareQueries.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Require CLIENT_URL in production (unless on Vercel where it's same-origin)
-if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_URL && !process.env.VERCEL) {
-  throw new Error('CLIENT_URL environment variable is required in production');
-}
+// CLIENT_URL is optional when serving client statically from the same server
 
 // Validate CLIENT_URL format
 if (process.env.CLIENT_URL) {
@@ -46,7 +45,7 @@ if (process.env.CLIENT_URL) {
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173'),
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));
@@ -77,23 +76,28 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   res.status(500).json({ error: 'Internal server error' });
 });
 
-if (process.env.VERCEL) {
-  // Serverless: init shares table on cold start (non-blocking)
-  initSharesTable().catch(err => console.error('Failed to init shares table:', err));
-} else {
-  // Standalone server: init + periodic cleanup + listen
-  initSharesTable().catch(err => console.error('Failed to init shares table:', err));
-  cleanupSessions().then(count => {
-    if (count > 0) console.log(`Cleaned up ${count} expired/revoked sessions`);
-  }).catch(() => {});
+// Serve client static files in production
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDist = path.resolve(__dirname, '../../client/dist');
+app.use(express.static(clientDist));
 
-  setInterval(() => {
-    cleanupSessions().catch(() => {});
-  }, 6 * 60 * 60 * 1000);
+// SPA fallback — serve index.html for non-API routes
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
 
-  app.listen(PORT, () => {
-    console.log(`Chronicles API running on port ${PORT}`);
-  });
-}
+// Init + periodic cleanup + listen
+initSharesTable().catch(err => console.error('Failed to init shares table:', err));
+cleanupSessions().then(count => {
+  if (count > 0) console.log(`Cleaned up ${count} expired/revoked sessions`);
+}).catch(() => {});
+
+setInterval(() => {
+  cleanupSessions().catch(() => {});
+}, 6 * 60 * 60 * 1000);
+
+app.listen(PORT, () => {
+  console.log(`Chronicles running on port ${PORT}`);
+});
 
 export default app;
