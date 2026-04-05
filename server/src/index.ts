@@ -77,15 +77,16 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Init shares table + cleanup expired sessions on startup
-initSharesTable().catch(err => console.error('Failed to init shares table:', err));
-cleanupSessions().then(count => {
-  if (count > 0) console.log(`Cleaned up ${count} expired/revoked sessions`);
-}).catch(() => {});
+if (process.env.VERCEL) {
+  // Serverless: init shares table on cold start (non-blocking)
+  initSharesTable().catch(err => console.error('Failed to init shares table:', err));
+} else {
+  // Standalone server: init + periodic cleanup + listen
+  initSharesTable().catch(err => console.error('Failed to init shares table:', err));
+  cleanupSessions().then(count => {
+    if (count > 0) console.log(`Cleaned up ${count} expired/revoked sessions`);
+  }).catch(() => {});
 
-// Only listen when running as a standalone server (not Vercel serverless)
-if (!process.env.VERCEL) {
-  // Run session cleanup every 6 hours
   setInterval(() => {
     cleanupSessions().catch(() => {});
   }, 6 * 60 * 60 * 1000);
