@@ -1,4 +1,4 @@
-export type PeriodType = 'week' | 'month' | 'year';
+export type PeriodType = 'today' | 'week' | 'month' | 'year' | 'custom';
 
 export type DateFilter = 'all' | 'today' | 'week' | 'month';
 

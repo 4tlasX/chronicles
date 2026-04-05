@@ -23,10 +23,9 @@ const Empty = styled.div`
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
-const Row = styled.div<{ $bg: string }>`
+const Row = styled.div`
   padding: 10px 12px;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  background: ${({ $bg }) => $bg};
   & + & { margin-top: 8px; }
 `;
 
@@ -87,12 +86,6 @@ function getCorrelationColor(c: number): string {
   return '#B8965A';
 }
 
-function getCorrelationBg(c: number): string {
-  if (c >= 75) return '#fef2f2';
-  if (c >= 50) return '#fff7ed';
-  return '#fefce8';
-}
-
 interface CorrelationChartProps {
   data: CorrelationResult[];
   title: string;
@@ -112,7 +105,7 @@ export function CorrelationChart({ data, title }: CorrelationChartProps) {
     <Card>
       <Title>{title}</Title>
       {data.slice(0, 10).map((item, i) => (
-        <Row key={i} $bg={getCorrelationBg(item.correlation)}>
+        <Row key={i}>
           <RowHeader>
             <div>
               <TriggerLabel>{item.trigger.name}</TriggerLabel>

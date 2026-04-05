@@ -3,6 +3,8 @@ import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { ViewHeader } from '../components/molecules/ViewHeader.js';
+import styled from 'styled-components';
+import { DateInput } from '../components/atoms/DateInput.js';
 import { FilterTabs } from '../components/molecules/FilterTabs.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { HealthReport } from '../components/organisms/HealthReport.js';
@@ -23,19 +25,32 @@ import type {
 /* ── Period filter ── */
 
 const PERIOD_OPTIONS = [
+  { value: 'today' as const, label: 'Today' },
   { value: 'week' as const, label: 'Week' },
   { value: 'month' as const, label: 'Month' },
   { value: 'year' as const, label: 'Year' },
+  { value: 'custom' as const, label: 'Custom' },
 ];
+
+const DateRangeRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  @media (max-width: 480px) { padding: 10px 12px; gap: 8px; }
+`;
 
 /* ── Helpers ── */
 
 function getDateRange(period: PeriodType): { startDate: string; endDate: string } {
   const end = new Date();
   const start = new Date();
-  if (period === 'week') start.setDate(end.getDate() - 7);
+  if (period === 'today') { /* same day */ }
+  else if (period === 'week') start.setDate(end.getDate() - 7);
   else if (period === 'month') start.setMonth(end.getMonth() - 1);
-  else start.setFullYear(end.getFullYear() - 1);
+  else if (period === 'year') start.setFullYear(end.getFullYear() - 1);
   return { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] };
 }
 
@@ -49,6 +64,8 @@ export function HealthReportingView() {
   const navigate = useNavigate();
 
   const [period, setPeriod] = useState<PeriodType>('month');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
   const [medLogs, setMedLogs] = useState<DecryptedMedicationLog[]>([]);
 
   // Resolve topic IDs
@@ -58,7 +75,11 @@ export function HealthReportingView() {
     return map;
   }, [allTopics]);
 
-  const { startDate, endDate } = useMemo(() => getDateRange(period), [period]);
+  const { startDate, endDate } = useMemo(() => {
+    if (period === 'custom' && customFrom && customTo) return { startDate: customFrom, endDate: customTo };
+    if (period === 'custom') return getDateRange('month'); // fallback until both dates set
+    return getDateRange(period);
+  }, [period, customFrom, customTo]);
 
   // Filter entries by topic and date range
   const filterByTopic = useCallback((topicName: string) => {
@@ -159,6 +180,14 @@ export function HealthReportingView() {
       <div style={{ padding: '0 20px 8px' }}>
         <FilterTabs options={PERIOD_OPTIONS} active={period} onChange={setPeriod} />
       </div>
+      {period === 'custom' && (
+        <DateRangeRow>
+          <span>From</span>
+          <DateInput value={customFrom} onChange={e => setCustomFrom(e.target.value)} />
+          <span>To</span>
+          <DateInput value={customTo} onChange={e => setCustomTo(e.target.value)} />
+        </DateRangeRow>
+      )}
 
       <HealthReport
         symptoms={symptoms}
