@@ -492,7 +492,7 @@ export function Header() {
 
           {(ff.entertainmentEnabled || ff.inspirationEnabled) && (
             <NavDropdown
-              label={<FontAwesomeIcon icon={faNoteSticky} size="lg" style={{ opacity: 0.5 }} />}
+              label={<FontAwesomeIcon icon={faNoteSticky as unknown as import('@fortawesome/fontawesome-svg-core').IconDefinition} size="lg" style={{ opacity: 0.5 }} />}
               activePath={location.pathname}
               bgColor={bgColor}
               light={light}
