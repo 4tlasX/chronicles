@@ -23,9 +23,6 @@ export const SectionTitle = styled.h2`
   letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.text};
   margin: 32px 0 12px;
-  padding-top: 16px;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-
 `;
 
 export const SectionDescription = styled.p`
@@ -42,8 +39,6 @@ export const DangerTitle = styled.h2`
   letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.textMuted};
   margin: 32px 0 12px;
-  padding-top: 16px;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 export const CollapsibleHeader = styled.button`
