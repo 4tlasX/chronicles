@@ -46,12 +46,12 @@ export const GlobalStyle = createGlobalStyle`
     outline-offset: 2px;
   }
 
-  /* Bottom-border-only inputs get a border color change instead of outline */
+  /* Bordered inputs get a full border color change instead of outline */
   input:focus-visible,
   select:focus-visible,
   textarea:focus-visible {
     outline: none;
-    border-bottom-color: var(--focus-color, #4E6E7E);
+    border-color: var(--focus-color, #4E6E7E);
   }
 
   /* Reduced motion for users who prefer it */

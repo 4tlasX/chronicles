@@ -7,18 +7,17 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const StyledInput = styled.input<{ $error?: boolean }>`
   width: 100%;
-  padding: 8px 0;
+  padding: 8px 12px;
   font-size: 14px;
-  border: none;
-  border-bottom: 1px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.border};
-  border-radius: 0;
+  border: 1px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
   outline: none;
   transition: border-color 0.15s;
 
   &:focus {
-    border-bottom-color: var(--focus-color, ${({ theme }) => theme.colors.text});
+    border-color: var(--focus-color, ${({ theme }) => theme.colors.text});
   }
 
   &::placeholder {

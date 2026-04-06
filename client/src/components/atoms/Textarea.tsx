@@ -8,11 +8,10 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 const StyledTextarea = styled.textarea<{ $error?: boolean }>`
   width: 100%;
   min-height: 80px;
-  padding: 8px 0;
+  padding: 8px 12px;
   font-size: 14px;
-  border: none;
-  border-bottom: 1px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.border};
-  border-radius: 0;
+  border: 1px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
   resize: vertical;
@@ -21,7 +20,7 @@ const StyledTextarea = styled.textarea<{ $error?: boolean }>`
   font-family: inherit;
 
   &:focus {
-    border-bottom-color: ${({ theme }) => theme.colors.text};
+    border-color: var(--focus-color, ${({ theme }) => theme.colors.text});
   }
 
   &::placeholder {
