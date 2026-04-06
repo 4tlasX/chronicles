@@ -35,6 +35,10 @@ interface UIState {
   showMobileEditor: boolean;
   setShowMobileEditor: (show: boolean) => void;
 
+  // Drawing / Apple Pencil
+  pencilOnly: boolean;
+  setPencilOnly: (v: boolean) => void;
+
   // Theme (runtime overrides from settings)
   themeMode: 'light' | 'dark';
   headerColor: string;
@@ -75,6 +79,9 @@ export const useUIStore = create<UIState>((set) => ({
 
   showMobileEditor: false,
   setShowMobileEditor: (show) => set({ showMobileEditor: show }),
+
+  pencilOnly: true,
+  setPencilOnly: (v) => set({ pencilOnly: v }),
 
   themeMode: 'light',
   headerColor: '#4E6E7E',

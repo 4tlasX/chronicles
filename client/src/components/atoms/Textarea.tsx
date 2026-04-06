@@ -17,6 +17,9 @@ const StyledTextarea = styled.textarea<{ $error?: boolean }>`
   color: ${({ theme }) => theme.colors.text};
   resize: vertical;
   outline: none;
+  touch-action: auto;
+  user-select: text;
+  -webkit-user-select: text;
   transition: border-color 0.15s;
   font-family: inherit;
 

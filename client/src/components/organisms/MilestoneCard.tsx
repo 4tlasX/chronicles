@@ -168,30 +168,28 @@ const AddTaskRow = styled.form`
 
 const LinkSelect = styled.select`
   flex: 1;
-  padding: 4px 0;
+  padding: 6px 10px;
   font-size: 14px;
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
   outline: none;
   appearance: none;
   cursor: pointer;
-  &:focus { border-bottom-color: ${({ theme }) => theme.colors.text}; }
+  &:focus { border-color: ${({ theme }) => theme.colors.text}; }
 `;
 
 const AddTaskInput = styled.input`
   flex: 1;
-  padding: 4px 0;
+  padding: 6px 10px;
   font-size: 14px;
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
   outline: none;
-  &:focus { border-bottom-color: ${({ theme }) => theme.colors.text}; }
+  &:focus { border-color: ${({ theme }) => theme.colors.text}; }
   &::placeholder { color: ${({ theme }) => theme.colors.textMuted}; }
 `;
 

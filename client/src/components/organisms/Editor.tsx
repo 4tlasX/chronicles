@@ -6,7 +6,9 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import styled from 'styled-components';
 import { useState, useEffect, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenNib } from '@fortawesome/free-solid-svg-icons';
+import { faPenNib, faPencil } from '@fortawesome/free-solid-svg-icons';
+import { DrawingNode } from '../tiptap/DrawingNode.js';
+import { DrawingCanvas } from '../atoms/DrawingCanvas.js';
 
 const EditorWrapper = styled.div`
   flex: 1;
@@ -24,6 +26,9 @@ const EditorWrapper = styled.div`
     font-size: 16px;
     line-height: 1.85;
     color: ${({ theme }) => theme.colors.text};
+    touch-action: auto;
+    user-select: text;
+    -webkit-user-select: text;
 
     p.is-editor-empty:first-child::before {
       content: attr(data-placeholder);
@@ -152,6 +157,7 @@ interface EditorProps {
 
 export function Editor({ content, onChange, readOnly = false, placeholder = 'Start writing...', charLimit, onEnterSave, toolbarOpen: externalToolbarOpen, onToolbarToggle, hideToolbarToggle }: EditorProps) {
   const [internalToolbarOpen, setInternalToolbarOpen] = useState(false);
+  const [drawingOpen, setDrawingOpen] = useState(false);
   const toolbarOpen = externalToolbarOpen ?? internalToolbarOpen;
   const setToolbarOpen = onToolbarToggle ?? setInternalToolbarOpen;
   // Store charLimit in a ref-like closure so the plugin always sees the latest value
@@ -193,6 +199,7 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
       Placeholder.configure({ placeholder }),
       charLimitExtension,
       enterSaveExtension,
+      DrawingNode,
     ],
     content,
     editable: !readOnly,
@@ -210,7 +217,22 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
 
   if (!editor) return null;
 
+  const handleDrawingSave = (svg: string) => {
+    setDrawingOpen(false);
+    editor?.chain().focus().insertContent({
+      type: 'drawing',
+      attrs: { svgContent: svg },
+    }).run();
+  };
+
   return (
+    <>
+    {drawingOpen && (
+      <DrawingCanvas
+        onSave={handleDrawingSave}
+        onCancel={() => setDrawingOpen(false)}
+      />
+    )}
     <EditorWrapper>
       {!readOnly && (toolbarOpen || !hideToolbarToggle) && (
         <ToolbarRow $collapsed={!toolbarOpen}>
@@ -281,6 +303,14 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
                 onClick={() => editor.chain().focus().redo().run()}
                 disabled={!editor.can().redo()}
               >↪</ToolbarButton>
+              <ToolbarDivider />
+              <ToolbarButton
+                aria-label="Insert drawing"
+                onClick={() => setDrawingOpen(true)}
+                title="Insert drawing (Apple Pencil)"
+              >
+                <FontAwesomeIcon icon={faPencil} />
+              </ToolbarButton>
             </Toolbar>
           )}
           {!hideToolbarToggle && <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)} aria-label="Toggle formatting toolbar" aria-expanded={toolbarOpen}>
@@ -290,5 +320,6 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
       )}
       <EditorContent editor={editor} />
     </EditorWrapper>
+    </>
   );
 }
