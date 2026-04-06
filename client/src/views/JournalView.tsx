@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { getTopicIcon } from '../utils/topicIcons.js';
 import { AppTemplate } from '../components/templates/AppTemplate.js';
 import { JournalTemplate, SidePanel, EditorPanel } from '../components/templates/JournalTemplate.js';
@@ -207,9 +207,19 @@ export function JournalView() {
     setShowMobileEditor(false);
   };
 
+  // Keep a fresh ref to handleSave so the global keydown listener never captures a stale version
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
+
   // Global keyboard shortcuts — read store directly to avoid stale refs
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S or Cmd+S → save current entry
+      if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleSaveRef.current();
+        return;
+      }
       // Ctrl+N or Cmd+N → new entry
       if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();

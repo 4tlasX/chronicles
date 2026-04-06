@@ -175,7 +175,7 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
       name: 'enterSave',
       addKeyboardShortcuts() {
         return {
-          Enter: () => {
+          'Mod-s': () => {
             if (saveRef.current) {
               saveRef.current();
               return true;
