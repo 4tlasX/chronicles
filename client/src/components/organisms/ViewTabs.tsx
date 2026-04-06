@@ -51,7 +51,7 @@ const TabButton = styled.button<{ $active?: boolean }>`
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
-  font-weight: ${({ theme, $active }) => $active ? theme.fontWeight.medium : theme.fontWeight.normal};
+  font-weight: ${({ theme, $active }) => $active ? theme.fontWeight.semibold : theme.fontWeight.medium};
   color: ${({ theme }) => theme.colors.text};
   background: transparent;
   border: none;

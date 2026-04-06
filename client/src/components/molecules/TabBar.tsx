@@ -14,10 +14,10 @@ const TabButton = styled.button<{ $active?: boolean; $color: string }>`
   padding: 10px 16px;
   font-family: 'Montserrat', sans-serif;
   font-size: 11px;
-  font-weight: ${({ $active }) => $active ? 700 : 500};
+  font-weight: ${({ $active }) => $active ? 700 : 600};
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textMuted};
+  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textSecondary};
   background: none;
   border: none;
   border-bottom: none;

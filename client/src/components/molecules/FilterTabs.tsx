@@ -17,11 +17,11 @@ const Btn = styled.button<{ $active?: boolean }>`
   padding: 6px 14px;
   font-family: 'Montserrat', sans-serif;
   font-size: 11px;
-  font-weight: ${({ $active }) => $active ? 700 : 500};
+  font-weight: ${({ $active }) => $active ? 700 : 600};
   font-style: normal;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textMuted};
+  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textSecondary};
   background: none;
   border: none;
   cursor: pointer;

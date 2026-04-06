@@ -10,7 +10,8 @@ const StyledTextarea = styled.textarea<{ $error?: boolean }>`
   min-height: 80px;
   padding: 8px 12px;
   font-size: 14px;
-  border: 1px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.border};
+  -webkit-appearance: none;
+  border: 1.5px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.textMuted};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
   color: ${({ theme }) => theme.colors.text};

@@ -12,13 +12,13 @@ const variantStyles = {
   primary: css`
     background: transparent;
     color: ${({ theme }) => theme.colors.text};
-    border: 1px solid ${({ theme }) => theme.colors.border};
+    border: 1px solid ${({ theme }) => theme.colors.textMuted};
     &:hover:not(:disabled) { background: rgba(0,0,0,0.03); }
   `,
   secondary: css`
     background: transparent;
     color: ${({ theme }) => theme.colors.text};
-    border: 1px solid ${({ theme }) => theme.colors.border};
+    border: 1px solid ${({ theme }) => theme.colors.textMuted};
     &:hover:not(:disabled) { background: rgba(0,0,0,0.03); }
   `,
   danger: css`
