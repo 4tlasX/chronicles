@@ -326,7 +326,7 @@ router.post('/change-password', strictLimiter, authMiddleware, async (req, res) 
 // =============================================================================
 // POST /api/auth/change-email — Change email address
 // =============================================================================
-router.post('/change-email', async (req, res) => {
+router.post('/change-email', authMiddleware, async (req, res) => {
   try {
     const { newEmail } = req.body;
     if (!newEmail) {
@@ -335,7 +335,8 @@ router.post('/change-email', async (req, res) => {
     }
 
     const normalizedEmail = newEmail.toLowerCase().trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    const emailParsed = emailSchema.safeParse(normalizedEmail);
+    if (!emailParsed.success) {
       res.status(400).json({ error: 'Invalid email format' });
       return;
     }

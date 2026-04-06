@@ -57,23 +57,21 @@ router.post('/revoke-all', async (req, res) => {
 });
 
 // POST /api/sessions/:id/revoke — Revoke a specific session
+// Ownership check and revocation are atomic via updateMany WHERE accountId — eliminates TOCTOU.
 router.post('/:id/revoke', async (req, res) => {
   try {
     const sessionId = parseId(req.params.id);
     if (Number.isNaN(sessionId)) { res.status(400).json({ error: 'Invalid session ID' }); return; }
-    const session = await prisma.session.findFirst({
-      where: { id: sessionId, accountId: req.auth!.accountId },
+
+    const result = await prisma.session.updateMany({
+      where: { id: sessionId, accountId: req.auth!.accountId, revokedAt: null },
+      data: { revokedAt: new Date(), revokedReason: 'user_logout' },
     });
 
-    if (!session) {
+    if (result.count === 0) {
       res.status(404).json({ error: 'Session not found' });
       return;
     }
-
-    await prisma.session.update({
-      where: { id: sessionId },
-      data: { revokedAt: new Date(), revokedReason: 'user_logout' },
-    });
 
     res.json({ success: true });
   } catch (err) {

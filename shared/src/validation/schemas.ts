@@ -83,7 +83,7 @@ export const updatePostSchema = z.object({
   metadata: metadataSchema,
   contentEncrypted: z.string().optional(),
   contentIv: z.string().optional(),
-  metadataEncrypted: z.string().optional(),
+  metadataEncrypted: z.string().max(20000, 'Metadata too large').optional(),
   metadataIv: z.string().optional(),
   taxonomyIds: z.array(z.number()).optional(),
 });
