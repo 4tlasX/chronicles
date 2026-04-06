@@ -5,7 +5,7 @@ A zero-knowledge encrypted journal for those too busy to journal. Capture the ke
 ## Features
 
 - **Zero-Knowledge Encryption** - AES-256-GCM client-side encryption with non-extractable keys
-- **Rich Text Editor** - TipTap-based editor with formatting toolbar
+- **Rich Text Editor** - TipTap-based editor with formatting toolbar and inline drawing support
 - **Topic Organization** - Categorize entries with custom topics, icons, and colors
 - **Quick Tab Filters** - Date, Tasks, All, Bookmarks, and Search views
 - **Goals & Milestones** - Track goals with milestone progress and task linking
@@ -18,6 +18,7 @@ A zero-knowledge encrypted journal for those too busy to journal. Capture the ke
 - **PWA Support** - Installable as a standalone app with offline shell caching
 - **Keyboard Shortcuts** - Ctrl+N (new entry), Ctrl+D (delete), Enter to save
 - **Customizable Theme** - 40+ muted vintage header colors, 28 background images, light/dark mode
+- **Apple Pencil Support** - Scribble handwriting-to-text in all fields; freehand drawing canvas with pressure sensitivity, palm rejection, and undo — drawings saved inline as encrypted SVG
 - **Mobile Responsive** - Collapsible navigation, touch-friendly tap targets
 - **Accessible** - ARIA roles, focus management, keyboard navigation, reduced motion support
 
@@ -178,7 +179,7 @@ npm run test:coverage    # Run tests with coverage
 
 ## Tech Stack
 
-- **Frontend**: React 19, Vite, react-router-dom, styled-components, Zustand, TipTap
+- **Frontend**: React 19, Vite, react-router-dom, styled-components, Zustand, TipTap, perfect-freehand
 - **Backend**: Express 5, TypeScript, Prisma
 - **Database**: PostgreSQL (schema-per-user isolation)
 - **Encryption**: Web Crypto API (AES-256-GCM, PBKDF2-SHA256 600k iterations)

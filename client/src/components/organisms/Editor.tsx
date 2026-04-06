@@ -306,11 +306,9 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
               <ToolbarDivider />
               <ToolbarButton
                 aria-label="Insert drawing"
-                onClick={() => setDrawingOpen(true)}
                 title="Insert drawing (Apple Pencil)"
-              >
-                <FontAwesomeIcon icon={faPencil} />
-              </ToolbarButton>
+                onClick={() => setDrawingOpen(true)}
+              ><FontAwesomeIcon icon={faPencil} /></ToolbarButton>
             </Toolbar>
           )}
           {!hideToolbarToggle && <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)} aria-label="Toggle formatting toolbar" aria-expanded={toolbarOpen}>

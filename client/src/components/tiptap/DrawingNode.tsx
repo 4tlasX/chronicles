@@ -2,6 +2,7 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import type { NodeViewProps } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import { DrawingCanvas } from '../atoms/DrawingCanvas.js';
 
@@ -74,12 +75,13 @@ function DrawingNodeView({ node, updateAttributes }: NodeViewProps) {
           Edit
         </EditBtn>
       </Wrapper>
-      {editing && (
+      {editing && createPortal(
         <DrawingCanvas
           initialSvg={svg || undefined}
           onSave={handleSave}
           onCancel={() => setEditing(false)}
-        />
+        />,
+        document.body
       )}
     </NodeViewWrapper>
   );

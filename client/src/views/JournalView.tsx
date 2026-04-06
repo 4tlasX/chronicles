@@ -156,7 +156,7 @@ export function JournalView() {
   }, [selectedEntryId, decryptedEntries]);
 
   const handleSave = useCallback(async () => {
-    if (!stripHtml(editorContent).trim()) return;
+    if (!stripHtml(editorContent).trim() && !editorContent.includes('data-type="drawing"')) return;
     setIsSaving(true); setSaveStatus('');
     try {
       const metadata: Record<string, unknown> = {};

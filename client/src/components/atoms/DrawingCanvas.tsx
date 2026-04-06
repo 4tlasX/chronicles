@@ -55,7 +55,7 @@ const CanvasArea = styled.div`
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #fff;
+  background: transparent;
   touch-action: none;
 `;
 
@@ -178,7 +178,9 @@ export function DrawingCanvas({ initialSvg, onSave, onCancel }: DrawingCanvasPro
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw existing SVG background if editing
-    // (loaded as image on mount, drawn below)
+    if (bgImageRef.current) {
+      ctx.drawImage(bgImageRef.current, 0, 0, canvas.width, canvas.height);
+    }
 
     const allToDraw = [
       ...allStrokes,

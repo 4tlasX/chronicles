@@ -264,7 +264,6 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Delete this goal?')) return;
     try { await entriesApi.delete(goal.id); removeEntry(goal.id); onClose(); }
     catch { setStatus('Delete failed'); }
   };

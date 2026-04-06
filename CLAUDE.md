@@ -17,6 +17,8 @@ Key privacy guarantees:
 - **No circles or pills** — All shapes use rounded square edges (border-radius: 4-8px). No circular badges, no pill-shaped chips.
 - **Icons are plain** — Topic icons are displayed as plain FontAwesome icons colored with the user's selected header color. No circle backgrounds, no colored dot indicators.
 - **User's header color** — Topic icons throughout the app (dropdowns, entry card badges) use the user's selected header color, not individual topic colors.
+- **No `window.confirm`** — Safari on iPad blocks pop-ups by default, silently returning `false`. Use inline state-based confirmation or delete directly. Never use `window.confirm` / `window.alert` / `window.prompt`.
+- **TipTap node views with overlays** — Always portal overlays (`position: fixed`) from TipTap `NodeViewWrapper` to `document.body` via `createPortal`. The node view DOM can create stacking contexts that trap pointer events.
 
 ## Commands
 
@@ -189,11 +191,15 @@ Views     → Route logic + top-level data orchestration
 **Client State:**
 - `client/src/contexts/AuthContext.tsx` — Session state, login/logout/register
 - `client/src/contexts/EncryptionContext.tsx` — Master key lifecycle, encrypt/decrypt delegation
-- `client/src/stores/uiStore.ts` — Search, sidebar, view mode, theme colors
+- `client/src/stores/uiStore.ts` — Search, sidebar, view mode, theme colors, `pencilOnly` toggle
 - `client/src/stores/entriesStore.ts` — Encrypted entries cache, topics, CRUD operations
 
 **Client Services:**
 - `client/src/services/api.ts` — Single API client with `X-Requested-With` CSRF header
+
+**Apple Pencil / Drawing:**
+- `client/src/components/atoms/DrawingCanvas.tsx` — Full-screen freehand canvas using `perfect-freehand`; pointer events with pressure sensitivity; palm rejection (`pencilOnly` mode); serializes strokes to SVG on save
+- `client/src/components/tiptap/DrawingNode.tsx` — TipTap block node extension (`type: drawing`, `atom: true`); renders saved SVG inline with hover-to-edit; portals canvas to `document.body` to avoid stacking context issues
 
 ### Querying User Data
 
@@ -216,6 +222,7 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - Settings (header color, background image, feature toggles)
 - Session management (view/revoke active sessions)
 - Security headers (CSP, HSTS, X-Frame-Options, Permissions-Policy)
+- Apple Pencil support: Scribble handwriting-to-text (CSS) + freehand drawing canvas with pressure sensitivity, palm rejection, undo, and inline SVG storage (encrypted with entry content)
 
 ### Phase 2 (Productivity)
 - Goals & milestones with progress tracking

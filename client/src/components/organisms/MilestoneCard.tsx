@@ -309,7 +309,6 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Delete this milestone?')) return;
     try { await entriesApi.delete(milestone.id); removeEntry(milestone.id); onClose(); }
     catch { setStatus('Delete failed'); }
   };
