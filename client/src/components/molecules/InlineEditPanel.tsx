@@ -9,16 +9,20 @@ const Panel = styled.div`
 `;
 
 const EditorWrap = styled.div`
+  margin: 0 24px 0 50px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  overflow: hidden;
+  @media (max-width: 768px) { margin: 0 16px 0 40px; }
+  @media (max-width: 480px) { margin: 0 12px; }
 
   /* Compact the TipTap editor for inline use */
   & > div { min-height: unset; }
   && .tiptap {
     min-height: 60px;
-    padding: 8px 48px 8px 50px;
+    padding: 8px 12px;
     font-size: 14px;
     line-height: 1.6;
-    @media (max-width: 768px) { padding: 8px 40px 8px 40px; }
-    @media (max-width: 480px) { padding: 8px 36px 8px 12px; }
   }
 `;
 
