@@ -154,7 +154,7 @@ const SaveRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
+  padding: 20px 24px;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   gap: 8px;
 `;
