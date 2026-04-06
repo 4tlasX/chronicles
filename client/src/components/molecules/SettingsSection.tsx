@@ -92,10 +92,11 @@ export const PrivacyCard = styled.div`
 `;
 
 export const DangerCard = styled.div`
-  border: none;
-  border-radius: 0;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
   overflow: hidden;
+  padding: 0 16px;
 `;
 
 export const PasswordForm = styled.div`
