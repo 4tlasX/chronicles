@@ -12,7 +12,7 @@ const StyledInput = styled.input`
   font-size: ${({ theme }) => theme.fontSize.sm}px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  background: ${({ theme }) => theme.colors.surface};
+  background: transparent;
   color: ${({ theme }) => theme.colors.text};
   outline: none;
 
