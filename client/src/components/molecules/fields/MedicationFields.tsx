@@ -28,20 +28,20 @@ const TimeRow = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm}px;
+  margin-bottom: 8px;
 `;
 
 const TimeInput = styled.input`
-  padding: 6px 0;
+  padding: 8px 12px;
   font-size: ${({ theme }) => theme.fontSize.sm}px;
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
   outline: none;
 
   &:focus {
-    border-bottom-color: ${({ theme }) => theme.colors.text};
+    border-color: var(--focus-color, ${({ theme }) => theme.colors.text});
   }
 `;
 
