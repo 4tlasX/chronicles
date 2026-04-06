@@ -20,7 +20,7 @@ const StyledSidePanel = styled.div<{ $hiddenMobile?: boolean; $hasBackground?: b
   background: ${({ theme }) => theme.colors.surfaceOverlay};
   border-right: 1px solid ${({ theme }) => theme.colors.border};
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     width: 100%;
     min-width: 100%;
     max-width: 100%;
@@ -35,7 +35,7 @@ const StyledEditorPanel = styled.div<{ $visibleMobile?: boolean; $hasBackground?
   overflow: hidden;
   background: ${({ $hasBackground, theme }) => $hasBackground ? theme.colors.surfaceOverlay : theme.colors.surfaceOverlay};
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     display: ${({ $visibleMobile }) => $visibleMobile ? 'flex' : 'none'};
     width: 100%;
   }
@@ -58,7 +58,7 @@ const StyledMobileBackButton = styled.button`
   cursor: pointer;
   &:hover { color: ${({ theme }) => theme.colors.text}; }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     display: flex;
   }
 `;

@@ -20,7 +20,7 @@ const Pane = styled.div<{ $hidden?: boolean }>`
   overflow-y: auto;
   background: ${({ theme }) => theme.colors.surfaceOverlay};
   border-right: 1px solid ${({ theme }) => theme.colors.border};
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     width: 100%;
     min-width: 100%;
     display: ${({ $hidden }) => $hidden ? 'none' : 'flex'};

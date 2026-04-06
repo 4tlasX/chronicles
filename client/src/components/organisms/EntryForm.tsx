@@ -63,13 +63,13 @@ const MobileBackBtn = styled.button`
   flex-shrink: 0;
   &:hover { opacity: 0.7; }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     display: flex;
   }
 `;
 
 const ExpandLabel = styled.span`
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     display: none;
   }
 `;

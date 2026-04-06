@@ -14,7 +14,7 @@ const Panel = styled.div<{ $hidden?: boolean }>`
   flex-direction: column;
   overflow-y: auto;
   background: ${({ theme }) => theme.colors.surfaceOverlay};
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     display: ${({ $hidden }) => $hidden ? 'none' : 'flex'};
   }
 `;
@@ -50,7 +50,7 @@ const MobileBack = styled.button`
   cursor: pointer;
   padding: 4px 0;
   &:hover { opacity: 0.7; }
-  @media (max-width: 768px) { display: flex; }
+  @media (max-width: 1024px) { display: flex; }
 `;
 
 const BackLink = styled.button`
@@ -67,7 +67,7 @@ const BackLink = styled.button`
   border: none;
   cursor: pointer;
   &:hover { opacity: 0.7; }
-  @media (max-width: 768px) { display: none; }
+  @media (max-width: 1024px) { display: none; }
 `;
 
 const ListArea = styled.div`
