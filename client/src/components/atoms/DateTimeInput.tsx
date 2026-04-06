@@ -5,6 +5,7 @@ const Wrapper = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm}px;
+  flex-wrap: wrap;
 `;
 
 const StyledInput = styled.input`
@@ -15,6 +16,8 @@ const StyledInput = styled.input`
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
   outline: none;
+  min-width: 0;
+  flex: 1;
 
   &:focus {
     border-color: ${({ theme }) => theme.colors.borderFocus};
