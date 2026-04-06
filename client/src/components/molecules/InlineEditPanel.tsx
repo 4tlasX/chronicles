@@ -1,16 +1,16 @@
 import styled from 'styled-components';
 import { Spinner } from '../atoms/Spinner.js';
 
-const Panel = styled.div`
+const Panel = styled.div<{ $hasFields?: boolean }>`
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   background: transparent;
-  padding-top: 8px;
-  padding-bottom: 12px;
+  padding-top: ${({ $hasFields }) => $hasFields ? 16 : 8}px;
+  padding-bottom: 16px;
 `;
 
-const EditorWrap = styled.div`
-  margin: 0 24px 0 50px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
+const EditorWrap = styled.div<{ $bordered?: boolean }>`
+  margin: 8px 24px 0 50px;
+  border: ${({ $bordered, theme }) => $bordered ? `1px solid ${theme.colors.border}` : 'none'};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   overflow: hidden;
   @media (max-width: 768px) { margin: 0 16px 0 40px; }
@@ -98,9 +98,9 @@ interface InlineEditPanelProps {
 
 export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, onDelete, title }: InlineEditPanelProps) {
   return (
-    <Panel>
+    <Panel $hasFields={!!fields}>
       {title && <EditTitle>{title}</EditTitle>}
-      <EditorWrap>{editor}</EditorWrap>
+      <EditorWrap $bordered={!!fields}>{editor}</EditorWrap>
       {fields && <FieldsWrap>{fields}</FieldsWrap>}
       <Actions>
         <ActionBtn onClick={onSave} disabled={saving}>

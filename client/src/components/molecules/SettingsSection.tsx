@@ -46,10 +46,10 @@ export const CollapsibleHeader = styled.button`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 16px 0;
+  padding: 16px;
   background: transparent;
-  border: none;
-  border-radius: 0;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.xl}px;
   cursor: pointer;
   text-align: left;
 `;
@@ -67,9 +67,10 @@ export const CollapsibleDesc = styled.div`
 `;
 
 export const CollapsibleBody = styled.div`
-  padding: 16px 0;
-  border: none;
-  border-radius: 0;
+  padding: 16px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-top: none;
+  border-radius: 0 0 ${({ theme }) => theme.borderRadius.xl}px ${({ theme }) => theme.borderRadius.xl}px;
   background: transparent;
   font-size: 14px;
   line-height: 1.6;
@@ -77,9 +78,9 @@ export const CollapsibleBody = styled.div`
 `;
 
 export const PrivacyCard = styled.div`
-  padding: 16px 0;
-  border: none;
-  border-radius: 0;
+  padding: 16px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.xl}px;
   background: transparent;
   font-size: 14px;
   line-height: 1.6;
