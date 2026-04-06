@@ -21,18 +21,18 @@ const HiddenInput = styled.input`
 `;
 
 const Box = styled.div<{ $checked: boolean }>`
-  width: ${({ $checked }) => $checked ? '20px' : '15px'};
-  height: ${({ $checked }) => $checked ? '20px' : '15px'};
+  width: 18px;
+  height: 18px;
   border-radius: 3px;
-  border: ${({ $checked, theme }) => $checked ? 'none' : `1.5px solid ${theme.colors.border}`};
+  border: 1.5px solid ${({ theme }) => theme.colors.border};
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ $checked }) => $checked ? '14px' : '11px'};
+  font-size: 12px;
   flex-shrink: 0;
-  transition: all 0.15s;
+  transition: border-color 0.15s;
 `;
 
 const CheckLabel = styled.span`
