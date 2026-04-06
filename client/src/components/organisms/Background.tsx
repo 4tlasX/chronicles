@@ -4,7 +4,10 @@ import { useTheme } from 'styled-components';
 
 const BackgroundWrapper = styled.div`
   position: fixed;
-  inset: 0;
+  top: -100px;
+  left: -100px;
+  right: -100px;
+  bottom: -100px;
   z-index: -1;
   background-color: ${({ theme }) => theme.colors.background};
 `;
