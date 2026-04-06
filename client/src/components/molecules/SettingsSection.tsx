@@ -88,7 +88,7 @@ export const PrivacyCard = styled.div`
 
 export const DangerCard = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  border-radius: ${({ theme }) => theme.borderRadius.xl}px;
   background: transparent;
   overflow: hidden;
   padding: 0 16px;
