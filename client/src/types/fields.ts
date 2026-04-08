@@ -1,5 +1,58 @@
 /* ── Custom field value types for entry types ── */
 
+export type ShoppingCategory =
+  | 'produce' | 'meat' | 'dairy' | 'bakery' | 'frozen'
+  | 'beverages' | 'sundries' | 'personal_care' | 'household' | 'other';
+
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  category: ShoppingCategory;
+  checked: boolean;
+}
+
+export interface ShoppingListFieldValues {
+  items: ShoppingItem[];
+  notes: string;
+  linkedRecipeIds: number[];
+}
+
+export interface RecipeIngredient {
+  id: string;
+  amount: string;
+  name: string;
+}
+
+export interface RecipeFieldValues {
+  servings: string;
+  prepTime: string;
+  cookTime: string;
+  cuisine: string;
+  ingredients: RecipeIngredient[];
+  instructions: string;
+  linkedShoppingListIds: number[];
+}
+
+export type MealSlotType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+export interface MenuMealSlot {
+  mealName: string;
+  recipeId: number | null;
+  recipeName: string;
+}
+
+export interface MenuPlanDay {
+  breakfast: MenuMealSlot;
+  lunch: MenuMealSlot;
+  dinner: MenuMealSlot;
+  snack: MenuMealSlot;
+}
+
+export interface MenuPlanFieldValues {
+  weekStart: string;
+  days: Record<string, MenuPlanDay>;
+}
+
 export type TaskPriority = 'urgent' | 'high' | 'medium' | 'low' | 'none';
 
 export interface TaskFieldValues {

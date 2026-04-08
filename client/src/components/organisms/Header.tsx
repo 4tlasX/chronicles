@@ -430,6 +430,8 @@ export function Header() {
   if (ff.milestonesEnabled) goalsItems.push({ label: 'Milestones', to: '/goals/milestones' });
   goalsItems.push({ label: 'Tasks', to: '/goals/tasks' });
   goalsItems.push({ label: 'Todos', to: '/goals/todos' });
+  goalsItems.push({ label: 'Menu Planner', to: '/menu' });
+  goalsItems.push({ label: 'Shopping Lists', to: '/shopping' });
 
   const healthItems: { label: string; to: string }[] = [];
   if (ff.medicationEnabled) {
@@ -473,7 +475,7 @@ export function Header() {
           <NavLink to="/calendar" $active={isActive('/calendar')} $light={light}>Calendar</NavLink>
           {goalsItems.length > 0 && (
             <NavDropdown
-              label="Planning"
+              label="Planner"
               activePath={location.pathname}
               items={goalsItems}
               bgColor={bgColor}
@@ -539,7 +541,7 @@ export function Header() {
             <>
               <DrawerDivider />
               <DrawerSectionLabel onClick={() => toggleDrawerSection('planning')}>
-                <span>Planning</span>
+                <span>Planner</span>
                 <FontAwesomeIcon icon={drawerSections.planning ? faChevronUp : faChevronDown} size="xs" />
               </DrawerSectionLabel>
               {drawerSections.planning && (
@@ -548,6 +550,8 @@ export function Header() {
                   {ff.milestonesEnabled && mobileNav('/goals/milestones', 'Milestones')}
                   {mobileNav('/goals/tasks', 'Tasks')}
                   {mobileNav('/goals/todos', 'Todos')}
+                  {mobileNav('/menu', 'Menu Planner')}
+                  {mobileNav('/shopping', 'Shopping Lists')}
                 </>
               )}
             </>

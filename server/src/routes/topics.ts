@@ -39,6 +39,9 @@ const DEFAULT_TOPICS = [
   { name: 'TV/Movies', icon: 'film', color: '#F59E0B' },
   { name: 'Quote', icon: 'quote-left', color: '#6366F1' },
   { name: 'Allergy', icon: 'triangle-exclamation', color: '#F97316' },
+  { name: 'Shopping List', icon: 'cart-shopping', color: '#22C55E' },
+  { name: 'Recipe', icon: 'bowl-food', color: '#F97316' },
+  { name: 'Menu Plan', icon: 'calendar-week', color: '#8B5CF6' },
 ];
 
 async function ensureDefaultTopics(schemaName: string): Promise<void> {

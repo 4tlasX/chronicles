@@ -51,26 +51,27 @@ interface FilterTabsProps<T extends string> {
 }
 
 export function FilterTabs<T extends string>({ options, active, onChange, label }: FilterTabsProps<T>) {
+  const safeOptions = options ?? [];
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent, index: number) => {
     let nextIndex: number | null = null;
-    if (e.key === 'ArrowRight') nextIndex = (index + 1) % options.length;
-    else if (e.key === 'ArrowLeft') nextIndex = (index - 1 + options.length) % options.length;
+    if (e.key === 'ArrowRight') nextIndex = (index + 1) % safeOptions.length;
+    else if (e.key === 'ArrowLeft') nextIndex = (index - 1 + safeOptions.length) % safeOptions.length;
     else if (e.key === 'Home') nextIndex = 0;
-    else if (e.key === 'End') nextIndex = options.length - 1;
+    else if (e.key === 'End') nextIndex = safeOptions.length - 1;
 
     if (nextIndex !== null) {
       e.preventDefault();
       btnRefs.current[nextIndex]?.focus();
-      onChange(options[nextIndex].value);
+      onChange(safeOptions[nextIndex].value);
     }
-  }, [options, onChange]);
+  }, [safeOptions, onChange]);
 
   return (
     <Row role="tablist">
       {label && <Label>{label}:</Label>}
-      {options.map((opt, i) => (
+      {safeOptions.map((opt, i) => (
         <Btn
           key={opt.value}
           ref={el => { btnRefs.current[i] = el; }}

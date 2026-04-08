@@ -18,6 +18,8 @@ import { ExerciseFields, type ExerciseFieldValues } from '../molecules/fields/Ex
 import { EventFields, type EventFieldValues } from '../molecules/fields/EventFields.js';
 import { MeetingFields, type MeetingFieldValues } from '../molecules/fields/MeetingFields.js';
 import { AllergyFields, type AllergyFieldValues } from '../molecules/fields/AllergyFields.js';
+import { ShoppingListFields, type ShoppingListFieldValues } from '../molecules/fields/ShoppingListFields.js';
+import { RecipeFields, type RecipeFieldValues } from '../molecules/fields/RecipeFields.js';
 
 /* ── Styled components ── */
 
@@ -228,7 +230,7 @@ const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
   food: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
-  allergy: 'allergy',
+  allergy: 'allergy', 'shopping list': 'shopping_list', recipe: 'recipe',
 };
 
 function getCustomType(topicName: string | undefined): string | null {
@@ -297,6 +299,26 @@ export function EntryForm({
       return t && getCustomType(t.name) === 'milestone';
     })
     .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || `Milestone #${e.id}` }));
+
+  // Build recipe options for shopping list linking
+  const recipeOptions = entries
+    .filter(e => {
+      const meta = e.metadata as Record<string, unknown>;
+      const tid = meta?._taxonomyId as number | undefined;
+      const t = tid ? topics.find(tp => tp.id === tid) : undefined;
+      return t && getCustomType(t.name) === 'recipe' && e.id !== entryId;
+    })
+    .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || `Recipe #${e.id}` }));
+
+  // Build shopping list options for recipe linking
+  const shoppingListOptions = entries
+    .filter(e => {
+      const meta = e.metadata as Record<string, unknown>;
+      const tid = meta?._taxonomyId as number | undefined;
+      const t = tid ? topics.find(tp => tp.id === tid) : undefined;
+      return t && getCustomType(t.name) === 'shopping_list' && e.id !== entryId;
+    })
+    .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || `Shopping List #${e.id}` }));
 
   // Build linked tasks for the current milestone (tasks whose parentMilestoneId === this entry)
   const linkedTasks = entryId ? entries
@@ -393,7 +415,7 @@ export function EntryForm({
         {customType && (
           <CustomFieldsSection>
             <CustomFieldsHeader onClick={() => setFieldsExpanded(!fieldsExpanded)}>
-              <span>{customType === 'task' ? 'Task Options' : customType === 'goal' ? 'Goal Type' : customType === 'milestone' ? 'Milestone Status' : customType === 'food' ? 'Meal Type' : customType === 'medication' ? 'Dosage' : customType === 'symptom' ? 'Severity' : customType === 'exercise' ? 'Exercise Type' : customType === 'event' ? 'Event Details' : customType === 'meeting' ? 'Meeting Details' : customType === 'allergy' ? 'Allergy Details' : 'Settings'}</span>
+              <span>{customType === 'task' ? 'Task Options' : customType === 'goal' ? 'Goal Type' : customType === 'milestone' ? 'Milestone Status' : customType === 'food' ? 'Meal Type' : customType === 'medication' ? 'Dosage' : customType === 'symptom' ? 'Severity' : customType === 'exercise' ? 'Exercise Type' : customType === 'event' ? 'Event Details' : customType === 'meeting' ? 'Meeting Details' : customType === 'allergy' ? 'Allergy Details' : customType === 'shopping_list' ? 'Shopping List' : customType === 'recipe' ? 'Recipe Details' : 'Settings'}</span>
               <FontAwesomeIcon icon={fieldsExpanded ? faChevronUp : faChevronDown} size="xs" />
             </CustomFieldsHeader>
             {fieldsExpanded && (
@@ -408,6 +430,8 @@ export function EntryForm({
                 {customType === 'event' && <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as EventFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
                 {customType === 'meeting' && <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as MeetingFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
                 {customType === 'allergy' && <AllergyFields values={{ allergen: '', severity: 5, reaction: '', occurredDate: '', occurredTime: '', notes: '', ...customFields } as AllergyFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
+                {customType === 'shopping_list' && <ShoppingListFields values={{ items: [], notes: '', linkedRecipeIds: [], ...(customFields as Partial<ShoppingListFieldValues>) } as ShoppingListFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} recipeOptions={recipeOptions} />}
+                {customType === 'recipe' && <RecipeFields values={{ servings: '', prepTime: '', cookTime: '', cuisine: '', ingredients: [], instructions: '', linkedShoppingListIds: [], ...(customFields as Partial<RecipeFieldValues>) } as RecipeFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} shoppingListOptions={shoppingListOptions} />}
               </CustomFieldsBody>
             )}
           </CustomFieldsSection>

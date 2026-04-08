@@ -268,6 +268,207 @@ export async function seedTestData(deps: SeedDeps): Promise<string> {
     // Quote
     await createEntry(deps, '"The best way to predict the future is to invent it." — Alan Kay', 'Quote', {}); count++;
 
+    onProgress?.('Creating recipes...');
+
+    // Compute this week's Monday for the menu plan
+    const now = new Date();
+    const dow = now.getDay();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - dow + (dow === 0 ? -6 : 1));
+    monday.setHours(0, 0, 0, 0);
+    const weekStart = monday.toISOString().slice(0, 10);
+    const dayStr = (offset: number) => {
+      const d = new Date(monday);
+      d.setDate(d.getDate() + offset);
+      return d.toISOString().slice(0, 10);
+    };
+
+    // ── Recipes ──
+    const recipe1 = await createEntry(deps, 'Chicken Stir-Fry with Vegetables', 'Recipe', {
+      servings: '4',
+      prepTime: '15 min',
+      cookTime: '20 min',
+      cuisine: 'Asian',
+      ingredients: [
+        { id: crypto.randomUUID(), amount: '500g', name: 'chicken breast, sliced' },
+        { id: crypto.randomUUID(), amount: '2 tbsp', name: 'soy sauce' },
+        { id: crypto.randomUUID(), amount: '1 tbsp', name: 'sesame oil' },
+        { id: crypto.randomUUID(), amount: '2 cloves', name: 'garlic, minced' },
+        { id: crypto.randomUUID(), amount: '1 tbsp', name: 'fresh ginger, grated' },
+        { id: crypto.randomUUID(), amount: '1 cup', name: 'broccoli florets' },
+        { id: crypto.randomUUID(), amount: '1', name: 'red bell pepper, sliced' },
+        { id: crypto.randomUUID(), amount: '1 cup', name: 'snap peas' },
+        { id: crypto.randomUUID(), amount: '2 tbsp', name: 'vegetable oil' },
+        { id: crypto.randomUUID(), amount: '2 cups', name: 'jasmine rice, cooked' },
+      ],
+      instructions: 'Marinate chicken in soy sauce for 10 min. Heat oil in wok over high heat. Cook chicken 5–6 min. Remove and set aside. Stir-fry garlic and ginger 30 sec, then add vegetables and cook 4–5 min. Return chicken, add sesame oil, toss everything together. Serve over rice.',
+      linkedShoppingListIds: [],
+    }); count++;
+
+    const recipe2 = await createEntry(deps, 'Classic Pasta Marinara', 'Recipe', {
+      servings: '4',
+      prepTime: '10 min',
+      cookTime: '25 min',
+      cuisine: 'Italian',
+      ingredients: [
+        { id: crypto.randomUUID(), amount: '400g', name: 'spaghetti' },
+        { id: crypto.randomUUID(), amount: '2 cans', name: 'crushed tomatoes (400g each)' },
+        { id: crypto.randomUUID(), amount: '4 cloves', name: 'garlic, minced' },
+        { id: crypto.randomUUID(), amount: '1 medium', name: 'onion, diced' },
+        { id: crypto.randomUUID(), amount: '3 tbsp', name: 'olive oil' },
+        { id: crypto.randomUUID(), amount: '1 tsp', name: 'dried oregano' },
+        { id: crypto.randomUUID(), amount: '1 tsp', name: 'dried basil' },
+        { id: crypto.randomUUID(), amount: '1/2 tsp', name: 'red pepper flakes' },
+        { id: crypto.randomUUID(), amount: 'to taste', name: 'salt and black pepper' },
+        { id: crypto.randomUUID(), amount: '50g', name: 'parmesan, grated' },
+      ],
+      instructions: 'Cook pasta in salted boiling water until al dente. Meanwhile, sauté onion in olive oil 5 min, add garlic 1 min. Add tomatoes, herbs, and chili flakes. Simmer 15 min. Season well. Drain pasta and toss with sauce. Top with parmesan.',
+      linkedShoppingListIds: [],
+    }); count++;
+
+    const recipe3 = await createEntry(deps, 'Avocado Toast with Poached Eggs', 'Recipe', {
+      servings: '2',
+      prepTime: '5 min',
+      cookTime: '10 min',
+      cuisine: 'Breakfast',
+      ingredients: [
+        { id: crypto.randomUUID(), amount: '2 slices', name: 'sourdough bread, thick-cut' },
+        { id: crypto.randomUUID(), amount: '1 large', name: 'ripe avocado' },
+        { id: crypto.randomUUID(), amount: '2', name: 'large eggs' },
+        { id: crypto.randomUUID(), amount: '1 tbsp', name: 'white vinegar (for poaching)' },
+        { id: crypto.randomUUID(), amount: '1/2', name: 'lemon, juiced' },
+        { id: crypto.randomUUID(), amount: 'pinch', name: 'chili flakes' },
+        { id: crypto.randomUUID(), amount: 'to taste', name: 'salt and black pepper' },
+        { id: crypto.randomUUID(), amount: 'handful', name: 'microgreens or rocket, to serve' },
+      ],
+      instructions: 'Toast bread until golden. Mash avocado with lemon juice, salt, and pepper. Bring a pan of water to a gentle simmer, add vinegar. Create a gentle whirlpool, crack egg in, poach 3 min. Spread avocado on toast, top with poached egg, chili flakes, and greens.',
+      linkedShoppingListIds: [],
+    }); count++;
+
+    const recipe4 = await createEntry(deps, 'Beef Tacos with Pico de Gallo', 'Recipe', {
+      servings: '4',
+      prepTime: '20 min',
+      cookTime: '15 min',
+      cuisine: 'Mexican',
+      ingredients: [
+        { id: crypto.randomUUID(), amount: '500g', name: 'ground beef' },
+        { id: crypto.randomUUID(), amount: '8', name: 'small corn tortillas' },
+        { id: crypto.randomUUID(), amount: '1 packet', name: 'taco seasoning' },
+        { id: crypto.randomUUID(), amount: '3 medium', name: 'tomatoes, diced' },
+        { id: crypto.randomUUID(), amount: '1/2', name: 'red onion, finely diced' },
+        { id: crypto.randomUUID(), amount: '1', name: 'jalapeño, seeded and minced' },
+        { id: crypto.randomUUID(), amount: '1/4 cup', name: 'fresh cilantro, chopped' },
+        { id: crypto.randomUUID(), amount: '1', name: 'lime, juiced' },
+        { id: crypto.randomUUID(), amount: '1 cup', name: 'shredded cheddar' },
+        { id: crypto.randomUUID(), amount: '1', name: 'avocado, sliced' },
+      ],
+      instructions: 'Brown beef in a skillet over medium-high heat, drain fat, add taco seasoning with 1/4 cup water. Simmer 5 min. Combine tomatoes, onion, jalapeño, cilantro, and lime juice for pico. Warm tortillas. Assemble tacos with beef, pico, cheese, and avocado.',
+      linkedShoppingListIds: [],
+    }); count++;
+
+    onProgress?.('Creating shopping lists...');
+
+    // ── Shopping Lists ──
+    // Current list — partially checked
+    const sl1Items = [
+      { id: crypto.randomUUID(), name: 'chicken breast (500g)', category: 'meat', checked: true },
+      { id: crypto.randomUUID(), name: 'ground beef (500g)', category: 'meat', checked: false },
+      { id: crypto.randomUUID(), name: 'broccoli florets', category: 'produce', checked: true },
+      { id: crypto.randomUUID(), name: 'red bell pepper', category: 'produce', checked: true },
+      { id: crypto.randomUUID(), name: 'snap peas', category: 'produce', checked: false },
+      { id: crypto.randomUUID(), name: 'avocado (x3)', category: 'produce', checked: false },
+      { id: crypto.randomUUID(), name: 'tomatoes (x4)', category: 'produce', checked: false },
+      { id: crypto.randomUUID(), name: 'sourdough bread', category: 'bakery', checked: false },
+      { id: crypto.randomUUID(), name: 'spaghetti (400g)', category: 'sundries', checked: true },
+      { id: crypto.randomUUID(), name: 'crushed tomatoes (2 cans)', category: 'sundries', checked: true },
+      { id: crypto.randomUUID(), name: 'soy sauce', category: 'sundries', checked: false },
+      { id: crypto.randomUUID(), name: 'sesame oil', category: 'sundries', checked: false },
+      { id: crypto.randomUUID(), name: 'taco seasoning', category: 'sundries', checked: false },
+      { id: crypto.randomUUID(), name: 'corn tortillas (8)', category: 'sundries', checked: false },
+      { id: crypto.randomUUID(), name: 'parmesan (block)', category: 'dairy', checked: false },
+      { id: crypto.randomUUID(), name: 'shredded cheddar', category: 'dairy', checked: false },
+      { id: crypto.randomUUID(), name: 'eggs (dozen)', category: 'dairy', checked: true },
+    ];
+    await createEntry(deps, 'Weekly grocery run — meal prep for the week', 'Shopping List', {
+      items: sl1Items,
+      notes: 'Check pantry for olive oil and garlic before buying. Get extra limes.',
+      linkedRecipeIds: [recipe1, recipe2, recipe3, recipe4],
+    }); count++;
+
+    // Completed list — all checked
+    const sl2Items = [
+      { id: crypto.randomUUID(), name: 'greek yogurt (x2)', category: 'dairy', checked: true },
+      { id: crypto.randomUUID(), name: 'almond milk (1L)', category: 'dairy', checked: true },
+      { id: crypto.randomUUID(), name: 'oats (1kg)', category: 'sundries', checked: true },
+      { id: crypto.randomUUID(), name: 'blueberries', category: 'produce', checked: true },
+      { id: crypto.randomUUID(), name: 'bananas (bunch)', category: 'produce', checked: true },
+      { id: crypto.randomUUID(), name: 'protein powder', category: 'sundries', checked: true },
+      { id: crypto.randomUUID(), name: 'almonds (200g)', category: 'sundries', checked: true },
+      { id: crypto.randomUUID(), name: 'honey', category: 'sundries', checked: true },
+      { id: crypto.randomUUID(), name: 'walnuts (150g)', category: 'sundries', checked: true },
+      { id: crypto.randomUUID(), name: 'chia seeds', category: 'sundries', checked: true },
+    ];
+    await createEntry(deps, 'Breakfast staples restock', 'Shopping List', {
+      items: sl2Items,
+      notes: 'All done! Regular weekly restock.',
+      linkedRecipeIds: [],
+    }); count++;
+
+    onProgress?.('Creating menu plan...');
+
+    // ── Menu Plan (current week) ──
+    const r1Title = 'Chicken Stir-Fry with Vegetables';
+    const r2Title = 'Classic Pasta Marinara';
+    const r3Title = 'Avocado Toast with Poached Eggs';
+    const r4Title = 'Beef Tacos with Pico de Gallo';
+    await createEntry(deps, `Menu: week of ${weekStart}`, 'Menu Plan', {
+      weekStart,
+      days: {
+        [dayStr(0)]: { // Monday
+          breakfast: { mealName: r3Title, recipeId: recipe3, recipeName: r3Title },
+          lunch:     { mealName: 'Leftover stir-fry', recipeId: null, recipeName: '' },
+          dinner:    { mealName: r1Title, recipeId: recipe1, recipeName: r1Title },
+          snack:     { mealName: 'Almonds and banana', recipeId: null, recipeName: '' },
+        },
+        [dayStr(1)]: { // Tuesday
+          breakfast: { mealName: 'Oatmeal with blueberries', recipeId: null, recipeName: '' },
+          lunch:     { mealName: r2Title, recipeId: recipe2, recipeName: r2Title },
+          dinner:    { mealName: r4Title, recipeId: recipe4, recipeName: r4Title },
+          snack:     { mealName: 'Greek yogurt', recipeId: null, recipeName: '' },
+        },
+        [dayStr(2)]: { // Wednesday
+          breakfast: { mealName: r3Title, recipeId: recipe3, recipeName: r3Title },
+          lunch:     { mealName: 'Taco leftovers', recipeId: null, recipeName: '' },
+          dinner:    { mealName: r2Title, recipeId: recipe2, recipeName: r2Title },
+          snack:     { mealName: 'Apple and peanut butter', recipeId: null, recipeName: '' },
+        },
+        [dayStr(3)]: { // Thursday
+          breakfast: { mealName: 'Smoothie bowl', recipeId: null, recipeName: '' },
+          lunch:     { mealName: r1Title, recipeId: recipe1, recipeName: r1Title },
+          dinner:    { mealName: 'Grilled salmon with veg', recipeId: null, recipeName: '' },
+          snack:     { mealName: '', recipeId: null, recipeName: '' },
+        },
+        [dayStr(4)]: { // Friday
+          breakfast: { mealName: r3Title, recipeId: recipe3, recipeName: r3Title },
+          lunch:     { mealName: 'Caesar salad', recipeId: null, recipeName: '' },
+          dinner:    { mealName: r4Title, recipeId: recipe4, recipeName: r4Title },
+          snack:     { mealName: 'Hummus and veggies', recipeId: null, recipeName: '' },
+        },
+        [dayStr(5)]: { // Saturday
+          breakfast: { mealName: 'Pancakes with maple syrup', recipeId: null, recipeName: '' },
+          lunch:     { mealName: r2Title, recipeId: recipe2, recipeName: r2Title },
+          dinner:    { mealName: 'BBQ ribs and coleslaw', recipeId: null, recipeName: '' },
+          snack:     { mealName: 'Fruit salad', recipeId: null, recipeName: '' },
+        },
+        [dayStr(6)]: { // Sunday
+          breakfast: { mealName: 'Full English breakfast', recipeId: null, recipeName: '' },
+          lunch:     { mealName: 'Roast chicken and potatoes', recipeId: null, recipeName: '' },
+          dinner:    { mealName: r1Title, recipeId: recipe1, recipeName: r1Title },
+          snack:     { mealName: 'Cheese and crackers', recipeId: null, recipeName: '' },
+        },
+      },
+    }); count++;
+
     onProgress?.('Creating plain entry...');
 
     // Plain entry (no topic)

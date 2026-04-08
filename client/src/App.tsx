@@ -19,6 +19,8 @@ import { GoalsView } from './views/GoalsView.js';
 import { TopicEntriesView } from './views/TopicEntriesView.js';
 import { MedicationScheduleView } from './views/MedicationScheduleView.js';
 import { HealthReportingView } from './views/HealthReportingView.js';
+import { MenuView } from './views/MenuView.js';
+import { ShoppingListsView } from './views/ShoppingListsView.js';
 
 function R({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -64,6 +66,8 @@ export function App() {
               <Route path="/goals/milestones" element={<R><GoalsView /></R>} />
               <Route path="/goals/tasks" element={<R><GoalsView /></R>} />
               <Route path="/goals/todos" element={<R><GoalsView /></R>} />
+              <Route path="/menu" element={<R><MenuView /></R>} />
+              <Route path="/shopping" element={<R><ShoppingListsView /></R>} />
 
               {/* Health */}
               <Route path="/health" element={<R><TopicEntriesView title="Health" topicNames={['Medication', 'Symptom', 'Food', 'Exercise', 'Allergy']} /></R>} />
