@@ -7,6 +7,14 @@ import type { TaskFieldValues } from '../../../types/fields.js';
 import type { MilestoneOption } from '../../../types/ui.js';
 export type { TaskFieldValues } from '../../../types/fields.js';
 
+const PRIORITY_OPTIONS = [
+  { value: 'urgent', label: 'Urgent' },
+  { value: 'high',   label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low',    label: 'Low' },
+  { value: 'none',   label: 'None' },
+] as const;
+
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -41,6 +49,16 @@ export function TaskFields({ values, onChange, milestoneOptions = [] }: TaskFiel
           </Select>
         </FormField>
       )}
+      <FormField label="Priority">
+        <Select
+          value={values.priority || 'none'}
+          onChange={e => onChange({ ...values, priority: e.target.value as TaskFieldValues['priority'] })}
+        >
+          {PRIORITY_OPTIONS.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </Select>
+      </FormField>
       <FormField label="Deadline">
         <TextInput
           type="date"

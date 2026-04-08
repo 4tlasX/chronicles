@@ -29,6 +29,7 @@ export interface TaskEntryData {
   title: string;
   isCompleted: boolean;
   parentMilestoneId: number | null;
+  priority: string;
   customFields: Record<string, unknown>;
   taxonomyId: number;
 }

@@ -3,6 +3,7 @@ import { useRef, useCallback, type KeyboardEvent } from 'react';
 
 const Row = styled.div`
   display: flex;
+  align-items: center;
   justify-content: center;
   gap: 6px;
   padding: 8px 24px;
@@ -11,6 +12,19 @@ const Row = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   overflow-x: auto;
   &::-webkit-scrollbar { display: none; }
+`;
+
+const Label = styled.span`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  opacity: 0.5;
+  white-space: nowrap;
+  margin-right: 4px;
+  flex-shrink: 0;
 `;
 
 const Btn = styled.button<{ $active?: boolean }>`
@@ -33,9 +47,10 @@ interface FilterTabsProps<T extends string> {
   options: { value: T; label: string }[];
   active: T;
   onChange: (value: T) => void;
+  label?: string;
 }
 
-export function FilterTabs<T extends string>({ options, active, onChange }: FilterTabsProps<T>) {
+export function FilterTabs<T extends string>({ options, active, onChange, label }: FilterTabsProps<T>) {
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent, index: number) => {
@@ -54,6 +69,7 @@ export function FilterTabs<T extends string>({ options, active, onChange }: Filt
 
   return (
     <Row role="tablist">
+      {label && <Label>{label}:</Label>}
       {options.map((opt, i) => (
         <Btn
           key={opt.value}

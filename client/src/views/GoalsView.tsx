@@ -49,9 +49,19 @@ const TASK_FILTERS = [
   { value: 'completed' as const, label: 'Completed' },
 ];
 
+const PRIORITY_FILTERS = [
+  { value: 'all' as const, label: 'All' },
+  { value: 'urgent' as const, label: 'Urgent' },
+  { value: 'high' as const, label: 'High' },
+  { value: 'medium' as const, label: 'Medium' },
+  { value: 'low' as const, label: 'Low' },
+  { value: 'none' as const, label: 'None' },
+];
+
 type GoalFilter = typeof GOAL_FILTERS[number]['value'];
 type MilestoneFilter = typeof MILESTONE_FILTERS[number]['value'];
 type TaskFilter = typeof TASK_FILTERS[number]['value'];
+type PriorityFilter = typeof PRIORITY_FILTERS[number]['value'];
 
 export function GoalsView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
@@ -75,7 +85,9 @@ export function GoalsView() {
   const [goalFilter, setGoalFilter] = useState<GoalFilter>('active');
   const [milestoneFilter, setMilestoneFilter] = useState<MilestoneFilter>('all');
   const [taskFilter, setTaskFilter] = useState<TaskFilter>('all');
+  const [taskPriorityFilter, setTaskPriorityFilter] = useState<PriorityFilter>('all');
   const [todoFilter, setTodoFilter] = useState<TaskFilter>('all');
+  const [todoPriorityFilter, setTodoPriorityFilter] = useState<PriorityFilter>('all');
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const sensors = useSensors(
@@ -124,7 +136,7 @@ export function GoalsView() {
         const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
         return { id: e.id, content: e.content, title: stripHtml(e.content).slice(0, 80) || 'Untitled task',
           isCompleted: !!cf.isCompleted, parentMilestoneId: (cf.parentMilestoneId as number) || null,
-          customFields: cf, taxonomyId: taskTopicId };
+          priority: (cf.priority as string) || 'none', customFields: cf, taxonomyId: taskTopicId };
       });
   }, [entries, taskTopicId]);
 
@@ -358,8 +370,10 @@ export function GoalsView() {
 
       {tab === 'goals' && <FilterTabs options={GOAL_FILTERS} active={goalFilter} onChange={setGoalFilter} />}
       {tab === 'milestones' && <FilterTabs options={MILESTONE_FILTERS} active={milestoneFilter} onChange={setMilestoneFilter} />}
-      {tab === 'tasks' && <FilterTabs options={TASK_FILTERS} active={taskFilter} onChange={setTaskFilter} />}
-      {tab === 'todos' && <FilterTabs options={TASK_FILTERS} active={todoFilter} onChange={setTodoFilter} />}
+      {tab === 'tasks' && <FilterTabs options={TASK_FILTERS} active={taskFilter} onChange={setTaskFilter} label="Status" />}
+      {tab === 'tasks' && <FilterTabs options={PRIORITY_FILTERS} active={taskPriorityFilter} onChange={setTaskPriorityFilter} label="Priority" />}
+      {tab === 'todos' && <FilterTabs options={TASK_FILTERS} active={todoFilter} onChange={setTodoFilter} label="Status" />}
+      {tab === 'todos' && <FilterTabs options={PRIORITY_FILTERS} active={todoPriorityFilter} onChange={setTodoPriorityFilter} label="Priority" />}
 
       <ScrollList $padding="0" $gap="0">
         {tab === 'goals' && (() => {
@@ -407,11 +421,13 @@ export function GoalsView() {
 
         {tab === 'tasks' && (() => {
           const filteredTasks = tasks.filter(t => {
-            if (taskFilter === 'all') return true;
-            if (taskFilter === 'completed') return t.isCompleted;
-            if (taskFilter === 'in_progress') return !t.isCompleted && !!(t.customFields as Record<string, unknown>).isInProgress;
-            if (taskFilter === 'not_started') return !t.isCompleted && !(t.customFields as Record<string, unknown>).isInProgress;
-            return true;
+            const statusMatch = taskFilter === 'all' ? true
+              : taskFilter === 'completed' ? t.isCompleted
+              : taskFilter === 'in_progress' ? !t.isCompleted && !!(t.customFields as Record<string, unknown>).isInProgress
+              : taskFilter === 'not_started' ? !t.isCompleted && !(t.customFields as Record<string, unknown>).isInProgress
+              : true;
+            const priorityMatch = taskPriorityFilter === 'all' ? true : t.priority === taskPriorityFilter;
+            return statusMatch && priorityMatch;
           });
           return filteredTasks.length === 0
             ? <EmptyState message="No tasks found." submessage={taskFilter === 'all' ? 'Create a journal entry with the Task topic to get started.' : 'No tasks match this filter.'} />
@@ -442,11 +458,13 @@ export function GoalsView() {
         })()}
         {tab === 'todos' && (() => {
           const filteredTodos = todos.filter(t => {
-            if (todoFilter === 'all') return true;
-            if (todoFilter === 'completed') return t.isCompleted;
-            if (todoFilter === 'in_progress') return !t.isCompleted && !!(t.customFields as Record<string, unknown>).isInProgress;
-            if (todoFilter === 'not_started') return !t.isCompleted && !(t.customFields as Record<string, unknown>).isInProgress;
-            return true;
+            const statusMatch = todoFilter === 'all' ? true
+              : todoFilter === 'completed' ? t.isCompleted
+              : todoFilter === 'in_progress' ? !t.isCompleted && !!(t.customFields as Record<string, unknown>).isInProgress
+              : todoFilter === 'not_started' ? !t.isCompleted && !(t.customFields as Record<string, unknown>).isInProgress
+              : true;
+            const priorityMatch = todoPriorityFilter === 'all' ? true : t.priority === todoPriorityFilter;
+            return statusMatch && priorityMatch;
           });
           return filteredTodos.length === 0
             ? <EmptyState message="No todos found." submessage={todoFilter === 'all' ? 'Create a task without linking it to a milestone or goal.' : 'No todos match this filter.'} />

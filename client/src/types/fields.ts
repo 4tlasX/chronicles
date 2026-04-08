@@ -1,11 +1,14 @@
 /* ── Custom field value types for entry types ── */
 
+export type TaskPriority = 'urgent' | 'high' | 'medium' | 'low' | 'none';
+
 export interface TaskFieldValues {
   isInProgress: boolean;
   isCompleted: boolean;
   isAutoMigrating: boolean;
   parentMilestoneId: number | null;
   deadline: string;
+  priority: TaskPriority;
 }
 
 export interface GoalFieldValues {
