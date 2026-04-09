@@ -17,7 +17,7 @@ A zero-knowledge encrypted journal for those too busy to journal. Capture the ke
 - **Health Reporting** - Correlation analysis, severity trends, and exercise impact charts with date range filtering
 - **Calendar View** - Visual month overview; events and meetings appear on their scheduled date in your header colour
 - **Entry Sharing** - Share entries via encrypted public links
-- **Printable Views** - Print medication lists, symptoms, and allergy records
+- **Printable Views** - Print medication lists (with dosage and schedule), symptoms, and allergy records
 - **PWA Support** - Installable as a standalone app with offline shell caching
 - **Keyboard Shortcuts** - Ctrl+N (new entry), Ctrl+D (delete), Enter to save
 - **Customizable Theme** - 40+ muted vintage header colors, 28 background images, light/dark mode
