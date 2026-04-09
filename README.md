@@ -10,6 +10,8 @@ A zero-knowledge encrypted journal for those too busy to journal. Capture the ke
 - **Topic Organization** - Categorize entries with custom topics, icons, and colors
 - **Quick Tab Filters** - Date, Tasks, All, Bookmarks, and Search views
 - **Goals & Milestones** - Track goals with milestone progress and task linking
+- **Meal Planning & Recipes** - Weekly menu planner, recipe entries with ingredients and instructions, linked shopping lists
+- **Shopping Lists** - Checklist-style lists linkable to recipes; dashboard widget shows active list with inline check-off
 - **Health Tracking** - Medications, symptoms, food, exercise, and allergies
 - **Medication Schedule** - Daily dose tracking with time-based scheduling
 - **Health Reporting** - Correlation analysis, severity trends, and exercise impact charts with date range filtering
