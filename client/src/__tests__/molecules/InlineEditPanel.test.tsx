@@ -12,7 +12,6 @@ describe('InlineEditPanel', () => {
     status: '',
     onSave: vi.fn(),
     onCancel: vi.fn(),
-    onDelete: vi.fn(),
   };
 
   it('renders editor and fields slots', () => {
@@ -27,9 +26,9 @@ describe('InlineEditPanel', () => {
     expect(screen.getByText('Cancel')).toBeInTheDocument();
   });
 
-  it('renders Delete button', () => {
+  it('does not render a Delete button', () => {
     renderWithTheme(<InlineEditPanel {...baseProps} />);
-    expect(screen.getByText('Delete')).toBeInTheDocument();
+    expect(screen.queryByText('Delete')).not.toBeInTheDocument();
   });
 
   it('calls onSave when Save is clicked', () => {
@@ -44,13 +43,6 @@ describe('InlineEditPanel', () => {
     renderWithTheme(<InlineEditPanel {...baseProps} onCancel={onCancel} />);
     fireEvent.click(screen.getByText('Cancel'));
     expect(onCancel).toHaveBeenCalledOnce();
-  });
-
-  it('calls onDelete when Delete is clicked', () => {
-    const onDelete = vi.fn();
-    renderWithTheme(<InlineEditPanel {...baseProps} onDelete={onDelete} />);
-    fireEvent.click(screen.getByText('Delete'));
-    expect(onDelete).toHaveBeenCalledOnce();
   });
 
   it('shows spinner instead of Save text when saving', () => {

@@ -100,17 +100,6 @@ describe('EntryForm', () => {
     expect(saveBtn).not.toBeDisabled();
   });
 
-  it('shows delete button when editing', () => {
-    renderWithTheme(
-      <EntryForm
-        {...defaultProps}
-        isEditing={true}
-        entryId={1}
-        onDelete={vi.fn()}
-      />
-    );
-    expect(screen.getByText('Delete')).toBeInTheDocument();
-  });
 
   it('shows close button when editing', () => {
     renderWithTheme(
