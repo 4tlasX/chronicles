@@ -5,6 +5,7 @@ A zero-knowledge encrypted journal for those too busy to journal. Capture the ke
 ## Features
 
 - **Zero-Knowledge Encryption** - AES-256-GCM client-side encryption with non-extractable keys
+- **Dashboard Home** - Drag-and-drop widgets: quick entry, daily priorities, events, tasks, shopping, medication schedule; daily quote and Playfair greeting
 - **Rich Text Editor** - TipTap-based editor with formatting toolbar and inline drawing support
 - **Topic Organization** - Categorize entries with custom topics, icons, and colors
 - **Quick Tab Filters** - Date, Tasks, All, Bookmarks, and Search views
@@ -12,7 +13,7 @@ A zero-knowledge encrypted journal for those too busy to journal. Capture the ke
 - **Health Tracking** - Medications, symptoms, food, exercise, and allergies
 - **Medication Schedule** - Daily dose tracking with time-based scheduling
 - **Health Reporting** - Correlation analysis, severity trends, and exercise impact charts with date range filtering
-- **Calendar View** - Visual month overview with day detail panel
+- **Calendar View** - Visual month overview; events and meetings appear on their scheduled date in your header colour
 - **Entry Sharing** - Share entries via encrypted public links
 - **Printable Views** - Print medication lists, symptoms, and allergy records
 - **PWA Support** - Installable as a standalone app with offline shell caching
@@ -85,9 +86,10 @@ You can create your own topics for anything else.
 
 ### Navigation
 
-- **Journal** - Main entry view with quick tab filters (Date, Tasks, All, Bookmarks, Search)
+- **Dashboard** (`/`) - Home view with daily widgets and quick entry
+- **Journal** (`/journal`) - Main entry view with quick tab filters (Date, Tasks, All, Bookmarks, Search)
 - **Topics** - Manage and browse entries by topic
-- **Calendar** - Month view with clickable days for detail
+- **Calendar** - Month view with clickable days for detail; events/meetings appear on their scheduled date
 - **Planning** - Goals, milestones, tasks, and todos (dropdown selector)
 - **Health** - Medications, schedule, food, exercise, symptoms, allergies, and reporting
 - **Quick Links** - Entertainment and inspiration collections

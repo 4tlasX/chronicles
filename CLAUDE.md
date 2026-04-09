@@ -175,6 +175,19 @@ Views     → Route logic + top-level data orchestration
 
 **React Native swap**: Replace atoms + templates. Organisms, stores, contexts, and services stay the same.
 
+### Routes
+
+| Path | View |
+|------|------|
+| `/` | DashboardView (home) |
+| `/journal` | JournalView |
+| `/topics` | TopicsView |
+| `/calendar` | CalendarView |
+| `/settings` | SettingsView |
+| `/goals`, `/goals/milestones`, `/goals/tasks`, `/goals/todos` | Goals/planning views |
+| `/health/*` | Health tracking views |
+| `/entertainment/*`, `/inspiration/*` | Media/inspiration views |
+
 ### Key Files
 
 **Database & Auth:**
@@ -192,10 +205,17 @@ Views     → Route logic + top-level data orchestration
 - `client/src/contexts/AuthContext.tsx` — Session state, login/logout/register
 - `client/src/contexts/EncryptionContext.tsx` — Master key lifecycle, encrypt/decrypt delegation
 - `client/src/stores/uiStore.ts` — Search, sidebar, view mode, theme colors, `pencilOnly` toggle
-- `client/src/stores/entriesStore.ts` — Encrypted entries cache, topics, CRUD operations
+- `client/src/stores/entriesStore.ts` — Encrypted entries cache, topics, feature flags, CRUD operations
 
 **Client Services:**
-- `client/src/services/api.ts` — Single API client with `X-Requested-With` CSRF header
+- `client/src/services/api.ts` — Single API client with `X-Requested-With` CSRF header; fetches up to 5,000 entries on init
+
+**Dashboard:**
+- `client/src/views/DashboardView.tsx` — Home view with drag-and-drop widgets; saves widget order to localStorage
+  - Widget IDs: `quick-entry`, `priorities`, `events`, `tasks`, `shopping`, `meds`
+  - Priorities widget auto-creates a "Priorities" topic on first save
+  - Events widget shows Event + Meeting topic entries with `startDate`, up to 10, 90-day lookahead
+  - Meds widget only renders when active medication entries exist
 
 **Apple Pencil / Drawing:**
 - `client/src/components/atoms/DrawingCanvas.tsx` — Full-screen freehand canvas using `perfect-freehand`; pointer events with pressure sensitivity; palm rejection (`pencilOnly` mode); serializes strokes to SVG on save
@@ -213,38 +233,69 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 
 ## Features
 
-### Phase 1 (Current — Foundation)
+### Implemented
+
+**Foundation**
 - User authentication with bcrypt + split-token sessions
 - Client-side AES-256-GCM encryption with non-extractable keys
 - Journal entries with TipTap rich text editor
-- Topic organization with icons and colors
+- Topic organization with icons and drag-and-drop reordering
 - Client-side search (keyword + date range)
-- Settings (header color, background image, feature toggles)
+- Settings (header color, background image, feature toggles per topic type)
 - Session management (view/revoke active sessions)
 - Security headers (CSP, HSTS, X-Frame-Options, Permissions-Policy)
-- Apple Pencil support: Scribble handwriting-to-text (CSS) + freehand drawing canvas with pressure sensitivity, palm rejection, undo, and inline SVG storage (encrypted with entry content)
+- Apple Pencil: Scribble handwriting-to-text (CSS) + freehand drawing canvas with pressure sensitivity, palm rejection, undo, inline SVG storage (encrypted)
 
-### Phase 2 (Productivity)
+**Dashboard (Home)**
+- Drag-and-drop widget layout persisted to localStorage
+- Quick Entry with topic selector, rotating daily reflection prompt, per-topic custom fields
+- Daily Priorities widget — saved as "Priorities" topic entries with `PrioritiesFields` custom fields editor
+- Events & Meetings widget — upcoming entries by `startDate`, 90-day window, up to 10
+- Tasks widget — today's tasks with inline completion toggle
+- Shopping List widget — first active shopping list with item check-off
+- Medication Schedule widget — today's dose tracking; only shown when active meds exist
+- Daily quote and greeting in Playfair Display
+
+**Productivity**
 - Goals & milestones with progress tracking
-- Tasks with auto-migration (incomplete tasks move to current day)
-- Entry relationships (goal → milestone → task linking)
+- Tasks with priority levels and milestone linking
+- Menu planner and shopping lists with recipe linking
 - Drag-and-drop reordering
 
-### Phase 3 (Health Tracking)
+**Health Tracking**
 - Medications with dosage, frequency, scheduled times
-- Dose logging with timestamps
-- Food tracking with meal types, ingredients, calorie counting
+- Dose logging with timestamps (`medication_dose_logs` table, JIT migration)
+- Food tracking with meal types, ingredients, calories
 - Symptom tracking with severity scale
 - Exercise tracking with type, duration, intensity, distance
-- Schedule view (today's medication timeline)
-- Reporting with correlation analysis + calorie summaries
+- Allergy tracking
+- Reporting view
 
-### Phase 4 (Calendar, Sharing & Media)
-- Calendar events (encrypted titles, recurrence rules)
+**Calendar**
+- Monthly grid with entry previews per day
+- Events and meetings placed on their `startDate`, sorted first, shown in user header colour
+- Day detail panel with full editable entry list
+
+**Media & Inspiration**
 - Entertainment tracking (music, books, TV/movies)
-- Inspiration collection (research, ideas, quotes)
-- Entry sharing via public links (with expiration, view count)
+- Inspiration (research, ideas, quotes)
+
+### Planned
+- Entry sharing via public links (expiration, view count)
 - Image uploads (encrypted storage)
+- Recurring calendar events
+- Calorie correlation reporting
+
+## Important Implementation Notes
+
+### Entry Pagination
+`entriesApi.getAll()` requests `?limit=5000`. Server allows up to 10,000. Do not reduce this — personal journals can easily exceed 100 entries and topic filtering relies on all entries being in the client store.
+
+### Feature Flags
+Feature flags in `entriesStore.featureFlags` default to `{}` on load. `useInitializeData` explicitly sets all known flags to `true` when not present in settings. The `filterTopics` function uses `featureFlags[flag] !== false` (not `featureFlags[flag]`) so undefined flags are treated as enabled.
+
+### Dashboard Widget Data
+Dashboard widgets save entries with `_taxonomyId` in encrypted metadata (same as all entries). The Priorities widget auto-creates a "Priorities" topic on first save. The Meds widget reads from `decryptedEntries` filtered by the Medication topic — it only renders when `hasMeds` is true.
 
 ## Security Hardening
 
