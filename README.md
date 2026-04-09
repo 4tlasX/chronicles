@@ -12,12 +12,11 @@ A zero-knowledge encrypted journal for those too busy to journal. Capture the ke
 - **Goals & Milestones** - Track goals with milestone progress and task linking
 - **Meal Planning & Recipes** - Weekly menu planner, recipe entries with ingredients and instructions, linked shopping lists
 - **Shopping Lists** - Checklist-style lists linkable to recipes; dashboard widget shows active list with inline check-off
-- **Health Tracking** - Medications, symptoms, food, exercise, and allergies
+- **Health Tracking** - Medications, symptoms, food, exercise, and allergies - Printable medication lists (with dosage and schedule), symptoms, and allergy records
 - **Medication Schedule** - Daily dose tracking with time-based scheduling
 - **Health Reporting** - Correlation analysis, severity trends, and exercise impact charts with date range filtering
 - **Calendar View** - Visual month overview; events and meetings appear on their scheduled date in your header colour
 - **Entry Sharing** - Share entries via encrypted public links
-- **Printable Views** - Print medication lists (with dosage and schedule), symptoms, and allergy records
 - **PWA Support** - Installable as a standalone app with offline shell caching
 - **Keyboard Shortcuts** - Ctrl+N (new entry), Ctrl+D (delete), Enter to save
 - **Customizable Theme** - 40+ muted vintage header colors, 28 background images, light/dark mode
