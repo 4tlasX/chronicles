@@ -350,7 +350,6 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
           status={status}
           onSave={handleSave}
           onCancel={onClose}
-          onDelete={handleDelete}
         />
       )}
     </Card>

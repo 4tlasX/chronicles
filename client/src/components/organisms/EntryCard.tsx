@@ -4,6 +4,7 @@ import { faStar } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { useUIStore } from '../../stores/uiStore.js';
 import { stripHtml } from '../../utils/stripHtml.js';
+import { SwipeActions } from '../molecules/SwipeActions.js';
 
 interface EntryCardProps {
   id: number;
@@ -15,6 +16,7 @@ interface EntryCardProps {
   topicId?: number;
   active?: boolean;
   onClick: () => void;
+  onDelete?: () => void;
   onTopicClick?: (topicId: number) => void;
   onToggleComplete?: (id: number, completed: boolean) => void;
   onToggleBookmark?: (id: number, isFavorite: boolean) => void;
@@ -24,24 +26,23 @@ interface EntryCardProps {
   customType?: string;
 }
 
-const Card = styled.button<{ $active?: boolean }>`
+/* Card is a div so we can safely nest buttons inside (action buttons) */
+const Card = styled.div<{ $active?: boolean }>`
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 12px 24px 24px;
-  margin-bottom: 0;
   text-align: left;
-  background: ${({ $active }) =>
-    $active ? 'rgba(0, 0, 0, 0.04)' : 'transparent'};
-  border: none;
+  background: ${({ $active }) => $active ? 'rgba(0, 0, 0, 0.04)' : 'transparent'};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease;
+  &:hover { background: rgba(0, 0, 0, 0.04); }
+`;
 
-  &:hover {
-    background: rgba(0, 0, 0, 0.04);
-  }
+const CardContent = styled.div`
+  padding: 12px 24px 24px;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
 const HeaderRow = styled.div`
@@ -79,9 +80,15 @@ const TopicLabel = styled.span`
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
+const Separator = styled.span`
+  color: ${({ theme }) => theme.colors.border};
+  font-size: 11px;
+  user-select: none;
+`;
+
 const Timestamp = styled.span`
-  margin-left: auto;
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
+  font-size: 13px;
+  font-weight: 300;
   color: ${({ theme }) => theme.colors.textMuted};
   flex-shrink: 0;
 `;
@@ -90,25 +97,6 @@ const ContentArea = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 8px;
-`;
-
-const Checkbox = styled.div<{ $checked?: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  min-width: 14px;
-  margin-top: 5px;
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  border: 2px solid ${({ theme, $checked }) =>
-    $checked ? theme.colors.text : '#999'};
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 9px;
-  line-height: 1;
 `;
 
 const PreviewText = styled.div<{ $completed?: boolean }>`
@@ -135,12 +123,12 @@ const Footer = styled.div`
 `;
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  task: { bg: 'rgba(59, 130, 246, 0.15)', text: '#2563eb' },
-  goal: { bg: 'rgba(139, 92, 246, 0.15)', text: '#7c3aed' },
-  food: { bg: 'rgba(245, 158, 11, 0.15)', text: '#b45309' },
-  medication: { bg: 'rgba(16, 185, 129, 0.15)', text: '#047857' },
-  exercise: { bg: 'rgba(239, 68, 68, 0.15)', text: '#9B4444' },
-  symptom: { bg: 'rgba(236, 72, 153, 0.15)', text: '#be185d' },
+  task:       { bg: 'rgba(59, 130, 246, 0.15)',  text: '#2563eb' },
+  goal:       { bg: 'rgba(139, 92, 246, 0.15)',  text: '#7c3aed' },
+  food:       { bg: 'rgba(245, 158, 11, 0.15)',  text: '#b45309' },
+  medication: { bg: 'rgba(16, 185, 129, 0.15)',  text: '#047857' },
+  exercise:   { bg: 'rgba(239, 68, 68, 0.15)',   text: '#9B4444' },
+  symptom:    { bg: 'rgba(236, 72, 153, 0.15)',  text: '#be185d' },
 };
 
 const TypeBadge = styled.span<{ $type: string }>`
@@ -169,67 +157,38 @@ const FavoriteStar = styled.span`
   &:hover { opacity: 0.7; }
 `;
 
-
 export function EntryCard({
-  id,
-  content,
-  date,
-  topicName,
-  topicColor,
-  topicIcon,
-  topicId,
-  active,
-  onClick,
-  onTopicClick,
-  onToggleComplete,
-  onToggleBookmark,
-  hasCheckbox,
-  isCompleted,
-  isFavorite,
-  customType,
+  id, content, date, topicName, topicColor, topicIcon, topicId,
+  active, onClick, onDelete, onTopicClick, onToggleComplete, onToggleBookmark,
+  hasCheckbox, isCompleted, isFavorite, customType,
 }: EntryCardProps) {
   const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
   const plainText = stripHtml(content);
   const preview = plainText.slice(0, 160) || 'Untitled entry';
 
   const d = new Date(date);
-  const formatted = `${d.getMonth() + 1}/${d.getDate()} ${d.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })}`;
+  const formatted = d.toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+  });
 
-  return (
-    <Card $active={active} onClick={onClick}>
+  const inner = (
+    <CardContent onClick={onClick}>
       <HeaderRow>
         {topicName && (
           <TopicBadge
             $bgColor={headerColor}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (topicId && onTopicClick) onTopicClick(topicId);
-            }}
+            onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }}
           >
             {topicIcon && <TopicIcon><FontAwesomeIcon icon={topicIcon} /></TopicIcon>}
             <TopicLabel>{topicName}</TopicLabel>
           </TopicBadge>
         )}
+        {topicName && <Separator>|</Separator>}
         <Timestamp>{formatted}</Timestamp>
       </HeaderRow>
 
       <ContentArea>
-        {false && hasCheckbox && (
-          <Checkbox
-            $checked={isCompleted}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onToggleComplete) onToggleComplete(id, !isCompleted);
-            }}
-          >
-            {isCompleted && '✓'}
-          </Checkbox>
-        )}
-        <PreviewText>{preview}</PreviewText>
+        <PreviewText $completed={isCompleted}>{preview}</PreviewText>
       </ContentArea>
 
       {((!topicName && customType) || isFavorite) && (
@@ -237,10 +196,7 @@ export function EntryCard({
           {!topicName && customType && <TypeBadge $type={customType}>{customType}</TypeBadge>}
           {isFavorite && (
             <FavoriteStar
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleBookmark?.(id, false);
-              }}
+              onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
               title="Remove bookmark"
             >
               <FontAwesomeIcon icon={faStar} />
@@ -248,6 +204,16 @@ export function EntryCard({
           )}
         </Footer>
       )}
+    </CardContent>
+  );
+
+  return (
+    <Card $active={active}>
+      {onDelete ? (
+        <SwipeActions onDelete={onDelete} accentColor={headerColor}>
+          {inner}
+        </SwipeActions>
+      ) : inner}
     </Card>
   );
 }

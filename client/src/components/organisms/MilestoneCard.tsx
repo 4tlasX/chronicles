@@ -408,7 +408,6 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
           status={status}
           onSave={handleSave}
           onCancel={onClose}
-          onDelete={handleDelete}
         />
       )}
     </Card>

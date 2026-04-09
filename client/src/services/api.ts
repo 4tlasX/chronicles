@@ -133,7 +133,7 @@ export const auth = {
 // =============================================================================
 
 export const entries = {
-  getAll: () => request<Record<string, unknown>[]>('/entries'),
+  getAll: () => request<Record<string, unknown>[]>('/entries?limit=5000'),
 
   get: (id: number) => request<Record<string, unknown>>(`/entries/${id}`),
 

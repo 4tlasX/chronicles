@@ -415,7 +415,7 @@ export function Header() {
   const handleNewEntry = () => {
     useUIStore.getState().setSelectedEntryId(null);
     useUIStore.getState().setShowMobileEditor(true);
-    navigate('/');
+    navigate('/journal');
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -470,7 +470,8 @@ export function Header() {
         </LeftSection>
 
         <Nav>
-          <NavLink to="/" $active={isActive('/')} $light={light}>Journal</NavLink>
+          <NavLink to="/" $active={isActive('/')} $light={light}>Dashboard</NavLink>
+          <NavLink to="/journal" $active={isActive('/journal')} $light={light}>Journal</NavLink>
           <NavLink to="/topics" $active={isActive('/topics')} $light={light}>Topics</NavLink>
           <NavLink to="/calendar" $active={isActive('/calendar')} $light={light}>Calendar</NavLink>
           {goalsItems.length > 0 && (
@@ -534,7 +535,8 @@ export function Header() {
           </DrawerCloseButton>
         </DrawerHeader>
         <DrawerNav>
-          {mobileNav('/', 'Journal')}
+          {mobileNav('/', 'Dashboard')}
+          {mobileNav('/journal', 'Journal')}
           {mobileNav('/topics', 'Topics')}
           {mobileNav('/calendar', 'Calendar')}
           {goalsItems.length > 0 && (

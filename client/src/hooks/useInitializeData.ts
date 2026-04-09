@@ -47,12 +47,14 @@ export function useInitializeData() {
         if (typeof settingsMap.backgroundImage === 'string') setBackgroundImage(settingsMap.backgroundImage);
         if (typeof settingsMap.backgroundOpacity === 'string') setBackgroundOpacity(parseFloat(settingsMap.backgroundOpacity));
 
-        // Feature flags
+        // Feature flags — default to true (enabled) when not explicitly saved
+        const KNOWN_FLAGS = [
+          'foodEnabled', 'medicationEnabled', 'goalsEnabled', 'milestonesEnabled',
+          'exerciseEnabled', 'allergiesEnabled', 'entertainmentEnabled', 'inspirationEnabled',
+        ];
         const flags: Record<string, boolean> = {};
-        for (const key of Object.keys(settingsMap)) {
-          if (key.endsWith('Enabled') && typeof settingsMap[key] === 'boolean') {
-            flags[key] = settingsMap[key] as boolean;
-          }
+        for (const key of KNOWN_FLAGS) {
+          flags[key] = typeof settingsMap[key] === 'boolean' ? (settingsMap[key] as boolean) : true;
         }
         setFeatureFlags(flags);
         setTopics(topicsData);

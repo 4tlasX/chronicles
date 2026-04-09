@@ -20,6 +20,7 @@ import { MeetingFields, type MeetingFieldValues } from '../molecules/fields/Meet
 import { AllergyFields, type AllergyFieldValues } from '../molecules/fields/AllergyFields.js';
 import { ShoppingListFields, type ShoppingListFieldValues } from '../molecules/fields/ShoppingListFields.js';
 import { RecipeFields, type RecipeFieldValues } from '../molecules/fields/RecipeFields.js';
+import { PrioritiesFields, type PrioritiesFieldValues } from '../molecules/fields/PrioritiesFields.js';
 
 /* ── Styled components ── */
 
@@ -183,20 +184,6 @@ const ActionBtn = styled.button`
   &:hover { background: rgba(0,0,0,0.04); color: ${({ theme }) => theme.colors.text}; border-color: rgba(0,0,0,0.04); }
 `;
 
-const DeleteBtn = styled.button`
-  padding: 0;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: ${({ theme }) => theme.colors.danger};
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.15s;
-  &:hover { opacity: 0.7; }
-`;
 
 const SaveButton = styled.button<{ $disabled?: boolean }>`
   padding: 4px 14px;
@@ -231,6 +218,7 @@ const TOPIC_TO_TYPE: Record<string, string> = {
   food: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
   allergy: 'allergy', 'shopping list': 'shopping_list', recipe: 'recipe',
+  priorities: 'priorities',
 };
 
 function getCustomType(topicName: string | undefined): string | null {
@@ -251,7 +239,6 @@ interface EntryFormProps {
   customFields: Record<string, unknown>;
   onCustomFieldsChange: (fields: Record<string, unknown>) => void;
   onSave: () => Promise<void>;
-  onDelete?: () => Promise<void>;
   onNew: () => void;
   onBookmark?: () => void;
   onShare?: () => void;
@@ -266,7 +253,7 @@ interface EntryFormProps {
 
 export function EntryForm({
   entryId, content, onContentChange, topicId, onTopicChange, topics,
-  customFields, onCustomFieldsChange, onSave, onDelete, onNew,
+  customFields, onCustomFieldsChange, onSave, onNew,
   onBookmark, onShare, onBack,
   isEditing, isSaving, saveStatus, placeholder = 'Start writing...',
   expanded = false, onExpandChange,
@@ -432,15 +419,13 @@ export function EntryForm({
                 {customType === 'allergy' && <AllergyFields values={{ allergen: '', severity: 5, reaction: '', occurredDate: '', occurredTime: '', notes: '', ...customFields } as AllergyFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
                 {customType === 'shopping_list' && <ShoppingListFields values={{ items: [], notes: '', linkedRecipeIds: [], ...(customFields as Partial<ShoppingListFieldValues>) } as ShoppingListFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} recipeOptions={recipeOptions} />}
                 {customType === 'recipe' && <RecipeFields values={{ servings: '', prepTime: '', cookTime: '', cuisine: '', ingredients: [], instructions: '', linkedShoppingListIds: [], ...(customFields as Partial<RecipeFieldValues>) } as RecipeFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} shoppingListOptions={shoppingListOptions} />}
+                {customType === 'priorities' && <PrioritiesFields values={{ priorities: [], ...(customFields as Partial<PrioritiesFieldValues>) } as PrioritiesFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
               </CustomFieldsBody>
             )}
           </CustomFieldsSection>
         )}
         {/* Action bar — below custom fields, scrolls with content */}
         <SaveRow>
-          {isEditing && onDelete && (
-            <DeleteBtn onClick={onDelete}>Delete</DeleteBtn>
-          )}
           {saveStatus && <StatusText $error={saveStatus === 'Save failed'}>{saveStatus}</StatusText>}
           <RightActions>
             {isEditing && (

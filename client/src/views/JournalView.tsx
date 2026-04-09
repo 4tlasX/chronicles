@@ -325,7 +325,10 @@ export function JournalView() {
       <JournalTemplate
         sidePanel={
           <SidePanel hiddenMobile={showMobileEditor}>
-            <ViewTabs onDateTabClick={() => setCalendarExpanded(prev => !prev)} />
+            <ViewTabs
+              onDateTabClick={() => setCalendarExpanded(prev => !prev)}
+              onTodayClick={() => setCalendarExpanded(false)}
+            />
             {filterTopic && (
               <TopicFilterBar
                 icon={getTopicIcon(filterTopic.icon)}

@@ -64,10 +64,19 @@ interface CalendarDayDetailProps {
   entries: DecryptedPost[];
   allTopics: Topic[];
   accentColor: string;
+  eventTopicIds: Set<number>;
   onClose: () => void;
 }
 
-export function CalendarDayDetail({ dateStr, entries, allTopics, accentColor, onClose }: CalendarDayDetailProps) {
+export function CalendarDayDetail({ dateStr, entries, allTopics, accentColor, eventTopicIds, onClose }: CalendarDayDetailProps) {
+  // Events/meetings are already sorted first by CalendarView; keep that order
+  const sortedEntries = [...entries].sort((a, b) => {
+    const aIsEvent = eventTopicIds.has((a.metadata as Record<string, unknown>)?._taxonomyId as number);
+    const bIsEvent = eventTopicIds.has((b.metadata as Record<string, unknown>)?._taxonomyId as number);
+    if (aIsEvent && !bIsEvent) return -1;
+    if (!aIsEvent && bIsEvent) return 1;
+    return 0;
+  });
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const dateLabel = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
@@ -92,10 +101,10 @@ export function CalendarDayDetail({ dateStr, entries, allTopics, accentColor, on
       </Header>
 
       <List>
-        {entries.length === 0 ? (
+        {sortedEntries.length === 0 ? (
           <EmptyState message="No entries for this day." />
         ) : (
-          entries.map(entry => (
+          sortedEntries.map(entry => (
             <EditableEntryCard
               key={entry.id}
               entry={entry}

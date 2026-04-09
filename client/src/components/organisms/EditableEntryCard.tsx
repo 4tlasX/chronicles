@@ -14,6 +14,7 @@ import { ExerciseFields } from '../molecules/fields/ExerciseFields.js';
 import { EventFields } from '../molecules/fields/EventFields.js';
 import { MeetingFields } from '../molecules/fields/MeetingFields.js';
 import { Badge } from '../atoms/Badge.js';
+import { SwipeActions } from '../molecules/SwipeActions.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { entries as entriesApi } from '../../services/api.js';
@@ -252,7 +253,6 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Delete this entry?')) return;
     try {
       await entriesApi.delete(entry.id);
       removeEntry(entry.id);
@@ -293,6 +293,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
 
   return (
     <Card $editing={isEditing}>
+      <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing}>
       <PreviewRow role="button" tabIndex={0} onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}>
         {customType === 'task' && !showAsPlain ? (
           <TaskCheckButton
@@ -337,6 +338,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
           <DateLabel>{dateStr}</DateLabel>
         )}
       </PreviewRow>
+      </SwipeActions>
 
       {isEditing && (
         <InlineEditPanel
@@ -348,7 +350,6 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
           status={status}
           onSave={handleSave}
           onCancel={onClose}
-          onDelete={handleDelete}
         />
       )}
     </Card>

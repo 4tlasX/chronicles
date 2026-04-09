@@ -21,6 +21,7 @@ import { MedicationScheduleView } from './views/MedicationScheduleView.js';
 import { HealthReportingView } from './views/HealthReportingView.js';
 import { MenuView } from './views/MenuView.js';
 import { ShoppingListsView } from './views/ShoppingListsView.js';
+import { DashboardView } from './views/DashboardView.js';
 
 function R({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -58,7 +59,8 @@ export function App() {
               <Route path="/share/:token" element={<SharedEntryView />} />
 
               {/* Core */}
-              <Route path="/" element={<R><JournalView /></R>} />
+              <Route path="/" element={<R><DashboardView /></R>} />
+              <Route path="/journal" element={<R><JournalView /></R>} />
               <Route path="/settings" element={<R><SettingsView /></R>} />
               <Route path="/topics" element={<R><TopicsView /></R>} />
               <Route path="/calendar" element={<R><CalendarView /></R>} />

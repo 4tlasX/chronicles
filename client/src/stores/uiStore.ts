@@ -65,7 +65,7 @@ export const useUIStore = create<UIState>((set) => ({
   setSearchDateTo: (date) => set({ searchDateTo: date }),
   clearSearch: () => set({ searchKeyword: '', searchDateFrom: '', searchDateTo: '', isSearchActive: false }),
 
-  viewMode: 'all',
+  viewMode: 'date',
   setViewMode: (mode) => set({ viewMode: mode }),
 
   selectedDate: new Date(),

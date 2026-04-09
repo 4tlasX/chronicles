@@ -154,7 +154,6 @@ export function NewEntryCard({ topic, headerColor, onCreated }: NewEntryCardProp
         status={status}
         onSave={handleSave}
         onCancel={handleCancel}
-        onDelete={handleCancel}
       />
     </Card>
   );

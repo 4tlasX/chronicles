@@ -60,13 +60,6 @@ const ActionBtn = styled.button`
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
-const DeleteBtn = styled(ActionBtn)`
-  color: ${({ theme }) => theme.colors.danger};
-  border-color: ${({ theme }) => theme.colors.danger};
-  margin-left: auto;
-  &:hover { background: rgba(155, 68, 68, 0.05); color: ${({ theme }) => theme.colors.dangerHover}; }
-`;
-
 const Status = styled.span<{ $error?: boolean }>`
   font-size: 12px;
   color: ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.success};
@@ -92,11 +85,10 @@ interface InlineEditPanelProps {
   status: string;
   onSave: () => void;
   onCancel: () => void;
-  onDelete: () => void;
   title?: string;
 }
 
-export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, onDelete, title }: InlineEditPanelProps) {
+export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title }: InlineEditPanelProps) {
   return (
     <Panel $hasFields={!!fields}>
       {title && <EditTitle>{title}</EditTitle>}
@@ -108,7 +100,6 @@ export function InlineEditPanel({ editor, fields, accentColor, saving, status, o
         </ActionBtn>
         <ActionBtn onClick={onCancel}>Cancel</ActionBtn>
         {status && <Status $error={status.toLowerCase().includes('fail')}>{status}</Status>}
-        <DeleteBtn onClick={onDelete}>Delete</DeleteBtn>
       </Actions>
     </Panel>
   );

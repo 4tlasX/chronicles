@@ -144,13 +144,16 @@ const DayItems = styled.div`
   @media (max-width: 768px) { display: none; }
 `;
 
-const DayItem = styled.div`
+const DayItem = styled.div<{ $accent?: string }>`
   font-size: 12px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  color: ${({ $accent, theme }) => $accent || theme.colors.textSecondary};
+  background: ${({ $accent }) => $accent ? `${$accent}18` : 'transparent'};
   padding: 1px 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  border-radius: 2px;
+  font-weight: ${({ $accent }) => $accent ? 500 : 400};
   @media (max-width: 768px) { padding: 2px 0; }
 `;
 
@@ -177,6 +180,7 @@ interface CalendarGridProps {
   selectedDate: string | null;
   entriesByDate: Map<string, DecryptedPost[]>;
   accentColor: string;
+  eventTopicIds: Set<number>;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onDayClick: (dateStr: string) => void;
@@ -185,7 +189,7 @@ interface CalendarGridProps {
 }
 
 export function CalendarGrid({
-  currentMonth, selectedDate, entriesByDate, accentColor,
+  currentMonth, selectedDate, entriesByDate, accentColor, eventTopicIds,
   onPrevMonth, onNextMonth, onDayClick, onEntryClick, getTopicName,
 }: CalendarGridProps) {
   const today = new Date();
@@ -223,9 +227,11 @@ export function CalendarGrid({
                     <DayItems>
                       {dayEntries.slice(0, 3).map(entry => {
                         const topicName = getTopicName(entry);
+                        const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
+                        const isEvent = taxId !== undefined && eventTopicIds.has(taxId);
                         const preview = stripHtml(entry.content).slice(0, 40) || 'Entry';
                         return (
-                          <DayItem key={entry.id} onClick={e => { e.stopPropagation(); onEntryClick(entry.id); }}>
+                          <DayItem key={entry.id} $accent={isEvent ? accentColor : undefined} onClick={e => { e.stopPropagation(); onEntryClick(entry.id); }}>
                             {topicName ? `${topicName}: ` : ''}{preview}
                           </DayItem>
                         );

@@ -171,6 +171,7 @@ export function SettingsView() {
   const [seedResult, setSeedResult] = useState('');
   const [seedingEntries, setSeedingEntries] = useState(false);
   const [seedEntriesResult, setSeedEntriesResult] = useState('');
+  const [seedConfirmArmed, setSeedConfirmArmed] = useState(false);
 
   // Load settings
   useEffect(() => {
@@ -489,7 +490,7 @@ export function SettingsView() {
     <SettingsTemplate title="">
       <HeaderRow>
         <Title>Settings</Title>
-        <BackLink to="/"><FontAwesomeIcon icon={faChevronLeft} size="xs" /> Back to Journal</BackLink>
+        <BackLink to="/journal"><FontAwesomeIcon icon={faChevronLeft} size="xs" /> Back to Journal</BackLink>
       </HeaderRow>
 
       {/* Account */}
@@ -709,11 +710,24 @@ export function SettingsView() {
         {seedResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: '#5A8A6A' }}>{seedResult}</div>}
         <SettingsRow
           title="Seed Test Data"
-          description="Create 18 test entries across all topic types with custom fields and linking"
+          description="Create test entries across all topic types — adds to existing data, does not delete anything"
           action={
-            <ActionButton onClick={handleSeedEntries} disabled={seedingEntries}>
-              {seedingEntries ? <Spinner size={14} /> : 'Seed Entries'}
-            </ActionButton>
+            seedConfirmArmed ? (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <ActionButton
+                  onClick={() => { setSeedConfirmArmed(false); handleSeedEntries(); }}
+                  disabled={seedingEntries}
+                  style={{ background: '#9B4444', color: '#fff' }}
+                >
+                  {seedingEntries ? <Spinner size={14} /> : 'Yes, seed'}
+                </ActionButton>
+                <ActionButton onClick={() => setSeedConfirmArmed(false)}>Cancel</ActionButton>
+              </div>
+            ) : (
+              <ActionButton onClick={() => setSeedConfirmArmed(true)} disabled={seedingEntries}>
+                Seed Entries
+              </ActionButton>
+            )
           }
         />
         {seedEntriesResult && <div style={{ padding: '0 20px 12px', fontSize: 13, color: seedEntriesResult.startsWith('Failed') ? '#9B4444' : '#5A8A6A' }}>{seedEntriesResult}</div>}

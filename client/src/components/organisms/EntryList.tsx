@@ -3,6 +3,7 @@ import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { EntryCard } from './EntryCard.js';
 import { getTopicIcon } from '../../utils/topicIcons.js';
+import { entries as entriesApi } from '../../services/api.js';
 import { useMemo, useCallback } from 'react';
 
 const TOPIC_TO_TYPE: Record<string, string> = {
@@ -40,6 +41,7 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   const topics = useEntriesStore(s => s.topics);
   const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
+  const removeEntry = useEntriesStore(s => s.removeEntry);
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
   const selectedEntryId = useUIStore(s => s.selectedEntryId);
@@ -66,6 +68,15 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
     // Delegate persist to parent if provided
     onToggleBookmark?.(entryId, isFavorite);
   }, [entries, updateDecryptedEntry, onToggleBookmark]);
+
+  const handleDelete = useCallback(async (entryId: number) => {
+    try {
+      await entriesApi.delete(entryId);
+      removeEntry(entryId);
+    } catch (err) {
+      console.error('Failed to delete entry:', err);
+    }
+  }, [removeEntry]);
 
   const handleToggleComplete = useCallback((entryId: number, completed: boolean) => {
     const entry = entries.find(e => e.id === entryId);
@@ -177,6 +188,7 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
             topicId={topic?.id}
             active={selectedEntryId === entry.id}
             onClick={() => setSelectedEntryId(entry.id)}
+            onDelete={() => handleDelete(entry.id)}
             onTopicClick={handleTopicClick}
             onToggleComplete={hasCheckbox ? handleToggleComplete : undefined}
             onToggleBookmark={handleToggleBookmarkLocal}

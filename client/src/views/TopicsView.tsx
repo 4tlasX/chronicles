@@ -77,7 +77,6 @@ export function TopicsView() {
   }, [editingId, editName, editIcon, allTopics, setTopics]);
 
   const handleDelete = useCallback(async (id: number) => {
-    if (!window.confirm('Delete this topic? Entries with this topic will become untagged.')) return;
     try {
       await topicsApi.delete(id);
       setTopics(allTopics.filter(t => t.id !== id));
@@ -145,7 +144,7 @@ export function TopicsView() {
           headerColor={headerColor}
           hiddenMobile={!mobileShowEntries}
           onMobileBack={() => setMobileShowEntries(false)}
-          onBackToJournal={() => navigate('/')}
+          onBackToJournal={() => navigate('/journal')}
           selectedTopic={selectedTopic || undefined}
         />
     </TwoPanelTemplate>

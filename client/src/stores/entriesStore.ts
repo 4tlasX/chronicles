@@ -19,9 +19,9 @@ function filterTopics(allTopics: Topic[], featureFlags: Record<string, boolean>)
   return allTopics.filter(topic => {
     // Topics not gated by any feature flag are always shown
     if (!GATED_TOPIC_NAMES.has(topic.name)) return true;
-    // Check if any flag that controls this topic is enabled
+    // Only hide a topic when its flag is explicitly set to false — undefined means "not configured yet, show it"
     return Object.entries(FEATURE_TOPIC_MAP).some(
-      ([flag, names]) => names.includes(topic.name) && featureFlags[flag]
+      ([flag, names]) => names.includes(topic.name) && featureFlags[flag] !== false
     );
   });
 }

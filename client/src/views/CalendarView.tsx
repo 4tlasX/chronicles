@@ -21,17 +21,48 @@ export function CalendarView() {
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
+  // IDs of Event and Meeting topics
+  const eventTopicIds = useMemo(
+    () => new Set(allTopics.filter(t => ['event', 'meeting'].includes(t.name.toLowerCase())).map(t => t.id)),
+    [allTopics]
+  );
+
   const entriesByDate = useMemo(() => {
     const map = new Map<string, typeof entries>();
-    for (const entry of entries) {
-      const d = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt);
-      const key = toDateStr(d);
+    const addEntry = (key: string, entry: typeof entries[number]) => {
       const arr = map.get(key) || [];
       arr.push(entry);
       map.set(key, arr);
+    };
+
+    for (const entry of entries) {
+      const meta = entry.metadata as Record<string, unknown>;
+      const taxId = meta?._taxonomyId as number | undefined;
+      const isEventEntry = taxId !== undefined && eventTopicIds.has(taxId);
+
+      if (isEventEntry) {
+        // Use startDate from custom fields for events/meetings
+        const cf = meta?._customFields as Record<string, unknown> | undefined;
+        const startDate = cf?.startDate as string | undefined;
+        if (startDate) { addEntry(startDate, entry); continue; }
+      }
+      const d = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt);
+      addEntry(toDateStr(d), entry);
     }
+
+    // Sort each day so events/meetings come first
+    for (const [key, arr] of map) {
+      map.set(key, arr.sort((a, b) => {
+        const aIsEvent = eventTopicIds.has((a.metadata as Record<string, unknown>)?._taxonomyId as number);
+        const bIsEvent = eventTopicIds.has((b.metadata as Record<string, unknown>)?._taxonomyId as number);
+        if (aIsEvent && !bIsEvent) return -1;
+        if (!aIsEvent && bIsEvent) return 1;
+        return 0;
+      }));
+    }
+
     return map;
-  }, [entries]);
+  }, [entries, eventTopicIds]);
 
   const getTopicName = useCallback((entry: typeof entries[number]) => {
     const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
@@ -70,6 +101,7 @@ export function CalendarView() {
           selectedDate={selectedDate}
           entriesByDate={entriesByDate}
           accentColor={headerColor}
+          eventTopicIds={eventTopicIds}
           onPrevMonth={goToPrev}
           onNextMonth={goToNext}
           onDayClick={handleDayClick}
@@ -84,6 +116,7 @@ export function CalendarView() {
           entries={selectedEntries}
           allTopics={allTopics}
           accentColor={headerColor}
+          eventTopicIds={eventTopicIds}
           onClose={() => setSelectedDate(null)}
         />
       )}
