@@ -446,7 +446,7 @@ router.post('/recover', strictLimiter, async (req, res) => {
     const txResult = await prisma.$transaction(async (tx) => {
       // Lock the account row to prevent concurrent recovery attempts
       const locked = await tx.$queryRawUnsafe<{ id: number; recovery_key_hash: string | null }[]>(
-        'SELECT id, recovery_key_hash FROM "Account" WHERE id = $1 FOR UPDATE',
+        'SELECT id, recovery_key_hash FROM "accounts" WHERE id = $1 FOR UPDATE',
         account.id
       );
 
