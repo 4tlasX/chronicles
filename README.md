@@ -6,7 +6,7 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 
 - **Zero-Knowledge Encryption** - AES-256-GCM client-side encryption with non-extractable keys; server never sees plaintext
 - **Two-Factor Authentication** - TOTP-based 2FA (authenticator app); inline setup wizard with QR code, confirmation step, and 8 backup codes; disable with password confirmation
-- **Dashboard Home** - Two-column drag-and-drop widget layout; quick entry, daily priorities, events & meetings, mini calendar, affirmations, daily wellness check-in, tasks, shopping list, medication schedule, weather, and menu plan; daily quote and Playfair greeting
+- **Dashboard Home** - Two-column drag-and-drop widget layout; quick entry, daily priorities, events & meetings, mini calendar, affirmations, daily wellness check-in, tasks, shopping list, medication schedule, weather, and menu plan; daily quote and greeting; Add your custom topic widget
 - **Rich Text Editor** - TipTap-based editor with formatting toolbar and inline freehand drawing support
 - **Topic Organization** - Categorize entries with custom topics, icons, and drag-and-drop reordering
 - **Quick Tab Filters** - Today, Date (with active filter bar and clear button), Tasks, All, Bookmarks, and Search views
