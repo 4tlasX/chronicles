@@ -517,7 +517,7 @@ function isValidCardId(id: string): id is CardId {
 }
 
 const DEFAULT_LEFT: CardId[]  = ['quick-entry', 'priorities', 'events', 'menu-plan'];
-const DEFAULT_RIGHT: CardId[] = ['mini-calendar', 'affirmations', 'wellness'];
+const DEFAULT_RIGHT: CardId[] = ['mini-calendar', 'affirmations', 'wellness', 'meds'];
 const LS_KEY = 'dashboard-layout-v2';
 
 const STATIC_LABELS: Record<StaticCardId, string> = {
@@ -2704,7 +2704,7 @@ export function DashboardView() {
   );
 
   // Optional static widgets not yet placed anywhere
-  const OPTIONAL_STATICS: StaticCardId[] = ['affirmations', 'mini-calendar', 'wellness'];
+  const OPTIONAL_STATICS: StaticCardId[] = ['affirmations', 'mini-calendar', 'wellness', 'meds'];
   const addableStatics = useMemo(
     () => OPTIONAL_STATICS.filter(id =>
       !layout.left.includes(id) && !layout.right.includes(id) && !layout.hidden.includes(id)
