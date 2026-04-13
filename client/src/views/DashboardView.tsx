@@ -512,7 +512,7 @@ type StaticCardId = 'priorities' | 'quick-entry' | 'tasks' | 'events' | 'shoppin
 type CardId = StaticCardId | `topic-${number}`;
 
 function isValidCardId(id: string): id is CardId {
-  const STATIC: string[] = ['quick-entry', 'priorities', 'events', 'meds', 'tasks', 'shopping', 'weather', 'menu-plan', 'affirmations', 'wellness'];
+  const STATIC: string[] = ['quick-entry', 'priorities', 'events', 'meds', 'tasks', 'shopping', 'weather', 'menu-plan', 'affirmations', 'wellness', 'mini-calendar'];
   return STATIC.includes(id) || /^topic-\d+$/.test(id);
 }
 
@@ -2704,13 +2704,13 @@ export function DashboardView() {
   );
 
   // Optional static widgets not yet placed anywhere
-  const OPTIONAL_STATICS: StaticCardId[] = ['affirmations', 'mini-calendar', 'wellness', 'meds'];
-  const addableStatics = useMemo(
-    () => OPTIONAL_STATICS.filter(id =>
+  const addableStatics = useMemo(() => {
+    const OPTIONAL_STATICS: StaticCardId[] = ['affirmations', 'mini-calendar', 'wellness', 'meds'];
+    if (weatherEnabled) OPTIONAL_STATICS.push('weather');
+    return OPTIONAL_STATICS.filter(id =>
       !layout.left.includes(id) && !layout.right.includes(id) && !layout.hidden.includes(id)
-    ),
-    [layout.left, layout.right, layout.hidden]
-  );
+    );
+  }, [layout.left, layout.right, layout.hidden, weatherEnabled]);
 
   // Shopping list — first current (has unchecked items)
   const shoppingListEntry = useMemo(() => {
