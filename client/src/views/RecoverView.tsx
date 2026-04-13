@@ -16,7 +16,7 @@ import type { RecoverStep } from '../types/health.js';
 export function RecoverView() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { unlockWithRecoveryKey, rewrapMasterKey } = useEncryption();
+  const { recoverAndRewrap } = useEncryption();
   const [step, setStep] = useState<RecoverStep>('email');
   const [email, setEmail] = useState('');
   const [recoveryKey, setRecoveryKey] = useState('');
@@ -47,17 +47,14 @@ export function RecoverView() {
   const handleRecoveryStep = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
-    try {
-      // Try to unlock master key with recovery key
-      const cleanKey = recoveryKey.replace(/[-\s]/g, '');
-      await unlockWithRecoveryKey(cleanKey, recoveryParams!.recoveryWrappedMK, recoveryParams!.recoveryWrapIv);
-      setStep('newPassword');
-    } catch {
+    // Just validate the key looks right before advancing — actual unwrap happens
+    // atomically with the rewrap in handleNewPasswordStep to avoid auto-lock races.
+    const cleanKey = recoveryKey.replace(/[-\s]/g, '');
+    if (cleanKey.length < 16) {
       setError('Invalid recovery key');
-    } finally {
-      setLoading(false);
+      return;
     }
+    setStep('newPassword');
   };
 
   const handleNewPasswordStep = async (e: FormEvent) => {
@@ -74,13 +71,20 @@ export function RecoverView() {
 
     setLoading(true);
     try {
-      // Re-wrap master key with new password
-      const { salt, wrappedMK, wrapIv } = await rewrapMasterKey(newPassword);
+      // Unwrap with recovery key and rewrap with new password in one atomic step —
+      // avoids the auto-lock race that cleared the key between separate steps.
+      const cleanKey = recoveryKey.replace(/[-\s]/g, '');
+      const { salt, wrappedMK, wrapIv } = await recoverAndRewrap(
+        cleanKey,
+        recoveryParams!.recoveryWrappedMK,
+        recoveryParams!.recoveryWrapIv,
+        newPassword,
+      );
 
       // Send to server
       await authApi.recover({
         email,
-        recoveryKey: recoveryKey.replace(/[-\s]/g, ''),
+        recoveryKey: cleanKey,
         newPassword,
         newEncryptedMasterKey: wrappedMK,
         newKekSalt: salt,
@@ -89,7 +93,7 @@ export function RecoverView() {
 
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Recovery failed');
+      setError(err instanceof Error ? err.message : 'Invalid recovery key or recovery failed');
     } finally {
       setLoading(false);
     }

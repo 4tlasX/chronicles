@@ -21,6 +21,8 @@ interface EncryptionContextValue {
   decryptPosts: (posts: EncryptedPost[]) => Promise<DecryptedPost[]>;
   unlockWithRecoveryKey: (recoveryKey: string, recoveryWrappedMK: string, recoveryWrapIv: string) => Promise<void>;
   rewrapMasterKey: (newPassword: string, currentPassword?: string, params?: EncryptionParams) => Promise<{ salt: string; wrappedMK: string; wrapIv: string }>;
+  /** Atomic recovery: unwrap with recovery key + rewrap with new password in one step. Avoids auto-lock race between steps. */
+  recoverAndRewrap: (recoveryKey: string, recoveryWrappedMK: string, recoveryWrapIv: string, newPassword: string) => Promise<{ salt: string; wrappedMK: string; wrapIv: string }>;
 }
 
 const EncryptionContext = createContext<EncryptionContextValue | null>(null);
@@ -129,6 +131,23 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     return result;
   }, []);
 
+  const recoverAndRewrap = useCallback(async (
+    recoveryKey: string,
+    recoveryWrappedMK: string,
+    recoveryWrapIv: string,
+    newPassword: string
+  ) => {
+    // Unwrap the master key using the recovery key
+    const extractableKey = await encryptionService.unwrapWithRecoveryKey(recoveryKey, recoveryWrappedMK, recoveryWrapIv);
+    // Immediately rewrap with the new password — no ref storage, no lock window
+    const result = await encryptionService.rewrapMasterKey(extractableKey, newPassword);
+    // Store non-extractable copy for this session
+    masterKeyRef.current = await toNonExtractable(extractableKey);
+    encryptionParamsRef.current = null;
+    setIsUnlocked(true);
+    return result;
+  }, []);
+
   // Clear all key material on unmount
   useEffect(() => {
     return () => {
@@ -183,6 +202,7 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
       decryptPosts,
       unlockWithRecoveryKey,
       rewrapMasterKey,
+      recoverAndRewrap,
     }}>
       {children}
     </EncryptionContext.Provider>
