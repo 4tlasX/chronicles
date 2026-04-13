@@ -1,9 +1,9 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faPlus, faTrash, faCalendarDay, faListCheck,
+  faPlus, faTrash, faCalendarDay, faCalendarDays, faListCheck,
   faBolt, faCartShopping, faCheck, faPencil, faGripVertical, faPills,
   faSun, faCloud, faCloudRain, faSnowflake, faWind, faXmark, faSlidersH, faChevronDown, faUtensils,
   faHeart, faChevronLeft, faChevronRight,
@@ -37,6 +37,7 @@ import { TopicSelector } from '../components/organisms/TopicSelector.js';
 import { Editor } from '../components/organisms/Editor.js';
 import type { Topic } from '../types/topics.js';
 import { getTopicIcon } from '../utils/topicIcons.js';
+import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
 
 /* ── Constants ── */
 
@@ -507,7 +508,7 @@ const PriorityNumber = styled.span`
 
 /* ── Drag & Drop ── */
 
-type StaticCardId = 'priorities' | 'quick-entry' | 'tasks' | 'events' | 'shopping' | 'meds' | 'weather' | 'menu-plan' | 'affirmations' | 'wellness';
+type StaticCardId = 'priorities' | 'quick-entry' | 'tasks' | 'events' | 'shopping' | 'meds' | 'weather' | 'menu-plan' | 'affirmations' | 'wellness' | 'mini-calendar';
 type CardId = StaticCardId | `topic-${number}`;
 
 function isValidCardId(id: string): id is CardId {
@@ -516,12 +517,13 @@ function isValidCardId(id: string): id is CardId {
 }
 
 const DEFAULT_LEFT: CardId[]  = ['quick-entry', 'priorities', 'events', 'menu-plan'];
-const DEFAULT_RIGHT: CardId[] = ['wellness', 'meds', 'shopping', 'weather'];
+const DEFAULT_RIGHT: CardId[] = ['mini-calendar', 'affirmations', 'wellness'];
 const LS_KEY = 'dashboard-layout-v2';
 
 const STATIC_LABELS: Record<StaticCardId, string> = {
   'quick-entry': 'Quick Entry',
   'priorities': 'Priorities',
+  'mini-calendar': 'Mini Calendar',
   'events': 'Events & Meetings',
   'tasks': 'Tasks',
   'shopping': 'Shopping',
@@ -2217,6 +2219,50 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
   );
 }
 
+/* ── Widget: Mini Calendar ── */
+
+function MiniCalendarCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
+  const navigate = useNavigate();
+  const setSelectedDate = useUIStore(s => s.setSelectedDate);
+  const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
+  const [selectedDate, setLocalDate] = useState(() => new Date());
+
+  const entryDates = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of decryptedEntries) {
+      const d = e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt as string);
+      set.add(toDateStr(d));
+    }
+    return set;
+  }, [decryptedEntries]);
+
+  const handleSelectDate = (date: Date) => {
+    setLocalDate(date);
+    setSelectedDate(date);
+    navigate('/journal');
+  };
+
+  return (
+    <DashCard>
+      <CardHeader>
+        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faCalendarDays} /></CardIconWrap>
+        <CardTitle>Calendar</CardTitle>
+        <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
+          <FontAwesomeIcon icon={faGripVertical} />
+        </DragGrip>
+      </CardHeader>
+      <div style={{ padding: '0 4px 8px' }}>
+        <MiniCalendar
+          selectedDate={selectedDate}
+          onSelectDate={handleSelectDate}
+          entryDates={entryDates}
+          expanded
+        />
+      </div>
+    </DashCard>
+  );
+}
+
 /* ── Widget: Daily Check-in (Wellness) ── */
 
 const WATER_GOAL = 8;
@@ -2656,7 +2702,7 @@ export function DashboardView() {
   );
 
   // Optional static widgets not yet placed anywhere
-  const OPTIONAL_STATICS: StaticCardId[] = ['affirmations'];
+  const OPTIONAL_STATICS: StaticCardId[] = ['affirmations', 'mini-calendar', 'wellness'];
   const addableStatics = useMemo(
     () => OPTIONAL_STATICS.filter(id =>
       !layout.left.includes(id) && !layout.right.includes(id) && !layout.hidden.includes(id)
@@ -2724,6 +2770,7 @@ export function DashboardView() {
               case 'menu-plan':     return <MenuPlanCard accentColor={headerColor} {...drag} />;
               case 'affirmations':  return <AffirmationsCard accentColor={headerColor} {...drag} />;
               case 'wellness':      return <WellnessCheckInCard accentColor={headerColor} {...drag} />;
+              case 'mini-calendar': return <MiniCalendarCard accentColor={headerColor} {...drag} />;
             }
           };
           const renderCol = (ids: CardId[]) => ids.map(id => (
