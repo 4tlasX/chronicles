@@ -1,9 +1,11 @@
 import { useState, useMemo, useCallback, useEffect, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlus, faTrash, faCalendarDay, faListCheck,
   faBolt, faCartShopping, faCheck, faPencil, faGripVertical, faPills,
+  faSun, faCloud, faCloudRain, faSnowflake, faWind, faXmark, faSlidersH, faChevronDown, faUtensils,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   DndContext, closestCenter,
@@ -20,7 +22,7 @@ import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
-import { entries as entriesApi, doses as dosesApi, topics as topicsApi } from '../services/api.js';
+import { entries as entriesApi, doses as dosesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
 import type { DoseLogRecord } from '../services/api.js';
 import type { ScheduledDose } from '../types/health.js';
 import { toDateStr, formatTime12h } from '../utils/dateUtils.js';
@@ -32,6 +34,7 @@ import { stripHtml } from '../utils/stripHtml.js';
 import { TopicSelector } from '../components/organisms/TopicSelector.js';
 import { Editor } from '../components/organisms/Editor.js';
 import type { Topic } from '../types/topics.js';
+import { getTopicIcon } from '../utils/topicIcons.js';
 
 /* ── Constants ── */
 
@@ -122,25 +125,25 @@ function todayKey() {
 /* ── Layout Styled Components ── */
 
 const Page = styled.div`
-  padding: 20px 24px 40px;
+  padding: 28px 24px 40px;
   overflow-y: auto;
   height: 100%;
   box-sizing: border-box;
-  @media (max-width: 640px) { padding: 12px 12px 32px; }
+  @media (max-width: 640px) { padding: 32px 12px 32px; }
 `;
 
 const PageHeader = styled.div`
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 20px;
-  @media (max-width: 640px) { flex-direction: column; gap: 12px; }
+  align-items: flex-end;
+  margin-bottom: 36px;
+  @media (max-width: 640px) { flex-direction: column; align-items: flex-start; gap: 4px; padding-left: 10px; margin-bottom: 28px; }
 `;
 
 const GreetingBlock = styled.div`
   display: flex;
   flex-direction: column;
+  flex: 2;
+  padding-right: 20px;
 `;
 
 const Greeting = styled.h1`
@@ -149,7 +152,7 @@ const Greeting = styled.h1`
   font-weight: 400;
   font-style: italic;
   color: ${({ theme }) => theme.colors.text};
-  margin: 0 0 4px;
+  margin: 0 0 10px;
   @media (max-width: 640px) { font-size: 26px; }
 `;
 
@@ -161,11 +164,45 @@ const DateLine = styled.p`
   margin: 0;
 `;
 
+const DateLineRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const InlineWeatherWrap = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 13px;
+  font-weight: 300;
+  color: ${({ theme }) => theme.colors.textMuted};
+  &::before { content: '·'; margin-right: 2px; opacity: 0.5; }
+`;
+
+const InlineTemp = styled.button`
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 13px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+  &:hover { opacity: 0.7; }
+`;
+
+const InlineHiLo = styled.span`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
 const QuoteBlock = styled.div`
-  max-width: 340px;
+  flex: 1;
+  padding-left: 20px;
   text-align: right;
-  flex-shrink: 0;
-  @media (max-width: 640px) { text-align: left; max-width: 100%; }
+  @media (max-width: 640px) { display: none; }
 `;
 
 const QuoteText = styled.p`
@@ -176,6 +213,9 @@ const QuoteText = styled.p`
   color: ${({ theme }) => theme.colors.text};
   margin: 0 0 4px;
   line-height: 1.5;
+  @media (max-width: 640px) {
+    margin: 0 0 10px;
+  }
 `;
 
 const QuoteAuthor = styled.p`
@@ -187,25 +227,30 @@ const QuoteAuthor = styled.p`
 `;
 
 const Grid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 40px;
-  position: relative;
-  &::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    transform: translateX(-50%);
-    width: 1px;
-    background: ${({ theme }) => theme.colors.border};
-    pointer-events: none;
-  }
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-    &::after { display: none; }
-  }
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+  @media (max-width: 640px) { flex-direction: column; }
+`;
+
+const LeftColumn = styled.div`
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-right: 20px;
+  border-right: 1px solid ${({ theme }) => theme.colors.border};
+  @media (max-width: 900px) { flex: 1; }
+  @media (max-width: 640px) { width: 100%; border-right: none; padding-right: 0; }
+`;
+
+const RightColumn = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-left: 20px;
+  @media (max-width: 640px) { width: 100%; padding-left: 0; }
 `;
 
 const DashCard = styled.div`
@@ -237,6 +282,18 @@ const CardTitle = styled.span`
   letter-spacing: 0.06em;
   color: ${({ theme }) => theme.colors.text};
   flex: 1;
+`;
+
+const CardViewLink = styled(Link)`
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: capitalize;
+  color: ${({ theme }) => theme.colors.textMuted};
+  text-decoration: none;
+  white-space: nowrap;
+  opacity: 0.55;
+  &:hover { opacity: 1; text-decoration: underline; }
 `;
 
 const CardBody = styled.div`
@@ -314,8 +371,8 @@ const QuickEditorWrap = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   margin-bottom: 0;
 
-  /* Constrain the inner EditorWrapper min-height */
-  > div { min-height: 80px; }
+  /* Taller initial height, expands with content */
+  > div { min-height: 120px; height: auto; }
 
   /* Compact content padding and size for dashboard context */
   .tiptap {
@@ -323,6 +380,8 @@ const QuickEditorWrap = styled.div`
     font-size: 14px;
     line-height: 1.6;
     font-weight: 300;
+    min-height: 120px;
+    height: auto;
   }
 
   /* Toolbar row sits flush at the top */
@@ -446,21 +505,70 @@ const PriorityNumber = styled.span`
 
 /* ── Drag & Drop ── */
 
-type CardId = 'priorities' | 'quick-entry' | 'tasks' | 'events' | 'shopping' | 'meds';
+type StaticCardId = 'priorities' | 'quick-entry' | 'tasks' | 'events' | 'shopping' | 'meds' | 'weather' | 'menu-plan';
+type CardId = StaticCardId | `topic-${number}`;
 
-const DEFAULT_ORDER: CardId[] = ['quick-entry', 'priorities', 'events', 'meds', 'tasks', 'shopping'];
-const LS_KEY = 'dashboard-card-order';
+function isValidCardId(id: string): id is CardId {
+  const STATIC: string[] = ['quick-entry', 'priorities', 'events', 'meds', 'tasks', 'shopping', 'weather', 'menu-plan'];
+  return STATIC.includes(id) || /^topic-\d+$/.test(id);
+}
 
-function loadOrder(): CardId[] {
+const DEFAULT_LEFT: CardId[]  = ['quick-entry', 'priorities', 'events', 'menu-plan'];
+const DEFAULT_RIGHT: CardId[] = ['meds', 'shopping', 'weather'];
+const LS_KEY = 'dashboard-layout-v2';
+
+const STATIC_LABELS: Record<StaticCardId, string> = {
+  'quick-entry': 'Quick Entry',
+  'priorities': 'Priorities',
+  'events': 'Events & Meetings',
+  'tasks': 'Tasks',
+  'shopping': 'Shopping',
+  'meds': 'Medications',
+  'weather': 'Weather',
+  'menu-plan': 'Menu Plan',
+};
+
+function cardLabel(id: CardId, allTopics: Topic[]): string {
+  if (id.startsWith('topic-')) {
+    const tid = parseInt(id.slice(6));
+    return allTopics.find(t => t.id === tid)?.name ?? 'Topic';
+  }
+  return STATIC_LABELS[id as StaticCardId] ?? id;
+}
+
+interface DashLayout { left: CardId[]; right: CardId[]; hidden: CardId[]; }
+
+function loadLayout(): DashLayout {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (raw) {
-      const parsed = (JSON.parse(raw) as string[]).filter((id): id is CardId => DEFAULT_ORDER.includes(id as CardId));
-      const missing = DEFAULT_ORDER.filter(id => !parsed.includes(id));
-      return [...parsed, ...missing];
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      let left: CardId[], right: CardId[], hidden: CardId[];
+      if (Array.isArray(parsed.left)) {
+        // New format
+        left   = (parsed.left   as string[]).filter(isValidCardId);
+        right  = (parsed.right  as string[] ?? []).filter(isValidCardId);
+        hidden = (parsed.hidden as string[] ?? []).filter(isValidCardId);
+      } else if (Array.isArray(parsed.order)) {
+        // Migrate from old flat format — split alternately
+        const order = (parsed.order as string[]).filter(isValidCardId);
+        hidden = (parsed.hidden as string[] ?? []).filter(isValidCardId);
+        left = []; right = [];
+        order.forEach((id, i) => (i % 2 === 0 ? left : right).push(id));
+      } else {
+        return { left: [...DEFAULT_LEFT], right: [...DEFAULT_RIGHT], hidden: [] };
+      }
+      // Append brand-new defaults not yet in any list
+      for (const id of DEFAULT_LEFT)  { if (!left.includes(id) && !right.includes(id) && !hidden.includes(id)) left.push(id); }
+      for (const id of DEFAULT_RIGHT) { if (!left.includes(id) && !right.includes(id) && !hidden.includes(id)) right.push(id); }
+      return { left, right, hidden };
     }
   } catch { /* ignore */ }
-  return DEFAULT_ORDER;
+  return { left: [...DEFAULT_LEFT], right: [...DEFAULT_RIGHT], hidden: [] };
+}
+
+function saveLayout(layout: DashLayout) {
+  localStorage.setItem(LS_KEY, JSON.stringify(layout));
 }
 
 const DragGrip = styled.button`
@@ -501,6 +609,129 @@ function SortableDashCard({ id, children }: { id: CardId; children: (drag: DragP
     </div>
   );
 }
+
+/* ── Edit-mode UI ── */
+
+const CardWrapper = styled.div`
+  position: relative;
+`;
+
+const RemoveBtn = styled.button`
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  z-index: 10;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: #9B4444;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  &:hover { background: #7a3030; }
+`;
+
+
+const EditWidgetsBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  color: ${({ theme }) => theme.colors.textMuted};
+  cursor: pointer;
+  &:hover { color: ${({ theme }) => theme.colors.text}; border-color: ${({ theme }) => theme.colors.textMuted}; }
+`;
+
+const EditWidgetsCard = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const WidgetMenu = styled.div`
+  margin-top: 10px;
+  margin-bottom: 32px;
+  background: ${({ theme }) => theme.colors.cardBg};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+const WidgetMenuHeader = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  color: ${({ theme }) => theme.colors.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
+const WidgetMenuChevron = styled.span<{ $open: boolean }>`
+  display: inline-flex;
+  font-size: 11px;
+  transition: transform 0.2s ease;
+  transform: ${({ $open }) => $open ? 'rotate(0deg)' : 'rotate(-90deg)'};
+`;
+
+const WidgetMenuBody = styled.div`
+  padding: 4px 16px 16px;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+const WidgetMenuSection = styled.div`
+  & + & {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid ${({ theme }) => theme.colors.border};
+  }
+`;
+
+const WidgetSectionLabel = styled.p`
+  font-size: 11px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  color: ${({ theme }) => theme.colors.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 10px 0 8px;
+`;
+
+const WidgetChips = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const WidgetChip = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: ${({ theme }) => theme.colors.bg};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+  &:hover { border-color: ${({ theme }) => theme.colors.textMuted}; }
+`;
 
 /* ── Widget: Daily Priorities ── */
 
@@ -732,6 +963,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
       <CardHeader>
         <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faPencil} /></CardIconWrap>
         <CardTitle>Quick Entry</CardTitle>
+        <CardViewLink to="/journal">View all</CardViewLink>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
       </CardHeader>
       <CardBody>
@@ -852,6 +1084,7 @@ function TasksCard({ accentColor, tasks, taskTopicId, dragAttributes, dragListen
       <CardHeader>
         <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faListCheck} /></CardIconWrap>
         <CardTitle>Tasks</CardTitle>
+        <CardViewLink to="/goals/tasks">View all</CardViewLink>
         {taskTopicId && <AddBtn onClick={() => setAdding(a => !a)}><FontAwesomeIcon icon={faPlus} /></AddBtn>}
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
       </CardHeader>
@@ -900,6 +1133,7 @@ function EventsCard({ accentColor, events, dragAttributes, dragListeners }: { ac
         <CardHeader>
           <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faCalendarDay} /></CardIconWrap>
           <CardTitle>Upcoming Events & Meetings</CardTitle>
+          <CardViewLink to="/calendar">View all</CardViewLink>
           {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
         </CardHeader>
         <CardBody><EmptyNote>No upcoming events</EmptyNote></CardBody>
@@ -1001,6 +1235,7 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
         <CardHeader>
           <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faCartShopping} /></CardIconWrap>
           <CardTitle>Shopping List</CardTitle>
+          <CardViewLink to="/shopping">View all</CardViewLink>
           {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
         </CardHeader>
         <CardBody><EmptyNote>No active shopping list</EmptyNote></CardBody>
@@ -1016,6 +1251,7 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
       <CardHeader>
         <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faCartShopping} /></CardIconWrap>
         <CardTitle>Shopping List</CardTitle>
+        <CardViewLink to="/shopping">View all</CardViewLink>
         <AddBtn onClick={() => setAdding(a => !a)}><FontAwesomeIcon icon={faPlus} /></AddBtn>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
       </CardHeader>
@@ -1108,6 +1344,530 @@ const MedTimeLabel = styled.span`
   flex-shrink: 0;
 `;
 
+/* ── Weather (inline header) ── */
+
+interface CurrentWeather {
+  temp: number;
+  code: number;
+}
+
+function wmoIcon(code: number) {
+  if (code === 0) return faSun;
+  if (code <= 3) return faCloud;
+  if (code <= 48) return faWind;
+  if (code <= 67) return faCloudRain;
+  if (code <= 77) return faSnowflake;
+  if (code <= 82) return faCloudRain;
+  return faBolt;
+}
+
+function wmoLabel(code: number) {
+  if (code === 0) return 'Clear';
+  if (code === 1) return 'Mostly clear';
+  if (code === 2) return 'Partly cloudy';
+  if (code === 3) return 'Overcast';
+  if (code <= 48) return 'Foggy';
+  if (code <= 55) return 'Drizzle';
+  if (code <= 67) return 'Rain';
+  if (code <= 77) return 'Snow';
+  if (code <= 82) return 'Showers';
+  return 'Thunderstorm';
+}
+
+const US_STATES: Record<string, string> = {
+  AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',
+  CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',
+  HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',
+  KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',
+  MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',
+  NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',
+  NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',
+  OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',
+  SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',
+  VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',
+  DC:'District of Columbia',
+};
+
+function geocodeCity(cityName: string): Promise<{ latitude: number; longitude: number }> {
+  const [cityPart, qualifierRaw] = cityName.split(',');
+  const searchName = cityPart.trim();
+  const qualifier = qualifierRaw?.trim().toUpperCase() ?? '';
+  return fetch(
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchName)}&count=10&language=en&format=json`
+  )
+    .then(r => r.json())
+    .then((data: { results?: { latitude: number; longitude: number; admin1?: string; country_code?: string; country?: string }[] }) => {
+      if (!data.results?.length) throw new Error(`City "${cityName}" not found`);
+      let result = data.results[0];
+      if (qualifier) {
+        const fullState = US_STATES[qualifier];
+        const match = data.results.find(r =>
+          (fullState && r.admin1?.toLowerCase() === fullState.toLowerCase()) ||
+          r.country_code?.toUpperCase() === qualifier ||
+          r.admin1?.toUpperCase().startsWith(qualifier) ||
+          r.country?.toUpperCase().startsWith(qualifier)
+        );
+        if (match) result = match;
+      }
+      return { latitude: result.latitude, longitude: result.longitude };
+    });
+}
+
+function InlineWeather() {
+  const cityName = useUIStore(s => s.weatherCity);
+  const unit = useUIStore(s => s.weatherUnit);
+  const setWeatherUnit = useUIStore(s => s.setWeatherUnit);
+
+  const [lat, setLat] = useState<number | null>(null);
+  const [lon, setLon] = useState<number | null>(null);
+  const [current, setCurrent] = useState<CurrentWeather | null>(null);
+  const [todayHiLo, setTodayHiLo] = useState<{ max: number; min: number } | null>(null);
+
+  useEffect(() => {
+    if (!cityName) { setLat(null); setLon(null); setCurrent(null); setTodayHiLo(null); return; }
+    geocodeCity(cityName)
+      .then(({ latitude, longitude }) => { setLat(latitude); setLon(longitude); })
+      .catch(() => {});
+  }, [cityName]);
+
+  useEffect(() => {
+    if (lat == null || lon == null) return;
+    const tempUnit = unit === 'f' ? 'fahrenheit' : 'celsius';
+    fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&daily=temperature_2m_max,temperature_2m_min&current=temperature_2m,weathercode` +
+      `&temperature_unit=${tempUnit}&timezone=auto&forecast_days=1`
+    )
+      .then(r => r.json())
+      .then((data: {
+        current: { temperature_2m: number; weathercode: number };
+        daily: { temperature_2m_max: number[]; temperature_2m_min: number[] };
+      }) => {
+        setCurrent({ temp: Math.round(data.current.temperature_2m), code: data.current.weathercode });
+        setTodayHiLo({ max: Math.round(data.daily.temperature_2m_max[0]), min: Math.round(data.daily.temperature_2m_min[0]) });
+      })
+      .catch(() => {});
+  }, [lat, lon, unit]);
+
+  if (!current) return null;
+
+  const deg = unit === 'f' ? '°F' : '°C';
+
+  const toggleUnit = () => {
+    const next: 'f' | 'c' = unit === 'f' ? 'c' : 'f';
+    setWeatherUnit(next);
+    settingsApi.upsert('weatherUnit', next).catch(() => {});
+  };
+
+  return (
+    <InlineWeatherWrap>
+      <FontAwesomeIcon icon={wmoIcon(current.code)} style={{ fontSize: 11 }} />
+      <InlineTemp onClick={toggleUnit}>{current.temp}{deg}</InlineTemp>
+      {todayHiLo && <InlineHiLo>H:{todayHiLo.max}° L:{todayHiLo.min}°</InlineHiLo>}
+    </InlineWeatherWrap>
+  );
+}
+
+/* ── Weather Card ── */
+
+const WeatherDayRow = styled.div<{ $today?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  &:last-child { border-bottom: none; }
+  ${({ $today }) => $today && 'padding: 8px 0 10px;'}
+`;
+
+const WeatherDayLabel = styled.span<{ $today?: boolean }>`
+  font-size: ${({ $today }) => $today ? '14px' : '13px'};
+  font-weight: ${({ $today }) => $today ? 600 : 400};
+  color: ${({ theme }) => theme.colors.text};
+  width: 52px;
+  flex-shrink: 0;
+`;
+
+const WeatherTodayTemp = styled.span`
+  font-size: 28px;
+  font-weight: 300;
+  color: ${({ theme }) => theme.colors.text};
+  line-height: 1;
+`;
+
+const WeatherCondition = styled.span`
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  flex: 1;
+`;
+
+const WeatherHiLo = styled.span`
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  white-space: nowrap;
+  margin-left: auto;
+`;
+
+const WeatherPrecip = styled.span`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  white-space: nowrap;
+`;
+
+const UnitToggle = styled.button`
+  background: none;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  color: ${({ theme }) => theme.colors.textMuted};
+  cursor: pointer;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
+interface WeatherDay {
+  date: string;
+  max: number;
+  min: number;
+  code: number;
+  precip: number;
+}
+
+function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
+  const cityName = useUIStore(s => s.weatherCity);
+  const unit = useUIStore(s => s.weatherUnit);
+  const setWeatherUnit = useUIStore(s => s.setWeatherUnit);
+
+  const [lat, setLat] = useState<number | null>(null);
+  const [lon, setLon] = useState<number | null>(null);
+  const [forecast, setForecast] = useState<WeatherDay[] | null>(null);
+  const [current, setCurrent] = useState<CurrentWeather | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!cityName) { setLat(null); setLon(null); setForecast(null); setCurrent(null); return; }
+    geocodeCity(cityName)
+      .then(({ latitude, longitude }) => { setLat(latitude); setLon(longitude); setError(''); })
+      .catch((err: Error) => setError(err.message ?? 'Unable to look up city'));
+  }, [cityName]);
+
+  useEffect(() => {
+    if (lat == null || lon == null) return;
+    setLoading(true);
+    setError('');
+    const tempUnit = unit === 'f' ? 'fahrenheit' : 'celsius';
+    fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max` +
+      `&current=temperature_2m,weathercode` +
+      `&temperature_unit=${tempUnit}&timezone=auto&forecast_days=5`
+    )
+      .then(r => r.json())
+      .then((data: {
+        current: { temperature_2m: number; weathercode: number };
+        daily: { time: string[]; temperature_2m_max: number[]; temperature_2m_min: number[]; weathercode: number[]; precipitation_probability_max: number[] };
+      }) => {
+        setCurrent({ temp: Math.round(data.current.temperature_2m), code: data.current.weathercode });
+        setForecast(data.daily.time.map((date, i) => ({
+          date,
+          max: Math.round(data.daily.temperature_2m_max[i]),
+          min: Math.round(data.daily.temperature_2m_min[i]),
+          code: data.daily.weathercode[i],
+          precip: data.daily.precipitation_probability_max[i],
+        })));
+      })
+      .catch(() => setError('Unable to load weather'))
+      .finally(() => setLoading(false));
+  }, [lat, lon, unit]);
+
+  const toggleUnit = () => {
+    const next: 'f' | 'c' = unit === 'f' ? 'c' : 'f';
+    setWeatherUnit(next);
+    settingsApi.upsert('weatherUnit', next).catch(() => {});
+  };
+
+  const dayLabel = (dateStr: string) => {
+    const today = toDateStr(new Date());
+    if (dateStr === today) return 'Today';
+    const d = new Date(`${dateStr}T12:00:00`);
+    return d.toLocaleDateString('en-US', { weekday: 'short' });
+  };
+
+  const deg = unit === 'f' ? '°F' : '°C';
+
+  return (
+    <DashCard>
+      <CardHeader>
+        <CardIconWrap $color={accentColor}>
+          <FontAwesomeIcon icon={faSun} />
+        </CardIconWrap>
+        <CardTitle>Weather</CardTitle>
+        {cityName && <UnitToggle onClick={toggleUnit}>{unit === 'f' ? '°F' : '°C'}</UnitToggle>}
+        <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
+          <FontAwesomeIcon icon={faGripVertical} />
+        </DragGrip>
+      </CardHeader>
+      <CardBody>
+        {!cityName ? (
+          <div style={{ fontSize: 13, color: 'inherit', opacity: 0.5, padding: '8px 0' }}>
+            Set your city in Settings → Preferences to see the forecast.
+          </div>
+        ) : loading && !forecast ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}><Spinner size={20} /></div>
+        ) : error ? (
+          <div style={{ fontSize: 13, color: '#9B4444', padding: '8px 0' }}>{error}</div>
+        ) : forecast && current ? (
+          <>
+            {forecast.map((day, i) => {
+              const isToday = i === 0;
+              return (
+                <WeatherDayRow key={day.date} $today={isToday}>
+                  <WeatherDayLabel $today={isToday}>{dayLabel(day.date)}</WeatherDayLabel>
+                  <FontAwesomeIcon
+                    icon={isToday ? wmoIcon(current.code) : wmoIcon(day.code)}
+                    style={{ fontSize: isToday ? 18 : 13, color: accentColor, width: 18, flexShrink: 0 }}
+                  />
+                  {isToday ? (
+                    <>
+                      <WeatherTodayTemp>{current.temp}{deg}</WeatherTodayTemp>
+                      <WeatherCondition>{wmoLabel(current.code)}</WeatherCondition>
+                      <WeatherHiLo>H:{day.max}° L:{day.min}°</WeatherHiLo>
+                    </>
+                  ) : (
+                    <>
+                      <WeatherCondition>{wmoLabel(day.code)}</WeatherCondition>
+                      {day.precip > 20 && <WeatherPrecip>💧{day.precip}%</WeatherPrecip>}
+                      <WeatherHiLo>H:{day.max}° L:{day.min}°</WeatherHiLo>
+                    </>
+                  )}
+                </WeatherDayRow>
+              );
+            })}
+          </>
+        ) : null}
+      </CardBody>
+    </DashCard>
+  );
+}
+
+/* ── Topic Widget ── */
+
+const TopicEntryRow = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  &:last-child { border-bottom: none; }
+`;
+
+const TopicEntryPreview = styled.span`
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.text};
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const TopicEntryDate = styled.span`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  flex-shrink: 0;
+`;
+
+function TopicWidget({ topicId, accentColor, dragAttributes, dragListeners }: { topicId: number; accentColor: string } & DragProps) {
+  const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
+  const allTopics = useEntriesStore(s => s.allTopics);
+
+  const topic = useMemo(() => allTopics.find(t => t.id === topicId), [allTopics, topicId]);
+
+  const entries = useMemo(() => {
+    if (!topic) return [];
+    return decryptedEntries
+      .filter(e => (e.metadata as Record<string, unknown>)._taxonomyId === topicId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+  }, [decryptedEntries, topicId, topic]);
+
+  if (!topic) return null;
+
+  const formatDate = (d: Date | string) => {
+    const date = d instanceof Date ? d : new Date(d);
+    const today = new Date();
+    const diff = Math.floor((today.getTime() - date.getTime()) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    if (diff < 7) return date.toLocaleDateString('en-US', { weekday: 'short' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  return (
+    <DashCard>
+      <CardHeader>
+        <CardIconWrap $color={accentColor}>
+          <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
+        </CardIconWrap>
+        <CardTitle>{topic.name}</CardTitle>
+        <CardViewLink to="/journal">View all</CardViewLink>
+        <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
+          <FontAwesomeIcon icon={faGripVertical} />
+        </DragGrip>
+      </CardHeader>
+      <CardBody>
+        {entries.length === 0 ? (
+          <div style={{ fontSize: 13, opacity: 0.5, padding: '8px 0' }}>No entries yet.</div>
+        ) : (
+          entries.map(e => {
+            const preview = stripHtml(e.content ?? '').trim().slice(0, 80) || '(no content)';
+            return (
+              <TopicEntryRow key={e.id}>
+                <TopicEntryPreview>{preview}</TopicEntryPreview>
+                <TopicEntryDate>{formatDate(e.createdAt)}</TopicEntryDate>
+              </TopicEntryRow>
+            );
+          })
+        )}
+      </CardBody>
+    </DashCard>
+  );
+}
+
+/* ── Menu Plan Card ── */
+
+interface MenuMealSlot { mealName: string; recipeName: string; }
+interface MenuPlanDay {
+  breakfast?: MenuMealSlot;
+  lunch?: MenuMealSlot;
+  dinner?: MenuMealSlot;
+  snack?: MenuMealSlot;
+}
+
+const MealRow = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  &:last-child { border-bottom: none; }
+`;
+
+const MealLabel = styled.span`
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: ${({ theme }) => theme.colors.textMuted};
+  width: 68px;
+  flex-shrink: 0;
+`;
+
+const MealName = styled.span`
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.text};
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const MEAL_SLOTS: { key: keyof MenuPlanDay; label: string }[] = [
+  { key: 'breakfast', label: 'Breakfast' },
+  { key: 'lunch',     label: 'Lunch' },
+  { key: 'dinner',    label: 'Dinner' },
+  { key: 'snack',     label: 'Snack' },
+];
+
+function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
+  const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
+  const allTopics = useEntriesStore(s => s.allTopics);
+
+  const menuTopicId = useMemo(
+    () => allTopics.find(t => t.name.toLowerCase() === 'menu plan')?.id ?? null,
+    [allTopics]
+  );
+
+  const todayStr = useMemo(() => toDateStr(new Date()), []);
+
+  // Find current week's plan, then show today or next upcoming day with meals
+  const display = useMemo((): { dayLabel: string; meals: MenuPlanDay; slots: typeof MEAL_SLOTS } | null => {
+    if (!menuTopicId) return null;
+    const entry = decryptedEntries.find(e => {
+      const meta = e.metadata as Record<string, unknown>;
+      if (meta._taxonomyId !== menuTopicId) return false;
+      const cf = meta._customFields as Record<string, unknown> | undefined;
+      const weekStart = cf?.weekStart as string | undefined;
+      if (!weekStart) return false;
+      const end = new Date(`${weekStart}T12:00:00`);
+      end.setDate(end.getDate() + 6);
+      return todayStr >= weekStart && todayStr <= toDateStr(end);
+    });
+    if (!entry) return null;
+
+    const cf = (entry.metadata as Record<string, unknown>)._customFields as Record<string, unknown> | undefined;
+    const weekStart = cf?.weekStart as string;
+    const days = cf?.days as Record<string, MenuPlanDay> | undefined;
+    if (!days) return null;
+
+    // Build the 7 dates of this week starting from weekStart
+    const weekDates: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(`${weekStart}T12:00:00`);
+      d.setDate(d.getDate() + i);
+      weekDates.push(toDateStr(d));
+    }
+
+    // Start from today, fall forward to next day with planned meals
+    const startIdx = Math.max(0, weekDates.indexOf(todayStr));
+    for (let i = startIdx; i < 7; i++) {
+      const dateStr = weekDates[i];
+      const meals = days[dateStr];
+      const slots = MEAL_SLOTS.filter(s => meals?.[s.key]?.mealName);
+      if (slots.length > 0) {
+        let label = 'Today';
+        if (dateStr !== todayStr) {
+          const diff = i - weekDates.indexOf(todayStr);
+          label = diff === 1 ? 'Tomorrow'
+            : new Date(`${dateStr}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long' });
+        }
+        return { dayLabel: label, meals, slots };
+      }
+    }
+    return null;
+  }, [decryptedEntries, menuTopicId, todayStr]);
+
+  const cardTitle = display && display.dayLabel !== 'Today' ? `${display.dayLabel}'s Menu` : "Today's Menu";
+
+  return (
+    <DashCard>
+      <CardHeader>
+        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faUtensils} /></CardIconWrap>
+        <CardTitle>{cardTitle}</CardTitle>
+        <CardViewLink to="/menu">View plan</CardViewLink>
+        <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
+          <FontAwesomeIcon icon={faGripVertical} />
+        </DragGrip>
+      </CardHeader>
+      <CardBody>
+        {!menuTopicId ? (
+          <div style={{ fontSize: 13, opacity: 0.5, padding: '8px 0' }}>No Menu Plan topic found.</div>
+        ) : !display ? (
+          <div style={{ fontSize: 13, opacity: 0.5, padding: '8px 0' }}>No meals planned for this week.</div>
+        ) : (
+          display.slots.map(({ key, label }) => (
+            <MealRow key={key}>
+              <MealLabel>{label}</MealLabel>
+              <MealName>{display.meals[key]!.mealName}</MealName>
+            </MealRow>
+          ))
+        )}
+      </CardBody>
+    </DashCard>
+  );
+}
+
 function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
@@ -1194,6 +1954,7 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
       <CardHeader>
         <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faPills} /></CardIconWrap>
         <CardTitle>Medications Today</CardTitle>
+        <CardViewLink to="/health/meds">View all</CardViewLink>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
       </CardHeader>
       <CardBody>
@@ -1226,8 +1987,12 @@ export function DashboardView() {
   const allTopics = useEntriesStore(s => s.allTopics);
   const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
   const displayName = useUIStore(s => s.displayName);
+  const weatherEnabled = useUIStore(s => s.weatherEnabled);
+  const cityName = useUIStore(s => s.weatherCity);
 
-  const [cardOrder, setCardOrder] = useState<CardId[]>(loadOrder);
+  const [layout, setLayout] = useState<DashLayout>(loadLayout);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isWidgetMenuOpen, setIsWidgetMenuOpen] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -1236,15 +2001,77 @@ export function DashboardView() {
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setCardOrder(prev => {
-        const oldIndex = prev.indexOf(active.id as CardId);
-        const newIndex = prev.indexOf(over.id as CardId);
-        const next = arrayMove(prev, oldIndex, newIndex);
-        localStorage.setItem(LS_KEY, JSON.stringify(next));
-        return next;
-      });
-    }
+    if (!over || active.id === over.id) return;
+    const activeId = active.id as CardId;
+    const overId   = over.id   as CardId;
+    setLayout(prev => {
+      const inLeft    = prev.left.includes(activeId);
+      const overLeft  = prev.left.includes(overId);
+      const overRight = prev.right.includes(overId);
+      let next = prev;
+      if (inLeft && overLeft) {
+        // reorder within left
+        next = { ...prev, left: arrayMove(prev.left, prev.left.indexOf(activeId), prev.left.indexOf(overId)) };
+      } else if (!inLeft && overRight) {
+        // reorder within right
+        next = { ...prev, right: arrayMove(prev.right, prev.right.indexOf(activeId), prev.right.indexOf(overId)) };
+      } else if (inLeft && overRight) {
+        // move left → right
+        const newRight = [...prev.right];
+        newRight.splice(prev.right.indexOf(overId), 0, activeId);
+        next = { ...prev, left: prev.left.filter(id => id !== activeId), right: newRight };
+      } else if (!inLeft && overLeft) {
+        // move right → left
+        const newLeft = [...prev.left];
+        newLeft.splice(prev.left.indexOf(overId), 0, activeId);
+        next = { ...prev, left: newLeft, right: prev.right.filter(id => id !== activeId) };
+      }
+      if (next !== prev) saveLayout(next);
+      return next;
+    });
+  }, []);
+
+  // Auto-remove stale topic-{id} widget for topics that now have a dedicated built-in card
+  useEffect(() => {
+    const menuPlanTopic = allTopics.find(t => t.name.toLowerCase() === 'menu plan');
+    if (!menuPlanTopic) return;
+    const staleId = `topic-${menuPlanTopic.id}` as CardId;
+    setLayout(prev => {
+      if (!prev.left.includes(staleId) && !prev.right.includes(staleId) && !prev.hidden.includes(staleId)) return prev;
+      const next = {
+        left: prev.left.filter(id => id !== staleId),
+        right: prev.right.filter(id => id !== staleId),
+        hidden: prev.hidden.filter(id => id !== staleId),
+      };
+      saveLayout(next);
+      return next;
+    });
+  }, [allTopics]);
+
+  const handleRemoveCard = useCallback((id: CardId) => {
+    setLayout(prev => {
+      const next = {
+        left: prev.left.filter(c => c !== id),
+        right: prev.right.filter(c => c !== id),
+        hidden: [...prev.hidden.filter(c => c !== id), id],
+      };
+      saveLayout(next);
+      return next;
+    });
+  }, []);
+
+  const handleAddCard = useCallback((id: CardId) => {
+    setLayout(prev => {
+      // Add to whichever column has fewer visible items
+      const addToRight = prev.right.length <= prev.left.length;
+      const next = {
+        left:   addToRight ? prev.left : [...prev.left, id],
+        right:  addToRight ? [...prev.right, id] : prev.right,
+        hidden: prev.hidden.filter(c => c !== id),
+      };
+      saveLayout(next);
+      return next;
+    });
   }, []);
 
   const today = new Date();
@@ -1302,9 +2129,36 @@ export function DashboardView() {
     });
   }, [decryptedEntries, allTopics]);
 
-  const visibleOrder = useMemo(
-    () => hasMeds ? cardOrder : cardOrder.filter(id => id !== 'meds'),
-    [cardOrder, hasMeds]
+  const filterVisible = useCallback((ids: CardId[]) =>
+    ids.filter(id => {
+      if (id === 'meds' && !hasMeds) return false;
+      if (id === 'weather' && !weatherEnabled) return false;
+      return true;
+    }), [hasMeds, weatherEnabled]);
+
+  const visibleLeft  = useMemo(() => filterVisible(layout.left),   [layout.left,   filterVisible]);
+  const visibleRight = useMemo(() => filterVisible(layout.right),  [layout.right,  filterVisible]);
+
+  const hiddenAddable = useMemo(
+    () => layout.hidden.filter(id => {
+      if (id === 'meds' && !hasMeds) return false;
+      if (id === 'weather' && !weatherEnabled) return false;
+      return true;
+    }),
+    [layout.hidden, hasMeds, weatherEnabled]
+  );
+
+  // Topics that have a dedicated built-in widget — exclude from the topic widget picker
+  const BUILTIN_TOPIC_NAMES = useMemo(() => new Set(['menu plan']), []);
+
+  // Topics not already added as a widget (visible or hidden), and not covered by a built-in
+  const addableTopics = useMemo(
+    () => allTopics.filter(t => {
+      if (BUILTIN_TOPIC_NAMES.has(t.name.toLowerCase())) return false;
+      const tid = `topic-${t.id}` as CardId;
+      return !layout.left.includes(tid) && !layout.right.includes(tid) && !layout.hidden.includes(tid);
+    }),
+    [allTopics, layout.left, layout.right, layout.hidden, BUILTIN_TOPIC_NAMES]
   );
 
   // Shopping list — first current (has unchecked items)
@@ -1340,7 +2194,10 @@ export function DashboardView() {
         <PageHeader>
           <GreetingBlock>
             <Greeting>{getGreeting()}{displayName ? `, ${displayName}` : ''}</Greeting>
-            <DateLine>{dateLabel}</DateLine>
+            <DateLineRow>
+              <DateLine>{dateLabel}</DateLine>
+              {weatherEnabled && cityName && <InlineWeather />}
+            </DateLineRow>
           </GreetingBlock>
           {(() => { const q = getDailyQuote(); return (
             <QuoteBlock>
@@ -1350,26 +2207,103 @@ export function DashboardView() {
           ); })()}
         </PageHeader>
 
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={visibleOrder} strategy={rectSortingStrategy}>
-            <Grid>
-              {visibleOrder.map(id => (
-                <SortableDashCard key={id} id={id}>
-                  {(drag) => {
-                    switch (id) {
-                      case 'priorities': return <PrioritiesCard accentColor={headerColor} {...drag} />;
-                      case 'tasks': return <TasksCard accentColor={headerColor} tasks={tasks} taskTopicId={taskTopicId} {...drag} />;
-                      case 'quick-entry': return <QuickEntryCard accentColor={headerColor} topics={allTopics} {...drag} />;
-                      case 'events': return <EventsCard accentColor={headerColor} events={events} {...drag} />;
-                      case 'shopping': return <ShoppingCard accentColor={headerColor} listEntry={shoppingListEntry ? { id: shoppingListEntry.id, content: shoppingListEntry.content, metadata: shoppingListEntry.metadata as Record<string, unknown> } : null} {...drag} />;
-                      case 'meds': return <MedsCard accentColor={headerColor} {...drag} />;
-                    }
-                  }}
-                </SortableDashCard>
-              ))}
-            </Grid>
-          </SortableContext>
-        </DndContext>
+        {(() => {
+          const renderCard = (id: CardId, drag: DragProps) => {
+            if (id.startsWith('topic-')) return <TopicWidget topicId={parseInt(id.slice(6))} accentColor={headerColor} {...drag} />;
+            switch (id as StaticCardId) {
+              case 'priorities':  return <PrioritiesCard accentColor={headerColor} {...drag} />;
+              case 'tasks':       return <TasksCard accentColor={headerColor} tasks={tasks} taskTopicId={taskTopicId} {...drag} />;
+              case 'quick-entry': return <QuickEntryCard accentColor={headerColor} topics={allTopics} {...drag} />;
+              case 'events':      return <EventsCard accentColor={headerColor} events={events} {...drag} />;
+              case 'shopping':    return <ShoppingCard accentColor={headerColor} listEntry={shoppingListEntry ? { id: shoppingListEntry.id, content: shoppingListEntry.content, metadata: shoppingListEntry.metadata as Record<string, unknown> } : null} {...drag} />;
+              case 'meds':        return <MedsCard accentColor={headerColor} {...drag} />;
+              case 'weather':     return <WeatherCard accentColor={headerColor} {...drag} />;
+              case 'menu-plan':   return <MenuPlanCard accentColor={headerColor} {...drag} />;
+            }
+          };
+          const renderCol = (ids: CardId[]) => ids.map(id => (
+            <SortableDashCard key={id} id={id}>
+              {(drag) => (
+                <CardWrapper>
+                  {isEditMode && (
+                    <RemoveBtn onClick={() => handleRemoveCard(id)} title={`Remove ${cardLabel(id, allTopics)}`}>
+                      <FontAwesomeIcon icon={faXmark} />
+                    </RemoveBtn>
+                  )}
+                  {renderCard(id, drag)}
+                </CardWrapper>
+              )}
+            </SortableDashCard>
+          ));
+          return (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <Grid>
+                <SortableContext items={visibleLeft} strategy={rectSortingStrategy}>
+                  <LeftColumn>{renderCol(visibleLeft)}</LeftColumn>
+                </SortableContext>
+                <SortableContext items={visibleRight} strategy={rectSortingStrategy}>
+                  <RightColumn>
+                    {renderCol(visibleRight)}
+                    <EditWidgetsCard>
+                      <EditWidgetsBtn onClick={() => setIsEditMode(e => !e)} style={{ width: '100%', justifyContent: 'center' }}>
+                        <FontAwesomeIcon icon={isEditMode ? faXmark : faSlidersH} />
+                        {isEditMode ? 'Done editing' : 'Edit widgets'}
+                      </EditWidgetsBtn>
+                      {isEditMode && (
+                        <WidgetMenu style={{ marginTop: 12, marginBottom: 0 }}>
+                          <WidgetMenuHeader onClick={() => setIsWidgetMenuOpen(o => !o)}>
+                            Add widgets
+                            <WidgetMenuChevron $open={isWidgetMenuOpen}>
+                              <FontAwesomeIcon icon={faChevronDown} />
+                            </WidgetMenuChevron>
+                          </WidgetMenuHeader>
+                          {isWidgetMenuOpen && (
+                            <WidgetMenuBody>
+                              {hiddenAddable.length === 0 && addableTopics.length === 0 ? (
+                                <div style={{ fontSize: 13, color: 'inherit', opacity: 0.45, padding: '4px 0 4px' }}>
+                                  All widgets are on the dashboard. Remove one first to add it back here.
+                                </div>
+                              ) : (
+                                <>
+                                  {hiddenAddable.length > 0 && (
+                                    <WidgetMenuSection>
+                                      <WidgetSectionLabel>Hidden</WidgetSectionLabel>
+                                      <WidgetChips>
+                                        {hiddenAddable.map(id => (
+                                          <WidgetChip key={id} onClick={() => handleAddCard(id)}>
+                                            <FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} />
+                                            {cardLabel(id, allTopics)}
+                                          </WidgetChip>
+                                        ))}
+                                      </WidgetChips>
+                                    </WidgetMenuSection>
+                                  )}
+                                  {addableTopics.length > 0 && (
+                                    <WidgetMenuSection>
+                                      <WidgetSectionLabel>Topics</WidgetSectionLabel>
+                                      <WidgetChips>
+                                        {addableTopics.map(topic => (
+                                          <WidgetChip key={topic.id} onClick={() => handleAddCard(`topic-${topic.id}` as CardId)}>
+                                            <FontAwesomeIcon icon={getTopicIcon(topic.icon)} style={{ fontSize: 11 }} />
+                                            {topic.name}
+                                          </WidgetChip>
+                                        ))}
+                                      </WidgetChips>
+                                    </WidgetMenuSection>
+                                  )}
+                                </>
+                              )}
+                            </WidgetMenuBody>
+                          )}
+                        </WidgetMenu>
+                      )}
+                    </EditWidgetsCard>
+                  </RightColumn>
+                </SortableContext>
+              </Grid>
+            </DndContext>
+          );
+        })()}
       </Page>
     </ContentTemplate>
   );
