@@ -105,7 +105,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setEncryptionData(null);
-    // Clear search state and entries from memory
+    // Clear all persisted site data
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch { /* sandboxed environments may block this */ }
+    // Clear in-memory stores
     try {
       const { useEntriesStore } = await import('../stores/entriesStore.js');
       const { useUIStore } = await import('../stores/uiStore.js');
