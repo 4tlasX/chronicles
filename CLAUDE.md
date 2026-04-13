@@ -76,11 +76,12 @@ chronicles-rebuild/
 │       │   ├── auth.ts                # Split-token session validation + CSRF
 │       │   └── security.ts            # CSP, HSTS, X-Frame-Options headers
 │       └── routes/
-│           ├── auth.ts                # Register, login, logout, salt, change-password, recover
+│           ├── auth.ts                # Register, login, logout, salt, change-password, recover, TOTP 2FA
 │           ├── entries.ts             # CRUD for journal entries (encrypted)
 │           ├── topics.ts              # CRUD for topics/taxonomies
 │           ├── settings.ts            # Key-value settings
-│           └── sessions.ts            # List, revoke, revoke-all sessions
+│           ├── sessions.ts            # List, revoke, revoke-all sessions
+│           └── doses.ts               # Medication dose log CRUD
 │
 ├── client/              # React 19 SPA (Vite)
 │   └── src/
@@ -125,10 +126,28 @@ PostgreSQL Database
 
 ### Two-Layer Security Model
 
-1. **Authentication Layer (Server)**: bcrypt password hash (12 rounds), split-token database sessions with immediate revocation
+1. **Authentication Layer (Server)**: bcrypt password hash (12 rounds), split-token database sessions with immediate revocation, optional TOTP 2FA
 2. **Encryption Layer (Client)**: AES-256-GCM with auto-generated master key wrapped by password-derived KEK (PBKDF2-SHA256, 600k iterations)
 
 Password changes only re-wrap the master key (instant). Data is never re-encrypted on password change.
+
+### TOTP Two-Factor Authentication
+
+Implemented via `otplib` — no external services required.
+
+**Login flow when 2FA is enabled:**
+- `POST /api/auth/login` returns `{ pendingToken, requires2FA: true }` instead of a session
+- Client shows OTP screen; user enters code from authenticator app or a backup code
+- `POST /api/auth/login/2fa` verifies the code and issues the real split-token session
+- Pending tokens are stored in-memory with 5-minute TTL (single-instance safe for Render)
+
+**Setup flow (Settings → Security):**
+1. `POST /api/auth/2fa/setup` — generates TOTP secret + QR code (not saved yet)
+2. User scans QR code and enters confirmation code
+3. `POST /api/auth/2fa/enable` — verifies code, saves secret to `accounts` table, issues 8 one-time backup codes
+4. `DELETE /api/auth/2fa` — disables 2FA after password confirmation
+
+**Schema**: `totpSecret` and `totpEnabled` added to `accounts` table.
 
 ### Split-Token Session Strategy
 
@@ -202,13 +221,16 @@ Views     → Route logic + top-level data orchestration
 - `shared/src/crypto/constants.ts` — AES_KEY_LENGTH, PBKDF2_ITERATIONS, etc.
 
 **Client State:**
-- `client/src/contexts/AuthContext.tsx` — Session state, login/logout/register
+- `client/src/contexts/AuthContext.tsx` — Session state, login/logout/register, `pending2FA` state for TOTP flow
 - `client/src/contexts/EncryptionContext.tsx` — Master key lifecycle, encrypt/decrypt delegation
-- `client/src/stores/uiStore.ts` — Search, sidebar, view mode, theme colors, `pencilOnly` toggle
+- `client/src/stores/uiStore.ts` — Search, sidebar, view mode, theme colors, `pencilOnly` toggle, `displayName`, `weatherEnabled`, `weatherCity`
 - `client/src/stores/entriesStore.ts` — Encrypted entries cache, topics, feature flags, CRUD operations
 
 **Client Services:**
-- `client/src/services/api.ts` — Single API client with `X-Requested-With` CSRF header; fetches up to 5,000 entries on init
+- `client/src/services/api.ts` — Single API client with `X-Requested-With` CSRF header; fetches up to 5,000 entries on init; includes 2FA endpoints (`login2fa`, `setup2fa`, `enable2fa`, `disable2fa`)
+
+**Journal View:**
+- `client/src/views/JournalView.tsx` — Two-panel layout (entry list + editor); preserves `_widgetType` through saves so wellness check-in entries remain linked; date filter bar shown when `viewMode === 'date'` with active date label and Clear button; topic filter bar shown when a topic is active
 
 **Dashboard:**
 - `client/src/views/DashboardView.tsx` — Home view with drag-and-drop widgets; saves widget order to localStorage
@@ -251,16 +273,23 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - Apple Pencil: Scribble handwriting-to-text (CSS) + freehand drawing canvas with pressure sensitivity, palm rejection, undo, inline SVG storage (encrypted)
 
 **Dashboard (Home)**
-- Drag-and-drop widget layout persisted to localStorage
-- Quick Entry with topic selector, rotating daily reflection prompt, per-topic custom fields
-- Daily Priorities widget — saved as "Priorities" topic entries with `PrioritiesFields` custom fields editor
+- Two-column layout (2/3 left + 1/3 right) with independent per-column drag-and-drop and cross-column dragging
+- Layout stored as `{ left, right, hidden }` arrays in localStorage (`dashboard-layout-v2`); migrates from old flat `order` array automatically
+- Default left: `quick-entry`, `priorities`, `events`, `menu-plan`; default right: `mini-calendar`, `affirmations`, `wellness`
+- Edit/Add Widgets tray at bottom of right column; cross-column dragging supported
+- Quick Entry with topic selector, rotating daily reflection prompt, per-topic custom fields; editor auto-expands with content
+- Daily Priorities widget — saved as "Priorities" topic entries with `PrioritiesFields` custom fields editor; respects 12:01am local grace period
 - Events & Meetings widget — upcoming entries by `startDate`, 90-day window, up to 10
 - Tasks widget — today's tasks with inline completion toggle
 - Shopping List widget — first active shopping list with item check-off
-- Medication Schedule widget — today's dose tracking; only shown when active meds exist
-- Daily Wellness Check-in widget — tap-to-fill water, mood, and sleep; saves as encrypted entry under Wellness topic; dashboard updates reactively when the same entry is edited in the journal (Zustand store, no BroadcastChannel)
-- Mini Calendar widget — monthly grid with entry-presence dots; click any day to jump to that day's journal entries
-- Daily quote and greeting in Playfair Display
+- Medication Schedule widget — today's dose tracking; only shown when active meds exist; syncs on tab focus via `visibilitychange`
+- Weather widget — current conditions via Open-Meteo; city geocoded with US state disambiguation; shown inline beside date in page header too
+- Menu Plan widget — shows actual meals for today (or next upcoming day)
+- Affirmations widget — daily rotating affirmation
+- Daily Wellness Check-in widget — tap-to-fill water glasses (8), mood faces (5), sleep hours (10 cloud-moon icons); debounced 600ms save with optimistic store updates; reactive to journal edits via Zustand (no BroadcastChannel); auto-creates Wellness topic on first save
+- Mini Calendar widget — monthly grid with entry-presence dots; click any day sets `viewMode: 'date'` and navigates to journal
+- Dashboard greeting uses `displayName` setting ("Good morning, Alex")
+- Daily quote in Playfair Display, constrained to right column
 
 **Productivity**
 - Goals & milestones with progress tracking
@@ -270,13 +299,13 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 
 **Health Tracking**
 - Medications with dosage, frequency, scheduled times
-- Dose logging with timestamps (`medication_dose_logs` table, JIT migration)
+- Dose logging with timestamps (`medication_dose_logs` table, JIT migration); real-time sync via `visibilitychange`
 - Food tracking with meal types, ingredients, calories
 - Symptom tracking with severity scale
 - Exercise tracking with type, duration, intensity, distance
 - Allergy tracking
 - Wellness check-ins — water glasses, mood (1–5), sleep hours; stored as `_widgetType: 'wellness-checkin'` entries with Wellness topic; editable via `WellnessFields` custom fields in journal
-- Reporting view with wellness trends + cross-correlations
+- Reporting view with wellness trends + cross-correlations (sleep→mood, water→symptoms, exercise→sleep, mood→symptoms)
 
 **Calendar**
 - Monthly grid with entry previews per day
@@ -286,6 +315,14 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 **Media & Inspiration**
 - Entertainment tracking (music, books, TV/movies)
 - Inspiration (research, ideas, quotes)
+
+**Settings**
+- Account: display name (shown in dashboard greeting), read-only username
+- Security: change password (re-wraps master key, no data re-encryption); TOTP 2FA inline setup wizard
+- Sessions: view and revoke active sessions from any device
+- Features: enable/disable health tracking, planning, entertainment, and more per topic type
+- Theme: header color (40+), background image (28), light/dark mode
+- Data: seed test data
 
 ### Planned
 - Image uploads (encrypted storage)

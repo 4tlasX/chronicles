@@ -4,30 +4,34 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 
 ## Features
 
-- **Zero-Knowledge Encryption** - AES-256-GCM client-side encryption with non-extractable keys
-- **Dashboard Home** - Drag-and-drop widgets: quick entry, daily priorities, events, mini calendar, affirmations, daily wellness check-in, tasks, shopping, medication schedule; daily quote and Playfair greeting
-- **Rich Text Editor** - TipTap-based editor with formatting toolbar and inline drawing support
-- **Topic Organization** - Categorize entries with custom topics, icons, and colors
-- **Quick Tab Filters** - Today, Date (with clear filter), Tasks, All, Bookmarks, and Search views
+- **Zero-Knowledge Encryption** - AES-256-GCM client-side encryption with non-extractable keys; server never sees plaintext
+- **Two-Factor Authentication** - TOTP-based 2FA (authenticator app); inline setup wizard with QR code, confirmation step, and 8 backup codes; disable with password confirmation
+- **Dashboard Home** - Two-column drag-and-drop widget layout; quick entry, daily priorities, events & meetings, mini calendar, affirmations, daily wellness check-in, tasks, shopping list, medication schedule, weather, and menu plan; daily quote and Playfair greeting
+- **Rich Text Editor** - TipTap-based editor with formatting toolbar and inline freehand drawing support
+- **Topic Organization** - Categorize entries with custom topics, icons, and drag-and-drop reordering
+- **Quick Tab Filters** - Today, Date (with active filter bar and clear button), Tasks, All, Bookmarks, and Search views
 - **Goals & Milestones** - Track goals with milestone progress and task linking
 - **Meal Planning & Recipes** - Weekly menu planner, recipe entries with ingredients and instructions, linked shopping lists
 - **Shopping Lists** - Checklist-style lists linkable to recipes; dashboard widget shows active list with inline check-off
-- **Health Tracking** - Medications, symptoms, food, exercise, and allergies - Printable medication lists (with dosage and schedule), symptoms, and allergy records
-- **Medication Schedule** - Daily dose tracking with time-based scheduling
-- **Daily Wellness Check-in** - Tap-to-fill water glasses, mood faces, and sleep hours on the dashboard; editable as journal entries under the Wellness topic
-- **Health Reporting** - Correlation analysis, severity trends, exercise impact, and wellness trends (water/mood/sleep) with cross-correlation insights; date range filtering
+- **Health Tracking** - Medications, symptoms, food, exercise, and allergies; printable medication lists (with dosage and schedule), symptom logs, and allergy records
+- **Medication Schedule** - Daily dose tracking with time-based scheduling; real-time sync on tab focus
+- **Daily Wellness Check-in** - Tap-to-fill water glasses, mood faces (1–5), and sleep hours (cloud-moon icons) on the dashboard; entries stored encrypted under the Wellness topic and fully editable in the journal
+- **Health Reporting** - Correlation analysis, severity trends, exercise impact, and wellness trends (water/mood/sleep) with cross-correlation insights (sleep→mood, water→symptoms, exercise→sleep, mood→symptoms); date range filtering
+- **Mini Calendar Widget** - Monthly grid on dashboard with entry-presence dots; click any day to jump to that day's journal entries
 - **Calendar View** - Visual month overview; events and meetings appear on their scheduled date in your header colour
 - **Entry Sharing** - Share entries via encrypted public links
 - **PWA Support** - Installable as a standalone app with offline shell caching
 - **Keyboard Shortcuts** - Ctrl+N (new entry), Ctrl+D (delete), Enter to save
 - **Customizable Theme** - 40+ muted vintage header colors, 28 background images, light/dark mode
+- **Display Name** - Set a display name shown in the dashboard greeting; username shown read-only in account settings
 - **Apple Pencil Support** - Scribble handwriting-to-text in all fields; freehand drawing canvas with pressure sensitivity, palm rejection, and undo — drawings saved inline as encrypted SVG
-- **Mobile Responsive** - Collapsible navigation, touch-friendly tap targets
+- **Mobile Responsive** - Collapsible navigation, touch-friendly tap targets, single-column dashboard on small screens
 - **Accessible** - ARIA roles, focus management, keyboard navigation, reduced motion support
 
-## Privacy
+## Privacy & Security
 
 - All entry content is encrypted in the browser before transmission
+- **Two-factor authentication** (TOTP) — no external services; secrets stored encrypted server-side
 - Recovery key system allows password reset without compromising zero-knowledge design
 - Schema-per-user database isolation (not row-level security)
 - Session management — view and revoke active sessions from any device
@@ -36,11 +40,11 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 
 ## Screenshots
 <img width="1430" height="719" alt="Screenshot 2026-04-04 at 7 35 22 PM" src="https://github.com/user-attachments/assets/06ce36c5-f24f-450b-9762-365c920d5908" />
-<img width="1392" height="730" alt="Screenshot 2026-04-08 at 5 52 26 PM" src="https://github.com/user-attachments/assets/492b25c1-fec4-4b9e-9968-4b0f62ac73b9" />
+<img width="1392" height="730" alt="Screenshot 2026-04-08 at 5 52 26 PM" src="https://github.com/user-attachments/assets/492b25c1-fec4-4b9e-9968-4b0f62ac73b9" />
 <img width="1432" height="725" alt="Screenshot 2026-04-04 at 7 36 07 PM" src="https://github.com/user-attachments/assets/9d1c516a-edcd-47ef-953d-57798b4b86d5" />
 <img width="1430" height="723" alt="Screenshot 2026-04-04 at 7 36 33 PM" src="https://github.com/user-attachments/assets/0690d1b6-4d2c-40f4-b0d2-cb20fc1e0632" />
-<img width="1394" height="729" alt="Screenshot 2026-04-08 at 5 52 52 PM" src="https://github.com/user-attachments/assets/b9260411-88df-4d81-a26b-56b5f580b3f3" />
-<img width="1389" height="639" alt="Screenshot 2026-04-08 at 5 52 40 PM" src="https://github.com/user-attachments/assets/78f8fe7d-3733-45be-8132-feb0f159f6e1" />
+<img width="1394" height="729" alt="Screenshot 2026-04-08 at 5 52 52 PM" src="https://github.com/user-attachments/assets/b9260411-88df-4d81-a26b-56b5f580b3f3" />
+<img width="1389" height="639" alt="Screenshot 2026-04-08 at 5 52 40 PM" src="https://github.com/user-attachments/assets/78f8fe7d-3733-45be-8132-feb0f159f6e1" />
 <img width="1428" height="729" alt="Screenshot 2026-04-04 at 7 36 59 PM" src="https://github.com/user-attachments/assets/0f629e6f-b325-4fce-b156-2e3f52456824" />
 <img width="1432" height="726" alt="Screenshot 2026-04-04 at 7 48 08 PM" src="https://github.com/user-attachments/assets/6169bf21-0d3a-4e97-bf31-78044b3033f5" />
 <img width="1427" height="716" alt="Screenshot 2026-04-04 at 7 37 37 PM" src="https://github.com/user-attachments/assets/2700db50-5ec3-457c-9648-e3c76d012ba9" />
@@ -82,8 +86,10 @@ Topics categorize your entries — like tags or folders. Each has an icon and co
 - **Symptom** - Severity tracking (1-10 scale) with duration
 - **Exercise** - Type, duration, intensity, and distance tracking
 - **Allergy** - Allergen, severity, and reaction tracking
+- **Wellness** - Auto-created by the dashboard check-in widget; water, mood, and sleep fields
 - **Event** - Date/time, location, and contact details
 - **Meeting** - Attendees, topic, location, and scheduling
+- **Priorities** - Auto-created by the dashboard priorities widget
 - **Music / Books / TV/Movies** - Entertainment tracking
 - **Research / Idea / Quote** - Inspiration collection
 
@@ -92,7 +98,7 @@ You can create your own topics for anything else.
 ### Navigation
 
 - **Dashboard** (`/`) - Home view with daily widgets and quick entry
-- **Journal** (`/journal`) - Main entry view with quick tab filters (Date, Tasks, All, Bookmarks, Search)
+- **Journal** (`/journal`) - Main entry view with quick tab filters (Today, Date, Tasks, All, Bookmarks, Search)
 - **Topics** - Manage and browse entries by topic
 - **Calendar** - Month view with clickable days for detail; events/meetings appear on their scheduled date
 - **Planning** - Goals, milestones, tasks, and todos (dropdown selector)
@@ -105,8 +111,23 @@ You can create your own topics for anything else.
 |----------|--------|
 | Ctrl/Cmd + N | New entry |
 | Ctrl/Cmd + D | Delete selected entry |
-| Enter | Save entry (compact mode) |
+| Enter | Save entry (when editor is focused) |
 | Shift + N | New entry (when not typing) |
+
+### Dashboard Widgets
+
+The dashboard has two columns. Default layout:
+
+| Left | Right |
+|------|-------|
+| Quick Entry | Mini Calendar |
+| Priorities | Affirmations |
+| Events & Meetings | Daily Wellness Check-in |
+| Menu Plan | *(add more from widget tray)* |
+
+Additional widgets available in the tray: Tasks, Shopping List, Medication Schedule, Weather.
+
+Drag to reorder within or across columns. Layout is saved per-browser.
 
 ### Health Reporting
 
@@ -124,8 +145,9 @@ Medication lists, symptom logs, and allergy records can be printed directly from
 
 ### Settings
 
-- **Sessions** - View and revoke active sessions
-- **Password** - Change password (master key re-wrapped, data not re-encrypted)
+- **Account** - Display name, read-only username
+- **Security** - Change password; Two-factor authentication (TOTP setup wizard with QR code and backup codes)
+- **Sessions** - View and revoke active sessions from any device
 - **Features** - Enable/disable health tracking, planning, entertainment, and more
 - **Theme** - 40+ header colors, 28 background images, light/dark mode
 - **Data** - Seed test data, export/import entries
@@ -191,7 +213,7 @@ npm run test:coverage    # Run tests with coverage
 - **Backend**: Express 5, TypeScript, Prisma
 - **Database**: PostgreSQL (schema-per-user isolation)
 - **Encryption**: Web Crypto API (AES-256-GCM, PBKDF2-SHA256 600k iterations)
-- **Auth**: Split-token sessions (selector + SHA-256 verifier hash)
+- **Auth**: Split-token sessions (selector + SHA-256 verifier hash) + TOTP 2FA (otplib)
 - **PWA**: vite-plugin-pwa with Workbox (shell caching, no encrypted data cached)
 - **Accessibility**: ARIA roles, focus trapping, keyboard navigation, prefers-reduced-motion
 - **Testing**: Vitest, React Testing Library, supertest
