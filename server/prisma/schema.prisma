@@ -1,75 +1,57 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
-// =============================================================================
-// Account — User identity and encryption parameters
-// =============================================================================
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 model Account {
-  id                Int       @id @default(autoincrement())
-  userId            String    @unique @default(uuid()) @db.Uuid
-  email             String    @unique
-  username          String    @unique
-  passwordHash      String    @map("password_hash")
-  tenantSchemaName  String    @unique @map("tenant_schema_name")
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
-
-  // Encryption: Password-wrapped master key
-  encryptedMasterKey  Bytes?    @map("encrypted_master_key")
-  kekSalt             Bytes?    @map("kek_salt")
-  kekWrapIv           Bytes?    @map("kek_wrap_iv")
-  kekIterations       Int       @default(600000) @map("kek_iterations")
-
-  // Encryption: Recovery-wrapped master key
-  recoveryWrappedMK   Bytes?    @map("recovery_wrapped_mk")
-  recoveryWrapIv      Bytes?    @map("recovery_wrap_iv")
-  recoveryKeyHash     String?   @map("recovery_key_hash")
-  recoveryKeySalt     String?   @map("recovery_key_salt")
-  recoveryKeyUsedAt   DateTime? @map("recovery_key_used_at") @db.Timestamptz
-
-  encryptionEnabled   Boolean   @default(false) @map("encryption_enabled")
-
-  // Two-factor authentication
-  totpSecret          String?   @map("totp_secret")
-  totpEnabled         Boolean   @default(false) @map("totp_enabled")
-  totpBackupCodes     String[]  @map("totp_backup_codes")
-
-  // JIT migration flag
-  isMigrating         Boolean   @default(false) @map("is_migrating")
-
-  sessions          Session[]
+  id                 Int       @id @default(autoincrement())
+  userId             String    @unique @default(uuid()) @db.Uuid
+  email              String    @unique
+  username           String    @unique
+  passwordHash       String    @map("password_hash")
+  tenantSchemaName   String    @unique @map("tenant_schema_name")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  encryptedMasterKey Bytes?    @map("encrypted_master_key")
+  kekSalt            Bytes?    @map("kek_salt")
+  kekWrapIv          Bytes?    @map("kek_wrap_iv")
+  kekIterations      Int       @default(600000) @map("kek_iterations")
+  recoveryWrappedMK  Bytes?    @map("recovery_wrapped_mk")
+  recoveryWrapIv     Bytes?    @map("recovery_wrap_iv")
+  encryptionEnabled  Boolean   @default(false) @map("encryption_enabled")
+  isMigrating        Boolean   @default(false) @map("is_migrating")
+  recoveryKeyHash    String?   @map("recovery_key_hash")
+  recoveryKeySalt    String?   @map("recovery_key_salt")
+  recoveryKeyUsedAt  DateTime? @map("recovery_key_used_at") @db.Timestamptz(6)
+  totpSecret         String?   @map("totp_secret")
+  totpEnabled        Boolean   @default(false) @map("totp_enabled")
+  totpBackupCodes    String[]  @default([]) @map("totp_backup_codes")
+  sessions           Session[]
+  shares             shares[]
 
   @@map("accounts")
 }
 
-// =============================================================================
-// Session — Split token pattern (selector + verifier hash)
-// =============================================================================
-
 model Session {
-  id              Int       @id @default(autoincrement())
-  selector        String    @unique @db.VarChar(12)
-  verifierHash    String    @map("verifier_hash")
-  accountId       Int       @map("account_id")
-  tenantSchemaName String   @map("tenant_schema_name")
-  schemaVersion   Int       @default(0) @map("schema_version")
-  deviceInfo      String?   @map("device_info")
-  ipAddress       String?   @map("ip_address")
-  userAgent       String?   @map("user_agent")
-  lastActiveAt    DateTime  @default(now()) @map("last_active_at") @db.Timestamptz
-  expiresAt       DateTime  @map("expires_at") @db.Timestamptz
-  revokedAt       DateTime? @map("revoked_at") @db.Timestamptz
-  revokedReason   String?   @map("revoked_reason")
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-
-  account         Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  id               Int       @id @default(autoincrement())
+  selector         String    @unique @db.VarChar(12)
+  verifierHash     String    @map("verifier_hash")
+  accountId        Int       @map("account_id")
+  tenantSchemaName String    @map("tenant_schema_name")
+  schemaVersion    Int       @default(0) @map("schema_version")
+  deviceInfo       String?   @map("device_info")
+  ipAddress        String?   @map("ip_address")
+  userAgent        String?   @map("user_agent")
+  lastActiveAt     DateTime  @default(now()) @map("last_active_at") @db.Timestamptz(6)
+  expiresAt        DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz(6)
+  revokedReason    String?   @map("revoked_reason")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  account          Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@index([selector])
   @@index([expiresAt])
@@ -77,14 +59,22 @@ model Session {
   @@map("sessions")
 }
 
-// =============================================================================
-// SchemaCounter — Atomic counter for tenant schema naming
-// =============================================================================
-
 model SchemaCounter {
   id            Int      @id @default(1)
   currentNumber Int      @default(0) @map("current_number")
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("schema_counter")
+}
+
+model shares {
+  id                Int       @id @default(autoincrement())
+  token             String    @unique @db.VarChar(64)
+  account_id        Int
+  content_encrypted Bytes
+  content_iv        Bytes
+  created_at        DateTime? @default(now()) @db.Timestamptz(6)
+  expires_at        DateTime? @db.Timestamptz(6)
+  is_active         Boolean?  @default(true)
+  accounts          Account   @relation(fields: [account_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
