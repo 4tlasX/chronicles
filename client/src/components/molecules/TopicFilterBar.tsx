@@ -8,7 +8,7 @@ const Bar = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 16px 8px;
+  margin: 8px 16px 4px;
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid ${({ theme }) => theme.colors.border};

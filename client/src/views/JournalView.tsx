@@ -1,4 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { getTopicIcon } from '../utils/topicIcons.js';
 import { AppTemplate } from '../components/templates/AppTemplate.js';
 import { JournalTemplate, SidePanel, EditorPanel } from '../components/templates/JournalTemplate.js';
@@ -25,6 +28,34 @@ import { entries as entriesApi, topics as topicsApi, settings as settingsApi } f
 import { stripHtml } from '../utils/stripHtml.js';
 import type { EncryptedPost } from '@shared/crypto/types';
 
+const DateFilterBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 16px 4px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 4px;
+  font-size: ${({ theme }) => theme.fontSize.sm}px;
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+const DateFilterClear = styled.button`
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: ${({ theme }) => theme.fontSize.xs}px;
+  color: ${({ theme }) => theme.colors.text};
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover { background: rgba(0, 0, 0, 0.04); }
+`;
+
 export function JournalView() {
   const { encryptionData } = useAuth();
   const { isUnlocked, unlock, decryptPosts, encryptPost } = useEncryption();
@@ -38,6 +69,7 @@ export function JournalView() {
   const showMobileEditor = useUIStore(s => s.showMobileEditor);
   const setShowMobileEditor = useUIStore(s => s.setShowMobileEditor);
   const viewMode = useUIStore(s => s.viewMode);
+  const setViewMode = useUIStore(s => s.setViewMode);
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
   const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
@@ -335,6 +367,14 @@ export function JournalView() {
                 topicName={filterTopic.name}
                 onClear={() => setSelectedTopicId(null)}
               />
+            )}
+            {viewMode === 'date' && (
+              <DateFilterBar>
+                {selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                <DateFilterClear onClick={() => { setViewMode('all'); setCalendarExpanded(false); }}>
+                  <FontAwesomeIcon icon={faXmark} size="xs" /> Clear
+                </DateFilterClear>
+              </DateFilterBar>
             )}
             {viewMode === 'date' && calendarExpanded && (
               <MiniCalendar
