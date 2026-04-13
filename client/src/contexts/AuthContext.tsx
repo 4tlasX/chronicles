@@ -105,11 +105,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setEncryptionData(null);
-    // Clear all persisted site data
-    try {
-      localStorage.clear();
-      sessionStorage.clear();
-    } catch { /* sandboxed environments may block this */ }
+
+    // Clear all persisted site data in parallel
+    await Promise.allSettled([
+      // Web Storage
+      (async () => { localStorage.clear(); sessionStorage.clear(); })(),
+
+      // Cache Storage (PWA / service worker caches)
+      (async () => {
+        if (!('caches' in window)) return;
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      })(),
+
+      // IndexedDB — enumerate and delete every database
+      (async () => {
+        if (!('indexedDB' in window)) return;
+        const dbs = await indexedDB.databases?.() ?? [];
+        await Promise.all(dbs.map(db => new Promise<void>((res, rej) => {
+          if (!db.name) return res();
+          const req = indexedDB.deleteDatabase(db.name);
+          req.onsuccess = () => res();
+          req.onerror   = () => rej(req.error);
+          req.onblocked = () => res(); // don't hang if another tab has it open
+        })));
+      })(),
+
+      // Unregister service workers so stale caches don't linger
+      (async () => {
+        if (!('serviceWorker' in navigator)) return;
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      })(),
+
+      // Non-HttpOnly cookies (session cookie is cleared server-side above)
+      (async () => {
+        document.cookie.split(';').forEach(c => {
+          const name = c.split('=')[0].trim();
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        });
+      })(),
+    ]);
+
     // Clear in-memory stores
     try {
       const { useEntriesStore } = await import('../stores/entriesStore.js');
