@@ -146,3 +146,12 @@ export interface AllergyFieldValues {
   occurredTime: string;
   notes: string;
 }
+
+export interface WellnessFieldValues {
+  date: string;        // YYYY-MM-DD — one entry per day, updated in-place
+  waterGlasses: number;
+  waterGoal: number;   // default 8
+  moodScore: number;   // 1–5, 0 = unset
+  sleepHours: number;  // 0–12, 0.5 increments, 0 = unset
+  sleepQuality: number; // 1–5, 0 = unset
+}

@@ -54,6 +54,14 @@ interface UIState {
   // Profile
   displayName: string;
   setDisplayName: (name: string) => void;
+
+  // Weather widget
+  weatherEnabled: boolean;
+  weatherCity: string;
+  weatherUnit: 'f' | 'c';
+  setWeatherEnabled: (v: boolean) => void;
+  setWeatherCity: (city: string) => void;
+  setWeatherUnit: (unit: 'f' | 'c') => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -100,4 +108,11 @@ export const useUIStore = create<UIState>((set) => ({
 
   displayName: '',
   setDisplayName: (name) => set({ displayName: name }),
+
+  weatherEnabled: false,
+  weatherCity: '',
+  weatherUnit: 'f',
+  setWeatherEnabled: (v) => set({ weatherEnabled: v }),
+  setWeatherCity: (city) => set({ weatherCity: city }),
+  setWeatherUnit: (unit) => set({ weatherUnit: unit }),
 }));

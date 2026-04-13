@@ -9,7 +9,9 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
   // (no inline JS), which prevents CSS-based exfiltration from escalating to code execution.
   res.setHeader('Content-Security-Policy',
     "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
-    "img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'"
+    "img-src 'self' data: blob:; " +
+    "connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com; " +
+    "frame-ancestors 'none'"
   );
   // Prevent MIME type sniffing
   res.setHeader('X-Content-Type-Options', 'nosniff');

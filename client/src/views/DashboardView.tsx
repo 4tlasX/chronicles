@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, type ReactNode } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -6,6 +6,8 @@ import {
   faPlus, faTrash, faCalendarDay, faListCheck,
   faBolt, faCartShopping, faCheck, faPencil, faGripVertical, faPills,
   faSun, faCloud, faCloudRain, faSnowflake, faWind, faXmark, faSlidersH, faChevronDown, faUtensils,
+  faHeart, faChevronLeft, faChevronRight,
+  faGlassWater, faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam, faCloudMoon,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   DndContext, closestCenter,
@@ -505,16 +507,16 @@ const PriorityNumber = styled.span`
 
 /* ── Drag & Drop ── */
 
-type StaticCardId = 'priorities' | 'quick-entry' | 'tasks' | 'events' | 'shopping' | 'meds' | 'weather' | 'menu-plan';
+type StaticCardId = 'priorities' | 'quick-entry' | 'tasks' | 'events' | 'shopping' | 'meds' | 'weather' | 'menu-plan' | 'affirmations' | 'wellness';
 type CardId = StaticCardId | `topic-${number}`;
 
 function isValidCardId(id: string): id is CardId {
-  const STATIC: string[] = ['quick-entry', 'priorities', 'events', 'meds', 'tasks', 'shopping', 'weather', 'menu-plan'];
+  const STATIC: string[] = ['quick-entry', 'priorities', 'events', 'meds', 'tasks', 'shopping', 'weather', 'menu-plan', 'affirmations', 'wellness'];
   return STATIC.includes(id) || /^topic-\d+$/.test(id);
 }
 
 const DEFAULT_LEFT: CardId[]  = ['quick-entry', 'priorities', 'events', 'menu-plan'];
-const DEFAULT_RIGHT: CardId[] = ['meds', 'shopping', 'weather'];
+const DEFAULT_RIGHT: CardId[] = ['wellness', 'meds', 'shopping', 'weather'];
 const LS_KEY = 'dashboard-layout-v2';
 
 const STATIC_LABELS: Record<StaticCardId, string> = {
@@ -526,6 +528,8 @@ const STATIC_LABELS: Record<StaticCardId, string> = {
   'meds': 'Medications',
   'weather': 'Weather',
   'menu-plan': 'Menu Plan',
+  'affirmations': 'Affirmations',
+  'wellness': 'Daily Check-in',
 };
 
 function cardLabel(id: CardId, allTopics: Topic[]): string {
@@ -1868,6 +1872,241 @@ function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentCo
   );
 }
 
+/* ── Widget: Affirmations ── */
+
+const AffirmationDisplay = styled.div`
+  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.6;
+  color: ${({ theme }) => theme.colors.text};
+  padding: 8px 0 12px;
+  text-align: center;
+`;
+
+const AffirmationNav = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 8px;
+`;
+
+const AffirmationNavBtn = styled.button`
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 11px;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
+const AffirmationCount = styled.span`
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  min-width: 40px;
+  text-align: center;
+`;
+
+const AffirmationEditList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+`;
+
+const AffirmationEditRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+const AffirmationEditText = styled.span`
+  flex: 1;
+  font-size: 13px;
+`;
+
+const AffirmationAddRow = styled.div`
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+`;
+
+const AffirmationInput = styled.input`
+  flex: 1;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  background: ${({ theme }) => theme.colors.inputBg};
+  color: ${({ theme }) => theme.colors.text};
+  &:focus { outline: none; border-color: ${({ theme }) => theme.colors.textMuted}; }
+`;
+
+const AffirmationToggle = styled.button`
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  color: ${({ theme }) => theme.colors.textMuted};
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 4px;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
+const DEFAULT_AFFIRMATIONS: string[] = [
+  'I am enough just as I am.',
+  'I am capable of handling whatever comes my way.',
+  'I choose to focus on what I can control.',
+  'I am worthy of love, rest, and good things.',
+  'Every day I grow a little stronger.',
+  'I trust myself to make good decisions.',
+  'I am grateful for this moment and what it holds.',
+  'I give myself permission to take up space.',
+  'My feelings are valid and I can move through them.',
+  'I am proud of how far I have come.',
+  'Progress, not perfection, is what matters.',
+  'I bring something unique and valuable to the world.',
+  'I am allowed to say no and honour my boundaries.',
+  'I face challenges with courage and curiosity.',
+  'Good things are unfolding for me.',
+];
+
+function AffirmationsCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
+  const { encryptPost } = useEncryption();
+  const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
+  const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
+  const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newText, setNewText] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [offset, setOffset] = useState(0);
+
+  const entry = useMemo(() =>
+    decryptedEntries.find(e => (e.metadata as Record<string, unknown>)._widgetType === 'affirmations'),
+    [decryptedEntries]
+  );
+
+  const items: string[] = useMemo(() => {
+    if (!entry) return [];
+    const cf = (entry.metadata as Record<string, unknown>)._customFields as Record<string, unknown> | undefined;
+    return (cf?.items as string[]) ?? [];
+  }, [entry]);
+
+  // Day-of-year base index + user-controlled offset
+  const baseIdx = useMemo(() => {
+    const d = new Date();
+    return Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
+  }, []);
+
+  const displayItems = items.length > 0 ? items : DEFAULT_AFFIRMATIONS;
+  const currentIdx = ((baseIdx + offset) % displayItems.length + displayItems.length) % displayItems.length;
+  const current = displayItems[currentIdx];
+
+  const saveItems = async (newItems: string[]) => {
+    setSaving(true);
+    try {
+      const metadata: Record<string, unknown> = { _widgetType: 'affirmations', _customFields: { items: newItems } };
+      const encrypted = await encryptPost('', metadata);
+      const payload = {
+        contentEncrypted: encrypted.contentEncrypted,
+        contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted,
+        metadataIv: encrypted.metadataIv,
+        isEncrypted: true,
+        taxonomyIds: [] as number[],
+      };
+      if (entry) {
+        await entriesApi.update(entry.id, payload);
+        updateDecryptedEntry(entry.id, { metadata });
+      } else {
+        const result = await entriesApi.create(payload);
+        addDecryptedEntry({ id: result.id as number, content: '', metadata, isEncrypted: true, createdAt: new Date(result.createdAt as string), updatedAt: new Date(result.createdAt as string) });
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAdd = async () => {
+    const trimmed = newText.trim();
+    if (!trimmed || saving) return;
+    await saveItems([...items, trimmed]);
+    setNewText('');
+  };
+
+  const handleRemove = (i: number) => saveItems(items.filter((_, j) => j !== i));
+
+  return (
+    <DashCard>
+      <CardHeader>
+        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faHeart} /></CardIconWrap>
+        <CardTitle>Affirmations</CardTitle>
+        <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
+          <FontAwesomeIcon icon={faGripVertical} />
+        </DragGrip>
+      </CardHeader>
+      <CardBody>
+        {isEditing ? (
+          <>
+            <AffirmationEditList>
+              {items.length === 0 ? (
+                <div style={{ fontSize: 13, opacity: 0.5 }}>No affirmations yet.</div>
+              ) : items.map((text, i) => (
+                <AffirmationEditRow key={i}>
+                  <AffirmationEditText>{text}</AffirmationEditText>
+                  <AddBtn onClick={() => handleRemove(i)} style={{ fontSize: 10 }}>
+                    <FontAwesomeIcon icon={faTrash} />
+                  </AddBtn>
+                </AffirmationEditRow>
+              ))}
+            </AffirmationEditList>
+            <AffirmationAddRow>
+              <AffirmationInput
+                value={newText}
+                onChange={e => setNewText(e.target.value)}
+                placeholder="Add an affirmation…"
+                onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                autoFocus
+              />
+              <SaveBtn $accent={accentColor} $active={!!newText.trim()} onClick={handleAdd} disabled={saving || !newText.trim()}>
+                {saving ? <Spinner size={10} /> : 'Add'}
+              </SaveBtn>
+            </AffirmationAddRow>
+          </>
+        ) : (
+          <>
+            <AffirmationDisplay>"{current}"</AffirmationDisplay>
+            {displayItems.length > 1 && (
+              <AffirmationNav>
+                <AffirmationNavBtn onClick={() => setOffset(o => o - 1)}>
+                  <FontAwesomeIcon icon={faChevronLeft} />
+                </AffirmationNavBtn>
+                <AffirmationCount>{currentIdx + 1} / {displayItems.length}</AffirmationCount>
+                <AffirmationNavBtn onClick={() => setOffset(o => o + 1)}>
+                  <FontAwesomeIcon icon={faChevronRight} />
+                </AffirmationNavBtn>
+              </AffirmationNav>
+            )}
+          </>
+        )}
+        <AffirmationToggle onClick={() => setIsEditing(e => !e)}>
+          {isEditing ? 'Done' : 'Edit affirmations'}
+        </AffirmationToggle>
+      </CardBody>
+    </DashCard>
+  );
+}
+
 function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
@@ -1973,6 +2212,261 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
             </MedRow>
           );
         })}
+      </CardBody>
+    </DashCard>
+  );
+}
+
+/* ── Widget: Daily Check-in (Wellness) ── */
+
+const WATER_GOAL = 8;
+const SLEEP_GOAL = 10;
+const MOOD_ICONS = [faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam] as const;
+
+const WSection = styled.div`
+  padding: 10px 0;
+  & + & { border-top: 1px solid ${({ theme }) => theme.colors.border}; }
+`;
+
+const WSectionLabel = styled.div`
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-bottom: 8px;
+`;
+
+const GlassRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+`;
+
+const GlassBtn = styled.button<{ $filled: boolean }>`
+  background: none;
+  border: none;
+  padding: 4px 3px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: ${({ $filled, theme }) => $filled ? theme.colors.text : theme.colors.border};
+  transition: color 0.1s, transform 0.1s;
+  &:hover { color: ${({ theme }) => theme.colors.text}; transform: scale(1.15); }
+  &:active { transform: scale(0.88); }
+`;
+
+const GlassCount = styled.span`
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-left: 6px;
+`;
+
+const MoodRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const MoodBtn = styled.button<{ $active: boolean }>`
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.border};
+  transition: color 0.1s, transform 0.1s;
+  &:hover { color: ${({ theme }) => theme.colors.text}; transform: scale(1.15); }
+  &:active { transform: scale(0.88); }
+`;
+
+
+function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
+  const { encryptPost } = useEncryption();
+  const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
+  const allTopics = useEntriesStore(s => s.allTopics);
+  const setTopics = useEntriesStore(s => s.setTopics);
+  const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
+  const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
+  const todayStr = todayKey();
+
+  // Derive wellness entry from store — reactive to journal edits
+  const wellnessEntry = useMemo(() => {
+    return decryptedEntries.find(e => {
+      const meta = e.metadata as Record<string, unknown>;
+      if (meta._widgetType !== 'wellness-checkin') return false;
+      const cf = meta._customFields as Record<string, unknown> | undefined;
+      return cf?.date === todayStr;
+    }) ?? null;
+  }, [decryptedEntries, todayStr]);
+
+  const storedCf = useMemo(() => {
+    if (!wellnessEntry) return null;
+    return ((wellnessEntry.metadata as Record<string, unknown>)._customFields as Record<string, unknown>) ?? null;
+  }, [wellnessEntry]);
+
+  // Pending state — used only before the first entry is created
+  const [pendingWater, setPendingWater] = useState(0);
+  const [pendingMood, setPendingMood] = useState(0);
+  const [pendingSleep, setPendingSleep] = useState(0);
+
+  // Display values: prefer stored, fall back to pending
+  const waterGlasses = wellnessEntry ? ((storedCf?.waterGlasses as number) || 0) : pendingWater;
+  const moodScore    = wellnessEntry ? ((storedCf?.moodScore   as number) || 0) : pendingMood;
+  const sleepHours   = wellnessEntry ? ((storedCf?.sleepHours  as number) || 0) : pendingSleep;
+
+  const entryIdRef = useRef<number | null>(null);
+  // Keep entryIdRef in sync with store
+  useEffect(() => {
+    if (wellnessEntry) entryIdRef.current = wellnessEntry.id;
+  }, [wellnessEntry]);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestRef = useRef({ water: 0, mood: 0, sleepH: 0 });
+
+  const wellnessTopicId = useMemo(
+    () => allTopics.find(t => t.name.toLowerCase() === 'wellness')?.id ?? null,
+    [allTopics]
+  );
+
+  // doSaveRef pattern — debounce timer always calls the latest version, avoiding stale closures
+  const doSaveRef = useRef<() => Promise<void>>(async () => {});
+  doSaveRef.current = async () => {
+    const { water, mood, sleepH } = latestRef.current;
+    // Resolve the existing entry id — check ref first, then scan the store directly
+    // (guards against race where useEffect hasn't run yet on first tap)
+    if (!entryIdRef.current) {
+      const existing = useEntriesStore.getState().decryptedEntries.find(e => {
+        const meta = e.metadata as Record<string, unknown>;
+        if (meta._widgetType !== 'wellness-checkin') return false;
+        const cf = meta._customFields as Record<string, unknown> | undefined;
+        return cf?.date === todayStr;
+      });
+      if (existing) entryIdRef.current = existing.id;
+    }
+    // Auto-create Wellness topic if needed
+    let topicId = wellnessTopicId;
+    if (!topicId) {
+      try {
+        const created = await topicsApi.create({ name: 'Wellness', icon: 'heart' });
+        setTopics([...useEntriesStore.getState().allTopics, created]);
+        topicId = created.id;
+      } catch { topicId = null; }
+    }
+    const metadata: Record<string, unknown> = {
+      _widgetType: 'wellness-checkin',
+      _customFields: { date: todayStr, waterGlasses: water, waterGoal: WATER_GOAL, moodScore: mood, sleepHours: sleepH, sleepQuality: 0 },
+    };
+    if (topicId) metadata._taxonomyId = topicId;
+    const summary = [
+      water > 0 ? `${water}/${WATER_GOAL} glasses` : '',
+      mood > 0 ? `Mood ${mood}/5` : '',
+      sleepH > 0 ? `${sleepH}h sleep` : '',
+    ].filter(Boolean).join(' · ') || 'Wellness check-in';
+    try {
+      const encrypted = await encryptPost(summary, metadata);
+      const payload = {
+        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+        isEncrypted: true as const,
+        taxonomyIds: topicId ? [topicId] : [] as number[],
+      };
+      if (entryIdRef.current) {
+        await entriesApi.update(entryIdRef.current, payload);
+        updateDecryptedEntry(entryIdRef.current, { content: summary, metadata });
+      } else {
+        const result = await entriesApi.create(payload);
+        const id = result.id as number;
+        entryIdRef.current = id;
+        addDecryptedEntry({ id, content: summary, metadata, isEncrypted: true, createdAt: new Date(result.createdAt as string), updatedAt: new Date(result.createdAt as string) });
+      }
+    } catch { /* fire-and-forget */ }
+  };
+
+  const scheduleSave = (water: number, mood: number, sleepH: number) => {
+    latestRef.current = { water, mood, sleepH };
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => doSaveRef.current(), 600);
+  };
+
+  const optimisticUpdate = (updates: Partial<{ waterGlasses: number; moodScore: number; sleepHours: number }>) => {
+    if (!entryIdRef.current) return;
+    const entry = useEntriesStore.getState().decryptedEntries.find(e => e.id === entryIdRef.current);
+    if (!entry) return;
+    const meta = entry.metadata as Record<string, unknown>;
+    const cf = (meta._customFields as Record<string, unknown>) ?? {};
+    updateDecryptedEntry(entryIdRef.current, { metadata: { ...meta, _customFields: { ...cf, ...updates } } });
+  };
+
+  const handleGlass = (i: number) => {
+    const newVal = i < waterGlasses ? i : i + 1;
+    if (wellnessEntry) optimisticUpdate({ waterGlasses: newVal });
+    else setPendingWater(newVal);
+    scheduleSave(newVal, moodScore, sleepHours);
+  };
+
+  const handleMood = (score: number) => {
+    const newVal = moodScore === score ? 0 : score;
+    if (wellnessEntry) optimisticUpdate({ moodScore: newVal });
+    else setPendingMood(newVal);
+    scheduleSave(waterGlasses, newVal, sleepHours);
+  };
+
+  const handleSleepHours = (i: number) => {
+    const newVal = i < sleepHours ? i : i + 1;
+    if (wellnessEntry) optimisticUpdate({ sleepHours: newVal });
+    else setPendingSleep(newVal);
+    scheduleSave(waterGlasses, moodScore, newVal);
+  };
+
+  return (
+    <DashCard>
+      <CardHeader>
+        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faHeart} /></CardIconWrap>
+        <CardTitle>Daily Check-in</CardTitle>
+        <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
+          <FontAwesomeIcon icon={faGripVertical} />
+        </DragGrip>
+      </CardHeader>
+      <CardBody>
+        <WSection>
+          <WSectionLabel>Water</WSectionLabel>
+          <GlassRow>
+            {Array.from({ length: WATER_GOAL }, (_, i) => (
+              <GlassBtn key={i} $filled={i < waterGlasses} onClick={() => handleGlass(i)} title={`${i + 1} glass${i !== 0 ? 'es' : ''}`}>
+                <FontAwesomeIcon icon={faGlassWater} />
+              </GlassBtn>
+            ))}
+            <GlassCount>{waterGlasses}/{WATER_GOAL}</GlassCount>
+          </GlassRow>
+        </WSection>
+
+        <WSection>
+          <WSectionLabel>Mood</WSectionLabel>
+          <MoodRow>
+            {MOOD_ICONS.map((icon, i) => (
+              <MoodBtn key={i} $active={moodScore === i + 1} onClick={() => handleMood(i + 1)} title={['Very sad', 'Sad', 'Neutral', 'Good', 'Great'][i]}>
+                <FontAwesomeIcon icon={icon} />
+              </MoodBtn>
+            ))}
+          </MoodRow>
+        </WSection>
+
+        <WSection>
+          <WSectionLabel>Sleep</WSectionLabel>
+          <GlassRow>
+            {Array.from({ length: SLEEP_GOAL }, (_, i) => (
+              <GlassBtn key={i} $filled={i < sleepHours} onClick={() => handleSleepHours(i)} title={`${i + 1}h`}>
+                <FontAwesomeIcon icon={faCloudMoon} />
+              </GlassBtn>
+            ))}
+            <GlassCount>{sleepHours > 0 ? `${sleepHours}h` : '—'}</GlassCount>
+          </GlassRow>
+        </WSection>
       </CardBody>
     </DashCard>
   );
@@ -2161,6 +2655,15 @@ export function DashboardView() {
     [allTopics, layout.left, layout.right, layout.hidden, BUILTIN_TOPIC_NAMES]
   );
 
+  // Optional static widgets not yet placed anywhere
+  const OPTIONAL_STATICS: StaticCardId[] = ['affirmations'];
+  const addableStatics = useMemo(
+    () => OPTIONAL_STATICS.filter(id =>
+      !layout.left.includes(id) && !layout.right.includes(id) && !layout.hidden.includes(id)
+    ),
+    [layout.left, layout.right, layout.hidden]
+  );
+
   // Shopping list — first current (has unchecked items)
   const shoppingListEntry = useMemo(() => {
     if (!shoppingTopicId) return null;
@@ -2217,8 +2720,10 @@ export function DashboardView() {
               case 'events':      return <EventsCard accentColor={headerColor} events={events} {...drag} />;
               case 'shopping':    return <ShoppingCard accentColor={headerColor} listEntry={shoppingListEntry ? { id: shoppingListEntry.id, content: shoppingListEntry.content, metadata: shoppingListEntry.metadata as Record<string, unknown> } : null} {...drag} />;
               case 'meds':        return <MedsCard accentColor={headerColor} {...drag} />;
-              case 'weather':     return <WeatherCard accentColor={headerColor} {...drag} />;
-              case 'menu-plan':   return <MenuPlanCard accentColor={headerColor} {...drag} />;
+              case 'weather':       return <WeatherCard accentColor={headerColor} {...drag} />;
+              case 'menu-plan':     return <MenuPlanCard accentColor={headerColor} {...drag} />;
+              case 'affirmations':  return <AffirmationsCard accentColor={headerColor} {...drag} />;
+              case 'wellness':      return <WellnessCheckInCard accentColor={headerColor} {...drag} />;
             }
           };
           const renderCol = (ids: CardId[]) => ids.map(id => (
@@ -2259,12 +2764,25 @@ export function DashboardView() {
                           </WidgetMenuHeader>
                           {isWidgetMenuOpen && (
                             <WidgetMenuBody>
-                              {hiddenAddable.length === 0 && addableTopics.length === 0 ? (
+                              {hiddenAddable.length === 0 && addableTopics.length === 0 && addableStatics.length === 0 ? (
                                 <div style={{ fontSize: 13, color: 'inherit', opacity: 0.45, padding: '4px 0 4px' }}>
                                   All widgets are on the dashboard. Remove one first to add it back here.
                                 </div>
                               ) : (
                                 <>
+                                  {addableStatics.length > 0 && (
+                                    <WidgetMenuSection>
+                                      <WidgetSectionLabel>Optional</WidgetSectionLabel>
+                                      <WidgetChips>
+                                        {addableStatics.map(id => (
+                                          <WidgetChip key={id} onClick={() => handleAddCard(id)}>
+                                            <FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} />
+                                            {STATIC_LABELS[id]}
+                                          </WidgetChip>
+                                        ))}
+                                      </WidgetChips>
+                                    </WidgetMenuSection>
+                                  )}
                                   {hiddenAddable.length > 0 && (
                                     <WidgetMenuSection>
                                       <WidgetSectionLabel>Hidden</WidgetSectionLabel>

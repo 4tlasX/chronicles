@@ -12,6 +12,8 @@ vi.mock('@/utils/correlationAnalysis', () => ({
   calculateExerciseImpact: vi.fn().mockReturnValue([]),
   calculateExerciseFrequency: vi.fn().mockReturnValue([]),
   calculateSymptomCoOccurrences: vi.fn().mockReturnValue([]),
+  calculateWellnessTrend: vi.fn().mockReturnValue([]),
+  calculateWellnessInsights: vi.fn().mockReturnValue([]),
 }));
 
 vi.mock('@/components/molecules/charts/CorrelationChart', () => ({
@@ -36,6 +38,7 @@ describe('HealthReport', () => {
     foods: [],
     medLogs: [],
     exercises: [],
+    wellness: [],
     period: 'week' as const,
     headerColor: '#4281a4',
   };

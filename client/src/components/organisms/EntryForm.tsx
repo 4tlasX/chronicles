@@ -20,6 +20,7 @@ import { AllergyFields, type AllergyFieldValues } from '../molecules/fields/Alle
 import { ShoppingListFields, type ShoppingListFieldValues } from '../molecules/fields/ShoppingListFields.js';
 import { RecipeFields, type RecipeFieldValues } from '../molecules/fields/RecipeFields.js';
 import { PrioritiesFields, type PrioritiesFieldValues } from '../molecules/fields/PrioritiesFields.js';
+import { WellnessFields, type WellnessFieldValues } from '../molecules/fields/WellnessFields.js';
 
 /* ── Styled components ── */
 
@@ -211,7 +212,7 @@ const TOPIC_TO_TYPE: Record<string, string> = {
   food: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
   allergy: 'allergy', 'shopping list': 'shopping_list', recipe: 'recipe',
-  priorities: 'priorities',
+  priorities: 'priorities', wellness: 'wellness',
 };
 
 function getCustomType(topicName: string | undefined): string | null {
@@ -378,7 +379,7 @@ export function EntryForm({
         {customType && (
           <CustomFieldsSection>
             <CustomFieldsHeader onClick={() => setFieldsExpanded(!fieldsExpanded)}>
-              <span>{customType === 'task' ? 'Task Options' : customType === 'goal' ? 'Goal Type' : customType === 'milestone' ? 'Milestone Status' : customType === 'food' ? 'Meal Type' : customType === 'medication' ? 'Dosage' : customType === 'symptom' ? 'Severity' : customType === 'exercise' ? 'Exercise Type' : customType === 'event' ? 'Event Details' : customType === 'meeting' ? 'Meeting Details' : customType === 'allergy' ? 'Allergy Details' : customType === 'shopping_list' ? 'Shopping List' : customType === 'recipe' ? 'Recipe Details' : 'Settings'}</span>
+              <span>{customType === 'task' ? 'Task Options' : customType === 'goal' ? 'Goal Type' : customType === 'milestone' ? 'Milestone Status' : customType === 'food' ? 'Meal Type' : customType === 'medication' ? 'Dosage' : customType === 'symptom' ? 'Severity' : customType === 'exercise' ? 'Exercise Type' : customType === 'event' ? 'Event Details' : customType === 'meeting' ? 'Meeting Details' : customType === 'allergy' ? 'Allergy Details' : customType === 'shopping_list' ? 'Shopping List' : customType === 'recipe' ? 'Recipe Details' : customType === 'wellness' ? 'Check-in Details' : 'Settings'}</span>
               <FontAwesomeIcon icon={fieldsExpanded ? faChevronUp : faChevronDown} size="xs" />
             </CustomFieldsHeader>
             {fieldsExpanded && (
@@ -396,6 +397,7 @@ export function EntryForm({
                 {customType === 'shopping_list' && <ShoppingListFields values={{ items: [], notes: '', linkedRecipeIds: [], ...(customFields as Partial<ShoppingListFieldValues>) } as ShoppingListFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} recipeOptions={recipeOptions} />}
                 {customType === 'recipe' && <RecipeFields values={{ servings: '', prepTime: '', cookTime: '', cuisine: '', ingredients: [], instructions: '', linkedShoppingListIds: [], ...(customFields as Partial<RecipeFieldValues>) } as RecipeFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} shoppingListOptions={shoppingListOptions} />}
                 {customType === 'priorities' && <PrioritiesFields values={{ priorities: [], ...(customFields as Partial<PrioritiesFieldValues>) } as PrioritiesFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
+                {customType === 'wellness' && <WellnessFields values={{ date: '', waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0, ...customFields } as WellnessFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
               </CustomFieldsBody>
             )}
           </CustomFieldsSection>

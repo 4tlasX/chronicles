@@ -284,6 +284,165 @@ export function calculateExerciseFrequency(
   return Array.from(data.entries()).map(([period, d]) => ({ period, count: d.count, totalDuration: d.duration })).sort((a, b) => a.period.localeCompare(b.period));
 }
 
+// ── Wellness types ──
+
+export interface DecryptedWellness {
+  id: number;
+  date: string; // YYYY-MM-DD
+  waterGlasses: number;
+  waterGoal: number;
+  moodScore: number;   // 1–5, 0 = unset
+  sleepHours: number;  // 0–12, 0 = unset
+  sleepQuality: number; // 1–5, 0 = unset
+}
+
+export interface WellnessTrendPoint {
+  date: string;
+  waterGlasses: number;
+  waterGoal: number;
+  moodScore: number;
+  sleepHours: number;
+  sleepQuality: number;
+}
+
+export interface WellnessInsight {
+  label: string;
+  high: string;
+  low: string;
+  dataPoints: number;
+  direction: 'positive' | 'negative' | 'neutral';
+}
+
+// ── Wellness trend ──
+
+export function calculateWellnessTrend(wellness: DecryptedWellness[]): WellnessTrendPoint[] {
+  return [...wellness]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(w => ({
+      date: w.date,
+      waterGlasses: w.waterGlasses,
+      waterGoal: w.waterGoal || 8,
+      moodScore: w.moodScore,
+      sleepHours: w.sleepHours,
+      sleepQuality: w.sleepQuality,
+    }));
+}
+
+// ── Wellness cross-correlations ──
+
+export function calculateWellnessInsights(
+  wellness: DecryptedWellness[],
+  symptoms: DecryptedSymptom[],
+  exercises: DecryptedExercise[]
+): WellnessInsight[] {
+  const insights: WellnessInsight[] = [];
+  const sorted = [...wellness].sort((a, b) => a.date.localeCompare(b.date));
+
+  // Sleep quality → next-day mood
+  const sleepMoodPairs: { sleepQ: number; nextMood: number }[] = [];
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const today = sorted[i];
+    const tomorrow = sorted[i + 1];
+    const d1 = new Date(today.date + 'T12:00:00');
+    const d2 = new Date(tomorrow.date + 'T12:00:00');
+    const diffDays = Math.round((d2.getTime() - d1.getTime()) / 86400000);
+    if (diffDays !== 1) continue;
+    if (today.sleepQuality > 0 && tomorrow.moodScore > 0) {
+      sleepMoodPairs.push({ sleepQ: today.sleepQuality, nextMood: tomorrow.moodScore });
+    }
+  }
+  if (sleepMoodPairs.length >= 3) {
+    const good = sleepMoodPairs.filter(p => p.sleepQ >= 4);
+    const poor = sleepMoodPairs.filter(p => p.sleepQ <= 2);
+    if (good.length > 0 && poor.length > 0) {
+      const avgGoodMood = good.reduce((s, p) => s + p.nextMood, 0) / good.length;
+      const avgPoorMood = poor.reduce((s, p) => s + p.nextMood, 0) / poor.length;
+      insights.push({
+        label: 'Sleep quality → next-day mood',
+        high: `After good sleep (4-5★): avg mood ${avgGoodMood.toFixed(1)}/5`,
+        low: `After poor sleep (1-2★): avg mood ${avgPoorMood.toFixed(1)}/5`,
+        dataPoints: sleepMoodPairs.length,
+        direction: avgGoodMood > avgPoorMood + 0.3 ? 'positive' : 'neutral',
+      });
+    }
+  }
+
+  // Water intake → same-day symptom count
+  const symptomDates = new Map<string, number>();
+  for (const s of symptoms) {
+    const date = s.occurredAt.split('T')[0];
+    symptomDates.set(date, (symptomDates.get(date) || 0) + 1);
+  }
+  const waterSymPairs = sorted
+    .filter(w => w.waterGlasses > 0)
+    .map(w => ({ water: w.waterGlasses, sx: symptomDates.get(w.date) || 0 }));
+  if (waterSymPairs.length >= 4) {
+    const low = waterSymPairs.filter(p => p.water <= 4);
+    const high = waterSymPairs.filter(p => p.water >= 6);
+    if (low.length > 0 && high.length > 0) {
+      const avgLowSx = low.reduce((s, p) => s + p.sx, 0) / low.length;
+      const avgHighSx = high.reduce((s, p) => s + p.sx, 0) / high.length;
+      insights.push({
+        label: 'Water intake → symptoms',
+        high: `6+ glasses: avg ${avgHighSx.toFixed(1)} symptoms/day`,
+        low: `≤4 glasses: avg ${avgLowSx.toFixed(1)} symptoms/day`,
+        dataPoints: waterSymPairs.length,
+        direction: avgHighSx < avgLowSx - 0.2 ? 'positive' : 'neutral',
+      });
+    }
+  }
+
+  // Exercise → same-night sleep quality
+  const exerciseDates = new Set(exercises.map(e => e.performedAt.split('T')[0]));
+  const exSleepPairs = sorted
+    .filter(w => w.sleepQuality > 0)
+    .map(w => ({ exercised: exerciseDates.has(w.date), sleepQ: w.sleepQuality }));
+  if (exSleepPairs.length >= 4) {
+    const withEx = exSleepPairs.filter(p => p.exercised);
+    const withoutEx = exSleepPairs.filter(p => !p.exercised);
+    if (withEx.length > 0 && withoutEx.length > 0) {
+      const avgWith = withEx.reduce((s, p) => s + p.sleepQ, 0) / withEx.length;
+      const avgWithout = withoutEx.reduce((s, p) => s + p.sleepQ, 0) / withoutEx.length;
+      insights.push({
+        label: 'Exercise → sleep quality',
+        high: `Exercise days: avg ${avgWith.toFixed(1)}/5 quality`,
+        low: `Rest days: avg ${avgWithout.toFixed(1)}/5 quality`,
+        dataPoints: exSleepPairs.length,
+        direction: avgWith > avgWithout + 0.2 ? 'positive' : 'neutral',
+      });
+    }
+  }
+
+  // Mood → same-day symptom severity
+  const sxSeverityByDate = new Map<string, { total: number; count: number }>();
+  for (const s of symptoms) {
+    const date = s.occurredAt.split('T')[0];
+    const e = sxSeverityByDate.get(date) || { total: 0, count: 0 };
+    e.total += s.severity; e.count++;
+    sxSeverityByDate.set(date, e);
+  }
+  const moodSxPairs = sorted
+    .filter(w => w.moodScore > 0 && sxSeverityByDate.has(w.date))
+    .map(w => { const sx = sxSeverityByDate.get(w.date)!; return { mood: w.moodScore, avgSx: sx.total / sx.count }; });
+  if (moodSxPairs.length >= 3) {
+    const highMood = moodSxPairs.filter(p => p.mood >= 4);
+    const lowMood  = moodSxPairs.filter(p => p.mood <= 2);
+    if (highMood.length > 0 && lowMood.length > 0) {
+      const avgHighSx = highMood.reduce((s, p) => s + p.avgSx, 0) / highMood.length;
+      const avgLowSx  = lowMood.reduce((s, p) => s + p.avgSx, 0) / lowMood.length;
+      insights.push({
+        label: 'Mood → symptom severity (same day)',
+        high: `High mood (4-5): avg severity ${avgHighSx.toFixed(1)}/10`,
+        low: `Low mood (1-2): avg severity ${avgLowSx.toFixed(1)}/10`,
+        dataPoints: moodSxPairs.length,
+        direction: avgHighSx < avgLowSx - 0.5 ? 'positive' : 'neutral',
+      });
+    }
+  }
+
+  return insights;
+}
+
 // ── Symptom co-occurrences ──
 
 export function calculateSymptomCoOccurrences(

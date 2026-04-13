@@ -53,6 +53,7 @@ export function JournalView() {
   const [editorContent, setEditorContent] = useState('');
   const [editorTopicId, setEditorTopicId] = useState<number | null>(null);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
+  const [widgetType, setWidgetType] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
@@ -141,12 +142,14 @@ export function JournalView() {
         const meta = entry.metadata as Record<string, unknown>;
         setEditorTopicId(meta?._taxonomyId as number | null ?? null);
         setCustomFields(meta?._customFields as Record<string, unknown> ?? {});
+        setWidgetType(meta?._widgetType as string | null ?? null);
         setShowMobileEditor(true);
       }
     } else {
       setEditorContent('');
       setEditorTopicId(null);
       setCustomFields({});
+      setWidgetType(null);
     }
   }, [selectedEntryId, decryptedEntries]);
 
@@ -156,6 +159,7 @@ export function JournalView() {
     try {
       const metadata: Record<string, unknown> = {};
       if (editorTopicId) metadata._taxonomyId = editorTopicId;
+      if (widgetType) metadata._widgetType = widgetType;
       if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
       const encrypted = await encryptPost(editorContent, metadata);
 
@@ -181,20 +185,20 @@ export function JournalView() {
       setTimeout(() => setSaveStatus(''), 2000);
     } catch (err) { console.error('Save failed:', err); setSaveStatus('Save failed'); }
     finally { setIsSaving(false); }
-  }, [editorContent, selectedEntryId, editorTopicId, customFields, encryptPost]);
+  }, [editorContent, selectedEntryId, editorTopicId, widgetType, customFields, encryptPost]);
 
   const handleDelete = useCallback(async () => {
     if (!selectedEntryId) return;
     try {
       await entriesApi.delete(selectedEntryId);
       removeEntry(selectedEntryId);
-      setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({});
+      setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
       setShowMobileEditor(false);
     } catch (err) { console.error('Delete failed:', err); }
   }, [selectedEntryId]);
 
   const handleNew = () => {
-    setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({});
+    setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
     setShowMobileEditor(false);
   };
 

@@ -157,6 +157,14 @@ export function SettingsView() {
   // Timezone
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
 
+  // Weather
+  const weatherEnabled = useUIStore(s => s.weatherEnabled);
+  const setWeatherEnabled = useUIStore(s => s.setWeatherEnabled);
+  const weatherCity = useUIStore(s => s.weatherCity);
+  const setWeatherCity = useUIStore(s => s.setWeatherCity);
+  const [weatherCityDraft, setWeatherCityDraft] = useState('');
+  const [weatherCitySaving, setWeatherCitySaving] = useState(false);
+
   // Password
   const [showPassword, setShowPassword] = useState(false);
   const [currentPw, setCurrentPw] = useState('');
@@ -248,6 +256,24 @@ export function SettingsView() {
   const handleTimezoneChange = async (tz: string) => {
     setTimezone(tz);
     await settingsApi.upsert('timezone', tz).catch(() => {});
+  };
+
+  const handleWeatherToggle = async (enabled: boolean) => {
+    setWeatherEnabled(enabled);
+    await settingsApi.upsert('weatherEnabled', enabled).catch(() => {});
+    if (enabled && !weatherCityDraft) setWeatherCityDraft(weatherCity);
+  };
+
+  const handleSaveWeatherCity = async () => {
+    const city = weatherCityDraft.trim();
+    if (!city) return;
+    setWeatherCitySaving(true);
+    try {
+      await settingsApi.upsert('weatherCity', city);
+      setWeatherCity(city);
+    } catch { /* ignore */ } finally {
+      setWeatherCitySaving(false);
+    }
   };
 
   const handleHeaderColorChange = async (color: string) => {
@@ -695,6 +721,35 @@ export function SettingsView() {
             </Select>
           }
         />
+        <SettingsRow
+          title="Weather Forecast"
+          description="Show a 5-day weather widget on your dashboard"
+          action={
+            <Toggle
+              checked={weatherEnabled}
+              onChange={handleWeatherToggle}
+              activeColor={themeMode === 'dark' ? '#2D2C2A' : '#ecebe7'}
+            />
+          }
+        >
+          {weatherEnabled && (
+            <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <TextInput
+                value={weatherCityDraft || weatherCity}
+                onChange={e => setWeatherCityDraft(e.target.value)}
+                placeholder="City name (e.g. New York)"
+                style={{ flex: 1 }}
+                onKeyDown={e => e.key === 'Enter' && handleSaveWeatherCity()}
+              />
+              <ActionButton
+                onClick={handleSaveWeatherCity}
+                disabled={weatherCitySaving || !(weatherCityDraft || weatherCity).trim()}
+              >
+                {weatherCitySaving ? <Spinner size={14} /> : 'Save'}
+              </ActionButton>
+            </div>
+          )}
+        </SettingsRow>
       </SettingsCard>
 
       {/* Theme */}

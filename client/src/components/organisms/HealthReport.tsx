@@ -9,6 +9,9 @@ import type {
   DecryptedFood,
   DecryptedMedicationLog,
   DecryptedExercise,
+  DecryptedWellness,
+  WellnessTrendPoint,
+  WellnessInsight,
 } from '../../utils/correlationAnalysis.js';
 import {
   calculateCorrelations,
@@ -18,6 +21,8 @@ import {
   calculateExerciseImpact,
   calculateExerciseFrequency,
   calculateSymptomCoOccurrences,
+  calculateWellnessTrend,
+  calculateWellnessInsights,
 } from '../../utils/correlationAnalysis.js';
 import { useMemo } from 'react';
 
@@ -238,6 +243,123 @@ const ImpactChange = styled.div<{ $positive: boolean; $neutral: boolean }>`
   color: ${({ $positive, $neutral, theme }) => $neutral ? theme.colors.textMuted : $positive ? theme.colors.success : theme.colors.danger};
 `;
 
+const WellnessGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+`;
+
+const WellnessTrendWrap = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+  margin-bottom: 8px;
+`;
+
+const WellnessTrendCol = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+`;
+
+const WellnessTrendBar = styled.div<{ $height: number; $color: string }>`
+  width: 100%;
+  min-width: 10px;
+  height: ${({ $height }) => Math.max($height, 2)}px;
+  background: ${({ $color }) => $color};
+  border-radius: 3px 3px 0 0;
+`;
+
+const WellnessTrendLabel = styled.span`
+  font-size: 9px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-top: 3px;
+  white-space: nowrap;
+`;
+
+const WellnessDotRow = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+  margin-bottom: 8px;
+`;
+
+const WellnessDotCol = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+`;
+
+const WellnessDot = styled.div<{ $bottom: number; $color: string }>`
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: ${({ $color }) => $color};
+  margin-bottom: ${({ $bottom }) => $bottom}px;
+`;
+
+const TrendChartLegend = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-bottom: 4px;
+`;
+
+const TrendLegendDot = styled.div<{ $color: string }>`
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: ${({ $color }) => $color};
+  flex-shrink: 0;
+`;
+
+const TrendLegendItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const InsightRow = styled.div`
+  padding: 10px 12px;
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  background: rgba(0, 0, 0, 0.02);
+  & + & { margin-top: 8px; }
+`;
+
+const InsightLabel = styled.div`
+  font-size: 13px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.text};
+  margin-bottom: 4px;
+`;
+
+const InsightDetail = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  line-height: 1.5;
+`;
+
+const InsightBadge = styled.span<{ $positive: boolean }>`
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 6px;
+  background: ${({ $positive }) => $positive ? 'rgba(90,138,106,0.12)' : 'rgba(0,0,0,0.06)'};
+  color: ${({ $positive }) => $positive ? '#5A8A6A' : '#888'};
+`;
+
 /* ── Helpers ── */
 
 function strengthColor(c: number): string {
@@ -253,13 +375,14 @@ interface HealthReportProps {
   foods: DecryptedFood[];
   medLogs: DecryptedMedicationLog[];
   exercises: DecryptedExercise[];
+  wellness: DecryptedWellness[];
   period: PeriodType;
   headerColor: string;
 }
 
 /* ── Component ── */
 
-export function HealthReport({ symptoms, foods, medLogs, exercises, period, headerColor }: HealthReportProps) {
+export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, period, headerColor }: HealthReportProps) {
   const correlations = useMemo(() => {
     if (symptoms.length === 0) return [];
     return [...calculateCorrelations(symptoms, foods, medLogs), ...calculateExerciseCorrelations(symptoms, exercises)];
@@ -318,6 +441,28 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, period, head
 
   const totalExerciseMin = exercises.reduce((s, e) => s + e.duration, 0);
 
+  const wellnessTrend: WellnessTrendPoint[] = useMemo(() =>
+    wellness.length > 0 ? calculateWellnessTrend(wellness) : [], [wellness]);
+
+  const wellnessInsights: WellnessInsight[] = useMemo(() =>
+    wellness.length >= 3 ? calculateWellnessInsights(wellness, symptoms, exercises) : [],
+    [wellness, symptoms, exercises]);
+
+  const wellnessSummary = useMemo(() => {
+    if (wellness.length === 0) return null;
+    const withWater = wellness.filter(w => w.waterGlasses > 0);
+    const withMood  = wellness.filter(w => w.moodScore > 0);
+    const withSleep = wellness.filter(w => w.sleepHours > 0);
+    const withSleepQ = wellness.filter(w => w.sleepQuality > 0);
+    return {
+      avgWater:  withWater.length  > 0 ? withWater.reduce((s, w) => s + w.waterGlasses, 0) / withWater.length : 0,
+      avgMood:   withMood.length   > 0 ? withMood.reduce((s, w) => s + w.moodScore, 0) / withMood.length : 0,
+      avgSleep:  withSleep.length  > 0 ? withSleep.reduce((s, w) => s + w.sleepHours, 0) / withSleep.length : 0,
+      avgSleepQ: withSleepQ.length > 0 ? withSleepQ.reduce((s, w) => s + w.sleepQuality, 0) / withSleepQ.length : 0,
+      days: wellness.length,
+    };
+  }, [wellness]);
+
   return (
     <ScrollList $gap="16px">
       {/* Summary stats */}
@@ -341,6 +486,80 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, period, head
           {totalExerciseMin > 0 && <StatSub>{totalExerciseMin} min total</StatSub>}
         </StatCard>
       </StatsGrid>
+
+      {/* Wellness summary stats */}
+      {wellnessSummary && (
+        <WellnessGrid>
+          <StatCard>
+            <StatValue $color={headerColor}>{wellnessSummary.avgWater.toFixed(1)}</StatValue>
+            <StatLabel>Avg Water</StatLabel>
+            <StatSub>/ 8 glasses · {wellnessSummary.days} days</StatSub>
+          </StatCard>
+          <StatCard>
+            <StatValue $color={headerColor}>{wellnessSummary.avgMood > 0 ? wellnessSummary.avgMood.toFixed(1) : '—'}</StatValue>
+            <StatLabel>Avg Mood</StatLabel>
+            <StatSub>/ 5</StatSub>
+          </StatCard>
+          <StatCard>
+            <StatValue $color={headerColor}>{wellnessSummary.avgSleep > 0 ? `${wellnessSummary.avgSleep.toFixed(1)}h` : '—'}</StatValue>
+            <StatLabel>Avg Sleep</StatLabel>
+            {wellnessSummary.avgSleepQ > 0 && <StatSub>Quality {wellnessSummary.avgSleepQ.toFixed(1)}/5</StatSub>}
+          </StatCard>
+        </WellnessGrid>
+      )}
+
+      {/* Wellness trends */}
+      {wellnessTrend.length > 1 && (
+        <SectionCard>
+          <SectionTitle>Wellness Trends</SectionTitle>
+          <TrendChartLegend>
+            <TrendLegendItem><TrendLegendDot $color={headerColor} /><span>Water (glasses)</span></TrendLegendItem>
+            <TrendLegendItem><TrendLegendDot $color="#5A8A6A" /><span>Mood (×2)</span></TrendLegendItem>
+            <TrendLegendItem><TrendLegendDot $color="#B8965A" /><span>Sleep (hours ÷ 2)</span></TrendLegendItem>
+          </TrendChartLegend>
+          <WellnessTrendWrap>
+            {wellnessTrend.slice(-14).map((pt, i) => {
+              const maxH = 72;
+              const waterH  = (pt.waterGlasses / 8) * maxH;
+              const moodH   = pt.moodScore   > 0 ? ((pt.moodScore * 2) / 10) * maxH : 0;
+              const sleepH  = pt.sleepHours  > 0 ? (pt.sleepHours / 12) * maxH : 0;
+              const date = new Date(pt.date + 'T12:00:00');
+              const label = `${date.getMonth() + 1}/${date.getDate()}`;
+              return (
+                <WellnessTrendCol key={i} title={`${pt.date}: ${pt.waterGlasses} water, mood ${pt.moodScore}/5, ${pt.sleepHours}h sleep`}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 1, flex: 1, justifyContent: 'center' }}>
+                    <WellnessTrendBar $height={waterH} $color={headerColor} style={{ width: 5 }} />
+                    {moodH > 0  && <WellnessTrendBar $height={moodH}  $color="#5A8A6A" style={{ width: 5 }} />}
+                    {sleepH > 0 && <WellnessTrendBar $height={sleepH} $color="#B8965A" style={{ width: 5 }} />}
+                  </div>
+                  <WellnessTrendLabel>{label}</WellnessTrendLabel>
+                </WellnessTrendCol>
+              );
+            })}
+          </WellnessTrendWrap>
+        </SectionCard>
+      )}
+
+      {/* Wellness cross-correlation insights */}
+      {wellnessInsights.length > 0 && (
+        <SectionCard>
+          <SectionTitle>Wellness Insights</SectionTitle>
+          <SectionDesc>Cross-correlations between sleep, water, mood, exercise, and symptoms</SectionDesc>
+          {wellnessInsights.map((insight, i) => (
+            <InsightRow key={i}>
+              <InsightLabel>
+                {insight.label}
+                <InsightBadge $positive={insight.direction === 'positive'}>
+                  {insight.direction === 'positive' ? 'pattern found' : 'tracking'} · {insight.dataPoints} days
+                </InsightBadge>
+              </InsightLabel>
+              <InsightDetail>
+                {insight.high}<br />{insight.low}
+              </InsightDetail>
+            </InsightRow>
+          ))}
+        </SectionCard>
+      )}
 
       {/* Correlations */}
       <CorrelationChart data={correlations} title="Correlations Detected" />

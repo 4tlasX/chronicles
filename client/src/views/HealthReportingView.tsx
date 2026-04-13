@@ -20,6 +20,7 @@ import type {
   DecryptedFood,
   DecryptedMedicationLog,
   DecryptedExercise,
+  DecryptedWellness,
 } from '../utils/correlationAnalysis.js';
 
 /* ── Period filter ── */
@@ -131,6 +132,30 @@ export function HealthReportingView() {
       };
     }), [filterByTopic]);
 
+  const wellness: DecryptedWellness[] = useMemo(() =>
+    entries
+      .filter(e => {
+        const meta = e.metadata as Record<string, unknown>;
+        if (meta._widgetType !== 'wellness-checkin') return false;
+        const cf = meta._customFields as Record<string, unknown> | undefined;
+        const date = cf?.date as string | undefined;
+        if (!date) return false;
+        return date >= startDate && date <= endDate;
+      })
+      .map(e => {
+        const cf = ((e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>) ?? {};
+        return {
+          id: e.id,
+          date: (cf.date as string) || (e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt)).toISOString().split('T')[0],
+          waterGlasses: (cf.waterGlasses as number) || 0,
+          waterGoal: (cf.waterGoal as number) || 8,
+          moodScore: (cf.moodScore as number) || 0,
+          sleepHours: (cf.sleepHours as number) || 0,
+          sleepQuality: (cf.sleepQuality as number) || 0,
+        };
+      }),
+    [entries, startDate, endDate]);
+
   // Fetch medication dose logs for the date range
   useEffect(() => {
     if (!isReady) return;
@@ -194,6 +219,7 @@ export function HealthReportingView() {
         foods={foods}
         medLogs={medLogs}
         exercises={exercises}
+        wellness={wellness}
         period={period}
         headerColor={headerColor}
       />
