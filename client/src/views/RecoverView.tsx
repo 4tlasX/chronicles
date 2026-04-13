@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { auth as authApi } from '../services/api.js';
 import { AuthTemplate } from '../components/templates/AuthTemplate.js';
@@ -11,11 +10,11 @@ import { Spinner } from '../components/atoms/Spinner.js';
 import { AuthForm } from '../components/atoms/AuthForm.js';
 import { ErrorBanner } from '../components/atoms/ErrorBanner.js';
 import { FormField } from '../components/molecules/FormField.js';
+import { RecoveryKeyDisplay } from '../components/molecules/RecoveryKeyDisplay.js';
 import type { RecoverStep } from '../types/health.js';
 
 export function RecoverView() {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const { recoverAndRewrap } = useEncryption();
   const [step, setStep] = useState<RecoverStep>('email');
   const [email, setEmail] = useState('');
@@ -25,6 +24,7 @@ export function RecoverView() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [recoveryParams, setRecoveryParams] = useState<{ recoveryWrappedMK: string; recoveryWrapIv: string } | null>(null);
+  const [newRecoveryKey, setNewRecoveryKey] = useState('');
 
   const handleEmailStep = async (e: FormEvent) => {
     e.preventDefault();
@@ -74,12 +74,33 @@ export function RecoverView() {
       // Unwrap with recovery key and rewrap with new password in one atomic step —
       // avoids the auto-lock race that cleared the key between separate steps.
       const cleanKey = recoveryKey.replace(/[-\s]/g, '');
-      const { salt, wrappedMK, wrapIv } = await recoverAndRewrap(
+      const { salt, wrappedMK, wrapIv, newRecoveryKey: freshRecoveryKey, newRecoveryWrappedMK, newRecoveryWrapIv } = await recoverAndRewrap(
         cleanKey,
         recoveryParams!.recoveryWrappedMK,
         recoveryParams!.recoveryWrapIv,
         newPassword,
       );
+
+      // Hash the new recovery key for server-side verification (same as registration)
+      const newRecoveryKeySaltBytes = crypto.getRandomValues(new Uint8Array(16));
+      const newRecoveryKeySalt = Array.from(newRecoveryKeySaltBytes)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(freshRecoveryKey),
+        'PBKDF2',
+        false,
+        ['deriveBits']
+      );
+      const derivedBits = await crypto.subtle.deriveBits(
+        { name: 'PBKDF2', salt: newRecoveryKeySaltBytes, iterations: 600000, hash: 'SHA-256' },
+        keyMaterial,
+        256
+      );
+      const newRecoveryKeyHash = Array.from(new Uint8Array(derivedBits))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
 
       // Send to server
       await authApi.recover({
@@ -89,9 +110,15 @@ export function RecoverView() {
         newEncryptedMasterKey: wrappedMK,
         newKekSalt: salt,
         newKekWrapIv: wrapIv,
+        newRecoveryWrappedMK,
+        newRecoveryWrapIv,
+        newRecoveryKeyHash,
+        newRecoveryKeySalt,
       });
 
-      navigate('/');
+      // Show the new recovery key before navigating away
+      setNewRecoveryKey(freshRecoveryKey);
+      setStep('newKey');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid recovery key or recovery failed');
     } finally {
@@ -102,7 +129,7 @@ export function RecoverView() {
   return (
     <AuthTemplate
       title="Recover Account"
-      footer={<>Remember your password? <Link to="/login">Sign in</Link></>}
+      footer={step !== 'newKey' ? <>Remember your password? <Link to="/login">Sign in</Link></> : undefined}
     >
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
@@ -165,6 +192,13 @@ export function RecoverView() {
             {loading ? <Spinner size={18} /> : 'Reset password'}
           </Button>
         </AuthForm>
+      )}
+
+      {step === 'newKey' && newRecoveryKey && (
+        <RecoveryKeyDisplay
+          recoveryKey={newRecoveryKey}
+          onConfirm={() => navigate('/')}
+        />
       )}
     </AuthTemplate>
   );

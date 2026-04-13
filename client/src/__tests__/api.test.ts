@@ -209,6 +209,8 @@ describe('auth', () => {
     await auth.recover({
       email: 'a@b.com', recoveryKey: 'rk', newPassword: 'np',
       newEncryptedMasterKey: 'emk', newKekSalt: 's', newKekWrapIv: 'iv',
+      newRecoveryWrappedMK: 'rwmk', newRecoveryWrapIv: 'rwiv',
+      newRecoveryKeyHash: 'rkh', newRecoveryKeySalt: 'rks',
     });
 
     const [url, init] = fetchSpy.mock.calls[0];

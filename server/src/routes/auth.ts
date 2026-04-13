@@ -409,7 +409,7 @@ router.post('/recover', strictLimiter, async (req, res) => {
       return;
     }
 
-    const { email: rawEmail, recoveryKey, newPassword, newEncryptedMasterKey, newKekSalt, newKekWrapIv } = parsed.data;
+    const { email: rawEmail, recoveryKey, newPassword, newEncryptedMasterKey, newKekSalt, newKekWrapIv, newRecoveryWrappedMK, newRecoveryWrapIv, newRecoveryKeyHash, newRecoveryKeySalt } = parsed.data;
     const email = rawEmail.toLowerCase();
 
     const account = await prisma.account.findUnique({ where: { email } });
@@ -462,10 +462,10 @@ router.post('/recover', strictLimiter, async (req, res) => {
           encryptedMasterKey: new Uint8Array(Buffer.from(newEncryptedMasterKey, 'base64')),
           kekSalt: new Uint8Array(Buffer.from(newKekSalt, 'base64')),
           kekWrapIv: new Uint8Array(Buffer.from(newKekWrapIv, 'base64')),
-          recoveryKeyHash: null,
-          recoveryKeySalt: null,
-          recoveryWrappedMK: null,
-          recoveryWrapIv: null,
+          recoveryKeyHash: newRecoveryKeyHash,
+          recoveryKeySalt: newRecoveryKeySalt,
+          recoveryWrappedMK: new Uint8Array(Buffer.from(newRecoveryWrappedMK, 'base64')),
+          recoveryWrapIv: new Uint8Array(Buffer.from(newRecoveryWrapIv, 'base64')),
           recoveryKeyUsedAt: new Date(),
         },
       });
@@ -752,6 +752,35 @@ router.get('/recovery-params', authLimiter, async (req, res) => {
   } catch (err) {
     console.error('Recovery params error:', err instanceof Error ? err.message : 'Unknown error');
     res.status(500).json({ error: 'Failed to fetch recovery params' });
+  }
+});
+
+// =============================================================================
+// POST /api/auth/recovery-key — Generate / regenerate recovery key (authenticated)
+// =============================================================================
+router.post('/recovery-key', authMiddleware, strictLimiter, async (req, res) => {
+  try {
+    const { recoveryWrappedMK, recoveryWrapIv, recoveryKeyHash, recoveryKeySalt } = req.body;
+    if (!recoveryWrappedMK || !recoveryWrapIv || !recoveryKeyHash || !recoveryKeySalt) {
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
+    }
+
+    await prisma.account.update({
+      where: { id: req.auth!.accountId },
+      data: {
+        recoveryWrappedMK: new Uint8Array(Buffer.from(recoveryWrappedMK, 'base64')),
+        recoveryWrapIv: new Uint8Array(Buffer.from(recoveryWrapIv, 'base64')),
+        recoveryKeyHash,
+        recoveryKeySalt,
+      },
+    });
+
+    logSecurityEvent('recovery_key_regenerated', { accountId: req.auth!.accountId, ip: req.ip });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Recovery key regeneration error:', err instanceof Error ? err.message : 'Unknown error');
+    res.status(500).json({ error: 'Failed to save recovery key' });
   }
 });
 

@@ -9,4 +9,4 @@ export interface ScheduledDose {
   time: string;
 }
 
-export type RecoverStep = 'email' | 'recovery' | 'newPassword';
+export type RecoverStep = 'email' | 'recovery' | 'newPassword' | 'newKey';

@@ -152,10 +152,21 @@ export const auth = {
     newEncryptedMasterKey: string;
     newKekSalt: string;
     newKekWrapIv: string;
+    newRecoveryWrappedMK: string;
+    newRecoveryWrapIv: string;
+    newRecoveryKeyHash: string;
+    newRecoveryKeySalt: string;
   }) => request<{
     user: { email: string; username: string };
     encryption: Record<string, unknown>;
   }>('/auth/recover', { method: 'POST', body: data }),
+
+  saveRecoveryKey: (data: {
+    recoveryWrappedMK: string;
+    recoveryWrapIv: string;
+    recoveryKeyHash: string;
+    recoveryKeySalt: string;
+  }) => request<{ success: boolean }>('/auth/recovery-key', { method: 'POST', body: data }),
 };
 
 // =============================================================================

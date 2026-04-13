@@ -102,6 +102,28 @@ class EncryptionService {
   }
 
   /**
+   * Generate a fresh recovery key and wrap the master key with it.
+   * Used after password recovery to issue a new recovery key.
+   */
+  async generateNewRecoveryWrapping(masterKey: CryptoKey): Promise<{
+    recoveryKey: string;
+    recoveryWrappedMK: string;
+    recoveryWrapIv: string;
+  }> {
+    const recoveryKeyBytes = generateRecoveryKey();
+    const recoveryKeyObj = await importRawKey(recoveryKeyBytes);
+    const recoveryWrapIv = generateIv();
+    const recoveryWrappedMKBuffer = await wrapKey(masterKey, recoveryKeyObj, recoveryWrapIv, 'recovery-wrap');
+    const recoveryKey = uint8ArrayToBase64(recoveryKeyBytes);
+    recoveryKeyBytes.fill(0);
+    return {
+      recoveryKey,
+      recoveryWrappedMK: uint8ArrayToBase64(new Uint8Array(recoveryWrappedMKBuffer)),
+      recoveryWrapIv: uint8ArrayToBase64(recoveryWrapIv),
+    };
+  }
+
+  /**
    * Re-wrap master key with a new password (after recovery)
    */
   async rewrapMasterKey(
@@ -118,6 +140,25 @@ class EncryptionService {
       wrappedMK: uint8ArrayToBase64(new Uint8Array(wrappedMKBuffer)),
       wrapIv: uint8ArrayToBase64(wrapIv),
     };
+  }
+
+  /**
+   * Generate a new recovery key wrapping from stored encryption params + current password.
+   * Used in Settings when the user needs to (re)generate their recovery key.
+   */
+  async generateRecoveryKeyFromParams(
+    currentPassword: string,
+    kekSaltBase64: string,
+    encryptedMKBase64: string,
+    kekWrapIvBase64: string,
+    kekIterations: number
+  ): Promise<{ recoveryKey: string; recoveryWrappedMK: string; recoveryWrapIv: string }> {
+    const salt = base64ToUint8Array(kekSaltBase64);
+    const wrappedMK = base64ToUint8Array(encryptedMKBase64);
+    const wrapIv = base64ToUint8Array(kekWrapIvBase64);
+    const kek = await deriveKEK(currentPassword, salt, kekIterations);
+    const extractableKey = await unwrapKey(wrappedMK.buffer as ArrayBuffer, kek, wrapIv, true, 'kek-wrap');
+    return this.generateNewRecoveryWrapping(extractableKey);
   }
 
   /**

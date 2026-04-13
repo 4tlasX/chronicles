@@ -21,8 +21,13 @@ interface EncryptionContextValue {
   decryptPosts: (posts: EncryptedPost[]) => Promise<DecryptedPost[]>;
   unlockWithRecoveryKey: (recoveryKey: string, recoveryWrappedMK: string, recoveryWrapIv: string) => Promise<void>;
   rewrapMasterKey: (newPassword: string, currentPassword?: string, params?: EncryptionParams) => Promise<{ salt: string; wrappedMK: string; wrapIv: string }>;
-  /** Atomic recovery: unwrap with recovery key + rewrap with new password in one step. Avoids auto-lock race between steps. */
-  recoverAndRewrap: (recoveryKey: string, recoveryWrappedMK: string, recoveryWrapIv: string, newPassword: string) => Promise<{ salt: string; wrappedMK: string; wrapIv: string }>;
+  /** Generate a new recovery key wrapping using the current password to re-derive the extractable master key. */
+  generateRecoveryKey: (currentPassword: string, externalParams?: EncryptionParams) => Promise<{ recoveryKey: string; recoveryWrappedMK: string; recoveryWrapIv: string }>;
+  /** Atomic recovery: unwrap with recovery key + rewrap with new password + generate new recovery key in one step. */
+  recoverAndRewrap: (recoveryKey: string, recoveryWrappedMK: string, recoveryWrapIv: string, newPassword: string) => Promise<{
+    salt: string; wrappedMK: string; wrapIv: string;
+    newRecoveryKey: string; newRecoveryWrappedMK: string; newRecoveryWrapIv: string;
+  }>;
 }
 
 const EncryptionContext = createContext<EncryptionContextValue | null>(null);
@@ -131,6 +136,18 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     return result;
   }, []);
 
+  const generateRecoveryKey = useCallback(async (currentPassword: string, externalParams?: EncryptionParams) => {
+    const params = encryptionParamsRef.current ?? externalParams;
+    if (!params) throw new Error('No encryption params available — please re-login');
+    return encryptionService.generateRecoveryKeyFromParams(
+      currentPassword,
+      params.kekSalt,
+      params.encryptedMasterKey,
+      params.kekWrapIv,
+      params.kekIterations
+    );
+  }, []);
+
   const recoverAndRewrap = useCallback(async (
     recoveryKey: string,
     recoveryWrappedMK: string,
@@ -139,13 +156,25 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
   ) => {
     // Unwrap the master key using the recovery key
     const extractableKey = await encryptionService.unwrapWithRecoveryKey(recoveryKey, recoveryWrappedMK, recoveryWrapIv);
-    // Immediately rewrap with the new password — no ref storage, no lock window
-    const result = await encryptionService.rewrapMasterKey(extractableKey, newPassword);
+    // Rewrap with the new password
+    const rewrapped = await encryptionService.rewrapMasterKey(extractableKey, newPassword);
+    // Generate a fresh recovery key for the new session
+    const recovery = await encryptionService.generateNewRecoveryWrapping(extractableKey);
     // Store non-extractable copy for this session
     masterKeyRef.current = await toNonExtractable(extractableKey);
-    encryptionParamsRef.current = null;
+    encryptionParamsRef.current = {
+      kekSalt: rewrapped.salt,
+      encryptedMasterKey: rewrapped.wrappedMK,
+      kekWrapIv: rewrapped.wrapIv,
+      kekIterations: PBKDF2_ITERATIONS,
+    };
     setIsUnlocked(true);
-    return result;
+    return {
+      ...rewrapped,
+      newRecoveryKey: recovery.recoveryKey,
+      newRecoveryWrappedMK: recovery.recoveryWrappedMK,
+      newRecoveryWrapIv: recovery.recoveryWrapIv,
+    };
   }, []);
 
   // Clear all key material on unmount
@@ -202,6 +231,7 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
       decryptPosts,
       unlockWithRecoveryKey,
       rewrapMasterKey,
+      generateRecoveryKey,
       recoverAndRewrap,
     }}>
       {children}

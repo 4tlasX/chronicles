@@ -20,6 +20,7 @@ import { FormField } from '../components/molecules/FormField.js';
 import { ColorPicker } from '../components/molecules/ColorPicker.js';
 import { BackgroundPicker } from '../components/molecules/BackgroundPicker.js';
 import { SessionRow } from '../components/molecules/SessionRow.js';
+import { RecoveryKeyDisplay } from '../components/molecules/RecoveryKeyDisplay.js';
 import { useAuth } from '../contexts/AuthContext.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useUIStore } from '../stores/uiStore.js';
@@ -117,8 +118,8 @@ const FEATURES = [
 /* ── View ── */
 
 export function SettingsView() {
-  const { user, logout } = useAuth();
-  const { lock, rewrapMasterKey, encryptPost } = useEncryption();
+  const { user, logout, encryptionData } = useAuth();
+  const { lock, rewrapMasterKey, generateRecoveryKey, encryptPost } = useEncryption();
   const clearAll = useEntriesStore(s => s.clearAll);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
@@ -190,6 +191,13 @@ export function SettingsView() {
   const [disabling2FA, setDisabling2FA] = useState(false);
   const [disable2FAPassword, setDisable2FAPassword] = useState('');
   const [disable2FAError, setDisable2FAError] = useState('');
+
+  // Recovery key regeneration
+  const [showRecoveryKey, setShowRecoveryKey] = useState(false);
+  const [recoveryKeyPw, setRecoveryKeyPw] = useState('');
+  const [recoveryKeyLoading, setRecoveryKeyLoading] = useState(false);
+  const [recoveryKeyError, setRecoveryKeyError] = useState('');
+  const [generatedRecoveryKey, setGeneratedRecoveryKey] = useState('');
 
   // Features
   const [features, setFeatures] = useState<Record<string, boolean>>({});
@@ -314,6 +322,33 @@ export function SettingsView() {
       setPwMessage('Password changed'); setCurrentPw(''); setNewPw(''); setConfirmPw(''); setShowPassword(false);
     } catch (err) { setPwMessage(err instanceof Error ? err.message : 'Failed'); setPwError(true); }
     finally { setPwLoading(false); }
+  };
+
+  const handleGenerateRecoveryKey = async () => {
+    setRecoveryKeyError('');
+    if (!recoveryKeyPw) { setRecoveryKeyError('Enter your current password'); return; }
+    setRecoveryKeyLoading(true);
+    try {
+      const fallbackParams = encryptionData?.kekSalt && encryptionData?.encryptedMasterKey && encryptionData?.kekWrapIv
+        ? { kekSalt: encryptionData.kekSalt, encryptedMasterKey: encryptionData.encryptedMasterKey, kekWrapIv: encryptionData.kekWrapIv, kekIterations: encryptionData.kekIterations }
+        : undefined;
+      const { recoveryKey, recoveryWrappedMK, recoveryWrapIv } = await generateRecoveryKey(recoveryKeyPw, fallbackParams);
+
+      // Hash the recovery key for server-side verification
+      const saltBytes = crypto.getRandomValues(new Uint8Array(16));
+      const saltHex = Array.from(saltBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+      const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(recoveryKey), 'PBKDF2', false, ['deriveBits']);
+      const derivedBits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: saltBytes, iterations: 600000, hash: 'SHA-256' }, keyMaterial, 256);
+      const keyHash = Array.from(new Uint8Array(derivedBits)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      await authApi.saveRecoveryKey({ recoveryWrappedMK, recoveryWrapIv, recoveryKeyHash: keyHash, recoveryKeySalt: saltHex });
+      setGeneratedRecoveryKey(recoveryKey);
+      setRecoveryKeyPw('');
+    } catch (err) {
+      setRecoveryKeyError(err instanceof Error ? err.message : 'Failed to generate recovery key');
+    } finally {
+      setRecoveryKeyLoading(false);
+    }
   };
 
   const handleLoadSessions = async () => {
@@ -847,6 +882,46 @@ export function SettingsView() {
             ))}
           </SessionsList>
         )}
+
+        {/* ── Recovery Key ── */}
+        <SettingsRow
+          title="Recovery Key"
+          description="Generate a new recovery key for emergency account access"
+          action={
+            !generatedRecoveryKey && (
+              <ActionButton onClick={() => { setShowRecoveryKey(!showRecoveryKey); setRecoveryKeyError(''); setRecoveryKeyPw(''); }}>
+                {showRecoveryKey ? 'Cancel' : 'Generate'}
+              </ActionButton>
+            )
+          }
+        >
+          {showRecoveryKey && !generatedRecoveryKey && (
+            <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted, #6b7280)' }}>
+                Enter your password to generate a new recovery key. Your old recovery key will be replaced.
+              </div>
+              {recoveryKeyError && <div style={{ fontSize: 13, color: '#9B4444' }}>{recoveryKeyError}</div>}
+              <PasswordInput
+                value={recoveryKeyPw}
+                onChange={e => setRecoveryKeyPw(e.target.value)}
+                placeholder="Current password"
+                autoComplete="current-password"
+                autoFocus
+              />
+              <ActionButton onClick={handleGenerateRecoveryKey} disabled={recoveryKeyLoading || !recoveryKeyPw}>
+                {recoveryKeyLoading ? <Spinner size={14} /> : 'Generate recovery key'}
+              </ActionButton>
+            </div>
+          )}
+          {generatedRecoveryKey && (
+            <div style={{ marginTop: 10 }}>
+              <RecoveryKeyDisplay
+                recoveryKey={generatedRecoveryKey}
+                onConfirm={() => { setGeneratedRecoveryKey(''); setShowRecoveryKey(false); }}
+              />
+            </div>
+          )}
+        </SettingsRow>
 
         {/* ── 2FA ── */}
         <SettingsRow

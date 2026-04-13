@@ -43,6 +43,10 @@ export const recoverSchema = z.object({
   newEncryptedMasterKey: z.string().min(1),
   newKekSalt: z.string().min(1),
   newKekWrapIv: z.string().min(1),
+  newRecoveryWrappedMK: z.string().min(1),
+  newRecoveryWrapIv: z.string().min(1),
+  newRecoveryKeyHash: z.string().min(1),
+  newRecoveryKeySalt: z.string().min(1),
 });
 
 // 2FA / TOTP validation
