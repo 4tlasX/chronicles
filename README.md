@@ -5,16 +5,17 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 ## Features
 
 - **Zero-Knowledge Encryption** - AES-256-GCM client-side encryption with non-extractable keys
-- **Dashboard Home** - Drag-and-drop widgets: quick entry, daily priorities, events, tasks, shopping, medication schedule; daily quote and Playfair greeting
+- **Dashboard Home** - Drag-and-drop widgets: quick entry, daily priorities, events, mini calendar, affirmations, daily wellness check-in, tasks, shopping, medication schedule; daily quote and Playfair greeting
 - **Rich Text Editor** - TipTap-based editor with formatting toolbar and inline drawing support
 - **Topic Organization** - Categorize entries with custom topics, icons, and colors
-- **Quick Tab Filters** - Date, Tasks, All, Bookmarks, and Search views
+- **Quick Tab Filters** - Today, Date (with clear filter), Tasks, All, Bookmarks, and Search views
 - **Goals & Milestones** - Track goals with milestone progress and task linking
 - **Meal Planning & Recipes** - Weekly menu planner, recipe entries with ingredients and instructions, linked shopping lists
 - **Shopping Lists** - Checklist-style lists linkable to recipes; dashboard widget shows active list with inline check-off
 - **Health Tracking** - Medications, symptoms, food, exercise, and allergies - Printable medication lists (with dosage and schedule), symptoms, and allergy records
 - **Medication Schedule** - Daily dose tracking with time-based scheduling
-- **Health Reporting** - Correlation analysis, severity trends, and exercise impact charts with date range filtering
+- **Daily Wellness Check-in** - Tap-to-fill water glasses, mood faces, and sleep hours on the dashboard; editable as journal entries under the Wellness topic
+- **Health Reporting** - Correlation analysis, severity trends, exercise impact, and wellness trends (water/mood/sleep) with cross-correlation insights; date range filtering
 - **Calendar View** - Visual month overview; events and meetings appear on their scheduled date in your header colour
 - **Entry Sharing** - Share entries via encrypted public links
 - **PWA Support** - Installable as a standalone app with offline shell caching
@@ -113,6 +114,7 @@ Analyze health data with correlation analysis:
 - **Symptom frequency** and **severity trends** over time
 - **Food-symptom correlations** — identify trigger ingredients
 - **Exercise impact** on symptom patterns
+- **Wellness trends** — water, mood, and sleep over time with cross-correlations (sleep→mood, water→symptoms, exercise→sleep, mood→symptoms)
 - **Calorie summaries** by meal type
 - **Date range filtering** — Today, Week, Month, Year, or custom date range
 

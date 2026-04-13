@@ -212,10 +212,14 @@ Views     → Route logic + top-level data orchestration
 
 **Dashboard:**
 - `client/src/views/DashboardView.tsx` — Home view with drag-and-drop widgets; saves widget order to localStorage
-  - Widget IDs: `quick-entry`, `priorities`, `events`, `tasks`, `shopping`, `meds`
+  - Widget IDs: `quick-entry`, `priorities`, `events`, `tasks`, `shopping`, `meds`, `weather`, `menu-plan`, `affirmations`, `wellness`, `mini-calendar`
+  - Default left column: `quick-entry`, `priorities`, `events`, `menu-plan`
+  - Default right column: `mini-calendar`, `affirmations`, `wellness`
   - Priorities widget auto-creates a "Priorities" topic on first save
   - Events widget shows Event + Meeting topic entries with `startDate`, up to 10, 90-day lookahead
   - Meds widget only renders when active medication entries exist
+  - Wellness widget: tap-to-fill water glasses (8), mood faces (5), sleep hours (10 cloud-moon icons); debounced save with optimistic store updates; reactive to journal edits via Zustand; auto-creates "Wellness" topic so entries appear in journal
+  - Mini Calendar widget: monthly grid with entry-presence dots; clicking a day sets `viewMode: 'date'` and navigates to journal filtered to that day
 
 **Apple Pencil / Drawing:**
 - `client/src/components/atoms/DrawingCanvas.tsx` — Full-screen freehand canvas using `perfect-freehand`; pointer events with pressure sensitivity; palm rejection (`pencilOnly` mode); serializes strokes to SVG on save
@@ -254,6 +258,8 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - Tasks widget — today's tasks with inline completion toggle
 - Shopping List widget — first active shopping list with item check-off
 - Medication Schedule widget — today's dose tracking; only shown when active meds exist
+- Daily Wellness Check-in widget — tap-to-fill water, mood, and sleep; saves as encrypted entry under Wellness topic; dashboard updates reactively when the same entry is edited in the journal (Zustand store, no BroadcastChannel)
+- Mini Calendar widget — monthly grid with entry-presence dots; click any day to jump to that day's journal entries
 - Daily quote and greeting in Playfair Display
 
 **Productivity**
@@ -269,7 +275,8 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - Symptom tracking with severity scale
 - Exercise tracking with type, duration, intensity, distance
 - Allergy tracking
-- Reporting view
+- Wellness check-ins — water glasses, mood (1–5), sleep hours; stored as `_widgetType: 'wellness-checkin'` entries with Wellness topic; editable via `WellnessFields` custom fields in journal
+- Reporting view with wellness trends + cross-correlations
 
 **Calendar**
 - Monthly grid with entry previews per day
@@ -281,7 +288,6 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - Inspiration (research, ideas, quotes)
 
 ### Planned
-- Entry sharing via public links (expiration, view count)
 - Image uploads (encrypted storage)
 - Recurring calendar events
 - Calorie correlation reporting
@@ -296,6 +302,8 @@ Feature flags in `entriesStore.featureFlags` default to `{}` on load. `useInitia
 
 ### Dashboard Widget Data
 Dashboard widgets save entries with `_taxonomyId` in encrypted metadata (same as all entries). The Priorities widget auto-creates a "Priorities" topic on first save. The Meds widget reads from `decryptedEntries` filtered by the Medication topic — it only renders when `hasMeds` is true.
+
+The Wellness widget uses `_widgetType: 'wellness-checkin'` (no `_taxonomyId` initially) to identify today's entry. On first save it auto-creates a "Wellness" topic and adds `_taxonomyId` so the entry becomes visible in the journal. The widget is fully reactive — display values are derived via `useMemo` from `decryptedEntries`, so journal edits flow back to the dashboard automatically. `doSaveRef` pattern prevents stale closures in the 600ms debounce. On save, the store is scanned directly for today's existing entry before creating a new one, preventing duplicates if the `entryIdRef` is stale.
 
 ## Security Hardening
 
