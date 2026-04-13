@@ -2224,6 +2224,7 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
 function MiniCalendarCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
   const navigate = useNavigate();
   const setSelectedDate = useUIStore(s => s.setSelectedDate);
+  const setViewMode = useUIStore(s => s.setViewMode);
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
   const [selectedDate, setLocalDate] = useState(() => new Date());
 
@@ -2239,6 +2240,7 @@ function MiniCalendarCard({ accentColor, dragAttributes, dragListeners }: { acce
   const handleSelectDate = (date: Date) => {
     setLocalDate(date);
     setSelectedDate(date);
+    setViewMode('date');
     navigate('/journal');
   };
 
