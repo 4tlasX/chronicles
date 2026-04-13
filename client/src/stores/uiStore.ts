@@ -50,6 +50,10 @@ interface UIState {
   setAccentColor: (color: string) => void;
   setBackgroundImage: (image: string) => void;
   setBackgroundOpacity: (opacity: number) => void;
+
+  // Profile
+  displayName: string;
+  setDisplayName: (name: string) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -93,4 +97,7 @@ export const useUIStore = create<UIState>((set) => ({
   setAccentColor: (color) => set({ accentColor: color }),
   setBackgroundImage: (image) => set({ backgroundImage: image }),
   setBackgroundOpacity: (opacity) => set({ backgroundOpacity: opacity }),
+
+  displayName: '',
+  setDisplayName: (name) => set({ displayName: name }),
 }));

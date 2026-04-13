@@ -25,7 +25,7 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useNavigate } from 'react-router-dom';
-import { auth as authApi, settings as settingsApi, sessions as sessionsApi, topics as topicsApi, entries as entriesApi } from '../services/api.js';
+import { auth as authApi, settings as settingsApi, sessions as sessionsApi, topics as topicsApi, entries as entriesApi, ApiError } from '../services/api.js';
 import { seedTestData } from '../utils/seedTestData.js';
 import { HEADER_COLORS } from '@shared/theme/accentColors';
 import { stripHtml } from '../utils/stripHtml.js';
@@ -139,6 +139,13 @@ export function SettingsView() {
   // How to Use
   const [showHowToUse, setShowHowToUse] = useState(false);
 
+  // Display name
+  const displayName = useUIStore(s => s.displayName);
+  const setDisplayName = useUIStore(s => s.setDisplayName);
+  const [editingDisplayName, setEditingDisplayName] = useState(false);
+  const [draftDisplayName, setDraftDisplayName] = useState('');
+  const [displayNameSaving, setDisplayNameSaving] = useState(false);
+
   // Email
   const [editingEmail, setEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState('');
@@ -162,6 +169,19 @@ export function SettingsView() {
   // Sessions
   const [showSessions, setShowSessions] = useState(false);
   const [sessionList, setSessionList] = useState<{ id: number; deviceInfo: string | null; ipAddress: string | null; lastActiveAt: string; isCurrent: boolean }[]>([]);
+
+  // 2FA
+  const [totpEnabled, setTotpEnabled] = useState(() => !!(user as unknown as { totpEnabled?: boolean })?.totpEnabled);
+  const [twoFAStep, setTwoFAStep] = useState<'idle' | 'qr' | 'confirm' | 'codes'>('idle');
+  const [twoFASecret, setTwoFASecret] = useState('');
+  const [twoFAQrUrl, setTwoFAQrUrl] = useState('');
+  const [twoFACode, setTwoFACode] = useState('');
+  const [twoFABackupCodes, setTwoFABackupCodes] = useState<string[]>([]);
+  const [twoFALoading, setTwoFALoading] = useState(false);
+  const [twoFAError, setTwoFAError] = useState('');
+  const [disabling2FA, setDisabling2FA] = useState(false);
+  const [disable2FAPassword, setDisable2FAPassword] = useState('');
+  const [disable2FAError, setDisable2FAError] = useState('');
 
   // Features
   const [features, setFeatures] = useState<Record<string, boolean>>({});
@@ -193,6 +213,19 @@ export function SettingsView() {
   }, []);
 
   // Handlers
+  const handleSaveDisplayName = async () => {
+    setDisplayNameSaving(true);
+    try {
+      await settingsApi.upsert('displayName', draftDisplayName.trim());
+      setDisplayName(draftDisplayName.trim());
+      setEditingDisplayName(false);
+    } catch {
+      // ignore — non-critical
+    } finally {
+      setDisplayNameSaving(false);
+    }
+  };
+
   const handleChangeEmail = async () => {
     if (!newEmail.trim()) return;
     setEmailLoading(true);
@@ -203,7 +236,7 @@ export function SettingsView() {
       setEmailMessage('Email updated');
       setEditingEmail(false);
       setNewEmail('');
-      if (user) (user as Record<string, unknown>).email = result.email;
+      if (user) (user as unknown as Record<string, unknown>).email = result.email;
     } catch (err) {
       setEmailError(true);
       setEmailMessage(err instanceof Error ? err.message : 'Failed to change email');
@@ -268,6 +301,52 @@ export function SettingsView() {
   const handleRevokeSession = async (id: number) => {
     await sessionsApi.revoke(id);
     setSessionList(prev => prev.filter(s => s.id !== id));
+  };
+
+  const handleStart2FASetup = async () => {
+    setTwoFALoading(true);
+    setTwoFAError('');
+    try {
+      const { secret, qrCodeUrl } = await authApi.setup2FA();
+      setTwoFASecret(secret);
+      setTwoFAQrUrl(qrCodeUrl);
+      setTwoFAStep('qr');
+    } catch {
+      setTwoFAError('Failed to start 2FA setup');
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
+
+  const handleConfirm2FA = async () => {
+    setTwoFALoading(true);
+    setTwoFAError('');
+    try {
+      const { backupCodes } = await authApi.enable2FA({ secret: twoFASecret, code: twoFACode });
+      setTwoFABackupCodes(backupCodes);
+      setTotpEnabled(true);
+      setTwoFAStep('codes');
+      setTwoFACode('');
+    } catch (err) {
+      setTwoFAError(err instanceof ApiError ? err.message : 'Invalid code');
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    setTwoFALoading(true);
+    setDisable2FAError('');
+    try {
+      await authApi.disable2FA({ password: disable2FAPassword });
+      setTotpEnabled(false);
+      setDisabling2FA(false);
+      setDisable2FAPassword('');
+    } catch (err) {
+      setDisable2FAError(err instanceof ApiError ? err.message : 'Failed to disable 2FA');
+    } finally {
+      setTwoFALoading(false);
+    }
   };
 
   const handleSeedTopics = async () => {
@@ -497,6 +576,40 @@ export function SettingsView() {
       <SectionTitle>Account</SectionTitle>
       <SettingsCard>
         <SettingsRow
+          title="Username"
+          description={user?.username || ''}
+        />
+        <SettingsRow
+          title="Display Name"
+          description={!editingDisplayName ? (displayName || 'Not set') : undefined}
+          action={
+            !editingDisplayName ? (
+              <ActionButton onClick={() => { setEditingDisplayName(true); setDraftDisplayName(displayName); }}>
+                {displayName ? 'Change' : 'Set'}
+              </ActionButton>
+            ) : (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <ActionButton onClick={handleSaveDisplayName} disabled={displayNameSaving}>
+                  {displayNameSaving ? <Spinner size={14} /> : 'Save'}
+                </ActionButton>
+                <ActionButton onClick={() => { setEditingDisplayName(false); setDraftDisplayName(''); }}>
+                  Cancel
+                </ActionButton>
+              </div>
+            )
+          }
+        >
+          {editingDisplayName && (
+            <TextInput
+              value={draftDisplayName}
+              onChange={e => setDraftDisplayName(e.target.value)}
+              placeholder="Your first name or nickname"
+              autoFocus
+              style={{ marginTop: 4 }}
+            />
+          )}
+        </SettingsRow>
+        <SettingsRow
           title="Email"
           description={!editingEmail ? (user?.email || 'Unknown') : undefined}
           action={
@@ -679,6 +792,127 @@ export function SettingsView() {
             ))}
           </SessionsList>
         )}
+
+        {/* ── 2FA ── */}
+        <SettingsRow
+          title="Two-Factor Authentication"
+          description={
+            totpEnabled
+              ? 'Active — using authenticator app'
+              : twoFAStep === 'idle'
+              ? 'Add an extra layer of security with an authenticator app'
+              : undefined
+          }
+          action={
+            totpEnabled ? (
+              !disabling2FA ? (
+                <ActionButton onClick={() => { setDisabling2FA(true); setDisable2FAPassword(''); setDisable2FAError(''); }}>
+                  Disable
+                </ActionButton>
+              ) : (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <ActionButton
+                    onClick={handleDisable2FA}
+                    disabled={twoFALoading || !disable2FAPassword}
+                    style={{ background: '#9B4444', color: '#fff' }}
+                  >
+                    {twoFALoading ? <Spinner size={14} /> : 'Confirm disable'}
+                  </ActionButton>
+                  <ActionButton onClick={() => setDisabling2FA(false)}>Cancel</ActionButton>
+                </div>
+              )
+            ) : twoFAStep === 'idle' ? (
+              <ActionButton onClick={handleStart2FASetup} disabled={twoFALoading}>
+                {twoFALoading ? <Spinner size={14} /> : 'Enable'}
+              </ActionButton>
+            ) : null
+          }
+        >
+          {/* Disable confirmation — password input */}
+          {totpEnabled && disabling2FA && (
+            <div style={{ marginTop: 8 }}>
+              {disable2FAError && <div style={{ fontSize: 13, color: '#9B4444', marginBottom: 6 }}>{disable2FAError}</div>}
+              <PasswordInput
+                value={disable2FAPassword}
+                onChange={e => setDisable2FAPassword(e.target.value)}
+                placeholder="Enter your password to confirm"
+                autoFocus
+                autoComplete="current-password"
+              />
+            </div>
+          )}
+
+          {/* Step 1: QR code */}
+          {!totpEnabled && twoFAStep === 'qr' && (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted, #6b7280)' }}>
+                Scan this QR code with your authenticator app, then click Next.
+              </div>
+              {twoFAQrUrl && (
+                <img src={twoFAQrUrl} alt="2FA QR code" style={{ width: 180, height: 180, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+              )}
+              <div style={{ fontSize: 12, color: 'var(--text-muted, #6b7280)' }}>
+                Manual entry code: <code style={{ userSelect: 'all', letterSpacing: 2 }}>{twoFASecret}</code>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <ActionButton onClick={() => setTwoFAStep('confirm')}>Next</ActionButton>
+                <ActionButton onClick={() => { setTwoFAStep('idle'); setTwoFASecret(''); setTwoFAQrUrl(''); }}>Cancel</ActionButton>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Confirm code */}
+          {!totpEnabled && twoFAStep === 'confirm' && (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted, #6b7280)' }}>
+                Enter the 6-digit code from your authenticator app to confirm setup.
+              </div>
+              {twoFAError && <div style={{ fontSize: 13, color: '#9B4444' }}>{twoFAError}</div>}
+              <TextInput
+                autoFocus
+                value={twoFACode}
+                onChange={e => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                inputMode="numeric"
+                maxLength={6}
+                style={{ fontSize: 20, letterSpacing: 6, textAlign: 'center', width: 160 }}
+                onKeyDown={e => e.key === 'Enter' && twoFACode.length === 6 && handleConfirm2FA()}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <ActionButton onClick={handleConfirm2FA} disabled={twoFALoading || twoFACode.length !== 6}>
+                  {twoFALoading ? <Spinner size={14} /> : 'Confirm'}
+                </ActionButton>
+                <ActionButton onClick={() => { setTwoFAStep('qr'); setTwoFACode(''); setTwoFAError(''); }}>Back</ActionButton>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Show backup codes */}
+          {twoFAStep === 'codes' && (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted, #6b7280)' }}>
+                <strong>Save these backup codes</strong> — they're shown only once. Each can be used once if you lose access to your authenticator app.
+              </div>
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px',
+                fontFamily: 'monospace', fontSize: 14, padding: '12px 16px',
+                background: 'rgba(0,0,0,0.04)', borderRadius: 6,
+              }}>
+                {twoFABackupCodes.map(code => (
+                  <span key={code} style={{ userSelect: 'all' }}>{code}</span>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <ActionButton onClick={() => {
+                  navigator.clipboard.writeText(twoFABackupCodes.join('\n')).catch(() => {});
+                }}>
+                  Copy all
+                </ActionButton>
+                <ActionButton onClick={() => { setTwoFAStep('idle'); setTwoFABackupCodes([]); }}>Done</ActionButton>
+              </div>
+            </div>
+          )}
+        </SettingsRow>
       </SettingsCard>
 
       {/* Features */}

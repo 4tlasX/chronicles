@@ -36,6 +36,11 @@ model Account {
 
   encryptionEnabled   Boolean   @default(false) @map("encryption_enabled")
 
+  // Two-factor authentication
+  totpSecret          String?   @map("totp_secret")
+  totpEnabled         Boolean   @default(false) @map("totp_enabled")
+  totpBackupCodes     String[]  @map("totp_backup_codes")
+
   // JIT migration flag
   isMigrating         Boolean   @default(false) @map("is_migrating")
 

@@ -5,7 +5,6 @@ import { faChevronDown, faChevronUp, faChevronLeft, faChevronRight, faBookmark, 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Editor } from './Editor.js';
 import { TopicSelector } from './TopicSelector.js';
-import { Checkbox } from '../atoms/Checkbox.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { TaskFields, type TaskFieldValues } from '../molecules/fields/TaskFields.js';
 import { GoalFields, type GoalFieldValues } from '../molecules/fields/GoalFields.js';
@@ -68,12 +67,6 @@ const MobileBackBtn = styled.button`
 
   @media (max-width: 1024px) {
     display: flex;
-  }
-`;
-
-const ExpandLabel = styled.span`
-  @media (max-width: 1024px) {
-    display: none;
   }
 `;
 
@@ -146,10 +139,10 @@ const CustomFieldsBody = styled.div`
   padding: 16px 24px 24px;
 `;
 
-const EditorArea = styled.div<{ $expanded?: boolean }>`
+const EditorArea = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: ${({ $expanded }) => $expanded ? '400px' : '100px'};
+  min-height: 200px;
   overflow: hidden;
 `;
 
@@ -247,8 +240,6 @@ interface EntryFormProps {
   isSaving: boolean;
   saveStatus: string;
   placeholder?: string;
-  expanded?: boolean;
-  onExpandChange?: (expanded: boolean) => void;
 }
 
 export function EntryForm({
@@ -256,7 +247,6 @@ export function EntryForm({
   customFields, onCustomFieldsChange, onSave, onNew,
   onBookmark, onShare, onBack,
   isEditing, isSaving, saveStatus, placeholder = 'Start writing...',
-  expanded = false, onExpandChange,
 }: EntryFormProps) {
   const isFavorite = !!customFields._isFavorite;
   const [fieldsExpanded, setFieldsExpanded] = useState(true);
@@ -343,26 +333,13 @@ export function EntryForm({
     updateDecryptedEntry(taskId, { metadata: updatedMeta });
   };
 
-  const charCount = stripHtml(content).length;
-  const canSave = charCount > 0;
-  const atLimit = !expanded && charCount >= 200;
-
-  const handleContentChange = (newContent: string) => {
-    if (!expanded && stripHtml(newContent).length > 200) return;
-    onContentChange(newContent);
-  };
+  const canSave = stripHtml(content).length > 0;
 
   return (
     <FormWrapper>
-      {/* Top bar: topic selector left, expand entry right */}
       <TopBar>
         <TopicSelector selectedId={topicId} onSelect={onTopicChange} topics={topics} />
         <ExpandControl>
-          <Checkbox
-            checked={expanded}
-            onChange={(val) => onExpandChange?.(val)}
-            label={<><ExpandLabel>Expand entry </ExpandLabel>({charCount}/200)</>}
-          />
           <IconBtn
             type="button"
             $active={isFavorite}
@@ -393,9 +370,8 @@ export function EntryForm({
       </TopBar>
 
       <ScrollArea>
-        {/* Editor (toolbar + content) — compact by default, taller when expanded */}
-        <EditorArea $expanded={expanded}>
-          <Editor content={content} onChange={handleContentChange} placeholder={placeholder} charLimit={expanded ? undefined : 200} onEnterSave={canSave && !isSaving ? onSave : undefined} toolbarOpen={toolbarOpen} onToolbarToggle={setToolbarOpen} hideToolbarToggle />
+        <EditorArea>
+          <Editor content={content} onChange={onContentChange} placeholder={placeholder} onEnterSave={canSave && !isSaving ? onSave : undefined} toolbarOpen={toolbarOpen} onToolbarToggle={setToolbarOpen} hideToolbarToggle />
         </EditorArea>
 
         {/* Custom fields section (collapsible) — below editor */}

@@ -45,6 +45,21 @@ export const recoverSchema = z.object({
   newKekWrapIv: z.string().min(1),
 });
 
+// 2FA / TOTP validation
+export const twoFALoginSchema = z.object({
+  pendingToken: z.string().min(1),
+  code: z.string().min(1),
+});
+
+export const enable2FASchema = z.object({
+  secret: z.string().min(1),
+  code: z.string().length(6),
+});
+
+export const disable2FASchema = z.object({
+  password: z.string().min(1),
+});
+
 // Shares validation
 export const createShareSchema = z.object({
   contentEncrypted: z.string().min(1, 'contentEncrypted is required'),

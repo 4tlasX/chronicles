@@ -86,12 +86,14 @@ interface InlineEditPanelProps {
   onSave: () => void;
   onCancel: () => void;
   title?: string;
+  topicSelector?: React.ReactNode;
 }
 
-export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title }: InlineEditPanelProps) {
+export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title, topicSelector }: InlineEditPanelProps) {
   return (
     <Panel $hasFields={!!fields}>
       {title && <EditTitle>{title}</EditTitle>}
+      {topicSelector && <FieldsWrap>{topicSelector}</FieldsWrap>}
       <EditorWrap $bordered={!!fields}>{editor}</EditorWrap>
       {fields && <FieldsWrap>{fields}</FieldsWrap>}
       <Actions>

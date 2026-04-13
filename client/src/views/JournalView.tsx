@@ -55,7 +55,6 @@ export function JournalView() {
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
-  const [entryExpanded, setEntryExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
 
@@ -142,16 +141,12 @@ export function JournalView() {
         const meta = entry.metadata as Record<string, unknown>;
         setEditorTopicId(meta?._taxonomyId as number | null ?? null);
         setCustomFields(meta?._customFields as Record<string, unknown> ?? {});
-        if (stripHtml(entry.content).length > 200) {
-          setEntryExpanded(true);
-        }
         setShowMobileEditor(true);
       }
     } else {
       setEditorContent('');
       setEditorTopicId(null);
       setCustomFields({});
-      setEntryExpanded(false);
     }
   }, [selectedEntryId, decryptedEntries]);
 
@@ -371,8 +366,6 @@ export function JournalView() {
               isEditing={selectedEntryId !== null}
               isSaving={isSaving}
               saveStatus={saveStatus}
-              expanded={entryExpanded}
-              onExpandChange={setEntryExpanded}
             />
           </EditorPanel>
         }

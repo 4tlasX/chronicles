@@ -122,11 +122,11 @@ const DoseRow = styled.div<{ $taken: boolean }>`
 `;
 
 const DoseCheckButton = styled.button<{ $taken: boolean; $color: string }>`
-  width: 19px;
-  height: 19px;
-  min-width: 19px;
-  border-radius: 50%;
-  border: 2px solid ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.border};
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 4px;
+  border: 1.5px solid ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.border};
   background: ${({ $taken, $color }) => $taken ? $color : 'transparent'};
   display: flex;
   align-items: center;
@@ -236,7 +236,17 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
   }, [viewDate]);
 
   useEffect(() => {
-    if (isReady) fetchLogs();
+    if (!isReady) return;
+    fetchLogs();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchLogs();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [isReady, fetchLogs]);
 
   const handleCheckDose = async (dose: ScheduledDose, checked: boolean) => {

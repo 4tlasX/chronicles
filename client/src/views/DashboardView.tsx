@@ -30,6 +30,7 @@ import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { stripHtml } from '../utils/stripHtml.js';
 import { TopicSelector } from '../components/organisms/TopicSelector.js';
+import { Editor } from '../components/organisms/Editor.js';
 import type { Topic } from '../types/topics.js';
 
 /* ── Constants ── */
@@ -109,7 +110,13 @@ function getGreeting() {
 }
 
 function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  // Grace period: before 12:01 AM local time, treat it as still the previous day
+  // so the day's priorities don't vanish at midnight
+  if (now.getHours() === 0 && now.getMinutes() < 1) {
+    now.setDate(now.getDate() - 1);
+  }
+  return toDateStr(now);
 }
 
 /* ── Layout Styled Components ── */
@@ -241,13 +248,13 @@ const AddBtn = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border: none;
   background: none;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 12px;
+  font-size: 13px;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   transition: color 0.15s, background 0.15s;
   &:hover { color: ${({ theme }) => theme.colors.text}; background: rgba(0,0,0,0.04); }
@@ -257,15 +264,15 @@ const ItemRow = styled.div<{ $done?: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 0;
+  padding: 8px 0;
   opacity: ${({ $done }) => $done ? 0.45 : 1};
 `;
 
 const CheckBtn = styled.button<{ $done?: boolean; $color: string }>`
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border: 1.5px solid ${({ $done, $color, theme }) => $done ? $color : theme.colors.border};
-  border-radius: 3px;
+  border-radius: 4px;
   background: ${({ $done, $color }) => $done ? $color : 'transparent'};
   cursor: pointer;
   flex-shrink: 0;
@@ -273,13 +280,13 @@ const CheckBtn = styled.button<{ $done?: boolean; $color: string }>`
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 8px;
+  font-size: 10px;
   transition: background 0.15s, border-color 0.15s;
   padding: 0;
 `;
 
 const ItemText = styled.span<{ $done?: boolean }>`
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
   text-decoration: ${({ $done }) => $done ? 'line-through' : 'none'};
@@ -292,33 +299,34 @@ const InlineInput = styled.input`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
-  padding: 4px 8px;
+  padding: 6px 10px;
   outline: none;
   font-family: ${({ theme }) => theme.fontFamily.sans};
   &::placeholder { color: ${({ theme }) => theme.colors.textMuted}; }
   &:focus { border-color: var(--focus-color); }
 `;
 
-const QuickTextarea = styled.textarea`
-  width: 100%;
-  min-height: 80px;
+const QuickEditorWrap = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: transparent;
-  font-size: 14px;
-  font-weight: 300;
-  color: ${({ theme }) => theme.colors.text};
-  resize: vertical;
-  outline: none;
-  font-family: ${({ theme }) => theme.fontFamily.sans};
-  line-height: 1.6;
-  box-sizing: border-box;
-  padding: 8px;
-  &::placeholder { color: ${({ theme }) => theme.colors.textMuted}; }
-  &:focus { border-color: var(--focus-color); }
+  margin-bottom: 0;
+
+  /* Constrain the inner EditorWrapper min-height */
+  > div { min-height: 80px; }
+
+  /* Compact content padding and size for dashboard context */
+  .tiptap {
+    padding: 8px 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* Toolbar row sits flush at the top */
+  &:focus-within { border-color: var(--focus-color); }
 `;
 
 const SaveRow = styled.div`
@@ -332,7 +340,7 @@ const SaveRow = styled.div`
 `;
 
 const SaveBtn = styled.button<{ $accent: string; $active?: boolean }>`
-  padding: 4px 14px;
+  padding: 7px 16px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   font-size: 11px;
   font-weight: 600;
@@ -374,10 +382,9 @@ const FieldCol = styled.div`
 `;
 
 const FieldLabel = styled.label`
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
@@ -385,10 +392,10 @@ const FieldInput = styled.input`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
-  padding: 4px 6px;
+  padding: 6px 8px;
   outline: none;
   font-family: ${({ theme }) => theme.fontFamily.sans};
   width: 100%;
@@ -402,10 +409,10 @@ const FieldSelect = styled.select`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
-  padding: 4px 6px;
+  padding: 6px 8px;
   outline: none;
   font-family: ${({ theme }) => theme.fontFamily.sans};
   width: 100%;
@@ -460,14 +467,14 @@ const DragGrip = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   border: none;
   background: none;
   padding: 0;
   cursor: grab;
   color: ${({ theme }) => theme.colors.border};
-  font-size: 11px;
+  font-size: 13px;
   flex-shrink: 0;
   touch-action: none;
   &:hover { color: ${({ theme }) => theme.colors.textMuted}; }
@@ -506,8 +513,9 @@ function findTodayPrioritiesEntry() {
   if (!topicId) return undefined;
   return decryptedEntries.find(e => {
     const meta = e.metadata as Record<string, unknown>;
-    return meta._taxonomyId === topicId &&
-      (e.createdAt as Date).toISOString().slice(0, 10) === today;
+    if (meta._taxonomyId !== topicId) return false;
+    const d = e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt as string);
+    return toDateStr(d) === today;
   });
 }
 
@@ -667,11 +675,12 @@ const TOPIC_FIELDS: Record<string, FieldDef[]> = {
 function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: { accentColor: string; topics: Topic[] } & DragProps) {
   const { encryptPost } = useEncryption();
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
-  const [text, setText] = useState('');
+  const [content, setContent] = useState('');
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
+  const hasContent = !!stripHtml(content).trim();
 
   const reflectionPrompt = useMemo(() => {
     const d = new Date();
@@ -690,11 +699,9 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
   };
 
   const handleSave = async () => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!hasContent) return;
     setSaving(true);
     try {
-      const content = `<p>${trimmed}</p>`;
       const metadata: Record<string, unknown> = {};
       if (selectedTopic) {
         metadata._taxonomyId = selectedTopic.id;
@@ -710,7 +717,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
         taxonomyIds: selectedTopic ? [selectedTopic.id] : [],
       });
       addDecryptedEntry({ id: result.id as number, content, metadata, isEncrypted: true, createdAt: new Date(result.createdAt as string), updatedAt: new Date(result.createdAt as string) });
-      setText('');
+      setContent('');
       setSelectedTopicId(null);
       setCustomFields({});
       setStatus('Saved');
@@ -766,15 +773,17 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
             ))}
           </FieldGrid>
         )}
-        <QuickTextarea
-          value={text}
-          onChange={e => setText(e.target.value)}
-          placeholder={selectedTopicId === null ? reflectionPrompt : 'Add a note...'}
-          onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) handleSave(); }}
-        />
+        <QuickEditorWrap>
+          <Editor
+            content={content}
+            onChange={setContent}
+            placeholder={selectedTopicId === null ? reflectionPrompt : 'Add a note...'}
+            onEnterSave={handleSave}
+          />
+        </QuickEditorWrap>
         <SaveRow>
           {status && <StatusText>{status}</StatusText>}
-          <SaveBtn $accent={accentColor} $active={!!text.trim()} onClick={handleSave} disabled={saving || !text.trim()}>
+          <SaveBtn $accent={accentColor} $active={hasContent} onClick={handleSave} disabled={saving || !hasContent}>
             {saving ? <Spinner size={10} /> : 'Save'}
           </SaveBtn>
         </SaveRow>
@@ -1065,24 +1074,24 @@ const MedRow = styled.div<{ $taken: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 0;
+  padding: 8px 0;
   opacity: ${({ $taken }) => $taken ? 0.45 : 1};
-  & + & { border-top: 1px solid ${({ theme }) => theme.colors.border}; padding-top: 6px; }
+  & + & { border-top: 1px solid ${({ theme }) => theme.colors.border}; }
 `;
 
 const MedCircle = styled.button<{ $taken: boolean; $color: string }>`
-  width: 18px; height: 18px; min-width: 18px;
-  border-radius: 50%;
-  border: 2px solid ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.border};
+  width: 22px; height: 22px; min-width: 22px;
+  border-radius: 4px;
+  border: 1.5px solid ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.border};
   background: ${({ $taken, $color }) => $taken ? $color : 'transparent'};
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0; color: white; font-size: 9px; padding: 0;
+  cursor: pointer; flex-shrink: 0; color: white; font-size: 10px; padding: 0;
   transition: all 0.15s;
   &:disabled { opacity: 0.5; cursor: wait; }
 `;
 
 const MedName = styled.span<{ $taken: boolean }>`
-  font-size: 13px;
+  font-size: 14px;
   font-weight: ${({ $taken }) => $taken ? 300 : 400};
   color: ${({ theme }) => theme.colors.text};
   text-decoration: ${({ $taken }) => $taken ? 'line-through' : 'none'};
@@ -1129,8 +1138,7 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
     return doses.sort((a, b) => a.time.localeCompare(b.time));
   }, [entries, medicationTopicId]);
 
-  useEffect(() => {
-    if (!scheduledDoses.length) return;
+  const fetchLogs = useCallback(() => {
     dosesApi.getByDate(todayStr).then(data => {
       const map: Record<string, DoseLogRecord> = {};
       for (const log of data.logs) {
@@ -1138,8 +1146,21 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
       }
       setDoseLogs(map);
     }).catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayStr]);
+
+  useEffect(() => {
+    if (!scheduledDoses.length) return;
+    fetchLogs();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchLogs();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [fetchLogs, scheduledDoses.length]);
 
   const getStatus = (dose: ScheduledDose) =>
     doseLogs[`${dose.medicationPostId}-${dose.time.substring(0, 5)}`]?.status ?? 'pending';
@@ -1158,7 +1179,9 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
         takenAt: isTaken ? null : new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       });
       setDoseLogs(prev => ({ ...prev, [key]: { ...log, scheduledTime: log.scheduledTime.substring(0, 5) } }));
-    } catch { /* ignore */ } finally {
+    } catch (err) {
+      console.error('Failed to log dose:', err);
+    } finally {
       setSaving(null);
     }
   };
@@ -1202,6 +1225,7 @@ export function DashboardView() {
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
   const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
+  const displayName = useUIStore(s => s.displayName);
 
   const [cardOrder, setCardOrder] = useState<CardId[]>(loadOrder);
 
@@ -1315,7 +1339,7 @@ export function DashboardView() {
       <Page>
         <PageHeader>
           <GreetingBlock>
-            <Greeting>{getGreeting()}</Greeting>
+            <Greeting>{getGreeting()}{displayName ? `, ${displayName}` : ''}</Greeting>
             <DateLine>{dateLabel}</DateLine>
           </GreetingBlock>
           {(() => { const q = getDailyQuote(); return (

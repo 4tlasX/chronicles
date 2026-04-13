@@ -4,6 +4,7 @@ import { auth as authApi, ApiError } from '../services/api.js';
 interface User {
   email: string;
   username: string;
+  totpEnabled: boolean;
 }
 
 interface EncryptionData {
@@ -16,12 +17,18 @@ interface EncryptionData {
   recoveryWrapIv: string | null;
 }
 
+interface Pending2FA {
+  pendingToken: string;
+}
+
 interface AuthContextValue {
   user: User | null;
   encryptionData: EncryptionData | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<EncryptionData>;
+  pending2FA: Pending2FA | null;
+  login: (email: string, password: string) => Promise<EncryptionData | null>;
+  submitTotpCode: (code: string) => Promise<EncryptionData>;
   register: (data: {
     email: string;
     username: string;
@@ -43,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [encryptionData, setEncryptionData] = useState<EncryptionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pending2FA, setPending2FA] = useState<Pending2FA | null>(null);
 
   // Check if we have a valid session on mount
   useEffect(() => {
@@ -64,16 +72,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  const login = useCallback(async (email: string, password: string): Promise<EncryptionData> => {
+  const login = useCallback(async (email: string, password: string): Promise<EncryptionData | null> => {
     const result = await authApi.login({ email, password });
+    if (result.requires2FA) {
+      setPending2FA({ pendingToken: result.pendingToken });
+      return null;
+    }
     setUser(result.user);
     setEncryptionData(result.encryption);
     return result.encryption;
   }, []);
 
+  const submitTotpCode = useCallback(async (code: string): Promise<EncryptionData> => {
+    if (!pending2FA) throw new Error('No pending 2FA session');
+    const result = await authApi.submit2FA({ pendingToken: pending2FA.pendingToken, code });
+    setPending2FA(null);
+    setUser(result.user);
+    setEncryptionData(result.encryption);
+    return result.encryption;
+  }, [pending2FA]);
+
   const register = useCallback(async (data: Parameters<typeof authApi.register>[0]) => {
     const result = await authApi.register(data);
-    setUser(result.user);
+    setUser({ ...result.user, totpEnabled: false });
   }, []);
 
   const logout = useCallback(async () => {
@@ -101,7 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       encryptionData,
       isAuthenticated: user !== null,
       isLoading,
+      pending2FA,
       login,
+      submitTotpCode,
       register,
       logout,
     }}>

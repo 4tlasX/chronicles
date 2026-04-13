@@ -22,6 +22,7 @@ export function useInitializeData() {
   const setThemeMode = useUIStore(s => s.setThemeMode);
   const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
   const setBackgroundOpacity = useUIStore(s => s.setBackgroundOpacity);
+  const setDisplayName = useUIStore(s => s.setDisplayName);
 
   const handleUnlock = useCallback(async (password: string) => {
     if (!encryptionData?.kekSalt || !encryptionData?.encryptedMasterKey || !encryptionData?.kekWrapIv) {
@@ -46,6 +47,7 @@ export function useInitializeData() {
         if (settingsMap.themeMode === 'light' || settingsMap.themeMode === 'dark') setThemeMode(settingsMap.themeMode);
         if (typeof settingsMap.backgroundImage === 'string') setBackgroundImage(settingsMap.backgroundImage);
         if (typeof settingsMap.backgroundOpacity === 'string') setBackgroundOpacity(parseFloat(settingsMap.backgroundOpacity));
+        if (typeof settingsMap.displayName === 'string') setDisplayName(settingsMap.displayName);
 
         // Feature flags — default to true (enabled) when not explicitly saved
         const KNOWN_FLAGS = [

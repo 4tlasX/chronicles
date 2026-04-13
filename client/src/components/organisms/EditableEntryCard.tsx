@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { InlineEditPanel } from '../molecules/InlineEditPanel.js';
+import { TopicSelector } from './TopicSelector.js';
 import { Editor } from './Editor.js';
 import { TaskFields } from '../molecules/fields/TaskFields.js';
 import { GoalFields } from '../molecules/fields/GoalFields.js';
@@ -37,6 +38,12 @@ function getCustomType(topicName: string | undefined): string | null {
 }
 
 /* ── Styled ── */
+
+const TopicSelectorBorder = styled.div`
+  display: inline-block;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+`;
 
 const Card = styled.div<{ $editing?: boolean }>`
   border: none;
@@ -192,8 +199,16 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
 
   const [editContent, setEditContent] = useState(entry.content);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>(cf);
+  const [selectedTopicId, setSelectedTopicId] = useState<number>(taxonomyId);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
+
+  // Derive topic + custom type from the currently selected topic (may differ from entry's original)
+  const editingTopic = useMemo(
+    () => allTopics.find(t => t.id === selectedTopicId),
+    [allTopics, selectedTopicId]
+  );
+  const editingCustomType = getCustomType(editingTopic?.name);
 
   // Task status: not started → in progress → completed → not started
   const taskState = cf.isCompleted ? 'done' : cf.isInProgress ? 'progress' : 'none';
@@ -227,21 +242,29 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
     if (isEditing && !prevEditingRef.current) {
       setEditContent(entry.content);
       setCustomFields((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {});
+      setSelectedTopicId((entry.metadata as Record<string, unknown>)?._taxonomyId as number || 0);
       setStatus('');
     }
     prevEditingRef.current = isEditing;
   }, [isEditing]);
 
+  const handleTopicChange = (id: number | null) => {
+    if (id === null) return;
+    const newType = getCustomType(allTopics.find(t => t.id === id)?.name);
+    if (newType !== editingCustomType) setCustomFields({});
+    setSelectedTopicId(id);
+  };
+
   const handleSave = async () => {
     setSaving(true); setStatus('');
     try {
-      const metadata: Record<string, unknown> = { _taxonomyId: taxonomyId };
+      const metadata: Record<string, unknown> = { _taxonomyId: selectedTopicId };
       if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
       const encrypted = await encryptPost(editContent, metadata);
       await entriesApi.update(entry.id, {
         contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
         metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
-        taxonomyIds: taxonomyId ? [taxonomyId] : [],
+        taxonomyIds: selectedTopicId ? [selectedTopicId] : [],
       });
       updateDecryptedEntry(entry.id, { content: editContent, metadata });
       setStatus('Saved');
@@ -273,11 +296,11 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
     })
     .filter((m): m is { label: string; value: string } => m != null);
 
-  // Render custom fields based on topic type
+  // Render custom fields based on the currently selected topic type (may differ from original)
   const renderFields = () => {
-    if (!customType) return null;
+    if (!editingCustomType) return null;
     const onChange = (v: Record<string, unknown>) => setCustomFields(v as Record<string, unknown>);
-    switch (customType) {
+    switch (editingCustomType) {
       case 'task': return <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentMilestoneId: null, deadline: '', ...customFields } as never} onChange={onChange as never} />;
       case 'goal': return <GoalFields values={{ goalType: 'short_term', goalStatus: 'active', targetDate: '', ...customFields } as never} onChange={onChange as never} />;
       case 'milestone': return <MilestoneFields values={{ milestoneStatus: 'active', targetDate: '', isCompleted: false, parentGoalId: null, ...customFields } as never} onChange={onChange as never} goalOptions={goalOptions} />;
@@ -342,7 +365,16 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
 
       {isEditing && (
         <InlineEditPanel
-          title={customType ? `Editing ${topic?.name || customType}` : undefined}
+          title={editingTopic ? `Editing ${editingTopic.name}` : 'Edit entry'}
+          topicSelector={
+            <TopicSelectorBorder>
+              <TopicSelector
+                selectedId={selectedTopicId || null}
+                onSelect={handleTopicChange}
+                topics={allTopics}
+              />
+            </TopicSelectorBorder>
+          }
           editor={<Editor content={editContent} onChange={setEditContent} placeholder="Edit entry..." />}
           fields={renderFields()}
           accentColor={headerColor}

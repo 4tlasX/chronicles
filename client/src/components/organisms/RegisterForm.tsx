@@ -21,6 +21,42 @@ const ErrorBanner = styled.div`
   font-size: ${({ theme }) => theme.fontSize.sm}px;
 `;
 
+const SuggestionsRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+`;
+
+const SuggestionLabel = styled.span`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-right: 2px;
+`;
+
+const SuggestionChip = styled.button`
+  padding: 3px 10px;
+  font-size: 13px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  color: ${({ theme }) => theme.colors.text};
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  &:hover { background: rgba(0,0,0,0.04); border-color: ${({ theme }) => theme.colors.textMuted}; }
+`;
+
+function generateUsernameSuggestions(base: string): string[] {
+  const year = new Date().getFullYear();
+  const r = () => String(Math.floor(Math.random() * 900) + 100);
+  return [
+    `${base}${year}`,
+    `${base}${r()}`,
+    `${base}_${r()}`,
+  ];
+}
+
 interface RegisterFormProps {
   onSubmit: (data: { email: string; username: string; password: string }) => Promise<void>;
 }
@@ -32,16 +68,32 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
-    if (password.length < 12) errors.password = 'Minimum 12 characters';
-    if (!/[A-Z]/.test(password)) errors.password = 'Must contain uppercase letter';
-    if (!/[a-z]/.test(password)) errors.password = 'Must contain lowercase letter';
-    if (!/[0-9]/.test(password)) errors.password = 'Must contain a number';
-    if (password !== confirmPassword) errors.confirmPassword = 'Passwords do not match';
+
+    // Email
+    if (!email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = 'Enter a valid email address';
+    }
+
+    // Username
     if (username.length < 3) errors.username = 'Minimum 3 characters';
+
+    // Password — collect all failures at once
+    const pwErrors: string[] = [];
+    if (password.length < 12) pwErrors.push('at least 12 characters');
+    if (!/[A-Z]/.test(password)) pwErrors.push('an uppercase letter');
+    if (!/[a-z]/.test(password)) pwErrors.push('a lowercase letter');
+    if (!/[0-9]/.test(password)) pwErrors.push('a number');
+    if (pwErrors.length > 0) errors.password = `Password must contain ${pwErrors.join(', ')}`;
+
+    if (password !== confirmPassword) errors.confirmPassword = 'Passwords do not match';
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -49,13 +101,22 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
     if (!validate()) return;
 
     setLoading(true);
     try {
       await onSubmit({ email, username, password });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      const message = err instanceof Error ? err.message : 'Registration failed';
+      if (message.toLowerCase().includes('email')) {
+        setFieldErrors(prev => ({ ...prev, email: message }));
+      } else if (message.toLowerCase().includes('username')) {
+        setFieldErrors(prev => ({ ...prev, username: message }));
+        setUsernameSuggestions(generateUsernameSuggestions(username));
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -81,11 +142,25 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
         <TextInput
           id="reg-username"
           value={username}
-          onChange={e => setUsername(e.target.value)}
+          onChange={e => { setUsername(e.target.value); setUsernameSuggestions([]); }}
           placeholder="Choose a username"
           required
           autoComplete="username"
         />
+        {usernameSuggestions.length > 0 && (
+          <SuggestionsRow>
+            <SuggestionLabel>Try:</SuggestionLabel>
+            {usernameSuggestions.map(s => (
+              <SuggestionChip
+                key={s}
+                type="button"
+                onClick={() => { setUsername(s); setUsernameSuggestions([]); setFieldErrors(prev => ({ ...prev, username: '' })); }}
+              >
+                {s}
+              </SuggestionChip>
+            ))}
+          </SuggestionsRow>
+        )}
       </FormField>
 
       <FormField label="Password" htmlFor="reg-password" error={fieldErrors.password}>

@@ -154,7 +154,7 @@ describe('auth', () => {
     const [url, init] = fetchSpy.mock.calls[0];
     expect(url).toBe('/api/auth/login');
     expect(init.method).toBe('POST');
-    expect(result.encryption.encryptionEnabled).toBe(true);
+    expect((result as { encryption: { encryptionEnabled: boolean } }).encryption.encryptionEnabled).toBe(true);
   });
 
   it('logout sends POST to /auth/logout', async () => {

@@ -74,8 +74,29 @@ export const auth = {
   }) => request<{ user: { email: string; username: string } }>('/auth/register', { method: 'POST', body: data }),
 
   login: (data: { email: string; password: string }) =>
+    request<
+      | {
+          requires2FA: true;
+          pendingToken: string;
+        }
+      | {
+          requires2FA?: false;
+          user: { email: string; username: string; totpEnabled: boolean };
+          encryption: {
+            encryptionEnabled: boolean;
+            kekSalt: string | null;
+            encryptedMasterKey: string | null;
+            kekWrapIv: string | null;
+            kekIterations: number;
+            recoveryWrappedMK: string | null;
+            recoveryWrapIv: string | null;
+          };
+        }
+    >('/auth/login', { method: 'POST', body: data }),
+
+  submit2FA: (data: { pendingToken: string; code: string }) =>
     request<{
-      user: { email: string; username: string };
+      user: { email: string; username: string; totpEnabled: boolean };
       encryption: {
         encryptionEnabled: boolean;
         kekSalt: string | null;
@@ -85,7 +106,16 @@ export const auth = {
         recoveryWrappedMK: string | null;
         recoveryWrapIv: string | null;
       };
-    }>('/auth/login', { method: 'POST', body: data }),
+    }>('/auth/login/2fa', { method: 'POST', body: data }),
+
+  setup2FA: () =>
+    request<{ secret: string; qrCodeUrl: string }>('/auth/2fa/setup', { method: 'POST' }),
+
+  enable2FA: (data: { secret: string; code: string }) =>
+    request<{ backupCodes: string[] }>('/auth/2fa/enable', { method: 'POST', body: data }),
+
+  disable2FA: (data: { password: string }) =>
+    request<{ success: boolean }>('/auth/2fa', { method: 'DELETE', body: data }),
 
   logout: () => request<{ success: boolean }>('/auth/logout', { method: 'POST' }),
 

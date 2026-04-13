@@ -332,8 +332,11 @@ export async function ensureDoseLogsTable(schemaName: string): Promise<void> {
 export async function getDoseLogsByDate(schemaName: string, date: string): Promise<DoseLog[]> {
   const s = escapeSchema(schemaName);
   const rows = await prisma.$queryRawUnsafe<DoseLog[]>(
-    `SELECT id, medication_post_id as "medicationPostId", scheduled_time as "scheduledTime",
-            taken_at as "takenAt", date, status, created_at as "createdAt"
+    `SELECT id, medication_post_id as "medicationPostId",
+            TO_CHAR(scheduled_time, 'HH24:MI') as "scheduledTime",
+            taken_at as "takenAt",
+            TO_CHAR(date, 'YYYY-MM-DD') as "date",
+            status, created_at as "createdAt"
      FROM ${s}.medication_dose_logs
      WHERE date = $1::date
      ORDER BY scheduled_time ASC`,
@@ -358,8 +361,11 @@ export async function upsertDoseLog(
      VALUES ($1, $2::time, $3::date, $4, $5)
      ON CONFLICT (medication_post_id, scheduled_time, date)
      DO UPDATE SET status = EXCLUDED.status, taken_at = EXCLUDED.taken_at
-     RETURNING id, medication_post_id as "medicationPostId", scheduled_time as "scheduledTime",
-               taken_at as "takenAt", date, status, created_at as "createdAt"`,
+     RETURNING id, medication_post_id as "medicationPostId",
+               TO_CHAR(scheduled_time, 'HH24:MI') as "scheduledTime",
+               taken_at as "takenAt",
+               TO_CHAR(date, 'YYYY-MM-DD') as "date",
+               status, created_at as "createdAt"`,
     medicationPostId,
     scheduledTime,
     date,

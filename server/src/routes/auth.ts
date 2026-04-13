@@ -1,12 +1,48 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { generateSecret, generateSync, verifySync, generateURI } from 'otplib';
+import QRCode from 'qrcode';
 import { prisma } from '../db/prisma.js';
 import { registerTenant } from '../db/schemaManager.js';
 import { createSession, revokeSession, revokeAllSessions, authMiddleware } from '../middleware/auth.js';
 import { authLimiter, strictLimiter } from '../middleware/rateLimiter.js';
-import { registerSchema, loginSchema, changePasswordSchema, recoverSchema, emailSchema } from '@chronicles/shared';
+import { registerSchema, loginSchema, changePasswordSchema, recoverSchema, emailSchema, twoFALoginSchema, enable2FASchema, disable2FASchema } from '@chronicles/shared';
 import { logSecurityEvent } from '../utils/securityLogger.js';
+
+// In-memory map for pending 2FA sessions (single-instance safe for Render)
+const pendingTwoFA = new Map<string, { accountId: number; expiresAt: Date }>();
+
+function cleanExpiredPending() {
+  const now = new Date();
+  for (const [token, entry] of pendingTwoFA) {
+    if (entry.expiresAt <= now) pendingTwoFA.delete(token);
+  }
+}
+
+function hashBackupCode(code: string): string {
+  return crypto.createHash('sha256').update(code).digest('hex');
+}
+
+function buildEncryptionResponse(account: {
+  encryptionEnabled: boolean;
+  kekSalt: Uint8Array | null;
+  encryptedMasterKey: Uint8Array | null;
+  kekWrapIv: Uint8Array | null;
+  kekIterations: number;
+  recoveryWrappedMK: Uint8Array | null;
+  recoveryWrapIv: Uint8Array | null;
+}) {
+  return {
+    encryptionEnabled: account.encryptionEnabled,
+    kekSalt: account.kekSalt ? Buffer.from(account.kekSalt).toString('base64') : null,
+    encryptedMasterKey: account.encryptedMasterKey ? Buffer.from(account.encryptedMasterKey).toString('base64') : null,
+    kekWrapIv: account.kekWrapIv ? Buffer.from(account.kekWrapIv).toString('base64') : null,
+    kekIterations: account.kekIterations,
+    recoveryWrappedMK: account.recoveryWrappedMK ? Buffer.from(account.recoveryWrappedMK).toString('base64') : null,
+    recoveryWrapIv: account.recoveryWrapIv ? Buffer.from(account.recoveryWrapIv).toString('base64') : null,
+  };
+}
 
 const router = Router();
 
@@ -44,15 +80,20 @@ router.post('/register', authLimiter, async (req, res) => {
     const { email: rawEmail, username, password, encryptedMasterKey, kekSalt, kekWrapIv, recoveryWrappedMK, recoveryWrapIv, recoveryKeyHash, recoveryKeySalt } = parsed.data;
     const email = rawEmail.toLowerCase();
 
-    // Check for existing account
-    const existing = await prisma.account.findFirst({
-      where: { OR: [{ email }, { username }] },
-    });
-    if (existing) {
+    // Check for existing account — check email and username separately for clear feedback
+    const existingEmail = await prisma.account.findUnique({ where: { email } });
+    if (existingEmail) {
       logSecurityEvent('register_duplicate', { ip: req.ip });
-      // Constant-time delay to prevent timing-based enumeration
       await bcrypt.hash('dummy', BCRYPT_ROUNDS);
-      res.status(409).json({ error: 'Registration could not be completed. Please try different credentials.' });
+      res.status(409).json({ error: 'An account with this email already exists.', field: 'email' });
+      return;
+    }
+
+    const existingUsername = await prisma.account.findUnique({ where: { username } });
+    if (existingUsername) {
+      logSecurityEvent('register_duplicate', { ip: req.ip });
+      await bcrypt.hash('dummy', BCRYPT_ROUNDS);
+      res.status(409).json({ error: 'This username is already taken.', field: 'username' });
       return;
     }
 
@@ -102,6 +143,7 @@ router.get('/me', authMiddleware, async (req, res) => {
         kekIterations: true,
         recoveryWrappedMK: true,
         recoveryWrapIv: true,
+        totpEnabled: true,
       },
     });
 
@@ -111,16 +153,8 @@ router.get('/me', authMiddleware, async (req, res) => {
     }
 
     res.json({
-      user: { email: account.email, username: account.username },
-      encryption: {
-        encryptionEnabled: account.encryptionEnabled,
-        kekSalt: account.kekSalt ? Buffer.from(account.kekSalt).toString('base64') : null,
-        encryptedMasterKey: account.encryptedMasterKey ? Buffer.from(account.encryptedMasterKey).toString('base64') : null,
-        kekWrapIv: account.kekWrapIv ? Buffer.from(account.kekWrapIv).toString('base64') : null,
-        kekIterations: account.kekIterations,
-        recoveryWrappedMK: account.recoveryWrappedMK ? Buffer.from(account.recoveryWrappedMK).toString('base64') : null,
-        recoveryWrapIv: account.recoveryWrapIv ? Buffer.from(account.recoveryWrapIv).toString('base64') : null,
-      },
+      user: { email: account.email, username: account.username, totpEnabled: account.totpEnabled },
+      encryption: buildEncryptionResponse(account),
     });
   } catch (err) {
     console.error('Me error:', err instanceof Error ? err.message : 'Unknown error');
@@ -161,6 +195,17 @@ router.post('/login', authLimiter, async (req, res) => {
       return;
     }
 
+    // 2FA check — if enabled, return a pending token instead of a session
+    if (account.totpEnabled) {
+      cleanExpiredPending();
+      const pendingToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+      pendingTwoFA.set(pendingToken, { accountId: account.id, expiresAt });
+      logSecurityEvent('login_2fa_required', { accountId: account.id, ip: req.ip });
+      res.json({ requires2FA: true, pendingToken });
+      return;
+    }
+
     const token = await createSession(account.id, account.tenantSchemaName, {
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
@@ -169,16 +214,8 @@ router.post('/login', authLimiter, async (req, res) => {
     logSecurityEvent('login_success', { accountId: account.id, ip: req.ip });
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
     res.json({
-      user: { email: account.email, username: account.username },
-      encryption: {
-        encryptionEnabled: account.encryptionEnabled,
-        kekSalt: account.kekSalt ? Buffer.from(account.kekSalt).toString('base64') : null,
-        encryptedMasterKey: account.encryptedMasterKey ? Buffer.from(account.encryptedMasterKey).toString('base64') : null,
-        kekWrapIv: account.kekWrapIv ? Buffer.from(account.kekWrapIv).toString('base64') : null,
-        kekIterations: account.kekIterations,
-        recoveryWrappedMK: account.recoveryWrappedMK ? Buffer.from(account.recoveryWrappedMK).toString('base64') : null,
-        recoveryWrapIv: account.recoveryWrapIv ? Buffer.from(account.recoveryWrapIv).toString('base64') : null,
-      },
+      user: { email: account.email, username: account.username, totpEnabled: account.totpEnabled },
+      encryption: buildEncryptionResponse(account),
     });
   } catch (err) {
     console.error('Login error:', err instanceof Error ? err.message : 'Unknown error');
@@ -472,6 +509,199 @@ router.post('/recover', strictLimiter, async (req, res) => {
   } catch (err) {
     console.error('Recovery error:', err instanceof Error ? err.message : 'Unknown error');
     res.status(500).json({ error: 'Recovery failed' });
+  }
+});
+
+// =============================================================================
+// POST /api/auth/login/2fa — Complete login with TOTP or backup code
+// =============================================================================
+router.post('/login/2fa', authLimiter, async (req, res) => {
+  try {
+    const parsed = twoFALoginSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid request' });
+      return;
+    }
+
+    const { pendingToken, code } = parsed.data;
+
+    cleanExpiredPending();
+    const pending = pendingTwoFA.get(pendingToken);
+    if (!pending || pending.expiresAt <= new Date()) {
+      pendingTwoFA.delete(pendingToken);
+      res.status(401).json({ error: 'Verification session expired. Please log in again.' });
+      return;
+    }
+
+    // Single-use — remove immediately
+    pendingTwoFA.delete(pendingToken);
+
+    const account = await prisma.account.findUnique({
+      where: { id: pending.accountId },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        tenantSchemaName: true,
+        totpSecret: true,
+        totpEnabled: true,
+        totpBackupCodes: true,
+        encryptionEnabled: true,
+        kekSalt: true,
+        encryptedMasterKey: true,
+        kekWrapIv: true,
+        kekIterations: true,
+        recoveryWrappedMK: true,
+        recoveryWrapIv: true,
+      },
+    });
+
+    if (!account || !account.totpEnabled || !account.totpSecret) {
+      res.status(401).json({ error: 'Invalid credentials' });
+      return;
+    }
+
+    // Try TOTP code first
+    const totpResult = verifySync({ token: code, secret: account.totpSecret });
+    const totpValid = totpResult.valid;
+
+    if (!totpValid) {
+      // Try backup codes
+      const codeHash = hashBackupCode(code);
+      const matchIndex = account.totpBackupCodes.indexOf(codeHash);
+      if (matchIndex === -1) {
+        logSecurityEvent('login_2fa_failed', { accountId: account.id, ip: req.ip });
+        res.status(401).json({ error: 'Invalid code' });
+        return;
+      }
+      // Consume the backup code (single-use)
+      const updatedCodes = account.totpBackupCodes.filter((_, i) => i !== matchIndex);
+      await prisma.account.update({
+        where: { id: account.id },
+        data: { totpBackupCodes: updatedCodes },
+      });
+      logSecurityEvent('login_2fa_backup_code_used', { accountId: account.id, ip: req.ip });
+    }
+
+    const token = await createSession(account.id, account.tenantSchemaName, {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    logSecurityEvent('login_success', { accountId: account.id, ip: req.ip });
+    res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
+    res.json({
+      user: { email: account.email, username: account.username, totpEnabled: account.totpEnabled },
+      encryption: buildEncryptionResponse(account),
+    });
+  } catch (err) {
+    console.error('2FA login error:', err instanceof Error ? err.message : 'Unknown error');
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+// =============================================================================
+// POST /api/auth/2fa/setup — Generate TOTP secret and QR code (not saved yet)
+// =============================================================================
+router.post('/2fa/setup', authMiddleware, async (req, res) => {
+  try {
+    const secret = generateSecret();
+    const account = await prisma.account.findUnique({
+      where: { id: req.auth!.accountId },
+      select: { email: true },
+    });
+    if (!account) {
+      res.status(404).json({ error: 'Account not found' });
+      return;
+    }
+
+    const otpAuthUrl = generateURI({ label: account.email, issuer: 'Chronicles', secret });
+    const qrCodeUrl = await QRCode.toDataURL(otpAuthUrl);
+    res.json({ secret, qrCodeUrl });
+  } catch (err) {
+    console.error('2FA setup error:', err instanceof Error ? err.message : 'Unknown error');
+    res.status(500).json({ error: '2FA setup failed' });
+  }
+});
+
+// =============================================================================
+// POST /api/auth/2fa/enable — Confirm TOTP code and save secret + backup codes
+// =============================================================================
+router.post('/2fa/enable', strictLimiter, authMiddleware, async (req, res) => {
+  try {
+    const parsed = enable2FASchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid request' });
+      return;
+    }
+
+    const { secret, code } = parsed.data;
+    const verifyResult = verifySync({ token: code, secret });
+    if (!verifyResult.valid) {
+      res.status(400).json({ error: 'Invalid code — check your authenticator app and try again' });
+      return;
+    }
+
+    // Generate 8 single-use backup codes
+    const backupCodes: string[] = [];
+    const hashedCodes: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      const raw = crypto.randomBytes(6).toString('hex'); // 12 hex chars
+      const formatted = `${raw.slice(0, 6)}-${raw.slice(6)}`; // xxxxxx-xxxxxx
+      backupCodes.push(formatted);
+      hashedCodes.push(hashBackupCode(formatted));
+    }
+
+    await prisma.account.update({
+      where: { id: req.auth!.accountId },
+      data: { totpSecret: secret, totpEnabled: true, totpBackupCodes: hashedCodes },
+    });
+
+    logSecurityEvent('2fa_enabled', { accountId: req.auth!.accountId, ip: req.ip });
+    res.json({ backupCodes });
+  } catch (err) {
+    console.error('2FA enable error:', err instanceof Error ? err.message : 'Unknown error');
+    res.status(500).json({ error: '2FA enable failed' });
+  }
+});
+
+// =============================================================================
+// DELETE /api/auth/2fa — Disable 2FA (requires password confirmation)
+// =============================================================================
+router.delete('/2fa', strictLimiter, authMiddleware, async (req, res) => {
+  try {
+    const parsed = disable2FASchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Password is required' });
+      return;
+    }
+
+    const account = await prisma.account.findUnique({
+      where: { id: req.auth!.accountId },
+      select: { passwordHash: true },
+    });
+    if (!account) {
+      res.status(404).json({ error: 'Account not found' });
+      return;
+    }
+
+    const valid = await bcrypt.compare(parsed.data.password, account.passwordHash);
+    if (!valid) {
+      logSecurityEvent('2fa_disable_failed', { accountId: req.auth!.accountId, ip: req.ip });
+      res.status(401).json({ error: 'Incorrect password' });
+      return;
+    }
+
+    await prisma.account.update({
+      where: { id: req.auth!.accountId },
+      data: { totpSecret: null, totpEnabled: false, totpBackupCodes: [] },
+    });
+
+    logSecurityEvent('2fa_disabled', { accountId: req.auth!.accountId, ip: req.ip });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('2FA disable error:', err instanceof Error ? err.message : 'Unknown error');
+    res.status(500).json({ error: '2FA disable failed' });
   }
 });
 
