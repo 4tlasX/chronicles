@@ -40,7 +40,8 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 
 ## Screenshots
 <img width="1430" height="719" alt="Screenshot 2026-04-04 at 7 35 22 PM" src="https://github.com/user-attachments/assets/06ce36c5-f24f-450b-9762-365c920d5908" />
-<img width="1392" height="730" alt="Screenshot 2026-04-08 at 5 52 26 PM" src="https://github.com/user-attachments/assets/492b25c1-fec4-4b9e-9968-4b0f62ac73b9" />
+<img width="1311" height="725" alt="Screenshot 2026-04-12 at 10 04 38 PM" src="https://github.com/user-attachments/assets/a675270b-7d5a-4d02-8ccc-f50dc31fe5a0" />
+<img width="1309" height="725" alt="Screenshot 2026-04-12 at 10 04 24 PM" src="https://github.com/user-attachments/assets/4d139bd4-7bdd-4840-ad3a-a8e0c76ce44b" />
 <img width="1432" height="725" alt="Screenshot 2026-04-04 at 7 36 07 PM" src="https://github.com/user-attachments/assets/9d1c516a-edcd-47ef-953d-57798b4b86d5" />
 <img width="1430" height="723" alt="Screenshot 2026-04-04 at 7 36 33 PM" src="https://github.com/user-attachments/assets/0690d1b6-4d2c-40f4-b0d2-cb20fc1e0632" />
 <img width="1394" height="729" alt="Screenshot 2026-04-08 at 5 52 52 PM" src="https://github.com/user-attachments/assets/b9260411-88df-4d81-a26b-56b5f580b3f3" />
