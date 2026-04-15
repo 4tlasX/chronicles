@@ -60,9 +60,22 @@ const ActionBtn = styled.button`
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
-const Status = styled.span<{ $error?: boolean }>`
-  font-size: 12px;
-  color: ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.success};
+const SaveBtn = styled.button<{ $error?: boolean }>`
+  padding: 6px 16px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.text};
+  background: none;
+  border: 1px solid ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  min-width: 60px;
+  &:hover:not(:disabled) { background: rgba(0,0,0,0.04); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
 const EditTitle = styled.div`
@@ -97,11 +110,14 @@ export function InlineEditPanel({ editor, fields, accentColor, saving, status, o
       <EditorWrap $bordered={!!fields}>{editor}</EditorWrap>
       {fields && <FieldsWrap>{fields}</FieldsWrap>}
       <Actions>
-        <ActionBtn onClick={onSave} disabled={saving}>
-          {saving ? <Spinner size={14} /> : 'Save'}
-        </ActionBtn>
+        <SaveBtn
+          onClick={onSave}
+          disabled={saving}
+          $error={status.toLowerCase().includes('fail')}
+        >
+          {saving ? <Spinner size={14} /> : status.toLowerCase().includes('fail') ? 'Failed' : 'Save'}
+        </SaveBtn>
         <ActionBtn onClick={onCancel}>Cancel</ActionBtn>
-        {status && <Status $error={status.toLowerCase().includes('fail')}>{status}</Status>}
       </Actions>
     </Panel>
   );

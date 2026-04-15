@@ -8,7 +8,7 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - **Two-Factor Authentication** - TOTP-based 2FA (authenticator app); inline setup wizard with QR code, confirmation step, and 8 backup codes; disable with password confirmation
 - **Dashboard Home** - Two-column drag-and-drop widget layout; quick entry, daily priorities, events & meetings, mini calendar, affirmations, daily wellness check-in, tasks, shopping list, medication schedule, weather, and menu plan; daily quote and greeting; Add your custom topic widget
 - **Rich Text Editor** - TipTap-based editor with formatting toolbar and inline freehand drawing support
-- **Topic Organization** - Categorize entries with custom topics, icons, and drag-and-drop reordering
+- **Topic Organization** - Categorize entries with custom topics, icons, and drag-and-drop reordering; define your own custom fields per topic (text, number, date, yes/no, URL) — fields appear in the entry editor and dashboard quick entry; entries saved with only field values auto-summarize them as content
 - **Quick Tab Filters** - Today, Date (with active filter bar and clear button), Tasks, All, Bookmarks, and Search views
 - **Goals & Milestones** - Track goals with milestone progress and task linking
 - **Meal Planning & Recipes** - Weekly menu planner, recipe entries with ingredients and instructions, linked shopping lists
@@ -94,7 +94,7 @@ Topics categorize your entries — like tags or folders. Each has an icon and co
 - **Music / Books / TV/Movies** - Entertainment tracking
 - **Research / Idea / Quote** - Inspiration collection
 
-You can create your own topics for anything else.
+You can create your own topics for anything else. Any topic can have **user-defined custom fields** — add them by editing a topic in the Topics view. Fields appear in the entry editor and Quick Entry widget. Supported types: text, number, date, yes/no, URL.
 
 ### Navigation
 

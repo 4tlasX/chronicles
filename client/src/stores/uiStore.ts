@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { UserFieldDef, TopicCustomFields } from '../types/userFields.js';
 
 interface UIState {
   // Sidebar
@@ -55,6 +56,11 @@ interface UIState {
   displayName: string;
   setDisplayName: (name: string) => void;
 
+  // User-defined custom fields per topic
+  topicCustomFields: TopicCustomFields;
+  setTopicCustomFields: (fields: TopicCustomFields) => void;
+  updateTopicFields: (topicId: number, defs: UserFieldDef[]) => void;
+
   // Weather widget
   weatherEnabled: boolean;
   weatherCity: string;
@@ -108,6 +114,10 @@ export const useUIStore = create<UIState>((set) => ({
 
   displayName: '',
   setDisplayName: (name) => set({ displayName: name }),
+
+  topicCustomFields: {},
+  setTopicCustomFields: (fields) => set({ topicCustomFields: fields }),
+  updateTopicFields: (topicId, defs) => set(s => ({ topicCustomFields: { ...s.topicCustomFields, [topicId]: defs } })),
 
   weatherEnabled: false,
   weatherCity: '',

@@ -101,35 +101,28 @@ const DayButton = styled.button<{
 }>`
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
   margin: 0 auto;
-  font-size: ${({ $isToday }) => $isToday ? '14px' : '12px'};
+  font-size: 12px;
   font-weight: ${({ $isToday, theme }) => $isToday ? theme.fontWeight.bold : theme.fontWeight.normal};
-  color: ${({ $isToday, $isOutside, $accentColor, theme }) => $isToday ? ($accentColor || theme.colors.text) : $isOutside ? theme.colors.border : theme.colors.text};
+  color: ${({ $hasEntry, $isOutside, $accentColor, theme }) =>
+    $isOutside ? theme.colors.border : $hasEntry ? ($accentColor || theme.colors.text) : theme.colors.text};
   background: transparent;
   border: none;
-  border-radius: 50%;
+  border-radius: 0;
+  border: ${({ $isToday, theme }) => $isToday ? `1.5px solid ${theme.colors.border}87` : '1.5px solid transparent'};
   cursor: pointer;
   line-height: 1;
+  box-sizing: border-box;
 
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
 
   ${({ $isOutside }) => $isOutside && 'visibility: hidden;'}
-`;
-
-const EntryDot = styled.span`
-  position: absolute;
-  bottom: 1px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: ${({ theme }) => theme.colors.accent};
 `;
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -241,7 +234,6 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates, expanded 
                   onClick={() => onSelectDate(date)}
                 >
                   {date.getDate()}
-                  {hasEntry && !isSelected && <EntryDot />}
                 </DayButton>
               );
             })}

@@ -81,13 +81,15 @@ const Content = styled.div`
   min-width: 0;
 `;
 
-const Preview = styled.div`
+const Preview = styled.div<{ $done?: boolean }>`
   font-size: 15px;
   line-height: 1.5;
   color: ${({ theme }) => theme.colors.text};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-decoration: ${({ $done }) => $done ? 'line-through' : 'none'};
+  opacity: ${({ $done }) => $done ? 0.55 : 1};
 `;
 
 const Meta = styled.div`
@@ -334,7 +336,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
           </IconWrap>
         )}
         <Content>
-          <Preview>{preview}</Preview>
+          <Preview $done={taskState === 'done'}>{preview}</Preview>
           {metaValues.length > 0 && (
             <Meta>{metaValues.map(m => <span key={m.label}>{m.label}: {m.value}</span>)}</Meta>
           )}

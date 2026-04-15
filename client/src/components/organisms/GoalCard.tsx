@@ -10,6 +10,7 @@ import { Badge } from '../atoms/Badge.js';
 import { Checkbox } from '../atoms/Checkbox.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { InlineEditPanel } from '../molecules/InlineEditPanel.js';
+import { SwipeActions } from '../molecules/SwipeActions.js';
 import { Editor } from './Editor.js';
 import { GoalFields, type GoalFieldValues } from '../molecules/fields/GoalFields.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
@@ -257,8 +258,7 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
         taxonomyIds: [goal.taxonomyId],
       });
       updateDecryptedEntry(goal.id, { content: editContent, metadata });
-      setStatus('Saved');
-      setTimeout(() => { setStatus(''); onSaved(); }, 800);
+      onSaved();
     } catch (err) { console.error('Goal save failed:', err); setStatus('Failed'); }
     finally { setSaving(false); }
   };
@@ -270,15 +270,16 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
 
   return (
     <Card ref={setNodeRef} style={style} $isDragging={isDragging} $editing={isEditing}>
+      <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing || isDragging}>
       <CardHeader onClick={onSelect}>
         <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
         <ContentWrap>
           <Title $completed={goal.goalStatus === 'completed'}>{goal.title}</Title>
           <Meta>
             <span>Status: {(goal.goalStatus || '').replace(/_/g, ' ')}</span>
-            {linkedMilestones.length > 0 && <span>Progress: {progress}%</span>}
             {goal.targetDate && <span>Target: {new Date(goal.targetDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
           </Meta>
+          {linkedMilestones.length > 0 && <div style={{ marginTop: 8 }}><ProgressBar percent={progress} color={headerColor} /></div>}
         </ContentWrap>
       </CardHeader>
 
@@ -352,6 +353,7 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
           onCancel={onClose}
         />
       )}
+      </SwipeActions>
     </Card>
   );
 }

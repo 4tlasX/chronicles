@@ -6,6 +6,8 @@ import { useEntriesStore } from '../../stores/entriesStore.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { getTopicIcon } from '../../utils/topicIcons.js';
 import { TopicSelectorDropdown } from './TopicSelectorDropdown.js';
+import { Editor } from './Editor.js';
+import { stripHtml } from '../../utils/stripHtml.js';
 
 interface QuickEntryProps {
   onCreateEntry: (content: string, topicId: number | null) => void;
@@ -64,35 +66,24 @@ const ChevronIcon = styled.span`
   margin-left: 2px;
 `;
 
-const BodyRow = styled.div`
-  display: flex;
-  gap: 8px;
+const EditorWrap = styled.div`
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  margin-bottom: 10px;
 
-  @media (max-width: 768px) {
-    flex-direction: column;
+  /* Compact the TipTap editor for quick entry use */
+  & > div { min-height: unset; }
+  && .tiptap {
+    min-height: 48px;
+    padding: 6px 0;
+    font-size: 15px;
+    font-style: italic;
+    line-height: 1.6;
   }
 `;
 
-const Input = styled.input`
-  flex: 1;
-  padding: 10px 8px;
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0;
-  font-size: 15px;
-  font-style: italic;
-  color: ${({ theme }) => theme.colors.text};
-  background: transparent;
-  outline: none;
-
-  &::placeholder {
-    color: ${({ theme }) => theme.colors.textMuted};
-    font-style: italic;
-  }
-
-  &:focus {
-    border-bottom-color: ${({ theme }) => theme.colors.text};
-  }
+const FooterRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
 `;
 
 const SubmitButton = styled.button<{ $disabled?: boolean }>`
@@ -120,24 +111,17 @@ export function QuickEntry({ onCreateEntry }: QuickEntryProps) {
   const topics = useEntriesStore((s) => s.topics);
   const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
 
-  const [text, setText] = useState('');
+  const [content, setContent] = useState('');
   const [quickTopicId, setQuickTopicId] = useState<number | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const selectedTopic = topics.find((t) => t.id === quickTopicId);
-  const isEmpty = text.trim().length === 0;
+  const isEmpty = !stripHtml(content).trim() && !content.includes('data-type="drawing"');
 
   function handleSubmit() {
     if (isEmpty) return;
-    onCreateEntry(text.trim(), quickTopicId);
-    setText('');
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !e.shiftKey && !isEmpty) {
-      e.preventDefault();
-      handleSubmit();
-    }
+    onCreateEntry(content, quickTopicId);
+    setContent('');
   }
 
   return (
@@ -164,18 +148,20 @@ export function QuickEntry({ onCreateEntry }: QuickEntryProps) {
           topics={topics}
         />
       </HeaderRow>
-      <BodyRow>
-        <Input
-          type="text"
+      <EditorWrap>
+        <Editor
+          content={content}
+          onChange={setContent}
           placeholder="Quick entry..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
+          onEnterSave={handleSubmit}
+          hideToolbarToggle={false}
         />
+      </EditorWrap>
+      <FooterRow>
         <SubmitButton $disabled={isEmpty} onClick={handleSubmit} disabled={isEmpty}>
           Add
         </SubmitButton>
-      </BodyRow>
+      </FooterRow>
     </Container>
   );
 }

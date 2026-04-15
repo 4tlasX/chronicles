@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { IconPicker } from './IconPicker.js';
+import type { UserFieldDef } from '../../types/userFields.js';
 
 const Card = styled.div`
   margin: 8px;
@@ -62,6 +66,97 @@ const GhostBtn = styled.button`
   &:hover { background: rgba(0, 0, 0, 0.04); }
 `;
 
+/* ── Custom fields section ── */
+
+const FieldsSection = styled.div`
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const FieldsSectionLabel = styled.div`
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-bottom: 2px;
+`;
+
+const FieldRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const FieldLabelInput = styled.input`
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 13px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  outline: none;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  &:focus { border-color: ${({ theme }) => theme.colors.accent}; }
+`;
+
+const TypeSelect = styled.select`
+  padding: 5px 6px;
+  font-size: 12px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  outline: none;
+  cursor: pointer;
+`;
+
+const IconActionBtn = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 11px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  &:hover { color: ${({ theme }) => theme.colors.text}; background: rgba(0,0,0,0.06); }
+`;
+
+const AddFieldRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const AddFieldBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px 0;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
+const FIELD_TYPES: { value: UserFieldDef['type']; label: string }[] = [
+  { value: 'text',    label: 'Text' },
+  { value: 'number',  label: 'Number' },
+  { value: 'date',    label: 'Date' },
+  { value: 'boolean', label: 'Yes/No' },
+  { value: 'url',     label: 'URL' },
+];
+
 interface TopicEditFormProps {
   name: string;
   icon: string | null;
@@ -73,9 +168,42 @@ interface TopicEditFormProps {
   onSave: () => void;
   onCancel: () => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
+  // Custom fields
+  topicId?: number;
+  fieldDefs?: UserFieldDef[];
+  onFieldDefsChange?: (defs: UserFieldDef[]) => void;
 }
 
-export function TopicEditForm({ name, icon, accentColor, saving, saveLabel = 'Save', onNameChange, onIconChange, onSave, onCancel, onKeyDown }: TopicEditFormProps) {
+export function TopicEditForm({
+  name, icon, accentColor, saving, saveLabel = 'Save',
+  onNameChange, onIconChange, onSave, onCancel, onKeyDown,
+  topicId, fieldDefs = [], onFieldDefsChange,
+}: TopicEditFormProps) {
+  const [newLabel, setNewLabel] = useState('');
+  const [newType, setNewType] = useState<UserFieldDef['type']>('text');
+  const [adding, setAdding] = useState(false);
+
+  const handleAddField = () => {
+    if (!newLabel.trim()) return;
+    const def: UserFieldDef = { id: `${Date.now()}`, label: newLabel.trim(), type: newType };
+    onFieldDefsChange?.([...fieldDefs, def]);
+    setNewLabel('');
+    setNewType('text');
+    setAdding(false);
+  };
+
+  const handleRemoveField = (id: string) => {
+    onFieldDefsChange?.(fieldDefs.filter(f => f.id !== id));
+  };
+
+  const handleLabelChange = (id: string, label: string) => {
+    onFieldDefsChange?.(fieldDefs.map(f => f.id === id ? { ...f, label } : f));
+  };
+
+  const handleTypeChange = (id: string, type: UserFieldDef['type']) => {
+    onFieldDefsChange?.(fieldDefs.map(f => f.id === id ? { ...f, type } : f));
+  };
+
   return (
     <Card>
       <Input
@@ -93,6 +221,56 @@ export function TopicEditForm({ name, icon, accentColor, saving, saveLabel = 'Sa
         <IconLabel>Icon (optional)</IconLabel>
         <IconPicker selectedIcon={icon} onSelectIcon={onIconChange} />
       </IconSection>
+
+      {topicId !== undefined && onFieldDefsChange && (
+        <FieldsSection>
+          <FieldsSectionLabel>Custom Fields</FieldsSectionLabel>
+          {fieldDefs.map(f => (
+            <FieldRow key={f.id}>
+              <FieldLabelInput
+                value={f.label}
+                onChange={e => handleLabelChange(f.id, e.target.value)}
+                onBlur={e => { if (!e.target.value.trim()) handleRemoveField(f.id); }}
+              />
+              <TypeSelect value={f.type} onChange={e => handleTypeChange(f.id, e.target.value as UserFieldDef['type'])}>
+                {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </TypeSelect>
+              <IconActionBtn onClick={() => handleRemoveField(f.id)} title="Remove field">
+                <FontAwesomeIcon icon={faXmark} />
+              </IconActionBtn>
+            </FieldRow>
+          ))}
+          {adding ? (
+            <AddFieldRow>
+              <FieldLabelInput
+                value={newLabel}
+                onChange={e => setNewLabel(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleAddField();
+                  if (e.key === 'Escape') { setAdding(false); setNewLabel(''); }
+                }}
+                placeholder="Field name"
+                autoFocus
+              />
+              <TypeSelect value={newType} onChange={e => setNewType(e.target.value as UserFieldDef['type'])}>
+                {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </TypeSelect>
+              <IconActionBtn onClick={handleAddField} title="Add">
+                <FontAwesomeIcon icon={faPlus} />
+              </IconActionBtn>
+              <IconActionBtn onClick={() => { setAdding(false); setNewLabel(''); }} title="Cancel">
+                <FontAwesomeIcon icon={faXmark} />
+              </IconActionBtn>
+            </AddFieldRow>
+          ) : (
+            <AddFieldBtn onClick={() => setAdding(true)}>
+              <FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} />
+              Add field
+            </AddFieldBtn>
+          )}
+        </FieldsSection>
+      )}
+
       <Actions>
         <PrimaryBtn $color={accentColor} $disabled={saving || !name.trim()} disabled={saving || !name.trim()} onClick={onSave}>
           {saving ? 'Saving...' : saveLabel}

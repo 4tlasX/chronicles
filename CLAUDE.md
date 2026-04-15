@@ -223,7 +223,9 @@ Views     → Route logic + top-level data orchestration
 **Client State:**
 - `client/src/contexts/AuthContext.tsx` — Session state, login/logout/register, `pending2FA` state for TOTP flow
 - `client/src/contexts/EncryptionContext.tsx` — Master key lifecycle, encrypt/decrypt delegation
-- `client/src/stores/uiStore.ts` — Search, sidebar, view mode, theme colors, `pencilOnly` toggle, `displayName`, `weatherEnabled`, `weatherCity`
+- `client/src/stores/uiStore.ts` — Search, sidebar, view mode, theme colors, `pencilOnly` toggle, `displayName`, `weatherEnabled`, `weatherCity`, `topicCustomFields` (user-defined field defs per topic)
+- `client/src/types/userFields.ts` — `UserFieldDef` (id, label, type) and `TopicCustomFields = Record<number, UserFieldDef[]>`
+- `client/src/utils/stripHtml.ts` — also exports `summarizeUserFields(defs, values)` for auto-content generation
 - `client/src/stores/entriesStore.ts` — Encrypted entries cache, topics, feature flags, CRUD operations
 
 **Client Services:**
@@ -277,7 +279,7 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - Layout stored as `{ left, right, hidden }` arrays in localStorage (`dashboard-layout-v2`); migrates from old flat `order` array automatically
 - Default left: `quick-entry`, `priorities`, `events`, `menu-plan`; default right: `mini-calendar`, `affirmations`, `wellness`
 - Edit/Add Widgets tray at bottom of right column; cross-column dragging supported
-- Quick Entry with topic selector, rotating daily reflection prompt, per-topic custom fields; editor auto-expands with content
+- Quick Entry with topic selector, rotating daily reflection prompt, per-topic built-in fields and user-defined custom fields; editor auto-expands with content; entries saved with only field values (no typed text) auto-summarize those fields as entry content
 - Daily Priorities widget — saved as "Priorities" topic entries with `PrioritiesFields` custom fields editor; respects 12:01am local grace period
 - Events & Meetings widget — upcoming entries by `startDate`, 90-day window, up to 10
 - Tasks widget — today's tasks with inline completion toggle
@@ -291,9 +293,17 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - Dashboard greeting uses `displayName` setting ("Good morning, Alex")
 - Daily quote in Playfair Display, constrained to right column
 
+**Topic Custom Fields**
+- Any topic can have user-defined custom fields: text, number, date, boolean (yes/no), URL
+- Fields defined by editing a topic in the Topics view (`TopicEditForm`); stored as `topicCustomFields` setting (JSONB, `Record<number, UserFieldDef[]>`)
+- Field definitions loaded into `uiStore.topicCustomFields` on init via `useInitializeData`
+- Field values stored in entries at `metadata._customFields._userFields` (same shape used in `EntryForm` and `QuickEntryCard`)
+- When saving with no text content but non-empty field values, a plain-text summary (`Label: value · …`) is auto-generated as entry content — see `summarizeUserFields` in `client/src/utils/stripHtml.ts`
+- `UserFieldDef` and `TopicCustomFields` types are in `client/src/types/userFields.ts`
+
 **Productivity**
-- Goals & milestones with progress tracking
-- Tasks with priority levels and milestone linking
+- Goals & milestones with progress tracking; progress bar shown when milestones/tasks are linked; goal "In Progress" status supported
+- Tasks with priority levels and milestone linking; completed tasks show line-through in all views
 - Menu planner and shopping lists with recipe linking
 - Drag-and-drop reordering
 

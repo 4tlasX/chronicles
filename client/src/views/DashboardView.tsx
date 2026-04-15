@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlus, faTrash, faCalendarDay, faCalendarDays, faListCheck,
   faBolt, faCartShopping, faCheck, faPencil, faGripVertical, faPills,
-  faSun, faCloud, faCloudRain, faSnowflake, faWind, faXmark, faSlidersH, faChevronDown, faUtensils,
+  faSun, faCloud, faCloudRain, faSnowflake, faWind, faXmark, faSlidersH, faChevronDown, faUtensils, faDroplet,
   faHeart, faChevronLeft, faChevronRight,
   faGlassWater, faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam, faCloudMoon,
 } from '@fortawesome/free-solid-svg-icons';
@@ -32,12 +32,13 @@ import { Spinner } from '../components/atoms/Spinner.js';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
-import { stripHtml } from '../utils/stripHtml.js';
+import { stripHtml, summarizeUserFields } from '../utils/stripHtml.js';
 import { TopicSelector } from '../components/organisms/TopicSelector.js';
 import { Editor } from '../components/organisms/Editor.js';
 import type { Topic } from '../types/topics.js';
 import { getTopicIcon } from '../utils/topicIcons.js';
 import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
+import { UserFieldsForm } from '../components/molecules/fields/UserFieldsForm.js';
 
 /* ── Constants ── */
 
@@ -237,23 +238,26 @@ const Grid = styled.div`
 `;
 
 const LeftColumn = styled.div`
-  flex: 2;
+  flex: 0 0 66.666%;
+  width: 66.666%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 24px;
   padding-right: 20px;
   border-right: 1px solid ${({ theme }) => theme.colors.border};
-  @media (max-width: 900px) { flex: 1; }
-  @media (max-width: 640px) { width: 100%; border-right: none; padding-right: 0; }
+  @media (max-width: 640px) { flex: none; width: 100%; border-right: none; padding-right: 0; }
 `;
 
 const RightColumn = styled.div`
-  flex: 1;
+  flex: 0 0 33.333%;
+  width: 33.333%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 24px;
   padding-left: 20px;
-  @media (max-width: 640px) { width: 100%; padding-left: 0; }
+  @media (max-width: 640px) { flex: none; width: 100%; padding-left: 0; }
 `;
 
 const DashCard = styled.div`
@@ -848,8 +852,6 @@ function PrioritiesCard({ accentColor, dragAttributes, dragListeners }: { accent
         addDecryptedEntry({ id, content, metadata, isEncrypted: true, createdAt: new Date(result.createdAt as string), updatedAt: new Date(result.createdAt as string) });
       }
       setDirty(false);
-      setStatus('Saved');
-      setTimeout(() => setStatus(''), 2000);
     } finally {
       setSaving(false);
     }
@@ -881,7 +883,7 @@ function PrioritiesCard({ accentColor, dragAttributes, dragListeners }: { accent
           </ItemRow>
         ))}
         <SaveRow>
-          {status && <StatusText>{status}</StatusText>}
+          {status && status !== 'Saved' && <StatusText>{status}</StatusText>}
           <SaveBtn $accent={accentColor} $active={dirty} onClick={handleSave} disabled={saving || !dirty}>
             {saving ? <Spinner size={10} /> : 'Save'}
           </SaveBtn>
@@ -917,16 +919,21 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
-  const hasContent = !!stripHtml(content).trim();
-
   const reflectionPrompt = useMemo(() => {
     const d = new Date();
     const dayOfYear = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
     return REFLECTION_PROMPTS[dayOfYear % REFLECTION_PROMPTS.length];
   }, []);
 
+  const topicCustomFields = useUIStore(s => s.topicCustomFields);
   const selectedTopic = topics.find(t => t.id === selectedTopicId) ?? null;
   const fieldDefs = selectedTopic ? (TOPIC_FIELDS[selectedTopic.name.toLowerCase()] ?? []) : [];
+  const userFieldDefs = selectedTopicId != null ? (topicCustomFields[selectedTopicId] ?? []) : [];
+
+  const hasContent = !!stripHtml(content).trim();
+  const userFields = (customFields._userFields as Record<string, unknown>) ?? {};
+  const hasUserFieldValues = userFieldDefs.length > 0 && summarizeUserFields(userFieldDefs, userFields) !== '';
+  const canSave = hasContent || hasUserFieldValues;
 
   const setField = (key: string, value: unknown) => setCustomFields(prev => ({ ...prev, [key]: value }));
 
@@ -936,15 +943,16 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
   };
 
   const handleSave = async () => {
-    if (!hasContent) return;
+    if (!canSave) return;
     setSaving(true);
     try {
+      const finalContent = hasContent ? content : `<p>${summarizeUserFields(userFieldDefs, userFields)}</p>`;
       const metadata: Record<string, unknown> = {};
       if (selectedTopic) {
         metadata._taxonomyId = selectedTopic.id;
-        if (fieldDefs.length > 0) metadata._customFields = customFields;
+        if (fieldDefs.length > 0 || userFieldDefs.length > 0) metadata._customFields = customFields;
       }
-      const encrypted = await encryptPost(content, metadata);
+      const encrypted = await encryptPost(finalContent, metadata);
       const result = await entriesApi.create({
         contentEncrypted: encrypted.contentEncrypted,
         contentIv: encrypted.contentIv,
@@ -953,12 +961,10 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
         isEncrypted: true,
         taxonomyIds: selectedTopic ? [selectedTopic.id] : [],
       });
-      addDecryptedEntry({ id: result.id as number, content, metadata, isEncrypted: true, createdAt: new Date(result.createdAt as string), updatedAt: new Date(result.createdAt as string) });
+      addDecryptedEntry({ id: result.id as number, content: finalContent, metadata, isEncrypted: true, createdAt: new Date(result.createdAt as string), updatedAt: new Date(result.createdAt as string) });
       setContent('');
       setSelectedTopicId(null);
       setCustomFields({});
-      setStatus('Saved');
-      setTimeout(() => setStatus(''), 2000);
     } finally {
       setSaving(false);
     }
@@ -1011,6 +1017,15 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
             ))}
           </FieldGrid>
         )}
+        {userFieldDefs.length > 0 && (
+          <div style={{ marginBottom: 10 }}>
+            <UserFieldsForm
+              fieldDefs={userFieldDefs}
+              values={(customFields._userFields as Record<string, unknown>) ?? {}}
+              onChange={vals => setCustomFields(prev => ({ ...prev, _userFields: vals }))}
+            />
+          </div>
+        )}
         <QuickEditorWrap>
           <Editor
             content={content}
@@ -1020,8 +1035,8 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
           />
         </QuickEditorWrap>
         <SaveRow>
-          {status && <StatusText>{status}</StatusText>}
-          <SaveBtn $accent={accentColor} $active={hasContent} onClick={handleSave} disabled={saving || !hasContent}>
+          {status && status !== 'Saved' && <StatusText>{status}</StatusText>}
+          <SaveBtn $accent={accentColor} $active={canSave} onClick={handleSave} disabled={saving || !canSave}>
             {saving ? <Spinner size={10} /> : 'Save'}
           </SaveBtn>
         </SaveRow>
@@ -1522,8 +1537,7 @@ const WeatherPrecip = styled.span`
 
 const UnitToggle = styled.button`
   background: none;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  border: none;
   padding: 2px 7px;
   font-size: 11px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
@@ -1644,7 +1658,7 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
                   ) : (
                     <>
                       <WeatherCondition>{wmoLabel(day.code)}</WeatherCondition>
-                      {day.precip > 20 && <WeatherPrecip>💧{day.precip}%</WeatherPrecip>}
+                      {day.precip > 20 && <WeatherPrecip><FontAwesomeIcon icon={faDroplet} style={{ marginRight: 3 }} />{day.precip}%</WeatherPrecip>}
                       <WeatherHiLo>H:{day.max}° L:{day.min}°</WeatherHiLo>
                     </>
                   )}
@@ -2572,6 +2586,17 @@ export function DashboardView() {
       return next;
     });
   }, []);
+
+  // Auto-add weather to layout when enabled but not in any list (e.g. after localStorage cleared)
+  useEffect(() => {
+    if (!weatherEnabled) return;
+    setLayout(prev => {
+      if (prev.left.includes('weather') || prev.right.includes('weather') || prev.hidden.includes('weather')) return prev;
+      const next: DashLayout = { ...prev, right: [...prev.right, 'weather' as CardId] };
+      saveLayout(next);
+      return next;
+    });
+  }, [weatherEnabled]);
 
   // Auto-remove stale topic-{id} widget for topics that now have a dedicated built-in card
   useEffect(() => {

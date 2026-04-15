@@ -1,15 +1,14 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
-import { getTopicIcon } from '../utils/topicIcons.js';
 import { AppTemplate } from '../components/templates/AppTemplate.js';
 import { JournalTemplate, SidePanel, EditorPanel } from '../components/templates/JournalTemplate.js';
 import { LoadingCenter } from '../components/atoms/LoadingCenter.js';
 import { EmptyEditor } from '../components/atoms/EmptyEditor.js';
 import { SidePadding } from '../components/atoms/SidePadding.js';
 import { QuickEntryCard } from '../components/atoms/QuickEntryCard.js';
-import { TopicFilterBar } from '../components/molecules/TopicFilterBar.js';
+import { TopicQuickFilter } from '../components/molecules/TopicQuickFilter.js';
 import { ViewTabs } from '../components/organisms/ViewTabs.js';
 import { QuickEntry } from '../components/organisms/QuickEntry.js';
 import { EntryList } from '../components/organisms/EntryList.js';
@@ -25,7 +24,7 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { entries as entriesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
-import { stripHtml } from '../utils/stripHtml.js';
+import { stripHtml, summarizeUserFields } from '../utils/stripHtml.js';
 import type { EncryptedPost } from '@shared/crypto/types';
 
 const DateFilterBar = styled.div`
@@ -73,11 +72,21 @@ export function JournalView() {
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
   const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
+  const topicCustomFields = useUIStore(s => s.topicCustomFields);
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
   const setThemeMode = useUIStore(s => s.setThemeMode);
   const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
   const setBackgroundOpacity = useUIStore(s => s.setBackgroundOpacity);
   const filterTopic = topics.find(t => t.id === selectedTopicId);
+
+  const entryCounts = useMemo(() => {
+    const counts = new Map<number, number>();
+    for (const entry of decryptedEntries) {
+      const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
+      if (taxId) counts.set(taxId, (counts.get(taxId) || 0) + 1);
+    }
+    return counts;
+  }, [decryptedEntries]);
 
   const selectedDate = useUIStore(s => s.selectedDate);
   const setSelectedDate = useUIStore(s => s.setSelectedDate);
@@ -186,14 +195,20 @@ export function JournalView() {
   }, [selectedEntryId, decryptedEntries]);
 
   const handleSave = useCallback(async () => {
-    if (!stripHtml(editorContent).trim() && !editorContent.includes('data-type="drawing"')) return;
+    const hasDrawing = editorContent.includes('data-type="drawing"');
+    const hasText = !!stripHtml(editorContent).trim();
+    const userFieldDefs = editorTopicId != null ? (topicCustomFields[editorTopicId] ?? []) : [];
+    const userFieldValues = (customFields._userFields as Record<string, unknown>) ?? {};
+    const fieldSummary = !hasText && !hasDrawing ? summarizeUserFields(userFieldDefs, userFieldValues) : '';
+    if (!hasText && !hasDrawing && !fieldSummary) return;
+    const finalContent = hasText || hasDrawing ? editorContent : `<p>${fieldSummary}</p>`;
     setIsSaving(true); setSaveStatus('');
     try {
       const metadata: Record<string, unknown> = {};
       if (editorTopicId) metadata._taxonomyId = editorTopicId;
       if (widgetType) metadata._widgetType = widgetType;
       if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
-      const encrypted = await encryptPost(editorContent, metadata);
+      const encrypted = await encryptPost(finalContent, metadata);
 
       if (selectedEntryId) {
         await entriesApi.update(selectedEntryId, {
@@ -201,23 +216,23 @@ export function JournalView() {
           metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
           taxonomyIds: editorTopicId ? [editorTopicId] : [],
         });
-        updateDecryptedEntry(selectedEntryId, { content: editorContent, metadata });
-        setSaveStatus('Saved');
+        updateDecryptedEntry(selectedEntryId, { content: finalContent, metadata });
+        setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+        setShowMobileEditor(false);
       } else {
         const result = await entriesApi.create({
           contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
           metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
           isEncrypted: true, taxonomyIds: editorTopicId ? [editorTopicId] : [],
         });
-        addDecryptedEntry({ id: result.id as number, content: editorContent, metadata, isEncrypted: true,
+        addDecryptedEntry({ id: result.id as number, content: finalContent, metadata, isEncrypted: true,
           createdAt: new Date(result.createdAt as string), updatedAt: new Date((result.updatedAt || result.createdAt) as string) });
-        setSelectedEntryId(result.id as number);
-        setSaveStatus('Created');
+        setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+        setShowMobileEditor(false);
       }
-      setTimeout(() => setSaveStatus(''), 2000);
     } catch (err) { console.error('Save failed:', err); setSaveStatus('Save failed'); }
     finally { setIsSaving(false); }
-  }, [editorContent, selectedEntryId, editorTopicId, widgetType, customFields, encryptPost]);
+  }, [editorContent, selectedEntryId, editorTopicId, widgetType, customFields, topicCustomFields, encryptPost, setSelectedEntryId, setShowMobileEditor]);
 
   const handleDelete = useCallback(async () => {
     if (!selectedEntryId) return;
@@ -254,8 +269,8 @@ export function JournalView() {
       // Ctrl+N or Cmd+N → new entry
       if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({});
-        setShowMobileEditor(false);
+        setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+        setShowMobileEditor(true);
         return;
       }
       // Shift+N (when not in editable) → new entry
@@ -264,8 +279,8 @@ export function JournalView() {
         const editable = (e.target as HTMLElement)?.isContentEditable;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || editable) return;
         e.preventDefault();
-        setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({});
-        setShowMobileEditor(false);
+        setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+        setShowMobileEditor(true);
         return;
       }
       // Ctrl+D / Cmd+D → delete selected entry with confirmation
@@ -360,14 +375,13 @@ export function JournalView() {
               onDateTabClick={() => setCalendarExpanded(prev => !prev)}
               onTodayClick={() => setCalendarExpanded(false)}
             />
-            {filterTopic && (
-              <TopicFilterBar
-                icon={getTopicIcon(filterTopic.icon)}
-                iconColor={headerColor}
-                topicName={filterTopic.name}
-                onClear={() => setSelectedTopicId(null)}
-              />
-            )}
+            <TopicQuickFilter
+              topics={topics}
+              selectedTopicId={selectedTopicId}
+              headerColor={headerColor}
+              entryCounts={entryCounts}
+              onSelect={setSelectedTopicId}
+            />
             {viewMode === 'date' && (
               <DateFilterBar>
                 {selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}

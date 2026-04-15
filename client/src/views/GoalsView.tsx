@@ -3,7 +3,7 @@ import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
-import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { ScrollList } from '../components/atoms/ScrollList.js';
@@ -149,7 +149,8 @@ export function GoalsView() {
   const filteredGoals = useMemo(() => goals
     .filter(g => {
       if (goalFilter === 'all') return true;
-      if (goalFilter === 'active') return g.goalStatus === 'active';
+      if (goalFilter === 'active') return g.goalStatus === 'active' || g.goalStatus === 'in_progress';
+      if (goalFilter === 'in_progress') return g.goalStatus === 'in_progress';
       if (goalFilter === 'completed') return g.goalStatus === 'completed';
       if (goalFilter === 'short_term') return g.goalType === 'short_term' && g.goalStatus !== 'completed';
       if (goalFilter === 'long_term') return g.goalType === 'long_term' && g.goalStatus !== 'completed';
@@ -328,7 +329,35 @@ export function GoalsView() {
     });
   }, [milestoneTopicId, encryptPost, addDecryptedEntry]);
 
-  const handleDragEnd = useCallback((_event: DragEndEvent) => {}, []);
+  // Local display order — synced from filtered lists, reordered by drag
+  const [orderedGoals, setOrderedGoals] = useState<typeof filteredGoals>([]);
+  const [orderedMilestones, setOrderedMilestones] = useState<typeof filteredMilestones>([]);
+
+  useEffect(() => { setOrderedGoals(filteredGoals); }, [filteredGoals]);
+  useEffect(() => { setOrderedMilestones(filteredMilestones); }, [filteredMilestones]);
+
+  const handleGoalDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setOrderedGoals(prev => {
+      const oldIndex = prev.findIndex(g => g.id === active.id);
+      const newIndex = prev.findIndex(g => g.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  }, []);
+
+  const handleMilestoneDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setOrderedMilestones(prev => {
+      const oldIndex = prev.findIndex(m => m.id === active.id);
+      const newIndex = prev.findIndex(m => m.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  }, []);
+
   const handleSelect = (id: number) => setEditingId(prev => prev === id ? null : id);
 
   if (needsUnlock) {
@@ -389,11 +418,11 @@ export function GoalsView() {
           return t ? <NewEntryCard topic={t} headerColor={headerColor} onCreated={(id) => setEditingId(id)} /> : null;
         })()}
 
-        {tab === 'goals' && (filteredGoals.length === 0
+        {tab === 'goals' && (orderedGoals.length === 0
           ? <EmptyState message="No goals found." submessage="Create a journal entry with the Goal topic to get started." />
-          : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={filteredGoals.map(g => g.id)} strategy={verticalListSortingStrategy}>
-                {filteredGoals.map(g => (
+          : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleGoalDragEnd}>
+              <SortableContext items={orderedGoals.map(g => g.id)} strategy={verticalListSortingStrategy}>
+                {orderedGoals.map(g => (
                   <GoalCard key={g.id} goal={g} milestones={milestones} headerColor={headerColor}
                     isEditing={editingId === g.id} onSelect={() => handleSelect(g.id)}
                     onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
@@ -405,18 +434,22 @@ export function GoalsView() {
             </DndContext>
         )}
 
-        {tab === 'milestones' && (filteredMilestones.length === 0
+        {tab === 'milestones' && (orderedMilestones.length === 0
           ? <EmptyState message="No milestones found." submessage="Create a journal entry with the Milestone topic to get started." />
-          : filteredMilestones.map(m => (
-              <MilestoneCard key={m.id} milestone={m} tasks={tasks}
-                goalTitle={m.parentGoalId ? (goalTitles.get(m.parentGoalId) || null) : null}
-                goalOptions={goalOptions} headerColor={headerColor}
-                isEditing={editingId === m.id} onSelect={() => handleSelect(m.id)}
-                onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
-                onToggleTask={handleToggleTask} onUnlinkTask={handleUnlinkTask}
-                onCreateTask={handleCreateTask}
-                onLinkTask={handleLinkTask} />
-            ))
+          : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleMilestoneDragEnd}>
+              <SortableContext items={orderedMilestones.map(m => m.id)} strategy={verticalListSortingStrategy}>
+                {orderedMilestones.map(m => (
+                  <MilestoneCard key={m.id} milestone={m} tasks={tasks}
+                    goalTitle={m.parentGoalId ? (goalTitles.get(m.parentGoalId) || null) : null}
+                    goalOptions={goalOptions} headerColor={headerColor}
+                    isEditing={editingId === m.id} onSelect={() => handleSelect(m.id)}
+                    onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
+                    onToggleTask={handleToggleTask} onUnlinkTask={handleUnlinkTask}
+                    onCreateTask={handleCreateTask}
+                    onLinkTask={handleLinkTask} />
+                ))}
+              </SortableContext>
+            </DndContext>
         )}
 
         {tab === 'tasks' && (() => {

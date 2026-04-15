@@ -66,7 +66,7 @@ export interface TaskFieldValues {
 
 export interface GoalFieldValues {
   goalType: 'short_term' | 'long_term';
-  goalStatus: 'active' | 'completed' | 'archived';
+  goalStatus: 'active' | 'in_progress' | 'completed' | 'archived';
   targetDate: string;
 }
 

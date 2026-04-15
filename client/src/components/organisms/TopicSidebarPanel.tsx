@@ -1,6 +1,7 @@
+import { useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faXmark, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -11,6 +12,9 @@ import { Badge } from '../atoms/Badge.js';
 import { TopicEditForm } from '../molecules/TopicEditForm.js';
 import { SortableTopicItem } from './SortableTopicItem.js';
 import type { Topic } from '../../types/topics.js';
+import { useUIStore } from '../../stores/uiStore.js';
+import { settings as settingsApi } from '../../services/api.js';
+import type { UserFieldDef } from '../../types/userFields.js';
 
 const Pane = styled.div<{ $hidden?: boolean }>`
   width: 300px;
@@ -92,6 +96,55 @@ const CountBadge = styled.span`
   margin-left: auto;
 `;
 
+const FilterWrap = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+const FilterIcon = styled.span`
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 12px;
+  flex-shrink: 0;
+`;
+
+const FilterInput = styled.input`
+  flex: 1;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.text};
+  background: none;
+  border: none;
+  outline: none;
+  &::placeholder { color: ${({ theme }) => theme.colors.textMuted}; }
+`;
+
+const ClearBtn = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 11px;
+  padding: 0;
+  flex-shrink: 0;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
+const NoMatch = styled.div`
+  padding: 16px 12px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  text-align: center;
+`;
+
 interface TopicSidebarPanelProps {
   topics: Topic[];
   selectedTopicId: number | null;
@@ -130,10 +183,28 @@ export function TopicSidebarPanel({
   editingId, editName, editIcon, onEditNameChange, onEditIconChange, onEditSave, onEditCancel,
   onSelectTopic, onStartEdit, onDelete, onDragEnd,
 }: TopicSidebarPanelProps) {
+  const [filter, setFilter] = useState('');
+
+  const topicCustomFields = useUIStore(s => s.topicCustomFields);
+  const updateTopicFields = useUIStore(s => s.updateTopicFields);
+
+  const handleFieldDefsChange = useCallback((topicId: number, defs: UserFieldDef[]) => {
+    updateTopicFields(topicId, defs);
+    const updated = { ...topicCustomFields, [topicId]: defs };
+    settingsApi.upsert('topicCustomFields', updated)
+      .catch(err => console.error('Failed to save topic fields:', err));
+  }, [updateTopicFields, topicCustomFields]);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  const filteredTopics = filter.trim()
+    ? topics.filter(t => t.name.toLowerCase().includes(filter.toLowerCase()))
+    : topics;
+
+  const isFiltering = filter.trim().length > 0;
 
   return (
     <Pane $hidden={hiddenMobile}>
@@ -143,6 +214,21 @@ export function TopicSidebarPanel({
           <FontAwesomeIcon icon={showAddForm ? faXmark : faPlus} />
         </AddBtn>
       </Header>
+
+      <FilterWrap>
+        <FilterIcon><FontAwesomeIcon icon={faMagnifyingGlass} /></FilterIcon>
+        <FilterInput
+          type="text"
+          placeholder="Filter topics…"
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+        />
+        {isFiltering && (
+          <ClearBtn onClick={() => setFilter('')} title="Clear filter">
+            <FontAwesomeIcon icon={faXmark} />
+          </ClearBtn>
+        )}
+      </FilterWrap>
 
       {showAddForm && (
         <TopicEditForm
@@ -159,14 +245,16 @@ export function TopicSidebarPanel({
       )}
 
       <List>
-        <AllItem $active={selectedTopicId === null} onClick={() => onSelectTopic(null)}>
-          All Entries
-          <CountBadge>({totalEntryCount})</CountBadge>
-        </AllItem>
+        {!isFiltering && (
+          <AllItem $active={selectedTopicId === null} onClick={() => onSelectTopic(null)}>
+            All Entries
+            <CountBadge>({totalEntryCount})</CountBadge>
+          </AllItem>
+        )}
 
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={topics.map(t => t.id)} strategy={verticalListSortingStrategy}>
-            {topics.map(topic => (
+        {isFiltering ? (
+          <>
+            {filteredTopics.map(topic => (
               editingId === topic.id ? (
                 <TopicEditForm
                   key={topic.id}
@@ -177,6 +265,9 @@ export function TopicSidebarPanel({
                   onIconChange={onEditIconChange}
                   onSave={onEditSave}
                   onCancel={onEditCancel}
+                  topicId={topic.id}
+                  fieldDefs={topicCustomFields[topic.id] ?? []}
+                  onFieldDefsChange={defs => handleFieldDefsChange(topic.id, defs)}
                 />
               ) : (
                 <SortableTopicItem
@@ -191,10 +282,46 @@ export function TopicSidebarPanel({
                 />
               )
             ))}
-          </SortableContext>
-        </DndContext>
+            {filteredTopics.length === 0 && (
+              <NoMatch>No topics match "{filter}"</NoMatch>
+            )}
+          </>
+        ) : (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+            <SortableContext items={topics.map(t => t.id)} strategy={verticalListSortingStrategy}>
+              {topics.map(topic => (
+                editingId === topic.id ? (
+                  <TopicEditForm
+                    key={topic.id}
+                    name={editName}
+                    icon={editIcon}
+                    accentColor={headerColor}
+                    onNameChange={onEditNameChange}
+                    onIconChange={onEditIconChange}
+                    onSave={onEditSave}
+                    onCancel={onEditCancel}
+                    topicId={topic.id}
+                    fieldDefs={topicCustomFields[topic.id] ?? []}
+                    onFieldDefsChange={defs => handleFieldDefsChange(topic.id, defs)}
+                  />
+                ) : (
+                  <SortableTopicItem
+                    key={topic.id}
+                    topic={topic}
+                    isActive={selectedTopicId === topic.id}
+                    count={entryCounts.get(topic.id) || 0}
+                    headerColor={headerColor}
+                    onSelect={() => onSelectTopic(topic.id)}
+                    onEdit={() => onStartEdit(topic)}
+                    onDelete={() => onDelete(topic.id)}
+                  />
+                )
+              ))}
+            </SortableContext>
+          </DndContext>
+        )}
 
-        {topics.length === 0 && !showAddForm && (
+        {topics.length === 0 && !showAddForm && !isFiltering && (
           <EmptyState message="No topics yet. Click + to create one." />
         )}
       </List>

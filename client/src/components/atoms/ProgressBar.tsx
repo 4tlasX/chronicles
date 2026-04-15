@@ -1,14 +1,19 @@
 import styled from 'styled-components';
 
 const Outer = styled.div`
-  height: 4px;
-  background: ${({ theme }) => theme.colors.border};
+  height: 9px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const Inner = styled.div<{ $percent: number; $color: string }>`
   height: 100%;
   width: ${({ $percent }) => $percent}%;
   background: ${({ $color }) => $color};
+  opacity: 0.25;
+  border-radius: 999px;
   transition: width 0.3s ease;
 `;
 

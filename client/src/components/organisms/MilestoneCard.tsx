@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { CSS } from '@dnd-kit/utilities';
+import { useSortable } from '@dnd-kit/sortable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faMinus, faLink, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faMinus, faLink, faTrash, faGripVertical } from '@fortawesome/free-solid-svg-icons';
 import { ProgressBar } from '../atoms/ProgressBar.js';
 import { Badge } from '../atoms/Badge.js';
 import { Checkbox } from '../atoms/Checkbox.js';
 import { InlineEditPanel } from '../molecules/InlineEditPanel.js';
+import { SwipeActions } from '../molecules/SwipeActions.js';
 import { Editor } from './Editor.js';
 import { MilestoneFields, type MilestoneFieldValues } from '../molecules/fields/MilestoneFields.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
@@ -13,12 +16,32 @@ import { useEntriesStore } from '../../stores/entriesStore.js';
 import { entries as entriesApi } from '../../services/api.js';
 import type { MilestoneEntryData, TaskEntryData } from '../../types/goals.js';
 
-const Card = styled.div<{ $editing?: boolean }>`
+const Card = styled.div<{ $editing?: boolean; $dragging?: boolean }>`
   border: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 0;
-  background: transparent;
+  background: ${({ $dragging, theme }) => $dragging ? theme.colors.surfaceHover : 'transparent'};
+  opacity: ${({ $dragging }) => $dragging ? 0.6 : 1};
   min-width: 0;
+  touch-action: manipulation;
+`;
+
+const DragHandle = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: grab;
+  flex-shrink: 0;
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 150ms;
+  ${Card}:hover & { opacity: 1; }
+  &:active { cursor: grabbing; }
 `;
 
 const CardHeader = styled.div`
@@ -227,6 +250,9 @@ interface MilestoneCardProps {
 }
 
 export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, headerColor, isEditing, onSelect, onClose, onSaved, onToggleTask, onUnlinkTask, onCreateTask, onLinkTask }: MilestoneCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: milestone.id });
+  const dragStyle = { transform: CSS.Transform.toString(transform), transition };
+
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const removeEntry = useEntriesStore(s => s.removeEntry);
@@ -302,8 +328,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
         taxonomyIds: [milestone.taxonomyId],
       });
       updateDecryptedEntry(milestone.id, { content: editContent, metadata });
-      setStatus('Saved');
-      setTimeout(() => { setStatus(''); onSaved(); }, 800);
+      onSaved();
     } catch (err) { console.error('Milestone save failed:', err); setStatus('Failed'); }
     finally { setSaving(false); }
   };
@@ -314,8 +339,12 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
   };
 
   return (
-    <Card $editing={isEditing}>
+    <Card ref={setNodeRef} style={dragStyle} $editing={isEditing} $dragging={isDragging}>
+      <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing || isDragging}>
       <CardHeader onClick={onSelect}>
+        <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} title="Drag to reorder">
+          <FontAwesomeIcon icon={faGripVertical} />
+        </DragHandle>
         <MilestoneCheckButton
           $state={checkState}
           $color={headerColor}
@@ -329,9 +358,9 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
           <Title $completed={milestone.isCompleted}>{milestone.title}</Title>
           <Meta>
             <span>Status: {milestone.isCompleted ? 'Completed' : (milestone.milestoneStatus || '').replace(/_/g, ' ')}</span>
-            {linkedTasks.length > 0 && <span>Progress: {progress}%</span>}
             {milestone.targetDate && <span>Target: {new Date(milestone.targetDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
           </Meta>
+          {linkedTasks.length > 0 && <div style={{ marginTop: 8 }}><ProgressBar percent={progress} color={headerColor} /></div>}
         </ContentWrap>
         {goalTitle && !isEditing && (
           <LinkedGoalLabel>
@@ -340,7 +369,6 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
           </LinkedGoalLabel>
         )}
       </CardHeader>
-
       {isEditing && (
         <InlineEditPanel
           title="Editing Milestone"
@@ -410,6 +438,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
           onCancel={onClose}
         />
       )}
+      </SwipeActions>
     </Card>
   );
 }

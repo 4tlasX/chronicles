@@ -92,13 +92,14 @@ const DaysGrid = styled.div`
   @media (max-width: 768px) { grid-template-columns: 1fr; }
 `;
 
-const DayCell = styled.div<{ $isOutside?: boolean; $isSelected?: boolean }>`
+const DayCell = styled.div<{ $isOutside?: boolean; $isSelected?: boolean; $isToday?: boolean; $accentColor?: string }>`
   aspect-ratio: 1;
   padding: 6px 8px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-width: 0 1px 1px 0;
   cursor: pointer;
-  background: ${({ $isSelected }) => $isSelected ? 'rgba(0,0,0,0.03)' : 'transparent'};
+  background: ${({ $isSelected, $isToday, $accentColor }) =>
+    $isToday ? `${$accentColor}10` : $isSelected ? 'rgba(0,0,0,0.03)' : 'transparent'};
   outline: ${({ $isSelected }) => $isSelected ? '2px solid #e5e6ea' : 'none'};
   outline-offset: -2px;
   opacity: ${({ $isOutside }) => $isOutside ? 0.4 : 1};
@@ -218,7 +219,7 @@ export function CalendarGrid({
             const dow = WEEKDAYS[date.getDay()];
 
             return (
-              <DayCell key={i} $isOutside={isOutside} $isSelected={!isOutside && isSelected} onClick={() => !isOutside && onDayClick(dateStr)}>
+              <DayCell key={i} $isOutside={isOutside} $isSelected={!isOutside && isSelected} $isToday={!isOutside && isToday} $accentColor={accentColor} onClick={() => !isOutside && onDayClick(dateStr)}>
                 {!isOutside && (
                   <>
                     <MobileDayLabel>{dow}</MobileDayLabel>

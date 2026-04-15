@@ -184,11 +184,11 @@ const MealCell = styled.div`
 const MealInput = styled.textarea`
   width: 100%;
   box-sizing: border-box;
-  font-size: 12px;
+  font-size: 13px;
   padding: 5px 7px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: ${({ theme }) => theme.colors.background};
+  background: transparent;
   color: ${({ theme }) => theme.colors.text};
   font-family: inherit;
   resize: none;
@@ -203,11 +203,11 @@ const MealInput = styled.textarea`
 const RecipeSelect = styled.select`
   width: 100%;
   box-sizing: border-box;
-  font-size: 11px;
+  font-size: 13px;
   padding: 3px 20px 3px 5px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: ${({ theme }) => theme.colors.background};
+  background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   font-family: inherit;
   cursor: pointer;

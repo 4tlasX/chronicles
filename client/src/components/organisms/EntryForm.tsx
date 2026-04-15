@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { stripHtml } from '../../utils/stripHtml.js';
+import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 import { faChevronDown, faChevronUp, faChevronLeft, faChevronRight, faBookmark, faShareNodes, faPenNib } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Editor } from './Editor.js';
@@ -21,6 +21,8 @@ import { ShoppingListFields, type ShoppingListFieldValues } from '../molecules/f
 import { RecipeFields, type RecipeFieldValues } from '../molecules/fields/RecipeFields.js';
 import { PrioritiesFields, type PrioritiesFieldValues } from '../molecules/fields/PrioritiesFields.js';
 import { WellnessFields, type WellnessFieldValues } from '../molecules/fields/WellnessFields.js';
+import { UserFieldsForm } from '../molecules/fields/UserFieldsForm.js';
+import { useUIStore } from '../../stores/uiStore.js';
 
 /* ── Styled components ── */
 
@@ -251,9 +253,12 @@ export function EntryForm({
 }: EntryFormProps) {
   const isFavorite = !!customFields._isFavorite;
   const [fieldsExpanded, setFieldsExpanded] = useState(true);
+  const [userFieldsExpanded, setUserFieldsExpanded] = useState(true);
   const [toolbarOpen, setToolbarOpen] = useState(false);
   const entries = useEntriesStore(s => s.decryptedEntries);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
+  const topicCustomFields = useUIStore(s => s.topicCustomFields);
+  const userFieldDefs = topicId != null ? (topicCustomFields[topicId] ?? []) : [];
 
   const selectedTopic = topics.find(t => t.id === topicId);
   const customType = getCustomType(selectedTopic?.name);
@@ -334,7 +339,8 @@ export function EntryForm({
     updateDecryptedEntry(taskId, { metadata: updatedMeta });
   };
 
-  const canSave = stripHtml(content).length > 0;
+  const userFieldValues = (customFields._userFields as Record<string, unknown>) ?? {};
+  const canSave = stripHtml(content).length > 0 || (userFieldDefs.length > 0 && summarizeUserFields(userFieldDefs, userFieldValues) !== '');
 
   return (
     <FormWrapper>
@@ -402,13 +408,30 @@ export function EntryForm({
             )}
           </CustomFieldsSection>
         )}
+        {/* User-defined custom fields */}
+        {userFieldDefs.length > 0 && (
+          <CustomFieldsSection>
+            <CustomFieldsHeader onClick={() => setUserFieldsExpanded(!userFieldsExpanded)}>
+              <span>Custom Fields</span>
+              <FontAwesomeIcon icon={userFieldsExpanded ? faChevronUp : faChevronDown} size="xs" />
+            </CustomFieldsHeader>
+            {userFieldsExpanded && (
+              <CustomFieldsBody>
+                <UserFieldsForm
+                  fieldDefs={userFieldDefs}
+                  values={(customFields._userFields as Record<string, unknown>) ?? {}}
+                  onChange={vals => onCustomFieldsChange({ ...customFields, _userFields: vals })}
+                />
+              </CustomFieldsBody>
+            )}
+          </CustomFieldsSection>
+        )}
+
         {/* Action bar — below custom fields, scrolls with content */}
         <SaveRow>
-          {saveStatus && <StatusText $error={saveStatus === 'Save failed'}>{saveStatus}</StatusText>}
+          {saveStatus && saveStatus !== 'Saved' && saveStatus !== 'Created' && <StatusText $error={saveStatus === 'Save failed'}>{saveStatus}</StatusText>}
           <RightActions>
-            {isEditing && (
-              <ActionBtn onClick={onNew}>Close</ActionBtn>
-            )}
+            <ActionBtn onClick={onNew}>Close</ActionBtn>
             <SaveButton $disabled={!canSave || isSaving} disabled={!canSave || isSaving} onClick={onSave}>
               {isSaving ? <><Spinner size={14} /> Saving...</> : 'Save'}
             </SaveButton>
