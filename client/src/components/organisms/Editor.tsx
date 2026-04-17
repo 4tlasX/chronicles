@@ -3,10 +3,11 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
-import styled from 'styled-components';
-import { useState, useEffect, useMemo } from 'react';
+import styled, { keyframes, css } from 'styled-components';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenNib, faPencil } from '@fortawesome/free-solid-svg-icons';
+import { faPenNib, faPencil, faMicrophone } from '@fortawesome/free-solid-svg-icons';
+import { useDictation } from '../../hooks/useDictation.js';
 import { DrawingNode } from '../tiptap/DrawingNode.js';
 import { DrawingCanvas } from '../atoms/DrawingCanvas.js';
 
@@ -126,6 +127,43 @@ const ToolbarButton = styled.button<{ $active?: boolean }>`
   }
 `;
 
+const micPulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+`;
+
+const MicButton = styled.button<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  padding: 6px 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 6px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  color: ${({ $active, theme }) => $active ? '#e53e3e' : theme.colors.textMuted};
+  opacity: ${({ $active }) => $active ? 1 : 0.5};
+  transition: color 0.15s, opacity 0.15s;
+  ${({ $active }) => $active && css`animation: ${micPulse} 1.5s ease-in-out infinite;`}
+  &:hover { opacity: 0.8; }
+`;
+
+const InterimText = styled.div`
+  padding: 4px 24px 8px;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: ${({ theme }) => theme.colors.textMuted};
+  opacity: 0.7;
+  pointer-events: none;
+`;
+
+const DictationError = styled.div`
+  padding: 4px 24px 8px;
+  font-size: 0.8rem;
+  color: #e53e3e;
+`;
+
 function createCharLimitPlugin(getLimit: () => number | undefined) {
   return new Plugin({
     key: new PluginKey('charLimit'),
@@ -160,6 +198,17 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
   const [drawingOpen, setDrawingOpen] = useState(false);
   const toolbarOpen = externalToolbarOpen ?? internalToolbarOpen;
   const setToolbarOpen = onToolbarToggle ?? setInternalToolbarOpen;
+
+  // Keep a stable ref to the editor for the dictation callback
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null);
+
+  const handleFinalResult = useCallback((text: string) => {
+    const ed = editorRef.current;
+    if (!ed) return;
+    ed.chain().focus().insertContent(text + ' ').run();
+  }, []);
+
+  const { isSupported: dictationSupported, isListening, interimText, error: dictationError, startListening, stopListening } = useDictation({ onFinalResult: handleFinalResult });
   // Store charLimit in a ref-like closure so the plugin always sees the latest value
   const limitRef = useMemo(() => ({ current: charLimit }), []);
   limitRef.current = charLimit;
@@ -207,6 +256,9 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
       onChange(ed.getHTML());
     },
   });
+
+  // Keep editorRef current so the dictation callback always has the latest instance
+  editorRef.current = editor;
 
   // Sync content from parent
   useEffect(() => {
@@ -314,9 +366,22 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
           {!hideToolbarToggle && <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)} aria-label="Toggle formatting toolbar" aria-expanded={toolbarOpen}>
             <FontAwesomeIcon icon={faPenNib} />
           </ToolbarToggle>}
+          {dictationSupported && (
+            <MicButton
+              $active={isListening}
+              onClick={isListening ? stopListening : startListening}
+              aria-label={isListening ? 'Stop dictation' : 'Start dictation'}
+              title={isListening ? 'Stop dictation' : 'Dictate'}
+              type="button"
+            >
+              <FontAwesomeIcon icon={faMicrophone} />
+            </MicButton>
+          )}
         </ToolbarRow>
       )}
       <EditorContent editor={editor} />
+      {interimText && <InterimText>{interimText}</InterimText>}
+      {dictationError && <DictationError>{dictationError}</DictationError>}
     </EditorWrapper>
     </>
   );
