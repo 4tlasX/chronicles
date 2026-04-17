@@ -273,6 +273,7 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - Session management (view/revoke active sessions)
 - Security headers (CSP, HSTS, X-Frame-Options, Permissions-Policy)
 - Apple Pencil: Scribble handwriting-to-text (CSS) + freehand drawing canvas with pressure sensitivity, palm rejection, undo, inline SVG storage (encrypted)
+- Voice Dictation: mic button in editor toolbar; `useDictation` hook (`client/src/hooks/useDictation.ts`) wraps Web Speech API with `continuous: true`; auto-restarts on silence and iOS 60s cap via `onend + isListeningRef`; final results inserted at cursor; interim text shown below editor; handles `not-allowed` (mic denied) and `network` (offline on Chrome) errors inline; hidden on unsupported browsers
 
 **Dashboard (Home)**
 - Two-column layout (2/3 left + 1/3 right) with independent per-column drag-and-drop and cross-column dragging
