@@ -11,7 +11,8 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - **Voice Dictation** - Tap the mic button to dictate entries hands-free using the Web Speech API; interim text previews in real-time as you speak; works offline on iOS/Safari (on-device processing); auto-continues after silence
 - **Topic Organization** - Categorize entries with custom topics, icons, and drag-and-drop reordering; define your own custom fields per topic (text, number, date, yes/no, URL) — fields appear in the entry editor and dashboard quick entry; entries saved with only field values auto-summarize them as content
 - **Quick Tab Filters** - Today, Date (with active filter bar and clear button), Tasks, All, Bookmarks, and Search views
-- **Goals & Milestones** - Track goals with milestone progress and task linking
+- **Goals & Milestones** - Track goals with milestone progress and task linking; milestone status cycle (Not Started → In Progress → Completed) with tap-to-advance on the card
+- **Custom Planner Filters** - Cross-hierarchy search across goals, milestones, tasks, and todos; filter by keyword, item type, status, priority, parent goal, and parent milestone; save named filters that persist and can be reloaded in one tap
 - **Meal Planning & Recipes** - Weekly menu planner, recipe entries with ingredients and instructions, linked shopping lists
 - **Shopping Lists** - Checklist-style lists linkable to recipes; dashboard widget shows active list with inline check-off
 - **Health Tracking** - Medications, symptoms, food, exercise, and allergies; printable medication lists (with dosage and schedule), symptom logs, and allergy records
@@ -104,7 +105,7 @@ You can create your own topics for anything else. Any topic can have **user-defi
 - **Journal** (`/journal`) - Main entry view with quick tab filters (Today, Date, Tasks, All, Bookmarks, Search)
 - **Topics** - Manage and browse entries by topic
 - **Calendar** - Month view with clickable days for detail; events/meetings appear on their scheduled date
-- **Planning** - Goals, milestones, tasks, and todos (dropdown selector)
+- **Planning** - Goals, milestones, tasks, and todos (dropdown selector); Custom Filters view at `/goals/filter`
 - **Health** - Medications, schedule, food, exercise, symptoms, allergies, and reporting
 - **Quick Links** - Entertainment and inspiration collections
 

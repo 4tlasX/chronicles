@@ -204,6 +204,7 @@ Views     → Route logic + top-level data orchestration
 | `/calendar` | CalendarView |
 | `/settings` | SettingsView |
 | `/goals`, `/goals/milestones`, `/goals/tasks`, `/goals/todos` | Goals/planning views |
+| `/goals/filter` | PlannerFilterView — cross-hierarchy search/filter |
 | `/health/*` | Health tracking views |
 | `/entertainment/*`, `/inspiration/*` | Media/inspiration views |
 
@@ -303,7 +304,8 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - `UserFieldDef` and `TopicCustomFields` types are in `client/src/types/userFields.ts`
 
 **Productivity**
-- Goals & milestones with progress tracking; progress bar shown when milestones/tasks are linked; goal "In Progress" status supported
+- Goals & milestones with progress tracking; progress bar shown when milestones/tasks are linked; goal "In Progress" status supported; milestone status cycle: `not_started → in_progress → completed` (tap-to-advance on card)
+- Custom Planner Filters (`/goals/filter`) — cross-hierarchy search across goals, milestones, tasks, and todos; filter by keyword, item types (toggle chips), status, priority, parent goal, parent milestone; save named filters persisted to `plannerFilters` setting; collapsible panel with inline filter summary; results shown in sectioned list with counts; filter config types in `client/src/types/planner.ts`
 - Tasks with priority levels and milestone linking; completed tasks show line-through in all views
 - Menu planner and shopping lists with recipe linking
 - Drag-and-drop reordering
