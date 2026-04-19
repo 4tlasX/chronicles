@@ -1443,8 +1443,6 @@ function geocodeCity(cityName: string): Promise<{ latitude: number; longitude: n
 
 function InlineWeather() {
   const cityName = useUIStore(s => s.weatherCity);
-  const unit = useUIStore(s => s.weatherUnit);
-  const setWeatherUnit = useUIStore(s => s.setWeatherUnit);
 
   const [lat, setLat] = useState<number | null>(null);
   const [lon, setLon] = useState<number | null>(null);
@@ -1460,11 +1458,10 @@ function InlineWeather() {
 
   useEffect(() => {
     if (lat == null || lon == null) return;
-    const tempUnit = unit === 'f' ? 'fahrenheit' : 'celsius';
     fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
       `&daily=temperature_2m_max,temperature_2m_min&current=temperature_2m,weathercode` +
-      `&temperature_unit=${tempUnit}&timezone=auto&forecast_days=1`
+      `&temperature_unit=fahrenheit&timezone=auto&forecast_days=1`
     )
       .then(r => r.json())
       .then((data: {
@@ -1475,22 +1472,14 @@ function InlineWeather() {
         setTodayHiLo({ max: Math.round(data.daily.temperature_2m_max[0]), min: Math.round(data.daily.temperature_2m_min[0]) });
       })
       .catch(() => {});
-  }, [lat, lon, unit]);
+  }, [lat, lon]);
 
   if (!current) return null;
-
-  const deg = unit === 'f' ? '°F' : '°C';
-
-  const toggleUnit = () => {
-    const next: 'f' | 'c' = unit === 'f' ? 'c' : 'f';
-    setWeatherUnit(next);
-    settingsApi.upsert('weatherUnit', next).catch(() => {});
-  };
 
   return (
     <InlineWeatherWrap>
       <FontAwesomeIcon icon={wmoIcon(current.code)} style={{ fontSize: 11 }} />
-      <InlineTemp onClick={toggleUnit}>{current.temp}{deg}</InlineTemp>
+      <InlineTemp>{current.temp}°F</InlineTemp>
       {todayHiLo && <InlineHiLo>H:{todayHiLo.max}° L:{todayHiLo.min}°</InlineHiLo>}
     </InlineWeatherWrap>
   );
@@ -1563,8 +1552,6 @@ interface WeatherDay {
 
 function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
   const cityName = useUIStore(s => s.weatherCity);
-  const unit = useUIStore(s => s.weatherUnit);
-  const setWeatherUnit = useUIStore(s => s.setWeatherUnit);
 
   const [lat, setLat] = useState<number | null>(null);
   const [lon, setLon] = useState<number | null>(null);
@@ -1584,12 +1571,11 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
     if (lat == null || lon == null) return;
     setLoading(true);
     setError('');
-    const tempUnit = unit === 'f' ? 'fahrenheit' : 'celsius';
     fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
       `&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max` +
       `&current=temperature_2m,weathercode` +
-      `&temperature_unit=${tempUnit}&timezone=auto&forecast_days=5`
+      `&temperature_unit=fahrenheit&timezone=auto&forecast_days=5`
     )
       .then(r => r.json())
       .then((data: {
@@ -1607,13 +1593,7 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
       })
       .catch(() => setError('Unable to load weather'))
       .finally(() => setLoading(false));
-  }, [lat, lon, unit]);
-
-  const toggleUnit = () => {
-    const next: 'f' | 'c' = unit === 'f' ? 'c' : 'f';
-    setWeatherUnit(next);
-    settingsApi.upsert('weatherUnit', next).catch(() => {});
-  };
+  }, [lat, lon]);
 
   const dayLabel = (dateStr: string) => {
     const today = toDateStr(new Date());
@@ -1622,8 +1602,6 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
     return d.toLocaleDateString('en-US', { weekday: 'short' });
   };
 
-  const deg = unit === 'f' ? '°F' : '°C';
-
   return (
     <DashCard>
       <CardHeader>
@@ -1631,7 +1609,6 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
           <FontAwesomeIcon icon={faSun} />
         </CardIconWrap>
         <CardTitle>Weather</CardTitle>
-        {cityName && <UnitToggle onClick={toggleUnit}>{unit === 'f' ? '°F' : '°C'}</UnitToggle>}
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <FontAwesomeIcon icon={faGripVertical} />
         </DragGrip>
@@ -1658,7 +1635,7 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
                   />
                   {isToday ? (
                     <>
-                      <WeatherTodayTemp>{current.temp}{deg}</WeatherTodayTemp>
+                      <WeatherTodayTemp>{current.temp}°F</WeatherTodayTemp>
                       <WeatherCondition>{wmoLabel(current.code)}</WeatherCondition>
                       <WeatherHiLo>H:{day.max}° L:{day.min}°</WeatherHiLo>
                     </>

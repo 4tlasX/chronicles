@@ -27,12 +27,18 @@ const Header = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
-const Title = styled.h1`
+const Title = styled.button`
   font-family: ${({ theme }) => theme.fontFamily.serif};
   font-size: 1.25rem;
   font-weight: 500;
   font-style: italic;
   color: ${({ theme }) => theme.colors.text};
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  &:hover { opacity: 0.7; }
 `;
 
 const MobileBack = styled.button`
@@ -84,11 +90,12 @@ interface TopicEntryListProps {
   hiddenMobile?: boolean;
   onMobileBack: () => void;
   onBackToJournal: () => void;
+  backLabel?: string;
   /** When a specific topic is selected, show a "New Entry" button */
   selectedTopic?: Topic;
 }
 
-export function TopicEntryList({ title, entries, allTopics, headerColor, hiddenMobile, onMobileBack, onBackToJournal, selectedTopic }: TopicEntryListProps) {
+export function TopicEntryList({ title, entries, allTopics, headerColor, hiddenMobile, onMobileBack, onBackToJournal, backLabel = 'Back', selectedTopic }: TopicEntryListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const getTopicForEntry = (entry: DecryptedPost) => {
@@ -99,11 +106,11 @@ export function TopicEntryList({ title, entries, allTopics, headerColor, hiddenM
   return (
     <Panel $hidden={hiddenMobile}>
       <Header>
-        <Title>{title}</Title>
+        <Title onClick={onBackToJournal}>{title}</Title>
         <MobileBack onClick={onMobileBack}>
-          <FontAwesomeIcon icon={faChevronLeft} size="xs" /> Topics
+          <FontAwesomeIcon icon={faChevronLeft} size="xs" /> {backLabel}
         </MobileBack>
-        <BackLink onClick={onBackToJournal}><FontAwesomeIcon icon={faChevronLeft} size="xs" /> Back to Journal</BackLink>
+        <BackLink onClick={onBackToJournal}><FontAwesomeIcon icon={faChevronLeft} size="xs" /> {backLabel}</BackLink>
       </Header>
 
       <ListArea>

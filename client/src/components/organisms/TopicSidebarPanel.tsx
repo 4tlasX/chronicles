@@ -187,13 +187,16 @@ export function TopicSidebarPanel({
 
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
   const updateTopicFields = useUIStore(s => s.updateTopicFields);
+  // getState() used in handleFieldDefsChange to avoid stale closure
 
   const handleFieldDefsChange = useCallback((topicId: number, defs: UserFieldDef[]) => {
     updateTopicFields(topicId, defs);
-    const updated = { ...topicCustomFields, [topicId]: defs };
+    // Read latest state directly to avoid stale closure
+    const currentFields = useUIStore.getState().topicCustomFields;
+    const updated = { ...currentFields, [topicId]: defs };
     settingsApi.upsert('topicCustomFields', updated)
       .catch(err => console.error('Failed to save topic fields:', err));
-  }, [updateTopicFields, topicCustomFields]);
+  }, [updateTopicFields]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -260,6 +263,7 @@ export function TopicSidebarPanel({
                   name={editName}
                   icon={editIcon}
                   accentColor={headerColor}
+                  cancelLabel="Close"
                   onNameChange={onEditNameChange}
                   onIconChange={onEditIconChange}
                   onSave={onEditSave}
@@ -295,6 +299,7 @@ export function TopicSidebarPanel({
                     name={editName}
                     icon={editIcon}
                     accentColor={headerColor}
+                    cancelLabel="Close"
                     onNameChange={onEditNameChange}
                     onIconChange={onEditIconChange}
                     onSave={onEditSave}

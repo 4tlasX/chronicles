@@ -135,13 +135,13 @@ const IconBtn = styled.button<{ $selected?: boolean }>`
   justify-content: center;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   border: 1px solid ${({ $selected, theme }) => $selected ? theme.colors.border : 'transparent'};
-  background: ${({ $selected }) => $selected ? 'rgba(255,255,255,0.4)' : 'transparent'};
+  background: ${({ $selected, theme }) => $selected ? theme.colors.surfaceHover : 'transparent'};
   cursor: pointer;
   transition: background 0.1s;
   padding: 0;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: ${({ theme }) => theme.colors.surfaceHover};
   }
 `;
 

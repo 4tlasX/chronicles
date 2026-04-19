@@ -72,7 +72,6 @@ export function TopicsView() {
     try {
       const updated = await topicsApi.update(editingId, { name: editName.trim(), icon: editIcon || undefined });
       setTopics(allTopics.map(t => t.id === editingId ? updated : t));
-      setEditingId(null);
     } catch (err) { console.error('Failed to update topic:', err); }
   }, [editingId, editName, editIcon, allTopics, setTopics]);
 
@@ -144,7 +143,8 @@ export function TopicsView() {
           headerColor={headerColor}
           hiddenMobile={!mobileShowEntries}
           onMobileBack={() => setMobileShowEntries(false)}
-          onBackToJournal={() => navigate('/journal')}
+          onBackToJournal={() => { setSelectedTopicId(null); setMobileShowEntries(false); }}
+          backLabel="Back to Topics"
           selectedTopic={selectedTopic || undefined}
         />
     </TwoPanelTemplate>

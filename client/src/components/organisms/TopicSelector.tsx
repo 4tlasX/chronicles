@@ -70,7 +70,7 @@ const Dropdown = styled.div`
   overflow-y: auto;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.95);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   box-shadow: ${({ theme }) => theme.shadow.lg};
@@ -83,7 +83,7 @@ const SearchWrapper = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   position: sticky;
   top: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
   backdrop-filter: blur(20px);
 `;
 

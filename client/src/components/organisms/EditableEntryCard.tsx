@@ -14,13 +14,15 @@ import { SymptomFields } from '../molecules/fields/SymptomFields.js';
 import { ExerciseFields } from '../molecules/fields/ExerciseFields.js';
 import { EventFields } from '../molecules/fields/EventFields.js';
 import { MeetingFields } from '../molecules/fields/MeetingFields.js';
+import { UserFieldsForm } from '../molecules/fields/UserFieldsForm.js';
 import { Badge } from '../atoms/Badge.js';
 import { SwipeActions } from '../molecules/SwipeActions.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
+import { useUIStore } from '../../stores/uiStore.js';
 import { entries as entriesApi } from '../../services/api.js';
 import { getTopicIcon } from '../../utils/topicIcons.js';
-import { stripHtml } from '../../utils/stripHtml.js';
+import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 import type { Topic } from '../../types/topics.js';
 
@@ -182,6 +184,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   const removeEntry = useEntriesStore(s => s.removeEntry);
   const allEntries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
+  const topicCustomFields = useUIStore(s => s.topicCustomFields);
 
   const goalOptions = useMemo(() => {
     const goalTopicId = allTopics.find(t => t.name.toLowerCase() === 'goal')?.id;
@@ -211,6 +214,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
     [allTopics, selectedTopicId]
   );
   const editingCustomType = getCustomType(editingTopic?.name);
+  const userFieldDefs = selectedTopicId ? (topicCustomFields[selectedTopicId] ?? []) : [];
 
   // Task status: not started → in progress → completed → not started
   const taskState = cf.isCompleted ? 'done' : cf.isInProgress ? 'progress' : 'none';
@@ -243,7 +247,8 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   useEffect(() => {
     if (isEditing && !prevEditingRef.current) {
       setEditContent(entry.content);
-      setCustomFields((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {});
+      const entryMeta = (entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
+      setCustomFields(entryMeta);
       setSelectedTopicId((entry.metadata as Record<string, unknown>)?._taxonomyId as number || 0);
       setStatus('');
     }
@@ -260,15 +265,19 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   const handleSave = async () => {
     setSaving(true); setStatus('');
     try {
+      const hasText = !!stripHtml(editContent).trim();
+      const userFieldValues = (customFields._userFields as Record<string, unknown>) ?? {};
+      const fieldSummary = !hasText ? summarizeUserFields(userFieldDefs, userFieldValues) : '';
+      const finalContent = hasText ? editContent : (fieldSummary ? `<p>${fieldSummary}</p>` : editContent);
       const metadata: Record<string, unknown> = { _taxonomyId: selectedTopicId };
       if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
-      const encrypted = await encryptPost(editContent, metadata);
+      const encrypted = await encryptPost(finalContent, metadata);
       await entriesApi.update(entry.id, {
         contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
         metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
         taxonomyIds: selectedTopicId ? [selectedTopicId] : [],
       });
-      updateDecryptedEntry(entry.id, { content: editContent, metadata });
+      updateDecryptedEntry(entry.id, { content: finalContent, metadata });
       setStatus('Saved');
       setTimeout(() => { setStatus(''); onClose(); }, 800);
     } catch (err) {
@@ -300,20 +309,31 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
 
   // Render custom fields based on the currently selected topic type (may differ from original)
   const renderFields = () => {
-    if (!editingCustomType) return null;
     const onChange = (v: Record<string, unknown>) => setCustomFields(v as Record<string, unknown>);
-    switch (editingCustomType) {
-      case 'task': return <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentMilestoneId: null, deadline: '', ...customFields } as never} onChange={onChange as never} />;
-      case 'goal': return <GoalFields values={{ goalType: 'short_term', goalStatus: 'active', targetDate: '', ...customFields } as never} onChange={onChange as never} />;
-      case 'milestone': return <MilestoneFields values={{ milestoneStatus: 'active', targetDate: '', isCompleted: false, parentGoalId: null, ...customFields } as never} onChange={onChange as never} goalOptions={goalOptions} />;
-      case 'food': return <FoodFields values={{ mealType: 'breakfast', consumedDate: '', consumedTime: '', ingredients: '', calories: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
-      case 'medication': return <MedicationFields values={{ dosage: '', frequency: 'once_daily', scheduleTimes: ['08:00'], isActive: true, notes: '', ...customFields } as never} onChange={onChange as never} />;
-      case 'symptom': return <SymptomFields values={{ severity: 5, occurredDate: '', occurredTime: '', duration: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
-      case 'exercise': return <ExerciseFields values={{ exerciseType: 'running', duration: '', intensity: 'medium', distance: '', distanceUnit: 'miles', calories: '', performedDate: '', performedTime: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
-      case 'event': return <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
-      case 'meeting': return <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
-      default: return null;
-    }
+    const builtIn = (() => {
+      if (!editingCustomType) return null;
+      switch (editingCustomType) {
+        case 'task': return <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentMilestoneId: null, deadline: '', ...customFields } as never} onChange={onChange as never} />;
+        case 'goal': return <GoalFields values={{ goalType: 'short_term', goalStatus: 'active', targetDate: '', ...customFields } as never} onChange={onChange as never} />;
+        case 'milestone': return <MilestoneFields values={{ milestoneStatus: 'active', targetDate: '', isCompleted: false, parentGoalId: null, ...customFields } as never} onChange={onChange as never} goalOptions={goalOptions} />;
+        case 'food': return <FoodFields values={{ mealType: 'breakfast', consumedDate: '', consumedTime: '', ingredients: '', calories: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
+        case 'medication': return <MedicationFields values={{ dosage: '', frequency: 'once_daily', scheduleTimes: ['08:00'], isActive: true, notes: '', ...customFields } as never} onChange={onChange as never} />;
+        case 'symptom': return <SymptomFields values={{ severity: 5, occurredDate: '', occurredTime: '', duration: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
+        case 'exercise': return <ExerciseFields values={{ exerciseType: 'running', duration: '', intensity: 'medium', distance: '', distanceUnit: 'miles', calories: '', performedDate: '', performedTime: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
+        case 'event': return <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
+        case 'meeting': return <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
+        default: return null;
+      }
+    })();
+    const userFields = userFieldDefs.length > 0 ? (
+      <UserFieldsForm
+        fieldDefs={userFieldDefs}
+        values={(customFields._userFields as Record<string, unknown>) ?? {}}
+        onChange={vals => setCustomFields(prev => ({ ...prev, _userFields: vals }))}
+      />
+    ) : null;
+    if (!builtIn && !userFields) return null;
+    return <>{builtIn}{userFields}</>;
   };
 
   return (
@@ -353,7 +373,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
                cf.isInProgress || cf.milestoneStatus === 'in_progress' ? 'In Progress' :
                'Not Started'}
             </StatusLabel>
-            {(cf.deadline || cf.targetDate) && (
+            {!!(cf.deadline || cf.targetDate) && (
               <DeadlineLabel $overdue={new Date(cf.deadline as string || cf.targetDate as string) < new Date()}>
                 {(() => { const dt = new Date((cf.deadline || cf.targetDate) as string + 'T00:00:00'); return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()}`; })()}
               </DeadlineLabel>

@@ -62,11 +62,11 @@ const TopicBadge = styled.div<{ $bgColor: string }>`
   cursor: pointer;
 `;
 
-const TopicIcon = styled.span`
+const TopicIcon = styled.span<{ $color: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  color: ${({ $color }) => $color};
   font-size: 13px;
   flex-shrink: 0;
 `;
@@ -192,7 +192,7 @@ export function EntryCard({
             $bgColor={headerColor}
             onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }}
           >
-            {topicIcon && <TopicIcon><FontAwesomeIcon icon={topicIcon} /></TopicIcon>}
+            {topicIcon && <TopicIcon $color={headerColor}><FontAwesomeIcon icon={topicIcon} /></TopicIcon>}
             <TopicLabel>{topicName}</TopicLabel>
           </TopicBadge>
         )}

@@ -32,7 +32,7 @@ const Wrapper = styled.div`
   margin-top: 4px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  background: rgba(255, 255, 255, 0.9);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   box-shadow: ${({ theme }) => theme.shadow.lg};
@@ -50,7 +50,7 @@ const SearchInput = styled.input`
   padding: 8px 12px;
   border: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  background: rgba(255, 255, 255, 0.9);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   font-size: 18px;

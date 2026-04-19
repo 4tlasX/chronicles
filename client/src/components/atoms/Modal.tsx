@@ -24,7 +24,7 @@ const Content = styled.div<{ $size: string }>`
   margin: 0 16px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.95);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   box-shadow: ${({ theme }) => theme.shadow.lg};

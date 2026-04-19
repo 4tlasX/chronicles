@@ -20,6 +20,8 @@ const Input = styled.input`
   width: 100%;
   padding: 8px 10px;
   font-size: 16px;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   outline: none;
@@ -163,6 +165,7 @@ interface TopicEditFormProps {
   accentColor: string;
   saving?: boolean;
   saveLabel?: string;
+  cancelLabel?: string;
   onNameChange: (name: string) => void;
   onIconChange: (icon: string | null) => void;
   onSave: () => void;
@@ -175,7 +178,7 @@ interface TopicEditFormProps {
 }
 
 export function TopicEditForm({
-  name, icon, accentColor, saving, saveLabel = 'Save',
+  name, icon, accentColor, saving, saveLabel = 'Save', cancelLabel = 'Cancel',
   onNameChange, onIconChange, onSave, onCancel, onKeyDown,
   topicId, fieldDefs = [], onFieldDefsChange,
 }: TopicEditFormProps) {
@@ -272,10 +275,13 @@ export function TopicEditForm({
       )}
 
       <Actions>
-        <PrimaryBtn $color={accentColor} $disabled={saving || !name.trim()} disabled={saving || !name.trim()} onClick={onSave}>
+        <PrimaryBtn $color={accentColor} $disabled={saving || !name.trim()} disabled={saving || !name.trim()} onClick={() => {
+          if (adding && newLabel.trim()) handleAddField();
+          onSave();
+        }}>
           {saving ? 'Saving...' : saveLabel}
         </PrimaryBtn>
-        <GhostBtn onClick={onCancel}>Cancel</GhostBtn>
+        <GhostBtn onClick={onCancel}>{cancelLabel}</GhostBtn>
       </Actions>
     </Card>
   );
