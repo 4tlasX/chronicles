@@ -23,7 +23,6 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - **Calendar View** - Visual month overview; events and meetings appear on their scheduled date in your header colour
 - **Entry Sharing** - Share entries via encrypted public links
 - **PWA Support** - Installable as a standalone app with offline shell caching
-- **Keyboard Shortcuts** - Ctrl+N (new entry), Ctrl+D (delete), Enter to save
 - **Customizable Theme** - 40+ muted vintage header colors, 28 background images, light/dark mode
 - **Display Name** - Set a display name shown in the dashboard greeting; username shown read-only in account settings
 - **Apple Pencil Support** - Scribble handwriting-to-text in all fields; freehand drawing canvas with pressure sensitivity, palm rejection, and undo — drawings saved inline as encrypted SVG
