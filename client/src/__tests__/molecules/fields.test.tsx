@@ -373,7 +373,10 @@ describe('TaskFields', () => {
     isInProgress: false,
     isCompleted: false,
     isAutoMigrating: false,
+    parentGoalId: null,
     parentMilestoneId: null,
+    deadline: '',
+    priority: 'none',
   };
 
   it('renders checkboxes for progress, completion, and auto-migrate', () => {

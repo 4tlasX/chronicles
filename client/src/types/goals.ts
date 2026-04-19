@@ -28,6 +28,7 @@ export interface TaskEntryData {
   content: string;
   title: string;
   isCompleted: boolean;
+  parentGoalId: number | null;
   parentMilestoneId: number | null;
   priority: string;
   customFields: Record<string, unknown>;

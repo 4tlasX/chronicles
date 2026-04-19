@@ -462,6 +462,7 @@ export function Header() {
   if (ff.milestonesEnabled) goalsItems.push({ label: 'Milestones', to: '/goals/milestones' });
   goalsItems.push({ label: 'Tasks', to: '/goals/tasks' });
   goalsItems.push({ label: 'Todos', to: '/goals/todos' });
+  goalsItems.push({ label: 'Custom Filters', to: '/goals/filter' });
   goalsItems.push({ label: 'Menu Planner', to: '/menu' });
   goalsItems.push({ label: 'Shopping Lists', to: '/shopping' });
 
@@ -584,6 +585,7 @@ export function Header() {
                   {ff.milestonesEnabled && mobileNav('/goals/milestones', 'Milestones')}
                   {mobileNav('/goals/tasks', 'Tasks')}
                   {mobileNav('/goals/todos', 'Todos')}
+                  {mobileNav('/goals/filter', 'Custom Filters')}
                   {mobileNav('/menu', 'Menu Planner')}
                   {mobileNav('/shopping', 'Shopping Lists')}
                 </>

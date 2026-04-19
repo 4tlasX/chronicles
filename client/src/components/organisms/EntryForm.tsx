@@ -275,7 +275,7 @@ export function EntryForm({
     })
     .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || `Goal #${e.id}` }));
 
-  // Build milestone options for task linking
+  // Build milestone options for task linking (include parentGoalId for cascading)
   const milestoneOptions = entries
     .filter(e => {
       const meta = e.metadata as Record<string, unknown>;
@@ -283,7 +283,14 @@ export function EntryForm({
       const t = tid ? topics.find(tp => tp.id === tid) : undefined;
       return t && getCustomType(t.name) === 'milestone';
     })
-    .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || `Milestone #${e.id}` }));
+    .map(e => {
+      const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> | undefined;
+      return {
+        id: e.id,
+        title: stripHtml(e.content).slice(0, 60) || `Milestone #${e.id}`,
+        parentGoalId: (cf?.parentGoalId as number) || undefined,
+      };
+    });
 
   // Build recipe options for shopping list linking
   const recipeOptions = entries
@@ -393,7 +400,7 @@ export function EntryForm({
             </CustomFieldsHeader>
             {fieldsExpanded && (
               <CustomFieldsBody>
-                {customType === 'task' && <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentMilestoneId: null, priority: 'none', deadline: '', ...customFields } as TaskFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} milestoneOptions={milestoneOptions} />}
+                {customType === 'task' && <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentGoalId: null, parentMilestoneId: null, priority: 'none', deadline: '', ...customFields } as TaskFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} goalOptions={goalOptions} milestoneOptions={milestoneOptions} />}
                 {customType === 'goal' && <GoalFields values={{ goalType: 'short_term', goalStatus: 'active', targetDate: '', ...customFields } as GoalFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
                 {customType === 'milestone' && <MilestoneFields values={{ milestoneStatus: 'active', targetDate: '', isCompleted: false, parentGoalId: null, ...customFields } as MilestoneFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} goalOptions={goalOptions} linkedTasks={linkedTasks} onToggleTaskComplete={handleToggleTaskComplete} onUnlinkTask={handleUnlinkTask} />}
                 {customType === 'food' && <FoodFields values={{ mealType: 'breakfast', consumedDate: '', consumedTime: '', ingredients: '', calories: '', notes: '', ...customFields } as FoodFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}

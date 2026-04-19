@@ -194,6 +194,17 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
       .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 80) || 'Untitled goal' }));
   }, [allEntries, allTopics]);
 
+  const milestoneOptions = useMemo(() => {
+    const milestoneTopicId = allTopics.find(t => t.name.toLowerCase() === 'milestone')?.id;
+    if (!milestoneTopicId) return [];
+    return allEntries
+      .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === milestoneTopicId)
+      .map(e => {
+        const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> | undefined;
+        return { id: e.id, title: stripHtml(e.content).slice(0, 60) || `Milestone #${e.id}`, parentGoalId: (cf?.parentGoalId as number) || undefined };
+      });
+  }, [allEntries, allTopics]);
+
   const meta = entry.metadata as Record<string, unknown>;
   const cf = (meta?._customFields as Record<string, unknown>) || {};
   const taxonomyId = (meta?._taxonomyId as number) || 0;
@@ -301,8 +312,8 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   const metaValues = metaFields
     .map(f => {
       const v = cf[f.key];
-      if (v == null) return null;
-      const formatted = typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v).replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+      if (v == null || v === false) return null;
+      const formatted = typeof v === 'boolean' ? 'Yes' : String(v).replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
       return { label: f.label, value: formatted };
     })
     .filter((m): m is { label: string; value: string } => m != null);
@@ -313,7 +324,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
     const builtIn = (() => {
       if (!editingCustomType) return null;
       switch (editingCustomType) {
-        case 'task': return <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentMilestoneId: null, deadline: '', ...customFields } as never} onChange={onChange as never} />;
+        case 'task': return <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentGoalId: null, parentMilestoneId: null, deadline: '', priority: 'none', ...customFields } as never} onChange={onChange as never} goalOptions={goalOptions} milestoneOptions={milestoneOptions} />;
         case 'goal': return <GoalFields values={{ goalType: 'short_term', goalStatus: 'active', targetDate: '', ...customFields } as never} onChange={onChange as never} />;
         case 'milestone': return <MilestoneFields values={{ milestoneStatus: 'active', targetDate: '', isCompleted: false, parentGoalId: null, ...customFields } as never} onChange={onChange as never} goalOptions={goalOptions} />;
         case 'food': return <FoodFields values={{ mealType: 'breakfast', consumedDate: '', consumedTime: '', ingredients: '', calories: '', notes: '', ...customFields } as never} onChange={onChange as never} />;

@@ -59,6 +59,7 @@ export interface TaskFieldValues {
   isInProgress: boolean;
   isCompleted: boolean;
   isAutoMigrating: boolean;
+  parentGoalId: number | null;
   parentMilestoneId: number | null;
   deadline: string;
   priority: TaskPriority;

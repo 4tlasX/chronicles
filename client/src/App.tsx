@@ -16,6 +16,7 @@ import { SharedEntryView } from './views/SharedEntryView.js';
 import { TopicsView } from './views/TopicsView.js';
 import { CalendarView } from './views/CalendarView.js';
 import { GoalsView } from './views/GoalsView.js';
+import { PlannerFilterView } from './views/PlannerFilterView.js';
 import { TopicEntriesView } from './views/TopicEntriesView.js';
 import { MedicationScheduleView } from './views/MedicationScheduleView.js';
 import { HealthReportingView } from './views/HealthReportingView.js';
@@ -68,6 +69,7 @@ export function App() {
               <Route path="/goals/milestones" element={<R><GoalsView /></R>} />
               <Route path="/goals/tasks" element={<R><GoalsView /></R>} />
               <Route path="/goals/todos" element={<R><GoalsView /></R>} />
+              <Route path="/goals/filter" element={<R><PlannerFilterView /></R>} />
               <Route path="/menu" element={<R><MenuView /></R>} />
               <Route path="/shopping" element={<R><ShoppingListsView /></R>} />
 

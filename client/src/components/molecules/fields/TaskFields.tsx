@@ -4,7 +4,7 @@ import { TextInput } from '../../atoms/TextInput.js';
 import { FormField } from '../FormField.js';
 import styled from 'styled-components';
 import type { TaskFieldValues } from '../../../types/fields.js';
-import type { MilestoneOption } from '../../../types/ui.js';
+import type { MilestoneOption, GoalOption } from '../../../types/ui.js';
 export type { TaskFieldValues } from '../../../types/fields.js';
 
 const PRIORITY_OPTIONS = [
@@ -30,12 +30,44 @@ const CheckboxGroup = styled.div`
 interface TaskFieldsProps {
   values: TaskFieldValues;
   onChange: (values: TaskFieldValues) => void;
+  goalOptions?: GoalOption[];
   milestoneOptions?: MilestoneOption[];
 }
 
-export function TaskFields({ values, onChange, milestoneOptions = [] }: TaskFieldsProps) {
+export function TaskFields({ values, onChange, goalOptions = [], milestoneOptions = [] }: TaskFieldsProps) {
+  // When a goal is selected, narrow the milestone list to that goal's milestones.
+  // MilestoneOption may carry an optional parentGoalId for filtering.
+  const visibleMilestones = values.parentGoalId
+    ? milestoneOptions.filter(m => (m as MilestoneOption & { parentGoalId?: number }).parentGoalId === values.parentGoalId)
+    : milestoneOptions;
+
+  const handleGoalChange = (goalId: number | null) => {
+    const milestonesForNewGoal = goalId
+      ? milestoneOptions.filter(m => (m as MilestoneOption & { parentGoalId?: number }).parentGoalId === goalId)
+      : milestoneOptions;
+    const milestoneStillValid = !values.parentMilestoneId || milestonesForNewGoal.some(m => m.id === values.parentMilestoneId);
+    onChange({
+      ...values,
+      parentGoalId: goalId,
+      parentMilestoneId: milestoneStillValid ? values.parentMilestoneId : null,
+    });
+  };
+
   return (
     <Wrapper>
+      {goalOptions.length > 0 && (
+        <FormField label="Linked Goal">
+          <Select
+            value={values.parentGoalId?.toString() || ''}
+            onChange={e => handleGoalChange(e.target.value ? parseInt(e.target.value) : null)}
+          >
+            <option value="">No goal</option>
+            {goalOptions.map(g => (
+              <option key={g.id} value={g.id}>{g.title}</option>
+            ))}
+          </Select>
+        </FormField>
+      )}
       {milestoneOptions.length > 0 && (
         <FormField label="Linked Milestone">
           <Select
@@ -43,7 +75,7 @@ export function TaskFields({ values, onChange, milestoneOptions = [] }: TaskFiel
             onChange={e => onChange({ ...values, parentMilestoneId: e.target.value ? parseInt(e.target.value) : null })}
           >
             <option value="">No milestone</option>
-            {milestoneOptions.map(m => (
+            {visibleMilestones.map(m => (
               <option key={m.id} value={m.id}>{m.title}</option>
             ))}
           </Select>

@@ -22,7 +22,9 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 import { entries as entriesApi } from '../services/api.js';
 import { stripHtml } from '../utils/stripHtml.js';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 import type { GoalEntry, MilestoneEntryData, TaskEntryData } from '../types/goals.js';
 
 /* ── Filter options ── */
@@ -135,12 +137,15 @@ export function GoalsView() {
       .map(e => {
         const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
         return { id: e.id, content: e.content, title: stripHtml(e.content).slice(0, 80) || 'Untitled task',
-          isCompleted: !!cf.isCompleted, parentMilestoneId: (cf.parentMilestoneId as number) || null,
+          isCompleted: !!cf.isCompleted,
+          parentGoalId: (cf.parentGoalId as number) || null,
+          parentMilestoneId: (cf.parentMilestoneId as number) || null,
           priority: (cf.priority as string) || 'none', customFields: cf, taxonomyId: taskTopicId };
       });
   }, [entries, taskTopicId]);
 
-  const todos = useMemo(() => tasks.filter(t => !t.parentMilestoneId), [tasks]);
+  // Todos have no parent goal or milestone connection
+  const todos = useMemo(() => tasks.filter(t => !t.parentMilestoneId && !t.parentGoalId), [tasks]);
 
   const goalOptions = useMemo(() => goals.map(g => ({ id: g.id, title: g.title })), [goals]);
   const goalTitles = useMemo(() => new Map(goals.map(g => [g.id, g.title])), [goals]);
@@ -150,7 +155,6 @@ export function GoalsView() {
     .filter(g => {
       if (goalFilter === 'all') return true;
       if (goalFilter === 'active') return g.goalStatus === 'active' || g.goalStatus === 'in_progress';
-      if (goalFilter === 'in_progress') return g.goalStatus === 'in_progress';
       if (goalFilter === 'completed') return g.goalStatus === 'completed';
       if (goalFilter === 'short_term') return g.goalType === 'short_term' && g.goalStatus !== 'completed';
       if (goalFilter === 'long_term') return g.goalType === 'long_term' && g.goalStatus !== 'completed';
@@ -380,7 +384,7 @@ export function GoalsView() {
         title="Planning"
         onBack={() => navigate('/')}
         right={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ width: 1, height: 20, background: 'currentColor', opacity: 0.15 }} />
             <Select
               value={tab}
@@ -393,6 +397,14 @@ export function GoalsView() {
             >
               {TAB_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </Select>
+            <span style={{ width: 1, height: 20, background: 'currentColor', opacity: 0.15 }} />
+            <Link
+              to="/goals/filter"
+              title="Custom Filters"
+              style={{ display: 'flex', alignItems: 'center', color: headerColor, fontSize: 15, opacity: 0.8, textDecoration: 'none' }}
+            >
+              <FontAwesomeIcon icon={faSlidersH} />
+            </Link>
           </div>
         }
       />
@@ -478,7 +490,7 @@ export function GoalsView() {
                     onSelect={() => handleSelect(t.id)}
                     onClose={() => setEditingId(null)}
                     onDeleted={() => setEditingId(null)}
-                    metaFields={[{ key: 'isCompleted', label: 'Completed' }, { key: 'isInProgress', label: 'In Progress' }]}
+                    metaFields={[{ key: 'isInProgress', label: 'In Progress' }]}
                     onStatusClick={(s) => setTaskFilter(s as TaskFilter)}
                   />
                 );
@@ -515,7 +527,7 @@ export function GoalsView() {
                     onSelect={() => handleSelect(t.id)}
                     onClose={() => setEditingId(null)}
                     onDeleted={() => setEditingId(null)}
-                    metaFields={[{ key: 'isCompleted', label: 'Completed' }, { key: 'isInProgress', label: 'In Progress' }]}
+                    metaFields={[{ key: 'isInProgress', label: 'In Progress' }]}
                     onStatusClick={(s) => setTodoFilter(s as TaskFilter)}
                   />
                 );

@@ -75,9 +75,17 @@ export function NewEntryCard({ topic, headerColor, onCreated }: NewEntryCardProp
     if (!goalTopicId) return [];
     return entries
       .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === goalTopicId)
+      .map(e => ({ id: e.id, title: e.content.replace(/<[^>]+>/g, '').slice(0, 80) || 'Untitled goal' }));
+  }, [entries, allTopics]);
+
+  const milestoneOptions = useMemo(() => {
+    const milestoneTopicId = allTopics.find(t => t.name.toLowerCase() === 'milestone')?.id;
+    if (!milestoneTopicId) return [];
+    return entries
+      .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === milestoneTopicId)
       .map(e => {
-        const content = e.content.replace(/<[^>]+>/g, '').slice(0, 80) || 'Untitled goal';
-        return { id: e.id, title: content };
+        const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> | undefined;
+        return { id: e.id, title: e.content.replace(/<[^>]+>/g, '').slice(0, 60) || `Milestone #${e.id}`, parentGoalId: (cf?.parentGoalId as number) || undefined };
       });
   }, [entries, allTopics]);
 
@@ -123,7 +131,7 @@ export function NewEntryCard({ topic, headerColor, onCreated }: NewEntryCardProp
     if (!customType) return null;
     const onChange = (v: Record<string, unknown>) => setCustomFields(v as Record<string, unknown>);
     switch (customType) {
-      case 'task': return <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentMilestoneId: null, deadline: '', ...customFields } as never} onChange={onChange as never} />;
+      case 'task': return <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentGoalId: null, parentMilestoneId: null, deadline: '', priority: 'none', ...customFields } as never} onChange={onChange as never} goalOptions={goalOptions} milestoneOptions={milestoneOptions} />;
       case 'goal': return <GoalFields values={{ goalType: 'short_term', goalStatus: 'active', targetDate: '', ...customFields } as never} onChange={onChange as never} />;
       case 'milestone': return <MilestoneFields values={{ milestoneStatus: 'active', targetDate: '', isCompleted: false, parentGoalId: null, ...customFields } as never} onChange={onChange as never} goalOptions={goalOptions} />;
       case 'food': return <FoodFields values={{ mealType: 'breakfast', consumedDate: '', consumedTime: '', ingredients: '', calories: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
