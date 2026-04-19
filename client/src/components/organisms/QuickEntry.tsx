@@ -48,11 +48,11 @@ const TopicTrigger = styled.button<{ $hasColor?: boolean }>`
   }
 `;
 
-const TopicIconSmall = styled.span<{ $color: string }>`
+const TopicIconSmall = styled.span`
   display: flex;
   align-items: center;
   font-size: 14px;
-  color: ${({ $color }) => $color};
+  color: ${({ theme }) => theme.colors.text};
   flex-shrink: 0;
 `;
 
@@ -130,7 +130,7 @@ export function QuickEntry({ onCreateEntry }: QuickEntryProps) {
         <TopicTrigger onClick={() => setDropdownOpen(!dropdownOpen)}>
           {selectedTopic ? (
             <>
-              <TopicIconSmall $color={headerColor}>
+              <TopicIconSmall>
                 <FontAwesomeIcon icon={getTopicIcon(selectedTopic.icon)} />
               </TopicIconSmall>
               {selectedTopic.name}

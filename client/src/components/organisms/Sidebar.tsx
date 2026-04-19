@@ -49,13 +49,13 @@ const TopicItem = styled.button<{ $active?: boolean }>`
   }
 `;
 
-const TopicIconWrapper = styled.span<{ $color: string }>`
+const TopicIconWrapper = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   font-size: 14px;
-  color: ${({ $color }) => $color};
+  color: ${({ theme }) => theme.colors.text};
   flex-shrink: 0;
 `;
 
@@ -114,7 +114,7 @@ export function Sidebar() {
             $active={selectedTopicId === topic.id}
             onClick={() => setSelectedTopicId(topic.id)}
           >
-            <TopicIconWrapper $color={headerColor}>
+            <TopicIconWrapper>
               <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
             </TopicIconWrapper>
             {topic.name}

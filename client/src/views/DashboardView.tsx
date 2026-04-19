@@ -25,6 +25,7 @@ import { useUIStore } from '../stores/uiStore.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 import { entries as entriesApi, doses as dosesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
+import { getOrCreateJournalTopic } from '../utils/getOrCreateJournalTopic.js';
 import type { DoseLogRecord } from '../services/api.js';
 import type { ScheduledDose } from '../types/health.js';
 import { toDateStr, formatTime12h } from '../utils/dateUtils.js';
@@ -282,8 +283,8 @@ const CardHeader = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
-const CardIconWrap = styled.span<{ $color: string }>`
-  color: ${({ $color }) => $color};
+const CardIconWrap = styled.span`
+  color: ${({ theme }) => theme.colors.text};
   font-size: 14px;
   flex-shrink: 0;
 `;
@@ -677,7 +678,7 @@ const EditWidgetsCard = styled.div`
 const WidgetMenu = styled.div`
   margin-top: 10px;
   margin-bottom: 32px;
-  background: ${({ theme }) => theme.colors.cardBg};
+  background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 8px;
   overflow: hidden;
@@ -739,7 +740,7 @@ const WidgetChip = styled.button`
   display: flex;
   align-items: center;
   gap: 6px;
-  background: ${({ theme }) => theme.colors.bg};
+  background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 4px;
   padding: 6px 14px;
@@ -867,7 +868,7 @@ function PrioritiesCard({ accentColor, dragAttributes, dragListeners }: { accent
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faBolt} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faBolt} /></CardIconWrap>
         <CardTitle>Daily Priorities</CardTitle>
         {priorities.length < 5 && <AddBtn onClick={handleAdd}><FontAwesomeIcon icon={faPlus} /></AddBtn>}
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
@@ -954,11 +955,9 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
     setSaving(true);
     try {
       const finalContent = hasContent ? content : `<p>${summarizeUserFields(userFieldDefs, userFields)}</p>`;
-      const metadata: Record<string, unknown> = {};
-      if (selectedTopic) {
-        metadata._taxonomyId = selectedTopic.id;
-        if (fieldDefs.length > 0 || userFieldDefs.length > 0) metadata._customFields = customFields;
-      }
+      const effectiveTopicId = selectedTopic ? selectedTopic.id : await getOrCreateJournalTopic();
+      const metadata: Record<string, unknown> = { _taxonomyId: effectiveTopicId };
+      if ((fieldDefs.length > 0 || userFieldDefs.length > 0) && selectedTopic) metadata._customFields = customFields;
       const encrypted = await encryptPost(finalContent, metadata);
       const result = await entriesApi.create({
         contentEncrypted: encrypted.contentEncrypted,
@@ -966,7 +965,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
         metadataEncrypted: encrypted.metadataEncrypted,
         metadataIv: encrypted.metadataIv,
         isEncrypted: true,
-        taxonomyIds: selectedTopic ? [selectedTopic.id] : [],
+        taxonomyIds: [effectiveTopicId],
       });
       addDecryptedEntry({ id: result.id as number, content: finalContent, metadata, isEncrypted: true, createdAt: new Date(result.createdAt as string), updatedAt: new Date(result.createdAt as string) });
       setContent('');
@@ -980,7 +979,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faPencil} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faPencil} /></CardIconWrap>
         <CardTitle>Quick Entry</CardTitle>
         <CardViewLink to="/journal">View all</CardViewLink>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
@@ -1110,7 +1109,7 @@ function TasksCard({ accentColor, tasks, taskTopicId, dragAttributes, dragListen
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faListCheck} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faListCheck} /></CardIconWrap>
         <CardTitle>Tasks</CardTitle>
         <CardViewLink to="/goals/tasks">View all</CardViewLink>
         {taskTopicId && <AddBtn onClick={() => setAdding(a => !a)}><FontAwesomeIcon icon={faPlus} /></AddBtn>}
@@ -1159,7 +1158,7 @@ function EventsCard({ accentColor, events, dragAttributes, dragListeners }: { ac
     return (
       <DashCard>
         <CardHeader>
-          <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faCalendarDay} /></CardIconWrap>
+          <CardIconWrap><FontAwesomeIcon icon={faCalendarDay} /></CardIconWrap>
           <CardTitle>Upcoming Events & Meetings</CardTitle>
           <CardViewLink to="/calendar">View all</CardViewLink>
           {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
@@ -1172,7 +1171,7 @@ function EventsCard({ accentColor, events, dragAttributes, dragListeners }: { ac
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faCalendarDay} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faCalendarDay} /></CardIconWrap>
         <CardTitle>Upcoming Events & Meetings</CardTitle>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
       </CardHeader>
@@ -1261,7 +1260,7 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
     return (
       <DashCard>
         <CardHeader>
-          <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faCartShopping} /></CardIconWrap>
+          <CardIconWrap><FontAwesomeIcon icon={faCartShopping} /></CardIconWrap>
           <CardTitle>Shopping List</CardTitle>
           <CardViewLink to="/shopping">View all</CardViewLink>
           {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
@@ -1277,7 +1276,7 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faCartShopping} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faCartShopping} /></CardIconWrap>
         <CardTitle>Shopping List</CardTitle>
         <CardViewLink to="/shopping">View all</CardViewLink>
         <AddBtn onClick={() => setAdding(a => !a)}><FontAwesomeIcon icon={faPlus} /></AddBtn>
@@ -1605,7 +1604,7 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}>
+        <CardIconWrap>
           <FontAwesomeIcon icon={faSun} />
         </CardIconWrap>
         <CardTitle>Weather</CardTitle>
@@ -1631,7 +1630,7 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
                   <WeatherDayLabel $today={isToday}>{dayLabel(day.date)}</WeatherDayLabel>
                   <FontAwesomeIcon
                     icon={isToday ? wmoIcon(current.code) : wmoIcon(day.code)}
-                    style={{ fontSize: isToday ? 18 : 13, color: accentColor, width: 18, flexShrink: 0 }}
+                    style={{ fontSize: isToday ? 18 : 13, width: 18, flexShrink: 0 }}
                   />
                   {isToday ? (
                     <>
@@ -1711,7 +1710,7 @@ function TopicWidget({ topicId, accentColor, dragAttributes, dragListeners }: { 
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}>
+        <CardIconWrap>
           <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
         </CardIconWrap>
         <CardTitle>{topic.name}</CardTitle>
@@ -1847,7 +1846,7 @@ function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentCo
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faUtensils} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faUtensils} /></CardIconWrap>
         <CardTitle>{cardTitle}</CardTitle>
         <CardViewLink to="/menu">View plan</CardViewLink>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
@@ -1945,7 +1944,7 @@ const AffirmationInput = styled.input`
   padding: 5px 8px;
   font-size: 15px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  background: ${({ theme }) => theme.colors.inputBg};
+  background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   &:focus { outline: none; border-color: ${({ theme }) => theme.colors.textMuted}; }
 `;
@@ -2049,7 +2048,7 @@ function AffirmationsCard({ accentColor, dragAttributes, dragListeners }: { acce
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faHeart} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faHeart} /></CardIconWrap>
         <CardTitle>Affirmations</CardTitle>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <FontAwesomeIcon icon={faGripVertical} />
@@ -2191,7 +2190,7 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faPills} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faPills} /></CardIconWrap>
         <CardTitle>Medications Today</CardTitle>
         <CardViewLink to="/health/meds">View all</CardViewLink>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
@@ -2245,7 +2244,7 @@ function MiniCalendarCard({ accentColor, dragAttributes, dragListeners }: { acce
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faCalendarDays} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faCalendarDays} /></CardIconWrap>
         <CardTitle>Calendar</CardTitle>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <FontAwesomeIcon icon={faGripVertical} />
@@ -2472,7 +2471,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
   return (
     <DashCard>
       <CardHeader>
-        <CardIconWrap $color={accentColor}><FontAwesomeIcon icon={faHeart} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faHeart} /></CardIconWrap>
         <CardTitle>Daily Check-in</CardTitle>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <FontAwesomeIcon icon={faGripVertical} />

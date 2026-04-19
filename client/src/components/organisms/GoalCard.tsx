@@ -276,7 +276,6 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
         <ContentWrap>
           <Title $completed={goal.goalStatus === 'completed'}>{goal.title}</Title>
           <Meta>
-            <span>Status: {(goal.goalStatus || '').replace(/_/g, ' ')}</span>
             {goal.targetDate && <span>Target: {new Date(goal.targetDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
           </Meta>
           {linkedMilestones.length > 0 && <div style={{ marginTop: 8 }}><ProgressBar percent={progress} color={headerColor} /></div>}

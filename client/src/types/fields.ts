@@ -72,7 +72,7 @@ export interface GoalFieldValues {
 }
 
 export interface MilestoneFieldValues {
-  milestoneStatus: 'active' | 'completed' | 'archived';
+  milestoneStatus: 'not_started' | 'in_progress' | 'completed';
   targetDate: string;
   isCompleted: boolean;
   parentGoalId: number | null;

@@ -74,7 +74,7 @@ export function ChangePassword() {
 
     setLoading(true);
     try {
-      const fallbackParams = encryptionData ? {
+      const fallbackParams = encryptionData?.kekSalt && encryptionData.encryptedMasterKey && encryptionData.kekWrapIv ? {
         kekSalt: encryptionData.kekSalt,
         encryptedMasterKey: encryptionData.encryptedMasterKey,
         kekWrapIv: encryptionData.kekWrapIv,

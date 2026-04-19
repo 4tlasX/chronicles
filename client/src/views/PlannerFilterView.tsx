@@ -401,7 +401,7 @@ export function PlannerFilterView() {
       .map(e => {
         const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
         return { id: e.id, content: e.content, title: stripHtml(e.content).slice(0, 120) || 'Untitled milestone',
-          milestoneStatus: (cf.milestoneStatus as string) || 'active', isCompleted: !!cf.isCompleted,
+          milestoneStatus: (cf.milestoneStatus as string) || 'not_started', isCompleted: !!cf.isCompleted,
           targetDate: (cf.targetDate as string) || '', parentGoalId: (cf.parentGoalId as number) || null,
           customFields: cf, taxonomyId: milestoneTopicId,
           createdAt: e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt) };
@@ -449,7 +449,8 @@ export function PlannerFilterView() {
     const matchGoalStatus = (status: string) => {
       if (goalStatus === 'all') return true;
       if (goalStatus === 'completed') return status === 'completed';
-      if (goalStatus === 'active') return status === 'active' || status === '';
+      if (goalStatus === 'active') return status === 'active' || status === 'not_started' || status === '';
+      if (goalStatus === 'not_started') return status === 'not_started' || status === '';
       if (goalStatus === 'in_progress') return status === 'in_progress';
       return true;
     };
@@ -801,7 +802,7 @@ export function PlannerFilterView() {
                     <EditableEntryCard key={t.id} entry={entry} topic={topic} headerColor={headerColor}
                       isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
                       onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
-                      metaFields={[{ key: 'isInProgress', label: 'In Progress' }]} />
+                      metaFields={[]} />
                   );
                 })}
               </>
@@ -820,7 +821,7 @@ export function PlannerFilterView() {
                     <EditableEntryCard key={t.id} entry={entry} topic={topic} headerColor={headerColor}
                       isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
                       onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
-                      metaFields={[{ key: 'isInProgress', label: 'In Progress' }]} />
+                      metaFields={[]} />
                   );
                 })}
               </>

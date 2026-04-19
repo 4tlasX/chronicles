@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { RecoveryKeyDisplay } from '@/components/molecules/RecoveryKeyDisplay';
 import { renderWithTheme } from '../testUtils';

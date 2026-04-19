@@ -24,6 +24,7 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { entries as entriesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
+import { getOrCreateJournalTopic } from '../utils/getOrCreateJournalTopic.js';
 import { stripHtml, summarizeUserFields } from '../utils/stripHtml.js';
 import type { EncryptedPost } from '@shared/crypto/types';
 
@@ -203,9 +204,17 @@ export function JournalView() {
     if (!hasText && !hasDrawing && !fieldSummary) return;
     const finalContent = hasText || hasDrawing ? editorContent : `<p>${fieldSummary}</p>`;
     setIsSaving(true); setSaveStatus('');
+
+    // Resolve effective topic — fall back to "Journal" if none selected
+    let effectiveTopicId = editorTopicId;
+    if (!effectiveTopicId) {
+      effectiveTopicId = await getOrCreateJournalTopic();
+      setEditorTopicId(effectiveTopicId);
+    }
+
     try {
       const metadata: Record<string, unknown> = {};
-      if (editorTopicId) metadata._taxonomyId = editorTopicId;
+      if (effectiveTopicId) metadata._taxonomyId = effectiveTopicId;
       if (widgetType) metadata._widgetType = widgetType;
       if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
       const encrypted = await encryptPost(finalContent, metadata);
@@ -214,7 +223,7 @@ export function JournalView() {
         await entriesApi.update(selectedEntryId, {
           contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
           metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
-          taxonomyIds: editorTopicId ? [editorTopicId] : [],
+          taxonomyIds: effectiveTopicId ? [effectiveTopicId] : [],
         });
         updateDecryptedEntry(selectedEntryId, { content: finalContent, metadata });
         setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
@@ -223,7 +232,7 @@ export function JournalView() {
         const result = await entriesApi.create({
           contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
           metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
-          isEncrypted: true, taxonomyIds: editorTopicId ? [editorTopicId] : [],
+          isEncrypted: true, taxonomyIds: effectiveTopicId ? [effectiveTopicId] : [],
         });
         addDecryptedEntry({ id: result.id as number, content: finalContent, metadata, isEncrypted: true,
           createdAt: new Date(result.createdAt as string), updatedAt: new Date((result.updatedAt || result.createdAt) as string) });

@@ -437,7 +437,7 @@ export function ShoppingListsView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Shopping Lists" onBack={() => navigate('/')} />
+      <ViewHeader title="Shopping Lists" titleTo="/goals" onBack={() => navigate('/')} />
 
       <TabsRow>
         <FilterTabs options={TABS} active={tab} onChange={v => setTab(v as Tab)} />

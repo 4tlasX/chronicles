@@ -27,15 +27,15 @@ const ModeButton = styled.button<{ $active: boolean; $mode?: string }>`
   padding: ${({ theme }) => theme.spacing.sm}px ${({ theme }) => theme.spacing.md}px;
   font-size: ${({ theme }) => theme.fontSize.sm}px;
   font-weight: ${({ $active, theme }) => $active ? theme.fontWeight.semibold : theme.fontWeight.normal};
-  color: ${({ $active, $mode, theme }) => $active && $mode === 'dark' ? theme.colors.textInverse : theme.colors.text};
+  color: ${({ $active, $mode }) => $active && $mode === 'dark' ? '#ffffff' : $active && $mode === 'light' ? '#2D2C2A' : 'inherit'};
   background: ${({ $active, $mode }) => $active && $mode === 'light' ? '#ecebe7' : $active ? '#2D2C2A' : 'transparent'};
-  border: 1px solid ${({ $active, $mode, theme }) => $active && $mode === 'light' ? '#b5b3ae' : $active ? '#2D2C2A' : theme.colors.border};
+  border: 1px solid ${({ $active, theme }) => $active ? 'transparent' : theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   cursor: pointer;
   transition: all 0.15s;
 
   &:hover {
-    border-color: ${({ theme }) => theme.colors.text};
+    border-color: ${({ $active, theme }) => $active ? 'transparent' : theme.colors.text};
   }
 `;
 

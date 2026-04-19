@@ -29,8 +29,8 @@ const Row = styled.div<{ $active?: boolean }>`
   &:hover { background: ${({ $active }) => $active ? 'rgba(0, 0, 0, 0.06)' : 'rgba(0, 0, 0, 0.04)'}; }
 `;
 
-const TopicIcon = styled.span<{ $color: string }>`
-  color: ${({ $color }) => $color};
+const TopicIcon = styled.span`
+  color: ${({ theme }) => theme.colors.text};
   font-size: 16px;
   width: 20px;
   text-align: center;
@@ -71,7 +71,7 @@ export function SortableTopicItem({ topic, isActive, count, headerColor, onSelec
       <SwipeActions onEdit={onEdit} onDelete={onDelete} accentColor={headerColor} disabled={isDragging} buttonWidth={48}>
         <Row $active={isActive} onClick={onSelect}>
           <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
-          <TopicIcon $color={headerColor}>
+          <TopicIcon>
             <FontAwesomeIcon icon={ICON_MAP[topic.icon || ''] || getTopicIcon(topic.icon)} />
           </TopicIcon>
           <NameAndCount>

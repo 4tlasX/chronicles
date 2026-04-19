@@ -19,7 +19,7 @@ export function MedicationScheduleView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Medication Schedule" onBack={() => navigate('/')} right={<PrintButton />} />
+      <ViewHeader title="Medication Schedule" titleTo="/health" onBack={() => navigate('/')} right={<PrintButton />} />
       <MedicationSchedule isReady={isReady} />
     </ContentTemplate>
   );

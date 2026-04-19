@@ -39,7 +39,7 @@ describe('Select', () => {
 
   it('reflects the selected value', () => {
     renderWithTheme(
-      <Select aria-label="color" value="blue" readOnly>
+      <Select aria-label="color" value="blue" onChange={() => {}}>
         <option value="red">Red</option>
         <option value="blue">Blue</option>
       </Select>

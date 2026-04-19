@@ -1,5 +1,21 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
+interface SpeechRecognitionAlternative { transcript: string; confidence: number; }
+interface SpeechRecognitionResult { isFinal: boolean; length: number; [i: number]: SpeechRecognitionAlternative; }
+interface SpeechRecognitionResultList { length: number; [i: number]: SpeechRecognitionResult; }
+interface SpeechRecognitionEvent extends Event { resultIndex: number; results: SpeechRecognitionResultList; }
+interface SpeechRecognitionErrorEvent extends Event { error: string; }
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: ((e: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((e: SpeechRecognitionErrorEvent) => void) | null;
+}
+
 type SpeechRecognitionCtor = new () => SpeechRecognition;
 
 function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {

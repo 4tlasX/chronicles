@@ -23,6 +23,7 @@ describe('CalendarGrid', () => {
     onDayClick: vi.fn(),
     onEntryClick: vi.fn(),
     getTopicName: vi.fn(),
+    eventTopicIds: new Set<number>(),
   };
 
   it('renders month label', () => {

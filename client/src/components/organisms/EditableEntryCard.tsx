@@ -71,8 +71,8 @@ const PreviewRow = styled.div`
   @media (max-width: 480px) { padding: 12px 12px 16px; gap: 8px; flex-wrap: wrap; }
 `;
 
-const IconWrap = styled.span<{ $color: string }>`
-  color: ${({ $color }) => $color};
+const IconWrap = styled.span`
+  color: ${({ theme }) => theme.colors.text};
   font-size: 16px;
   margin-top: 3px;
   flex-shrink: 0;
@@ -362,7 +362,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
             {taskState === 'progress' && <FontAwesomeIcon icon={faMinus} />}
           </TaskCheckButton>
         ) : topic && (
-          <IconWrap $color={headerColor}>
+          <IconWrap>
             <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
           </IconWrap>
         )}

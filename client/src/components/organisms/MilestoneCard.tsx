@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faMinus, faLink, faTrash, faGripVertical } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faMinus, faTrash, faGripVertical } from '@fortawesome/free-solid-svg-icons';
 import { ProgressBar } from '../atoms/ProgressBar.js';
 import { Badge } from '../atoms/Badge.js';
 import { Checkbox } from '../atoms/Checkbox.js';
@@ -175,7 +175,11 @@ const LinkedGoalLabel = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
   color: ${({ theme }) => theme.colors.textMuted};
   flex-shrink: 0;
   white-space: nowrap;
@@ -259,7 +263,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
 
   const [editContent, setEditContent] = useState(milestone.content);
   const [editFields, setEditFields] = useState<MilestoneFieldValues>({
-    milestoneStatus: (milestone.milestoneStatus as MilestoneFieldValues['milestoneStatus']) || 'active',
+    milestoneStatus: (milestone.milestoneStatus as MilestoneFieldValues['milestoneStatus']) || 'not_started',
     targetDate: milestone.targetDate,
     isCompleted: milestone.isCompleted,
     parentGoalId: milestone.parentGoalId,
@@ -274,7 +278,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
     if (isEditing) {
       setEditContent(milestone.content);
       setEditFields({
-        milestoneStatus: (milestone.milestoneStatus as MilestoneFieldValues['milestoneStatus']) || 'active',
+        milestoneStatus: (milestone.milestoneStatus as MilestoneFieldValues['milestoneStatus']) || 'not_started',
         targetDate: milestone.targetDate,
         isCompleted: milestone.isCompleted,
         parentGoalId: milestone.parentGoalId,
@@ -289,18 +293,18 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
   const completedCount = linkedTasks.filter(t => t.isCompleted).length;
   const progress = linkedTasks.length > 0 ? Math.round((completedCount / linkedTasks.length) * 100) : 0;
 
-  // Three-click cycle: not started → active (in progress) → completed → not started
-  const checkState = milestone.isCompleted ? 'done' : milestone.milestoneStatus === 'active' ? 'progress' : 'none';
+  // Three-click cycle: not started → in progress → completed → not started
+  const checkState = milestone.isCompleted ? 'done' : milestone.milestoneStatus === 'in_progress' ? 'progress' : 'none';
 
   const handleStatusCycle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     let newCf: Record<string, unknown>;
     if (checkState === 'none') {
-      newCf = { ...milestone.customFields, milestoneStatus: 'active', isCompleted: false };
+      newCf = { ...milestone.customFields, milestoneStatus: 'in_progress', isCompleted: false };
     } else if (checkState === 'progress') {
       newCf = { ...milestone.customFields, milestoneStatus: 'completed', isCompleted: true };
     } else {
-      newCf = { ...milestone.customFields, milestoneStatus: 'archived', isCompleted: false };
+      newCf = { ...milestone.customFields, milestoneStatus: 'not_started', isCompleted: false };
     }
     const metadata: Record<string, unknown> = { _taxonomyId: milestone.taxonomyId, _customFields: newCf };
     try {
@@ -349,7 +353,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
           $state={checkState}
           $color={headerColor}
           onClick={handleStatusCycle}
-          title={checkState === 'none' ? 'Click: In Progress' : checkState === 'progress' ? 'Click: Completed' : 'Click: Not Started'}
+          title={checkState === 'none' ? 'Mark In Progress' : checkState === 'progress' ? 'Mark Completed' : 'Mark Not Started'}
         >
           {checkState === 'done' && <FontAwesomeIcon icon={faCheck} />}
           {checkState === 'progress' && <FontAwesomeIcon icon={faMinus} />}
@@ -357,14 +361,12 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
         <ContentWrap>
           <Title $completed={milestone.isCompleted}>{milestone.title}</Title>
           <Meta>
-            <span>Status: {milestone.isCompleted ? 'Completed' : (milestone.milestoneStatus || '').replace(/_/g, ' ')}</span>
             {milestone.targetDate && <span>Target: {new Date(milestone.targetDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
           </Meta>
           {linkedTasks.length > 0 && <div style={{ marginTop: 8 }}><ProgressBar percent={progress} color={headerColor} /></div>}
         </ContentWrap>
         {goalTitle && !isEditing && (
           <LinkedGoalLabel>
-            <FontAwesomeIcon icon={faLink} style={{ fontSize: 10 }} />
             Goal: {goalTitle}
           </LinkedGoalLabel>
         )}

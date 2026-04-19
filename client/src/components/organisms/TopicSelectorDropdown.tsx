@@ -86,12 +86,12 @@ const Item = styled.button<{ $active?: boolean }>`
   }
 `;
 
-const TopicIcon = styled.span<{ $color: string }>`
+const TopicIcon = styled.span<{ $color?: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 20px;
-  color: ${({ $color }) => $color};
+  color: ${({ theme }) => theme.colors.text};
   font-size: 18px;
   flex-shrink: 0;
 `;

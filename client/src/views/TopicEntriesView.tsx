@@ -68,6 +68,7 @@ interface SummaryField {
 
 interface TopicEntriesViewProps {
   title: string;
+  titleTo?: string;
   topicNames: string[];
   metaFields?: { key: string; label: string }[];
   showDateFilter?: boolean;
@@ -75,7 +76,7 @@ interface TopicEntriesViewProps {
   summaryFields?: SummaryField[];
 }
 
-export function TopicEntriesView({ title, topicNames, metaFields = [], showDateFilter = true, printable = false, summaryFields = [] }: TopicEntriesViewProps) {
+export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], showDateFilter = true, printable = false, summaryFields = [] }: TopicEntriesViewProps) {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
@@ -145,6 +146,7 @@ export function TopicEntriesView({ title, topicNames, metaFields = [], showDateF
     <ContentTemplate>
       <ViewHeader
         title={title}
+        titleTo={titleTo}
         onBack={() => navigate('/')}
         right={<>{printable && <PrintButton />}</>}
       />

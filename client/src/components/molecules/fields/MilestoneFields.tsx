@@ -140,9 +140,9 @@ export function MilestoneFields({ values, onChange, goalOptions, linkedTasks = [
               onChange({ ...values, milestoneStatus: status, isCompleted: status === 'completed' });
             }}
           >
-            <option value="active">Active</option>
+            <option value="not_started">Not Started</option>
+            <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
-            <option value="archived">Archived</option>
           </Select>
         </FormField>
         <FormField label="Target Date">

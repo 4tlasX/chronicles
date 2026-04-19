@@ -31,7 +31,7 @@ const Btn = styled.button<{ $active?: boolean }>`
   padding: 6px 14px;
   font-family: 'Montserrat', sans-serif;
   font-size: 13px;
-  font-weight: ${({ $active }) => $active ? 700 : 600};
+  font-weight: ${({ $active }) => $active ? 700 : 400};
   font-style: normal;
   text-transform: uppercase;
   letter-spacing: 0.08em;

@@ -316,7 +316,7 @@ describe('MedicationFields', () => {
 
 describe('MilestoneFields', () => {
   const defaultValues: MilestoneFieldValues = {
-    milestoneStatus: 'active',
+    milestoneStatus: 'not_started',
     targetDate: '2024-12-31',
     isCompleted: false,
     parentGoalId: null,

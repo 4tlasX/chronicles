@@ -201,7 +201,7 @@ export function HealthReportingView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Health Reporting" onBack={() => navigate('/')} />
+      <ViewHeader title="Health Reporting" titleTo="/health" onBack={() => navigate('/')} />
       <div style={{ padding: '0 20px 8px' }}>
         <FilterTabs options={PERIOD_OPTIONS} active={period} onChange={setPeriod} />
       </div>

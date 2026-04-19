@@ -523,7 +523,7 @@ export function MenuView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Menu Planner" onBack={() => navigate('/')} />
+      <ViewHeader title="Menu Planner" titleTo="/goals" onBack={() => navigate('/')} />
 
       {/* Week navigation */}
       <NavRow>

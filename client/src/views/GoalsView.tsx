@@ -39,7 +39,7 @@ const GOAL_FILTERS = [
 
 const MILESTONE_FILTERS = [
   { value: 'all' as const, label: 'All' },
-  { value: 'active' as const, label: 'Active' },
+  { value: 'not_started' as const, label: 'Not Started' },
   { value: 'in_progress' as const, label: 'In Progress' },
   { value: 'completed' as const, label: 'Completed' },
 ];
@@ -123,7 +123,7 @@ export function GoalsView() {
       .map(e => {
         const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
         return { id: e.id, content: e.content, title: stripHtml(e.content).slice(0, 120) || 'Untitled milestone',
-          milestoneStatus: (cf.milestoneStatus as string) || 'active', isCompleted: !!cf.isCompleted,
+          milestoneStatus: (cf.milestoneStatus as string) || 'not_started', isCompleted: !!cf.isCompleted,
           targetDate: (cf.targetDate as string) || '', parentGoalId: (cf.parentGoalId as number) || null,
           customFields: cf, taxonomyId: milestoneTopicId,
           createdAt: e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt) };
@@ -166,8 +166,8 @@ export function GoalsView() {
   const filteredMilestones = useMemo(() => milestones
     .filter(m => {
       if (milestoneFilter === 'all') return true;
-      if (milestoneFilter === 'active') return !m.isCompleted && m.milestoneStatus === 'active';
-      if (milestoneFilter === 'in_progress') return !m.isCompleted;
+      if (milestoneFilter === 'not_started') return !m.isCompleted && m.milestoneStatus !== 'in_progress';
+      if (milestoneFilter === 'in_progress') return !m.isCompleted && m.milestoneStatus === 'in_progress';
       if (milestoneFilter === 'completed') return m.isCompleted;
       return true;
     })
@@ -273,7 +273,7 @@ export function GoalsView() {
               { ...parentCf, milestoneStatus: 'completed', isCompleted: true });
           } else if (anyUndone && parentIsCompleted) {
             await persistEntry(parentEntry.id, parentEntry.content, milestoneTopicId,
-              { ...parentCf, milestoneStatus: 'active', isCompleted: false });
+              { ...parentCf, milestoneStatus: 'in_progress', isCompleted: false });
           }
         }
       }
@@ -382,6 +382,7 @@ export function GoalsView() {
     <ContentTemplate>
       <ViewHeader
         title="Planning"
+        titleTo="/goals"
         onBack={() => navigate('/')}
         right={
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -401,7 +402,7 @@ export function GoalsView() {
             <Link
               to="/goals/filter"
               title="Custom Filters"
-              style={{ display: 'flex', alignItems: 'center', color: headerColor, fontSize: 15, opacity: 0.8, textDecoration: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', color: 'inherit', fontSize: 15, opacity: 0.5, textDecoration: 'none' }}
             >
               <FontAwesomeIcon icon={faSlidersH} />
             </Link>
@@ -490,7 +491,7 @@ export function GoalsView() {
                     onSelect={() => handleSelect(t.id)}
                     onClose={() => setEditingId(null)}
                     onDeleted={() => setEditingId(null)}
-                    metaFields={[{ key: 'isInProgress', label: 'In Progress' }]}
+                    metaFields={[]}
                     onStatusClick={(s) => setTaskFilter(s as TaskFilter)}
                   />
                 );
@@ -527,7 +528,7 @@ export function GoalsView() {
                     onSelect={() => handleSelect(t.id)}
                     onClose={() => setEditingId(null)}
                     onDeleted={() => setEditingId(null)}
-                    metaFields={[{ key: 'isInProgress', label: 'In Progress' }]}
+                    metaFields={[]}
                     onStatusClick={(s) => setTodoFilter(s as TaskFilter)}
                   />
                 );

@@ -77,6 +77,7 @@ describe('GoalCard', () => {
     onSaved: vi.fn(),
     onToggleMilestone: vi.fn(),
     onUnlinkMilestone: vi.fn(),
+    onLinkMilestone: vi.fn(),
     onCreateMilestone: vi.fn(),
   };
 

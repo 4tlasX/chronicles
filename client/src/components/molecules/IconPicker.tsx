@@ -167,7 +167,7 @@ export function IconPicker({ selectedIcon, onSelectIcon }: IconPickerProps) {
         <IconBtn key={name} $selected={selectedIcon === name} onClick={() => onSelectIcon(name)} title={name}>
           <FontAwesomeIcon
             icon={icon}
-            style={{ fontSize: 14, color: selectedIcon === name ? '#1f2937' : '#4b5563' }}
+            style={{ fontSize: 14 }}
           />
         </IconBtn>
       ))}
