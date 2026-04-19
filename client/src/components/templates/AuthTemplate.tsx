@@ -55,15 +55,45 @@ const Card = styled.div`
 `;
 
 const LogoMark = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Cormorant Garamond', serif;
   font-size: 36px;
   font-weight: 300;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   color: ${({ theme }) => theme.colors.text};
-  text-align: center;
-  margin-bottom: ${({ theme }) => theme.spacing.lg}px;
   padding-top: 4px;
+  margin-bottom: 10px;
+`;
+
+const PoppySVG = styled.svg`
+  height: 0.85em;
+  width: 0.85em;
+  flex-shrink: 0;
+  margin: 0 0.22em 0 0;
+  vertical-align: middle;
+`;
+
+const LogoDivider = styled.div`
+  width: 72px;
+  height: 1px;
+  background: ${({ theme }) => theme.colors.text};
+  margin: 0 auto 10px;
+  opacity: 0.4;
+`;
+
+const LogoTagline = styled.div`
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: ${({ theme }) => theme.colors.textMuted};
+  text-align: center;
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
+  margin-top: -12px;
 `;
 
 const BrandTitle = styled.h1`
@@ -123,6 +153,7 @@ export function AuthTemplate({ title, children, footer, brand }: AuthTemplatePro
       <ImageOverlay $image={bg} $opacity={opacity} />
       <Card>
         <LogoMark>Chronicles</LogoMark>
+        <LogoTagline>a record of your days</LogoTagline>
         {!brand && <PageTitle>{title}</PageTitle>}
         {children}
         {footer && <Footer>{footer}</Footer>}
