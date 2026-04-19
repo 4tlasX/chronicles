@@ -24,7 +24,7 @@ const EditorWrapper = styled.div`
     z-index: 1;
     padding: 16px 48px 32px 24px;
     outline: none;
-    font-size: 16px;
+    font-size: 18px;
     line-height: 1.85;
     color: ${({ theme }) => theme.colors.text};
     touch-action: auto;
@@ -39,7 +39,10 @@ const EditorWrapper = styled.div`
       height: 0;
     }
 
-ul, ol { padding-left: 1.5em; }
+strong { font-weight: 700; }
+    em { font-style: italic; }
+    s { text-decoration: line-through; }
+    ul, ol { padding-left: 1.5em; }
     blockquote {
       border-left: 3px solid ${({ theme }) => theme.colors.border};
       padding-left: 1em;
@@ -81,7 +84,7 @@ const ToolbarToggle = styled.button<{ $open: boolean }>`
   gap: 6px;
   padding: ${({ $open }) => $open ? '10px 4px' : '6px 4px'};
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -113,7 +116,7 @@ const ToolbarDivider = styled.div`
 const ToolbarButton = styled.button<{ $active?: boolean }>`
   padding: 5px 8px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 14px;
+  font-size: 16px;
   font-weight: ${({ $active }) => $active ? 600 : 400};
   color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textSecondary};
   background: transparent;
@@ -139,7 +142,7 @@ const MicButton = styled.button<{ $active: boolean }>`
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   margin-left: 6px;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   color: ${({ $active, theme }) => $active ? '#e53e3e' : theme.colors.textMuted};
@@ -260,10 +263,10 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
   // Keep editorRef current so the dictation callback always has the latest instance
   editorRef.current = editor;
 
-  // Sync content from parent
+  // Sync content from parent without emitting an update (prevents onChange→re-render loop)
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+      editor.commands.setContent(content, false);
     }
   }, [content, editor]);
 

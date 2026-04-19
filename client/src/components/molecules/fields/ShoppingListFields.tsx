@@ -38,7 +38,7 @@ const Group = styled.div`
 
 const GroupHeader = styled.div`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -87,7 +87,7 @@ const AddBtn = styled.button`
   margin-top: 16px;
   padding: 6px 12px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textSecondary};
   background: none;
@@ -111,7 +111,7 @@ const LinkedSection = styled.div`
 
 const SectionLabel = styled.div`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -134,7 +134,7 @@ const LinkedItem = styled.div`
   justify-content: space-between;
   gap: 8px;
   padding: 6px 10px;
-  font-size: 13px;
+  font-size: 15px;
   background: ${({ theme }) => theme.colors.surfaceHover};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
 `;
@@ -164,7 +164,7 @@ const UnlinkBtn = styled.button`
 `;
 
 const Empty = styled.p`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textSecondary};
   margin: 0;
   padding: 8px 0;

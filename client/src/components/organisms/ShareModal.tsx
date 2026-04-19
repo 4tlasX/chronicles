@@ -49,7 +49,7 @@ const UrlRow = styled.div`
 const UrlInput = styled.input`
   flex: 1;
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: 15px;
   font-family: monospace;
   color: ${({ theme }) => theme.colors.text};
   background: ${({ theme }) => theme.colors.surface};
@@ -67,7 +67,7 @@ const CopyBtn = styled.button<{ $copied?: boolean }>`
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: white;
   background: ${({ $copied, theme }) => $copied ? theme.colors.success : theme.colors.accent};
@@ -82,7 +82,7 @@ const CopyBtn = styled.button<{ $copied?: boolean }>`
 const CreateBtn = styled.button`
   width: 100%;
   padding: 10px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: white;
   background: ${({ theme }) => theme.colors.accent};
@@ -101,7 +101,7 @@ const CreateBtn = styled.button`
 `;
 
 const Notice = styled.p`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin: 8px 0 0;
   line-height: 1.5;
@@ -124,7 +124,7 @@ const ShareItem = styled.div`
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: 15px;
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
@@ -133,7 +133,7 @@ const ShareItem = styled.div`
 const ShareMeta = styled.span`
   flex: 1;
   color: ${({ theme }) => theme.colors.textSecondary};
-  font-size: 12px;
+  font-size: 14px;
 `;
 
 const RevokeBtn = styled.button`
@@ -143,13 +143,13 @@ const RevokeBtn = styled.button`
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 15px;
   transition: opacity 0.15s;
   &:hover { opacity: 0.7; }
 `;
 
 const SectionLabel = styled.div`
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -158,7 +158,7 @@ const SectionLabel = styled.div`
 `;
 
 const ErrorText = styled.p`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.danger};
   margin: 8px 0 0;
 `;

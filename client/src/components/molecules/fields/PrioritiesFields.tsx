@@ -13,7 +13,7 @@ const Row = styled.div<{ $done?: boolean }>`
 `;
 
 const Num = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textMuted};
   width: 14px;
@@ -32,7 +32,7 @@ const CheckBtn = styled.button<{ $done?: boolean; $color: string }>`
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 8px;
+  font-size: 10px;
   padding: 0;
   transition: background 0.15s, border-color 0.15s;
 `;
@@ -42,7 +42,7 @@ const Input = styled.input`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
   padding: 4px 8px;
@@ -62,7 +62,7 @@ const RemoveBtn = styled.button`
   background: none;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 10px;
+  font-size: 12px;
   padding: 0;
   &:hover { color: ${({ theme }) => theme.colors.text}; }
 `;
@@ -74,7 +74,7 @@ const AddBtn = styled.button`
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.textMuted};
   padding: 4px 0;

@@ -368,10 +368,10 @@ export function GoalsView() {
   }
 
   const TAB_OPTIONS = [
-    { value: 'goals', label: `Goals (${goals.length})` },
-    { value: 'milestones', label: `Milestones (${milestones.length})` },
-    { value: 'tasks', label: `Tasks (${tasks.length})` },
-    { value: 'todos', label: `Todos (${todos.length})` },
+    { value: 'goals', label: 'Goals' },
+    { value: 'milestones', label: 'Milestones' },
+    { value: 'tasks', label: 'Tasks' },
+    { value: 'todos', label: 'Todos' },
   ];
 
   return (

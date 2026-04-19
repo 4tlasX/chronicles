@@ -51,6 +51,7 @@ const MainContent = styled.main<{ $transparent?: boolean; $hasBackground?: boole
   overflow-y: ${({ $transparent }) => $transparent ? 'hidden' : 'auto'};
   background: ${({ $transparent, $hasBackground, theme }) =>
     $transparent ? 'transparent' : $hasBackground ? theme.colors.surfaceOverlay : theme.colors.surfaceOverlay};
+  padding-bottom: 20px;
 `;
 
 interface AppTemplateProps {

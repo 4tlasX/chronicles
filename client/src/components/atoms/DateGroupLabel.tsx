@@ -8,7 +8,7 @@ export const DateGroup = styled.div`
 /** Uppercase date header for grouped lists. */
 export const DateGroupLabel = styled.h3`
   padding: 8px 24px 4px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textMuted};
   text-transform: uppercase;

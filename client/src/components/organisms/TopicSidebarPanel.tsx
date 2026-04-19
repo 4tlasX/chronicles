@@ -76,7 +76,7 @@ const AllItem = styled.button<{ $active?: boolean }>`
   width: 100%;
   padding: 8px 12px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -90,7 +90,7 @@ const AllItem = styled.button<{ $active?: boolean }>`
 `;
 
 const CountBadge = styled.span`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.text};
   font-weight: 400;
   margin-left: auto;
@@ -106,14 +106,14 @@ const FilterWrap = styled.div`
 
 const FilterIcon = styled.span`
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 12px;
+  font-size: 14px;
   flex-shrink: 0;
 `;
 
 const FilterInput = styled.input`
   flex: 1;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.text};
   background: none;
   border: none;
@@ -131,7 +131,7 @@ const ClearBtn = styled.button`
   border: none;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 11px;
+  font-size: 13px;
   padding: 0;
   flex-shrink: 0;
   &:hover { color: ${({ theme }) => theme.colors.text}; }
@@ -140,7 +140,7 @@ const ClearBtn = styled.button`
 const NoMatch = styled.div`
   padding: 16px 12px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   text-align: center;
 `;
@@ -248,7 +248,6 @@ export function TopicSidebarPanel({
         {!isFiltering && (
           <AllItem $active={selectedTopicId === null} onClick={() => onSelectTopic(null)}>
             All Entries
-            <CountBadge>({totalEntryCount})</CountBadge>
           </AllItem>
         )}
 

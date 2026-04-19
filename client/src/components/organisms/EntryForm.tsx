@@ -57,7 +57,7 @@ const MobileBackBtn = styled.button`
   padding: 4px 0;
   margin-right: 8px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -77,26 +77,26 @@ const ExpandControl = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
-const IconBtn = styled.button<{ $active?: boolean }>`
+const IconBtn = styled.button<{ $active?: boolean; $activeColor?: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
-  color: ${({ $active, theme }) => $active ? theme.colors.warning : theme.colors.textMuted};
+  color: ${({ $active, $activeColor, theme }) => $active ? ($activeColor || theme.colors.warning) : theme.colors.textMuted};
   background: none;
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   transition: color 0.15s, background 0.15s;
 
   &:hover {
-    color: ${({ $active, theme }) => $active ? theme.colors.warning : theme.colors.text};
+    color: ${({ $active, $activeColor, theme }) => $active ? ($activeColor || theme.colors.warning) : theme.colors.text};
     background: rgba(0, 0, 0, 0.05);
   }
 `;
@@ -112,7 +112,7 @@ const CustomFieldsHeader = styled.button`
   width: 100%;
   padding: 8px 24px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: ${({ theme }) => theme.fontWeight.medium};
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -147,6 +147,7 @@ const EditorArea = styled.div`
   flex-direction: column;
   min-height: 200px;
   overflow: hidden;
+  padding-top: 12px;
 `;
 
 const SaveRow = styled.div`
@@ -167,7 +168,7 @@ const RightActions = styled.div`
 const ActionBtn = styled.button`
   padding: 6px 16px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -184,7 +185,7 @@ const ActionBtn = styled.button`
 const SaveButton = styled.button<{ $disabled?: boolean }>`
   padding: 4px 14px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06rem;
@@ -202,7 +203,7 @@ const SaveButton = styled.button<{ $disabled?: boolean }>`
 `;
 
 const StatusText = styled.span<{ $error?: boolean }>`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.success};
   margin-right: auto;
 `;
@@ -252,6 +253,7 @@ export function EntryForm({
   isEditing, isSaving, saveStatus, placeholder = 'Start writing...',
 }: EntryFormProps) {
   const isFavorite = !!customFields._isFavorite;
+  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
   const [fieldsExpanded, setFieldsExpanded] = useState(true);
   const [userFieldsExpanded, setUserFieldsExpanded] = useState(true);
   const [toolbarOpen, setToolbarOpen] = useState(false);
@@ -350,6 +352,7 @@ export function EntryForm({
           <IconBtn
             type="button"
             $active={isFavorite}
+            $activeColor={headerColor}
             aria-label={isFavorite ? 'Remove bookmark' : 'Bookmark entry'}
             onClick={() => entryId && onBookmark?.()}
             style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}

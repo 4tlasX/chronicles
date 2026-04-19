@@ -43,19 +43,19 @@ const StatCard = styled.div`
 `;
 
 const StatValue = styled.div<{ $color: string }>`
-  font-size: 28px;
+  font-size: 31px;
   font-weight: 700;
   color: ${({ $color }) => $color};
 `;
 
 const StatLabel = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 2px;
 `;
 
 const StatSub = styled.div`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 4px;
 `;
@@ -76,7 +76,7 @@ const SectionTitle = styled.h3`
 `;
 
 const SectionDesc = styled.p`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin: 0 0 12px;
 `;
@@ -86,7 +86,7 @@ const ListRow = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 6px 0;
-  font-size: 13px;
+  font-size: 15px;
 `;
 
 const ListLabel = styled.span`
@@ -112,7 +112,7 @@ const CoLabels = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.text};
 `;
 
@@ -121,7 +121,7 @@ const CoArrow = styled.span`
 `;
 
 const CoBadge = styled.span<{ $color: string }>`
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
@@ -131,7 +131,7 @@ const CoBadge = styled.span<{ $color: string }>`
 
 const CoMeta = styled.div`
   text-align: right;
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
@@ -147,13 +147,13 @@ const CalorieStat = styled.div`
 `;
 
 const CalorieValue = styled.div<{ $color: string }>`
-  font-size: 22px;
+  font-size: 25px;
   font-weight: 700;
   color: ${({ $color }) => $color};
 `;
 
 const CalorieLabel = styled.div`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
@@ -163,7 +163,7 @@ const HDivider = styled.div`
 `;
 
 const SubTitle = styled.h4`
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
   margin: 0 0 8px;
@@ -177,7 +177,7 @@ const ExFreqRow = styled.div`
 `;
 
 const ExFreqLabel = styled.span`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   width: 80px;
   flex-shrink: 0;
@@ -199,7 +199,7 @@ const ExFreqFill = styled.div<{ $width: number; $color: string }>`
 `;
 
 const ExFreqValue = styled.span`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.text};
   width: 80px;
   text-align: right;
@@ -218,13 +218,13 @@ const ImpactRow = styled.div`
 
 const ImpactLeft = styled.div``;
 const ImpactName = styled.span`
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
   text-transform: capitalize;
 `;
 const ImpactSub = styled.div`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
@@ -233,12 +233,12 @@ const ImpactRight = styled.div`
 `;
 
 const ImpactArrow = styled.div`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
 const ImpactChange = styled.div<{ $positive: boolean; $neutral: boolean }>`
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   color: ${({ $positive, $neutral, theme }) => $neutral ? theme.colors.textMuted : $positive ? theme.colors.success : theme.colors.danger};
 `;
@@ -275,7 +275,7 @@ const WellnessTrendBar = styled.div<{ $height: number; $color: string }>`
 `;
 
 const WellnessTrendLabel = styled.span`
-  font-size: 9px;
+  font-size: 11px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 3px;
   white-space: nowrap;
@@ -310,7 +310,7 @@ const TrendChartLegend = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-bottom: 4px;
 `;
@@ -337,21 +337,21 @@ const InsightRow = styled.div`
 `;
 
 const InsightLabel = styled.div`
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
   margin-bottom: 4px;
 `;
 
 const InsightDetail = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   line-height: 1.5;
 `;
 
 const InsightBadge = styled.span<{ $positive: boolean }>`
   display: inline-block;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 3px;

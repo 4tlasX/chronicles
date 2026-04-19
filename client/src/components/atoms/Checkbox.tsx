@@ -30,14 +30,14 @@ const Box = styled.div<{ $checked: boolean }>`
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.colors.text};
-  font-size: 12px;
+  font-size: 14px;
   flex-shrink: 0;
   transition: border-color 0.15s;
 `;
 
 const CheckLabel = styled.span`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05rem;

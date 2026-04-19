@@ -19,7 +19,7 @@ const Title = styled.h3`
 const Empty = styled.div`
   text-align: center;
   padding: 24px 0;
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
@@ -49,7 +49,7 @@ const Bar = styled.div<{ $height: number; $color: string }>`
 `;
 
 const BarLabel = styled.span`
-  font-size: 10px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 4px;
   text-align: center;

@@ -12,12 +12,12 @@ const Wrapper = styled.div`
 `;
 
 const Message = styled.p`
-  font-size: 14px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
 const Sub = styled.p`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 

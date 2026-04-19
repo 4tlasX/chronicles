@@ -2,8 +2,8 @@ import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import DOMPurify from 'dompurify';
 import { useUIStore } from '../../stores/uiStore.js';
-import { stripHtml } from '../../utils/stripHtml.js';
 import { SwipeActions } from '../molecules/SwipeActions.js';
 
 interface EntryCardProps {
@@ -40,7 +40,7 @@ const Card = styled.div<{ $active?: boolean }>`
 `;
 
 const CardContent = styled.div`
-  padding: 12px 24px 24px;
+  padding: 20px 24px 25px 24px;
   width: 100%;
   box-sizing: border-box;
 `;
@@ -49,7 +49,7 @@ const HeaderRow = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 17px;
 `;
 
 const TopicBadge = styled.div<{ $bgColor: string }>`
@@ -67,29 +67,33 @@ const TopicIcon = styled.span`
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.colors.textSecondary};
-  font-size: 11px;
+  font-size: 13px;
   flex-shrink: 0;
 `;
 
 const TopicLabel = styled.span`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.03rem;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  color: ${({ theme }) => theme.colors.text};
+  opacity: 0.75;
 `;
 
 const Separator = styled.span`
   color: ${({ theme }) => theme.colors.border};
-  font-size: 11px;
+  font-size: 13px;
   user-select: none;
 `;
 
 const Timestamp = styled.span`
   font-size: 13px;
   font-weight: 300;
-  color: ${({ theme }) => theme.colors.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: ${({ theme }) => theme.colors.text};
+  opacity: 0.75;
   flex-shrink: 0;
 `;
 
@@ -101,8 +105,8 @@ const ContentArea = styled.div`
 
 const PreviewText = styled.div<{ $completed?: boolean }>`
   font-family: ${({ theme }) => theme.fontFamily.sans};
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 17px;
+  font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
   color: ${({ $completed, theme }) =>
@@ -113,6 +117,13 @@ const PreviewText = styled.div<{ $completed?: boolean }>`
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   line-height: 1.5;
+
+  p, li, h1, h2, h3, blockquote { display: inline; }
+  p + p::before { content: ' '; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  s { text-decoration: line-through; }
+  code { font-size: 0.9em; font-family: monospace; }
 `;
 
 const Footer = styled.div`
@@ -135,7 +146,7 @@ const TypeBadge = styled.span<{ $type: string }>`
   display: inline-flex;
   align-items: center;
   padding: 1px 8px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: ${({ theme }) => theme.fontWeight.medium};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: ${({ $type }) => TYPE_COLORS[$type]?.bg || 'rgba(0,0,0,0.05)'};
@@ -143,10 +154,10 @@ const TypeBadge = styled.span<{ $type: string }>`
   text-transform: capitalize;
 `;
 
-const FavoriteStar = styled.span`
+const FavoriteStar = styled.span<{ $color: string }>`
   margin-left: auto;
-  color: ${({ theme }) => theme.colors.warning};
-  font-size: 12px;
+  color: ${({ $color }) => $color};
+  font-size: 14px;
   background: none;
   border: none;
   padding: 2px 4px;
@@ -163,8 +174,10 @@ export function EntryCard({
   hasCheckbox, isCompleted, isFavorite, customType,
 }: EntryCardProps) {
   const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
-  const plainText = stripHtml(content);
-  const preview = plainText.slice(0, 160) || 'Untitled entry';
+  const previewHtml = DOMPurify.sanitize(content, {
+    ALLOWED_TAGS: ['strong', 'em', 's', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'blockquote', 'code'],
+    ALLOWED_ATTR: [],
+  }) || 'Untitled entry';
 
   const d = new Date(date);
   const formatted = d.toLocaleDateString('en-US', {
@@ -185,23 +198,24 @@ export function EntryCard({
         )}
         {topicName && <Separator>|</Separator>}
         <Timestamp>{formatted}</Timestamp>
+        {isFavorite && (
+          <FavoriteStar
+            $color={headerColor}
+            onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
+            title="Remove bookmark"
+          >
+            <FontAwesomeIcon icon={faStar} />
+          </FavoriteStar>
+        )}
       </HeaderRow>
 
       <ContentArea>
-        <PreviewText $completed={isCompleted}>{preview}</PreviewText>
+        <PreviewText $completed={isCompleted} dangerouslySetInnerHTML={{ __html: previewHtml }} />
       </ContentArea>
 
-      {((!topicName && customType) || isFavorite) && (
+      {(!topicName && customType) && (
         <Footer>
-          {!topicName && customType && <TypeBadge $type={customType}>{customType}</TypeBadge>}
-          {isFavorite && (
-            <FavoriteStar
-              onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
-              title="Remove bookmark"
-            >
-              <FontAwesomeIcon icon={faStar} />
-            </FavoriteStar>
-          )}
+          <TypeBadge $type={customType}>{customType}</TypeBadge>
         </Footer>
       )}
     </CardContent>

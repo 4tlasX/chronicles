@@ -35,7 +35,7 @@ const AddButton = styled.button<{ $color: string }>`
   gap: 6px;
   padding: 16px 24px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.08em;

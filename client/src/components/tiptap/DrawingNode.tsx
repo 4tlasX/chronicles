@@ -32,7 +32,7 @@ const EditBtn = styled.button`
   top: 8px;
   right: 8px;
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: 13px;
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   text-transform: uppercase;

@@ -17,7 +17,7 @@ export const Title = styled.h1`
 
 export const SectionTitle = styled.h2`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: ${({ theme }) => theme.fontWeight.medium};
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -26,14 +26,14 @@ export const SectionTitle = styled.h2`
 `;
 
 export const SectionDescription = styled.p`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-bottom: 12px;
 `;
 
 export const DangerTitle = styled.h2`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: ${({ theme }) => theme.fontWeight.medium};
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -55,13 +55,15 @@ export const CollapsibleHeader = styled.button`
 `;
 
 export const CollapsibleTitle = styled.div`
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 400;
+  font-style: italic;
   color: ${({ theme }) => theme.colors.text};
+  margin-bottom: 14px;
 `;
 
 export const CollapsibleDesc = styled.div`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 2px;
 `;
@@ -72,7 +74,7 @@ export const CollapsibleBody = styled.div`
   border-top: none;
   border-radius: 0 0 ${({ theme }) => theme.borderRadius.xl}px ${({ theme }) => theme.borderRadius.xl}px;
   background: transparent;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
@@ -82,7 +84,7 @@ export const PrivacyCard = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.xl}px;
   background: transparent;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
   color: ${({ theme }) => theme.colors.text};
 `;
@@ -123,14 +125,14 @@ export const ColorSection = styled.div`
 `;
 
 export const ColorSectionTitle = styled.div`
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
   margin-bottom: 4px;
 `;
 
 export const ColorSectionDesc = styled.div`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-bottom: 12px;
 `;

@@ -14,7 +14,7 @@ const FieldGroup = styled.div`
 `;
 
 const FieldLabel = styled.label`
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
@@ -22,7 +22,7 @@ const FieldLabel = styled.label`
 const TextInput = styled.input`
   width: 100%;
   padding: 7px 10px;
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
@@ -37,7 +37,7 @@ const CheckboxRow = styled.label`
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.text};
 `;
 

@@ -6,7 +6,7 @@ const isDark = (theme: { colors: { background: string } }) => theme.colors.backg
 export const ActionButton = styled.button`
   && {
     padding: 6px 16px;
-    font-size: 14px;
+    font-size: 16px;
     color: ${({ theme }) => theme.colors.text};
     background: ${({ theme }) => isDark(theme) ? '#2a2b2d' : '#faf8f2'};
     border: 1px solid ${({ theme }) => theme.colors.border};
@@ -21,7 +21,7 @@ export const ActionButton = styled.button`
 export const SignOutButton = styled(ActionButton)``;
 
 export const SelectedColorLabel = styled.div`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 8px;
 `;
@@ -31,7 +31,7 @@ export const BackLink = styled(Link)`
   align-items: center;
   gap: 6px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;

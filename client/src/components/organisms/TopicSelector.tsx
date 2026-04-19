@@ -21,7 +21,7 @@ const Trigger = styled.button`
   gap: 8px;
   padding: 6px 8px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: ${({ theme }) => theme.fontWeight.medium};
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -43,7 +43,7 @@ const TopicIcon = styled.span<{ $color: string }>`
   justify-content: center;
   width: 20px;
   color: ${({ $color }) => $color};
-  font-size: 16px;
+  font-size: 18px;
   flex-shrink: 0;
 `;
 
@@ -53,7 +53,7 @@ const Placeholder = styled.span`
 
 const ChevronIcon = styled.span<{ $open: boolean }>`
   margin-left: auto;
-  font-size: 10px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
   transition: transform 0.15s;
   transform: ${({ $open }) => $open ? 'rotate(180deg)' : 'rotate(0)'};

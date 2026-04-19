@@ -23,21 +23,21 @@ const Header = styled.div`
 `;
 
 const AppName = styled.span`
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};
   letter-spacing: -0.02em;
 `;
 
 const SharedBadge = styled.span`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-left: auto;
 `;
 
 const Body = styled.div`
   padding: 28px 32px;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.7;
   color: ${({ theme }) => theme.colors.text};
 
@@ -70,7 +70,7 @@ const Body = styled.div`
 const Footer = styled.div`
   padding: 12px 24px;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   display: flex;
   align-items: center;
@@ -84,7 +84,7 @@ const StatusMessage = styled.div<{ $error?: boolean }>`
   gap: 12px;
   padding: 60px 20px;
   color: ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.textMuted};
-  font-size: 15px;
+  font-size: 17px;
   text-align: center;
 `;
 

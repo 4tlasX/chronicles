@@ -37,7 +37,7 @@ const DragHandle = styled.button`
   padding: 0;
   cursor: grab;
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: 13px;
   opacity: 0;
   transition: opacity 150ms;
   ${Card}:hover & { opacity: 1; }
@@ -60,7 +60,7 @@ const ContentWrap = styled.div`
 `;
 
 const Meta = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 2px;
   display: flex;
@@ -90,13 +90,13 @@ const MilestoneCheckButton = styled.button<{ $state: 'none' | 'progress' | 'done
   padding: 0;
   transition: all 0.15s;
   color: ${({ $state }) => $state === 'done' ? 'white' : 'inherit'};
-  font-size: 10px;
+  font-size: 12px;
   &:hover { opacity: 0.8; }
 `;
 
 const Title = styled.div<{ $completed?: boolean }>`
   flex: 1;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 500;
   color: ${({ theme, $completed }) => $completed ? theme.colors.textMuted : theme.colors.text};
   text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
@@ -108,7 +108,7 @@ const Title = styled.div<{ $completed?: boolean }>`
 
 const TypeLabel = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -121,7 +121,7 @@ const TaskRow = styled.div`
   align-items: center;
   gap: 8px;
   padding: 4px 0;
-  font-size: 13px;
+  font-size: 15px;
 `;
 
 const TaskTitle = styled.span<{ $completed?: boolean }>`
@@ -145,7 +145,7 @@ const RemoveBtn = styled.button`
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   flex-shrink: 0;
   &:hover { color: ${({ theme }) => theme.colors.text}; background: rgba(0,0,0,0.06); }
 `;
@@ -154,14 +154,14 @@ const TaskCountLabel = styled.div`
   padding: 16px 24px 8px;
   @media (max-width: 768px) { padding: 16px 16px 8px; }
   @media (max-width: 480px) { padding: 16px 12px 8px; }
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.textMuted};
   border-top: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const TaskSectionLabel = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textMuted};
   text-transform: uppercase;
@@ -175,7 +175,7 @@ const LinkedGoalLabel = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
   flex-shrink: 0;
   white-space: nowrap;
@@ -192,7 +192,7 @@ const AddTaskRow = styled.form`
 const LinkSelect = styled.select`
   flex: 1;
   padding: 6px 10px;
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
@@ -206,7 +206,7 @@ const LinkSelect = styled.select`
 const AddTaskInput = styled.input`
   flex: 1;
   padding: 6px 10px;
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
@@ -219,7 +219,7 @@ const AddTaskInput = styled.input`
 const AddTaskBtn = styled.button<{ $color: string }>`
   padding: 4px 10px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;

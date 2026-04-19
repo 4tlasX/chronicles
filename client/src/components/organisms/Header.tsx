@@ -41,30 +41,62 @@ const LeftSection = styled.div`
 
 const Logo = styled(Link)`
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   text-decoration: none;
 `;
 
 const LogoText = styled.span<{ $light?: boolean }>`
-  font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 24px;
-  font-weight: 100;
-  font-style: italic;
+  display: flex;
+  align-items: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 25px;
+  font-weight: 300;
   text-transform: uppercase;
-  letter-spacing: 0.12rem;
+  letter-spacing: 0.22em;
   color: inherit;
-  text-shadow: ${({ $light }) => $light ? 'none' : '1px 1px 5px #00000080'};
-  margin-bottom: 0.5rem;
-  @media (max-width: 480px) { font-size: 20px; margin-bottom: 0.3rem; }
+  margin-bottom: 0.1rem;
+  padding-top: 4px;
+  @media (max-width: 480px) { font-size: 22px; margin-bottom: 0; }
 `;
+
+const LogoLetters = styled.span`
+  line-height: 1;
+  align-self: center;
+`;
+
+const LogoPoppySVG = styled.svg`
+  height: 1.1em;
+  width: 1.1em;
+  align-self: center;
+  margin: 0 0.25em 0 0;
+  flex-shrink: 0;
+`;
+
+function LogoPoppy() {
+  return (
+    <LogoPoppySVG viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+      {[0, 72, 144, 216, 288].map(angle => (
+        <g key={angle} transform={angle ? `rotate(${angle},50,50)` : undefined}>
+          <path strokeWidth="1.1" d="M44,47 C34,42 24,28 28,13 C32,4 48,4 50,8 C52,4 68,4 72,13 C76,28 66,42 56,47 Z"/>
+          <path strokeWidth="0.7" d="M50,46 C50,36 50,22 50,10"/>
+        </g>
+      ))}
+      <circle cx="50" cy="50" r="9" strokeWidth="1.1"/>
+      {[0,36,72,108,144,180,216,252,288,324].map(angle => (
+        <line key={angle} transform={angle ? `rotate(${angle},50,50)` : undefined} x1="50" y1="39" x2="50" y2="36" strokeWidth="1"/>
+      ))}
+      <circle cx="50" cy="50" r="2.5" fill="currentColor" stroke="none"/>
+    </LogoPoppySVG>
+  );
+}
 
 const NewEntryButton = styled.button<{ $light?: boolean }>`
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  font-size: 12px;
-  @media (max-width: 480px) { font-size: 22px; padding: 5px 2px; }
+  font-size: 14px;
+  @media (max-width: 480px) { font-size: 25px; padding: 5px 2px; }
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.09rem;
@@ -142,7 +174,7 @@ const DropdownTrigger = styled.button<{ $active?: boolean; $light?: boolean }>`
 `;
 
 const DropdownChevron = styled.span`
-  font-size: 9px;
+  font-size: 11px;
   margin-left: 2px;
 `;
 
@@ -188,7 +220,7 @@ const LogoutButton = styled.button<{ $light?: boolean }>`
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.09rem;
@@ -212,7 +244,7 @@ const HamburgerButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 22px;
 
   @media (max-width: 1199px) {
     display: flex;
@@ -272,7 +304,7 @@ const DrawerCloseButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
 `;
 
 const DrawerNav = styled.nav`
@@ -284,7 +316,7 @@ const DrawerNav = styled.nav`
 const DrawerLink = styled(Link)<{ $active?: boolean }>`
   display: block;
   padding: 12px 20px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.09rem;
@@ -301,7 +333,7 @@ const DrawerSectionLabel = styled.button`
   justify-content: space-between;
   width: 100%;
   padding: 12px 20px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   color: rgba(255, 255, 255, 0.75);
   text-transform: uppercase;
@@ -323,7 +355,7 @@ const DrawerLogout = styled.button`
   display: block;
   width: 100%;
   padding: 12px 20px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.09rem;

@@ -40,7 +40,7 @@ const MobileBack = styled.button`
   align-items: center;
   gap: 4px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -58,7 +58,7 @@ const BackLink = styled.button`
   align-items: center;
   gap: 6px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;

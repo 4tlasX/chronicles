@@ -16,14 +16,14 @@ const OtpWrap = styled.div`
 
 const OtpHeading = styled.h2`
   font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 22px;
+  font-size: 25px;
   font-weight: 400;
   margin: 0 0 4px;
   color: ${({ theme }) => theme.colors.text};
 `;
 
 const OtpSubtext = styled.p`
-  font-size: 14px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin: 0;
 `;
@@ -32,7 +32,7 @@ const OtpInput = styled.input`
   width: 100%;
   box-sizing: border-box;
   padding: 10px 14px;
-  font-size: 24px;
+  font-size: 27px;
   letter-spacing: 6px;
   text-align: center;
   font-family: monospace;
@@ -48,7 +48,7 @@ const BackupInput = styled.input`
   width: 100%;
   box-sizing: border-box;
   padding: 10px 14px;
-  font-size: 15px;
+  font-size: 17px;
   font-family: monospace;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
@@ -62,7 +62,7 @@ const ToggleLink = styled.button`
   background: none;
   border: none;
   padding: 0;
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   cursor: pointer;
   text-align: left;

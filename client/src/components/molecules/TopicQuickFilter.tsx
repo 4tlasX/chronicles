@@ -13,10 +13,9 @@ const InputRow = styled.div<{ $hasSelection: boolean; $color: string }>`
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 12px 16px;
+  padding: 18px 16px;
   background: ${({ $hasSelection, $color }) =>
     $hasSelection ? `${$color}12` : 'transparent'};
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   cursor: text;
   transition: background 150ms;
@@ -24,20 +23,20 @@ const InputRow = styled.div<{ $hasSelection: boolean; $color: string }>`
 
 const SearchIcon = styled.span<{ $color: string; $hasSelection: boolean }>`
   color: ${({ $color, $hasSelection, theme }) => $hasSelection ? $color : theme.colors.textMuted};
-  font-size: 11px;
+  font-size: 13px;
   flex-shrink: 0;
 `;
 
 const TopicIconWrap = styled.span<{ $color: string }>`
   color: ${({ $color }) => $color};
-  font-size: 12px;
+  font-size: 14px;
   flex-shrink: 0;
 `;
 
 const Input = styled.input`
   flex: 1;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 14px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.text};
   background: none;
   border: none;
@@ -55,7 +54,7 @@ const ClearBtn = styled.button`
   padding: 0;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 11px;
+  font-size: 13px;
   flex-shrink: 0;
   &:hover { color: ${({ theme }) => theme.colors.text}; }
 `;
@@ -80,7 +79,7 @@ const DropdownItem = styled.button<{ $color: string }>`
   width: 100%;
   padding: 7px 12px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.text};
   background: none;
   border: none;
@@ -91,7 +90,7 @@ const DropdownItem = styled.button<{ $color: string }>`
 
 const ItemIcon = styled.span<{ $color: string }>`
   color: ${({ $color }) => $color};
-  font-size: 12px;
+  font-size: 14px;
   width: 16px;
   text-align: center;
   flex-shrink: 0;
@@ -99,13 +98,13 @@ const ItemIcon = styled.span<{ $color: string }>`
 
 const ItemCount = styled.span`
   margin-left: auto;
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
 const NoMatch = styled.div`
   padding: 10px 12px;
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   font-family: ${({ theme }) => theme.fontFamily.ui};
 `;

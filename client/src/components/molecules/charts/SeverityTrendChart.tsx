@@ -19,7 +19,7 @@ const Title = styled.h3`
 const Empty = styled.div`
   text-align: center;
   padding: 24px 0;
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
@@ -37,7 +37,7 @@ const YAxis = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
@@ -62,7 +62,7 @@ const XAxis = styled.div`
 `;
 
 const XLabel = styled.span`
-  font-size: 10px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
   text-align: center;
 `;
@@ -73,7 +73,7 @@ const Legend = styled.div`
   justify-content: center;
   gap: 16px;
   margin-top: 12px;
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 

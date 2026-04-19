@@ -58,7 +58,7 @@ const TaskCheckBtn = styled.button<{ $completed?: boolean }>`
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: 12px;
   color: ${({ $completed, theme }) => $completed ? theme.colors.success : theme.colors.textMuted};
   background: none;
   border: 1.5px solid ${({ $completed, theme }) => $completed ? theme.colors.success : theme.colors.border};
@@ -87,7 +87,7 @@ const UnlinkBtn = styled.button`
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
   background: none;
   border: none;

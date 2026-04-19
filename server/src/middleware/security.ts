@@ -8,7 +8,8 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
   // propagate to the page's style tags. The risk is mitigated by script-src 'self'
   // (no inline JS), which prevents CSS-based exfiltration from escalating to code execution.
   res.setHeader('Content-Security-Policy',
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com; " +
     "img-src 'self' data: blob:; " +
     "connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com; " +
     "frame-ancestors 'none'"

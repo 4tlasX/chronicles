@@ -7,5 +7,5 @@ export const EmptyEditor = styled.div`
   justify-content: center;
   flex: 1;
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 14px;
+  font-size: 16px;
 `;

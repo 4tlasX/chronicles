@@ -8,7 +8,7 @@ const Chip = styled.span<{ $color: string }>`
   gap: 6px;
   padding: 2px 8px;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: white;
   text-transform: uppercase;

@@ -19,7 +19,7 @@ const Card = styled.div`
 const Input = styled.input`
   width: 100%;
   padding: 8px 10px;
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   outline: none;
@@ -33,7 +33,7 @@ const IconSection = styled.div`
 `;
 
 const IconLabel = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-bottom: 4px;
 `;
@@ -46,7 +46,7 @@ const Actions = styled.div`
 const PrimaryBtn = styled.button<{ $color: string; $disabled?: boolean }>`
   flex: 1;
   padding: 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: white;
   background: ${({ $color, $disabled, theme }) => $disabled ? theme.colors.border : $color};
@@ -57,7 +57,7 @@ const PrimaryBtn = styled.button<{ $color: string; $disabled?: boolean }>`
 
 const GhostBtn = styled.button`
   padding: 8px 16px;
-  font-size: 14px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.textSecondary};
   background: none;
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -77,7 +77,7 @@ const FieldsSection = styled.div`
 `;
 
 const FieldsSectionLabel = styled.div`
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -94,7 +94,7 @@ const FieldRow = styled.div`
 const FieldLabelInput = styled.input`
   flex: 1;
   padding: 5px 8px;
-  font-size: 13px;
+  font-size: 15px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   outline: none;
@@ -105,7 +105,7 @@ const FieldLabelInput = styled.input`
 
 const TypeSelect = styled.select`
   padding: 5px 6px;
-  font-size: 12px;
+  font-size: 14px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
@@ -125,7 +125,7 @@ const IconActionBtn = styled.button`
   border: none;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 11px;
+  font-size: 13px;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   &:hover { color: ${({ theme }) => theme.colors.text}; background: rgba(0,0,0,0.06); }
 `;
@@ -140,7 +140,7 @@ const AddFieldBtn = styled.button`
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   background: none;
   border: none;

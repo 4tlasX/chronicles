@@ -3,7 +3,7 @@ import styled from 'styled-components';
 const StyledLabel = styled.label`
   display: block;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05rem;

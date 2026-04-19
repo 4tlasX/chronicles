@@ -71,7 +71,7 @@ const PreviewRow = styled.div`
 
 const IconWrap = styled.span<{ $color: string }>`
   color: ${({ $color }) => $color};
-  font-size: 14px;
+  font-size: 16px;
   margin-top: 3px;
   flex-shrink: 0;
 `;
@@ -82,7 +82,7 @@ const Content = styled.div`
 `;
 
 const Preview = styled.div<{ $done?: boolean }>`
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.5;
   color: ${({ theme }) => theme.colors.text};
   white-space: nowrap;
@@ -93,7 +93,7 @@ const Preview = styled.div<{ $done?: boolean }>`
 `;
 
 const Meta = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 4px;
   display: flex;
@@ -102,7 +102,7 @@ const Meta = styled.div`
 `;
 
 const DateLabel = styled.span`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   flex-shrink: 0;
   margin-top: 2px;
@@ -131,7 +131,7 @@ const TaskCheckButton = styled.button<{ $state: 'none' | 'progress' | 'done'; $c
   padding: 0;
   transition: all 0.15s;
   color: ${({ $state }) => $state === 'done' ? 'white' : 'inherit'};
-  font-size: 10px;
+  font-size: 12px;
   &:hover { opacity: 0.8; }
 `;
 
@@ -146,7 +146,7 @@ const RightInfo = styled.div`
 
 const StatusLabel = styled.span<{ $clickable?: boolean }>`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -155,7 +155,7 @@ const StatusLabel = styled.span<{ $clickable?: boolean }>`
 `;
 
 const DeadlineLabel = styled.span<{ $overdue?: boolean }>`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ $overdue, theme }) => $overdue ? theme.colors.danger : theme.colors.textMuted};
   white-space: nowrap;
   @media (max-width: 480px) { white-space: normal; }

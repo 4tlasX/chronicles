@@ -19,7 +19,7 @@ const Row = styled.div<{ $active?: boolean }>`
   gap: 8px;
   width: 100%;
   padding: 8px 12px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: ${({ $active }) => $active ? 600 : 400};
   color: ${({ theme }) => theme.colors.text};
   background: ${({ $active }) => $active ? 'rgba(0, 0, 0, 0.06)' : 'transparent'};
@@ -31,7 +31,7 @@ const Row = styled.div<{ $active?: boolean }>`
 
 const TopicIcon = styled.span<{ $color: string }>`
   color: ${({ $color }) => $color};
-  font-size: 14px;
+  font-size: 16px;
   width: 20px;
   text-align: center;
   flex-shrink: 0;
@@ -46,7 +46,7 @@ const NameAndCount = styled.span`
 `;
 
 const Count = styled.span<{ $color?: string }>`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ $color, theme }) => $color || theme.colors.textMuted};
   font-weight: 400;
   margin-left: 4px;
@@ -75,7 +75,7 @@ export function SortableTopicItem({ topic, isActive, count, headerColor, onSelec
             <FontAwesomeIcon icon={ICON_MAP[topic.icon || ''] || getTopicIcon(topic.icon)} />
           </TopicIcon>
           <NameAndCount>
-            {topic.name}<Count $color={headerColor}>({count})</Count>
+            {topic.name}
           </NameAndCount>
         </Row>
       </SwipeActions>

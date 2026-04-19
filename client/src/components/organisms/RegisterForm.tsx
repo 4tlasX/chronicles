@@ -29,14 +29,14 @@ const SuggestionsRow = styled.div`
 `;
 
 const SuggestionLabel = styled.span`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-right: 2px;
 `;
 
 const SuggestionChip = styled.button`
   padding: 3px 10px;
-  font-size: 13px;
+  font-size: 15px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   color: ${({ theme }) => theme.colors.text};
   background: transparent;

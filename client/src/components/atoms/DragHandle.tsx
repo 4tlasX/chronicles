@@ -12,7 +12,7 @@ const Handle = styled.button`
   background: none;
   border: none;
   cursor: grab;
-  font-size: 12px;
+  font-size: 14px;
   touch-action: none;
   flex-shrink: 0;
   padding: 8px;

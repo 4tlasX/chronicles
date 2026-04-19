@@ -54,7 +54,7 @@ const TopicIconWrapper = styled.span<{ $color: string }>`
   align-items: center;
   justify-content: center;
   width: 16px;
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ $color }) => $color};
   flex-shrink: 0;
 `;
@@ -106,7 +106,6 @@ export function Sidebar() {
           onClick={() => setSelectedTopicId(null)}
         >
           All Entries
-          <TopicCount>{entries.length}</TopicCount>
         </TopicItem>
 
         {topics.map(topic => (
@@ -119,7 +118,6 @@ export function Sidebar() {
               <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
             </TopicIconWrapper>
             {topic.name}
-            <TopicCount>{countForTopic(topic.id)}</TopicCount>
           </TopicItem>
         ))}
       </TopicList>

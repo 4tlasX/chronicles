@@ -38,7 +38,7 @@ const DateRangeRow = styled.div`
   align-items: center;
   gap: 12px;
   padding: 12px 24px;
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   @media (max-width: 480px) { padding: 10px 12px; gap: 8px; }
 `;

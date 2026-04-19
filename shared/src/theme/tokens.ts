@@ -4,20 +4,20 @@
  */
 
 const fontFamily = {
-  serif: "'Playfair Display', Georgia, 'Times New Roman', serif",
+  serif: "'Cormorant Garamond', Georgia, 'Times New Roman', serif",
   sans: "'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
   ui: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
   brand: "'Josefin Sans', 'Inter', sans-serif",
 };
 
 const typography = {
-  display: { fontFamily: fontFamily.serif, fontSize: '2rem', fontWeight: 700 },
-  h1: { fontFamily: fontFamily.serif, fontSize: '1.75rem', fontWeight: 600 },
-  h2: { fontFamily: fontFamily.serif, fontSize: '1.375rem', fontWeight: 600 },
-  h3: { fontFamily: fontFamily.sans, fontSize: '1.125rem', fontWeight: 600 },
+  display: { fontFamily: fontFamily.serif, fontSize: '2.25rem', fontWeight: 700 },
+  h1: { fontFamily: fontFamily.serif, fontSize: '2rem', fontWeight: 600 },
+  h2: { fontFamily: fontFamily.serif, fontSize: '1.5rem', fontWeight: 600 },
+  h3: { fontFamily: fontFamily.sans, fontSize: '1.25rem', fontWeight: 600 },
   body: { fontFamily: fontFamily.sans, fontSize: '1rem', fontWeight: 400 },
-  bodySm: { fontFamily: fontFamily.sans, fontSize: '0.875rem', fontWeight: 400 },
-  caption: { fontFamily: fontFamily.sans, fontSize: '0.75rem', fontWeight: 500 },
+  bodySm: { fontFamily: fontFamily.sans, fontSize: '0.9rem', fontWeight: 400 },
+  caption: { fontFamily: fontFamily.sans, fontSize: '0.8rem', fontWeight: 500 },
   brand: { fontFamily: fontFamily.brand, fontSize: '1rem', fontWeight: 400, letterSpacing: '0.1em' },
 };
 
@@ -31,12 +31,12 @@ const spacing = {
 };
 
 const fontSize = {
-  xs: 12,
-  sm: 14,
-  md: 16,
-  lg: 18,
-  xl: 24,
-  xxl: 32,
+  xs: 13,
+  sm: 15,
+  md: 17,
+  lg: 20,
+  xl: 26,
+  xxl: 34,
 };
 
 const fontWeight = {
@@ -118,7 +118,7 @@ export const darkTheme = {
     surfaceOverlay: 'rgba(26, 27, 29, 0.92)',
     surfaceOverlayBlur: 'rgba(26, 27, 29, 0.82)',
 
-    text: '#b1b1b1',
+    text: '#979797',
     textSecondary: '#a8a4a4',
     textMuted: '#a8a4a4',
     textInverse: '#2e2f31',

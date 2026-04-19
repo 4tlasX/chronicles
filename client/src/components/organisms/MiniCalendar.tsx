@@ -22,7 +22,7 @@ const ToggleBar = styled.button`
   justify-content: center;
   gap: 6px;
   padding: 4px 8px;
-  font-size: 11px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.textMuted};
@@ -47,7 +47,7 @@ const Header = styled.div`
 `;
 
 const MonthLabel = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   font-weight: ${({ theme }) => theme.fontWeight.semibold};
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -78,7 +78,7 @@ const WeekdayRow = styled.div`
 `;
 
 const WeekdayLabel = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.textMuted};
@@ -106,7 +106,7 @@ const DayButton = styled.button<{
   width: 28px;
   height: 28px;
   margin: 0 auto;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: ${({ $isToday, theme }) => $isToday ? theme.fontWeight.bold : theme.fontWeight.normal};
   color: ${({ $hasEntry, $isOutside, $accentColor, theme }) =>
     $isOutside ? theme.colors.border : $hasEntry ? ($accentColor || theme.colors.text) : theme.colors.text};

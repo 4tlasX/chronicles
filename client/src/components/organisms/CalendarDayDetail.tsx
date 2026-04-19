@@ -25,7 +25,7 @@ const Header = styled.div`
 
 const Title = styled.h3`
   font-family: 'Montserrat', sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -33,7 +33,7 @@ const Title = styled.h3`
 `;
 
 const Count = styled.div`
-  font-size: 14px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 2px;
 `;

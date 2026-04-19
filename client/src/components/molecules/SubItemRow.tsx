@@ -8,7 +8,7 @@ const Row = styled.div`
   align-items: center;
   gap: 8px;
   padding: 4px 0;
-  font-size: 13px;
+  font-size: 15px;
 `;
 
 const StatusBtn = styled.button<{ $color: string }>`
@@ -16,7 +16,7 @@ const StatusBtn = styled.button<{ $color: string }>`
   align-items: center;
   justify-content: center;
   color: ${({ $color }) => $color};
-  font-size: 14px;
+  font-size: 16px;
   flex-shrink: 0;
   background: none;
   border: none;
@@ -47,7 +47,7 @@ const UnlinkBtn = styled.button`
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
   flex-shrink: 0;
   &:hover { color: ${({ theme }) => theme.colors.text}; background: rgba(0,0,0,0.06); }
 `;

@@ -27,7 +27,7 @@ const SumItem = styled.div`
 
 const SumLabel = styled.span`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -35,7 +35,7 @@ const SumLabel = styled.span`
 `;
 
 const SumValue = styled.span`
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
 `;
@@ -146,7 +146,7 @@ export function TopicEntriesView({ title, topicNames, metaFields = [], showDateF
       <ViewHeader
         title={title}
         onBack={() => navigate('/')}
-        right={<><Badge>({filtered.length})</Badge>{printable && <PrintButton />}</>}
+        right={<>{printable && <PrintButton />}</>}
       />
 
       {showDateFilter && <div data-print-hide><FilterTabs options={DATE_FILTERS} active={dateFilter} onChange={setDateFilter} /></div>}

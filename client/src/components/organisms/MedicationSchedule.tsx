@@ -39,7 +39,7 @@ const NavButton = styled.button`
 
 const DateLabel = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -56,7 +56,7 @@ const ProgressStats = styled.div`
   display: flex;
   justify-content: space-between;
   margin-bottom: 6px;
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
@@ -76,38 +76,36 @@ const ProgressFill = styled.div<{ $percent: number; $color: string }>`
 `;
 
 const AllDoneMsg = styled.p<{ $color: string }>`
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   margin-top: 6px;
   color: ${({ $color }) => $color};
 `;
 
 const HelpText = styled.p`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
-  padding: 0 24px 8px;
-  @media (max-width: 768px) { padding: 0 16px 8px; }
-  @media (max-width: 480px) { padding: 0 12px 8px; }
+  padding: 0 24px 24px;
+  @media (max-width: 768px) { padding: 0 16px 24px; }
+  @media (max-width: 480px) { padding: 0 12px 24px; }
 `;
 
 const TimeGroup = styled.div`
-  margin: 0 0 0;
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0;
-  overflow: hidden;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
   background: transparent;
+  margin-bottom: 20px;
+  &:first-of-type { margin-top: 16px; }
 `;
 
 const TimeHeader = styled.div`
-  padding: 8px 24px;
-  font-size: 14px;
+  padding: 12px 24px;
+  font-size: 16px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
   background: rgba(0, 0, 0, 0.02);
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   @media (max-width: 768px) { padding: 8px 16px; }
-  @media (max-width: 480px) { padding: 8px 12px; font-size: 13px; }
+  @media (max-width: 480px) { padding: 8px 12px; font-size: 15px; }
 `;
 
 const DoseRow = styled.div<{ $taken: boolean }>`
@@ -135,7 +133,7 @@ const DoseCheckButton = styled.button<{ $taken: boolean; $color: string }>`
   flex-shrink: 0;
   transition: all 0.15s;
   color: white;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1;
   padding: 0;
   &:disabled { opacity: 0.5; cursor: wait; }
@@ -148,21 +146,21 @@ const DoseInfo = styled.div`
 `;
 
 const DoseName = styled.span<{ $taken: boolean; $color: string }>`
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.text};
   text-decoration: ${({ $taken }) => $taken ? 'line-through' : 'none'};
 `;
 
 const DoseTakenAt = styled.span<{ $color: string }>`
-  font-size: 11px;
+  font-size: 13px;
   margin-left: 8px;
   color: ${({ $color }) => $color};
 `;
 
 const StatusBadge = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;

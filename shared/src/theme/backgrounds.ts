@@ -39,14 +39,12 @@ export const BACKGROUND_IMAGES: BackgroundOption[] = [
   { value: '/backgrounds/deep-Ts9_sclEn5k-unsplash.jpg', thumb: '/backgrounds/thumbs/deep-Ts9_sclEn5k-unsplash.jpg', label: 'Deep' },
   { value: '/backgrounds/grazi-con-2VopZerN9jE-unsplash.jpg', thumb: '/backgrounds/thumbs/grazi-con-2VopZerN9jE-unsplash.jpg', label: 'Grazi Con' },
   { value: '/backgrounds/hammam-fuad-0Kn_nFFPFVo-unsplash.jpg', thumb: '/backgrounds/thumbs/hammam-fuad-0Kn_nFFPFVo-unsplash.jpg', label: 'Hammam Fuad' },
-  { value: '/backgrounds/martin-sanchez-7ZysQurP1Dg-unsplash.jpg', thumb: '/backgrounds/thumbs/martin-sanchez-7ZysQurP1Dg-unsplash.jpg', label: 'Martin Sanchez' },
   { value: '/backgrounds/omar-flores-lQT_bOWtysE-unsplash.jpg', thumb: '/backgrounds/thumbs/omar-flores-lQT_bOWtysE-unsplash.jpg', label: 'Omar Flores' },
   { value: '/backgrounds/slimane-kadi-f3tqjx1AW-A-unsplash.jpg', thumb: '/backgrounds/thumbs/slimane-kadi-f3tqjx1AW-A-unsplash.jpg', label: 'Slimane Kadi' },
   { value: '/backgrounds/tasha-kostyuk-5Pb0JuMOqbY-unsplash.jpg', thumb: '/backgrounds/thumbs/tasha-kostyuk-5Pb0JuMOqbY-unsplash.jpg', label: 'Tasha Kostyuk' },
   { value: '/backgrounds/vojtech-bruzek-mCjA1I8SlS8-unsplash.jpg', thumb: '/backgrounds/thumbs/vojtech-bruzek-mCjA1I8SlS8-unsplash.jpg', label: 'Vojtech Bruzek' },
 
   // Illustrations (grayscale)
-  { value: '/backgrounds/desiignhoud-ai-generated-8229330.jpg', thumb: '/backgrounds/thumbs/desiignhoud-ai-generated-8229330.jpg', label: 'Desiignhoud' },
   { value: '/backgrounds/jennydai-background-6650672.jpg', thumb: '/backgrounds/thumbs/jennydai-background-6650672.jpg', label: 'Jenny Dai' },
   { value: '/backgrounds/madebytin-lemon-8293725.jpg', thumb: '/backgrounds/thumbs/madebytin-lemon-8293725.jpg', label: 'Madebytin Lemon' },
   { value: '/backgrounds/sugeysima-art-6709653.jpg', thumb: '/backgrounds/thumbs/sugeysima-art-6709653.jpg', label: 'Sugeysima Art' },

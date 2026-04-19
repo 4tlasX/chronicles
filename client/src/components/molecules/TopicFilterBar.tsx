@@ -17,7 +17,7 @@ const Bar = styled.div`
 
 const IconWrap = styled.span<{ $color: string }>`
   color: ${({ $color }) => $color};
-  font-size: 14px;
+  font-size: 16px;
 `;
 
 const Text = styled.span`

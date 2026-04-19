@@ -21,7 +21,7 @@ const NumberInput = styled.input`
   width: 100%;
   padding: 7px 10px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   background: ${({ theme }) => theme.colors.surface};
@@ -32,7 +32,7 @@ const NumberInput = styled.input`
 
 const DateLabel = styled.div`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   padding: 4px 0;
 `;

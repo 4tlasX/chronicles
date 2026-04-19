@@ -16,7 +16,7 @@ const Row = styled.div`
 
 const Label = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -30,7 +30,7 @@ const Label = styled.span`
 const Btn = styled.button<{ $active?: boolean }>`
   padding: 6px 14px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: ${({ $active }) => $active ? 700 : 600};
   font-style: normal;
   text-transform: uppercase;

@@ -72,7 +72,7 @@ const TBtn = styled.button<{ $active?: boolean; $danger?: boolean }>`
   align-items: center;
   gap: 5px;
   padding: 6px 10px;
-  font-size: 13px;
+  font-size: 15px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   font-weight: 500;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;

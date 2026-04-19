@@ -146,7 +146,7 @@ const IconBtn = styled.button<{ $selected?: boolean }>`
 `;
 
 const NoIconLabel = styled.span`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 

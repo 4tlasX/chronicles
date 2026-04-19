@@ -66,7 +66,7 @@ const NavRow = styled.div`
 
 const WeekLabel = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   min-width: 180px;
   text-align: center;
@@ -98,7 +98,7 @@ const ActionRow = styled.div`
 const ActionBtn = styled.button<{ $primary?: boolean }>`
   padding: 7px 14px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -112,7 +112,7 @@ const ActionBtn = styled.button<{ $primary?: boolean }>`
 `;
 
 const StatusMsg = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textSecondary};
   padding: 10px 24px;
   text-align: center;
@@ -143,14 +143,14 @@ const HeaderCell = styled.div`
 
 const DayName = styled.div`
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 `;
 
 const DayDate = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textSecondary};
   margin-top: 2px;
 `;
@@ -161,7 +161,7 @@ const MealLabelCell = styled.div`
   align-items: flex-start;
   padding-top: 12px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -184,7 +184,7 @@ const MealCell = styled.div`
 const MealInput = styled.textarea`
   width: 100%;
   box-sizing: border-box;
-  font-size: 13px;
+  font-size: 15px;
   padding: 5px 7px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
@@ -203,7 +203,7 @@ const MealInput = styled.textarea`
 const RecipeSelect = styled.select`
   width: 100%;
   box-sizing: border-box;
-  font-size: 13px;
+  font-size: 15px;
   padding: 3px 20px 3px 5px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
@@ -239,14 +239,14 @@ const DayCardHeader = styled.div`
 
 const DayCardName = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 `;
 
 const DayCardDate = styled.span`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
@@ -261,7 +261,7 @@ const MobileSlotRow = styled.div`
 
 const MobileSlotLabel = styled.div`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;

@@ -5,7 +5,7 @@ const StyledSelect = styled.select`
   width: 100%;
   padding: 8px 12px;
   padding-right: 32px;
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;

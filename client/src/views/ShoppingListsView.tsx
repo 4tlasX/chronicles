@@ -74,7 +74,7 @@ const PanelHeader = styled.button`
 `;
 
 const PanelTitle = styled.span`
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
   flex: 1;
@@ -85,14 +85,14 @@ const PanelTitle = styled.span`
 `;
 
 const PanelMeta = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textSecondary};
   white-space: nowrap;
   flex-shrink: 0;
 `;
 
 const PanelChevron = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textSecondary};
   flex-shrink: 0;
 `;
@@ -104,7 +104,7 @@ const PanelBody = styled.div`
 /* Category group */
 const CategoryHeader = styled.div`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -135,7 +135,7 @@ const ItemCheckbox = styled.input`
 const ItemName = styled.input<{ $checked?: boolean }>`
   flex: 1;
   min-width: 0;
-  font-size: 13px;
+  font-size: 15px;
   font-family: inherit;
   color: ${({ $checked, theme }) => $checked ? theme.colors.textSecondary : theme.colors.text};
   text-decoration: ${({ $checked }) => $checked ? 'line-through' : 'none'};
@@ -147,7 +147,7 @@ const ItemName = styled.input<{ $checked?: boolean }>`
 `;
 
 const CategorySelect = styled.select`
-  font-size: 11px;
+  font-size: 13px;
   font-family: inherit;
   color: ${({ theme }) => theme.colors.textSecondary};
   background: none;
@@ -189,7 +189,7 @@ const AddBtn = styled.button`
   align-items: center;
   gap: 5px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textSecondary};
   background: none;
@@ -202,7 +202,7 @@ const AddBtn = styled.button`
 
 const SaveBtn = styled.button<{ $dirty?: boolean }>`
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;

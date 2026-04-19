@@ -19,7 +19,7 @@ const Title = styled.h3`
 const Empty = styled.div`
   text-align: center;
   padding: 24px 0;
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
@@ -38,7 +38,7 @@ const RowHeader = styled.div`
 
 const TriggerLabel = styled.span`
   font-weight: 500;
-  font-size: 14px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.text};
 `;
 
@@ -48,13 +48,13 @@ const Arrow = styled.span`
 `;
 
 const SymptomLabel = styled.span`
-  font-size: 14px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.text};
 `;
 
 const Percent = styled.span`
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.text};
 `;
 
@@ -76,7 +76,7 @@ const MetaRow = styled.div`
   display: flex;
   gap: 12px;
   margin-top: 6px;
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 

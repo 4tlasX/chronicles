@@ -28,13 +28,15 @@ const RowContent = styled.div`
 `;
 
 const RowTitle = styled.div`
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 400;
+  font-style: italic;
   color: ${({ theme }) => theme.colors.text};
+  margin-bottom: 14px;
 `;
 
 const RowDescription = styled.div`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 2px;
 `;

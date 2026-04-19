@@ -8,7 +8,7 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
 const StyledInput = styled.input<{ $error?: boolean }>`
   width: 100%;
   padding: 8px 12px;
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;

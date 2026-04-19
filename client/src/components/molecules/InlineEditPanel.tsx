@@ -21,7 +21,7 @@ const EditorWrap = styled.div<{ $bordered?: boolean }>`
   && .tiptap {
     min-height: 60px;
     padding: 8px 12px;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.6;
   }
 `;
@@ -46,7 +46,7 @@ const Actions = styled.div`
 const ActionBtn = styled.button`
   padding: 6px 16px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -63,7 +63,7 @@ const ActionBtn = styled.button`
 const SaveBtn = styled.button<{ $error?: boolean }>`
   padding: 6px 16px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -80,7 +80,7 @@ const SaveBtn = styled.button<{ $error?: boolean }>`
 
 const EditTitle = styled.div`
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;

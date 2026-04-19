@@ -13,7 +13,7 @@ const Header = styled.button`
   justify-content: space-between;
   width: 100%;
   padding: 8px 14px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.textMuted};
   background: none;

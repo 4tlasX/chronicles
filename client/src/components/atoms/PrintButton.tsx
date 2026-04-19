@@ -8,7 +8,7 @@ const Btn = styled.button`
   gap: 6px;
   padding: 4px 12px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;

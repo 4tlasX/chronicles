@@ -50,7 +50,7 @@ const ContentWrap = styled.div`
 `;
 
 const Meta = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 2px;
   display: flex;
@@ -60,7 +60,7 @@ const Meta = styled.div`
 
 const Title = styled.div<{ $completed?: boolean }>`
   flex: 1;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 500;
   color: ${({ theme, $completed }) => $completed ? theme.colors.textMuted : theme.colors.text};
   text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
@@ -72,7 +72,7 @@ const Title = styled.div<{ $completed?: boolean }>`
 
 const TypeLabel = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -92,14 +92,14 @@ const MilestoneCountLabel = styled.div`
   padding: 16px 24px 8px;
   @media (max-width: 768px) { padding: 16px 16px 8px; }
   @media (max-width: 480px) { padding: 16px 12px 8px; }
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.textMuted};
   border-top: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const MilestoneSectionLabel = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textMuted};
   text-transform: uppercase;
@@ -114,7 +114,7 @@ const MilestoneRow = styled.div`
   align-items: center;
   gap: 8px;
   padding: 4px 0;
-  font-size: 13px;
+  font-size: 15px;
 `;
 
 const MilestoneTitle = styled.span<{ $completed?: boolean }>`
@@ -138,7 +138,7 @@ const RemoveBtn = styled.button`
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   flex-shrink: 0;
   &:hover { color: ${({ theme }) => theme.colors.text}; background: rgba(0,0,0,0.06); }
 `;
@@ -153,7 +153,7 @@ const AddRow = styled.form`
 const LinkSelect = styled.select`
   flex: 1;
   padding: 6px 10px;
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
@@ -167,7 +167,7 @@ const LinkSelect = styled.select`
 const AddInput = styled.input`
   flex: 1;
   padding: 6px 10px;
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
@@ -180,7 +180,7 @@ const AddInput = styled.input`
 const AddBtn = styled.button<{ $color: string }>`
   padding: 4px 10px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;

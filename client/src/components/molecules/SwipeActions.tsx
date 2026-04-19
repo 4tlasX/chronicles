@@ -62,7 +62,7 @@ const ActionBtn = styled.button<{ $bg: string }>`
   border: none;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.75);
-  font-size: 18px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;

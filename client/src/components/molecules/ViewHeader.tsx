@@ -21,7 +21,7 @@ const TitleRow = styled.div`
 const Title = styled.h1`
   font-family: ${({ theme }) => theme.fontFamily.serif};
   font-size: 1.375rem;
-  font-weight: 500;
+  font-weight: 700;
   font-style: italic;
   color: ${({ theme }) => theme.colors.text};
   @media (max-width: 480px) { font-size: 1.1rem; }
@@ -32,7 +32,7 @@ const Back = styled.button`
   align-items: center;
   gap: 6px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;

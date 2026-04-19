@@ -13,7 +13,7 @@ const TabButton = styled.button<{ $active?: boolean; $color: string }>`
   flex: none;
   padding: 10px 16px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: ${({ $active }) => $active ? 700 : 600};
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -30,7 +30,7 @@ const TabButton = styled.button<{ $active?: boolean; $color: string }>`
   @media (max-width: 480px) {
     flex: none;
     padding: 10px 14px;
-    font-size: 11px;
+    font-size: 13px;
     gap: 4px;
   }
   &:hover { color: ${({ theme }) => theme.colors.text}; }

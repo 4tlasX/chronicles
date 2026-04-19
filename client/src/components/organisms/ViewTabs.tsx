@@ -28,11 +28,11 @@ const BookmarkIcon = () => (
 
 const tabs: TabEntry[] = [
   { value: 'today', label: 'Today', special: true },
+  { value: 'all', label: 'All' },
   { value: 'date', label: 'Date' },
   { value: 'tasks', label: 'Tasks' },
-  { value: 'all', label: 'All', flex: 0.5 },
-  { value: 'favorites', label: <BookmarkIcon />, flex: 0.5 },
   { value: 'search', label: 'Search' },
+  { value: 'favorites', label: <BookmarkIcon /> },
 ];
 
 function isSameDay(a: Date, b: Date) {
@@ -78,7 +78,7 @@ const TabButton = styled.button<{ $active?: boolean }>`
   gap: 5px;
   padding: 6px 8px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
   font-weight: ${({ theme, $active }) => $active ? theme.fontWeight.semibold : theme.fontWeight.medium};
@@ -105,6 +105,7 @@ export function ViewTabs({ onDateTabClick, onTodayClick }: ViewTabsProps = {}) {
   const setViewMode = useUIStore((s) => s.setViewMode);
   const selectedDate = useUIStore((s) => s.selectedDate);
   const setSelectedDate = useUIStore((s) => s.setSelectedDate);
+  const headerColor = useUIStore((s) => s.headerColor) || '#6A9B9B';
   const containerRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [sliderStyle, setSliderStyle] = useState({ left: 0, width: 0 });
@@ -178,7 +179,7 @@ export function ViewTabs({ onDateTabClick, onTodayClick }: ViewTabsProps = {}) {
           aria-selected={isTabActive(tab)}
           tabIndex={isTabActive(tab) ? 0 : -1}
           $active={isTabActive(tab)}
-          style={tab.flex ? { flex: tab.flex } : undefined}
+          style={tab.value === 'favorites' ? { color: headerColor } : tab.flex ? { flex: tab.flex } : undefined}
           onClick={() => handleTabClick(tab)}
           onKeyDown={e => handleKeyDown(e, i)}
         >

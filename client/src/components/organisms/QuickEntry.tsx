@@ -33,7 +33,7 @@ const TopicTrigger = styled.button<{ $hasColor?: boolean }>`
   gap: 8px;
   padding: 4px 8px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -51,7 +51,7 @@ const TopicTrigger = styled.button<{ $hasColor?: boolean }>`
 const TopicIconSmall = styled.span<{ $color: string }>`
   display: flex;
   align-items: center;
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ $color }) => $color};
   flex-shrink: 0;
 `;
@@ -61,7 +61,7 @@ const PlaceholderText = styled.span`
 `;
 
 const ChevronIcon = styled.span`
-  font-size: 10px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-left: 2px;
 `;
@@ -75,7 +75,7 @@ const EditorWrap = styled.div`
   && .tiptap {
     min-height: 48px;
     padding: 6px 0;
-    font-size: 15px;
+    font-size: 17px;
     font-style: italic;
     line-height: 1.6;
   }
@@ -89,7 +89,7 @@ const FooterRow = styled.div`
 const SubmitButton = styled.button<{ $disabled?: boolean }>`
   padding: 0;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;

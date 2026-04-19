@@ -20,7 +20,7 @@ const Row = styled.button`
 
 const IconWrap = styled.span<{ $color: string }>`
   color: ${({ $color }) => $color};
-  font-size: 14px;
+  font-size: 16px;
   margin-top: 2px;
   flex-shrink: 0;
 `;
@@ -31,7 +31,7 @@ const Content = styled.div`
 `;
 
 const Preview = styled.div`
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.5;
   color: ${({ theme }) => theme.colors.text};
   white-space: nowrap;
@@ -40,7 +40,7 @@ const Preview = styled.div`
 `;
 
 const Meta = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-top: 4px;
   display: flex;

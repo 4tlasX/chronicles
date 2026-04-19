@@ -31,7 +31,6 @@ const Title = styled.h2`
   font-family: ${({ theme }) => theme.fontFamily.serif};
   font-size: 1.25rem;
   font-weight: 500;
-  font-style: italic;
   color: ${({ theme }) => theme.colors.text};
   margin-bottom: ${({ theme }) => theme.spacing.md}px;
 `;

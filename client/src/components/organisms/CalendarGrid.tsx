@@ -54,7 +54,7 @@ const NavBtn = styled.button`
 
 const MonthLabel = styled.h2`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
@@ -78,7 +78,7 @@ const WeekdayRow = styled.div`
 
 const WeekdayLabel = styled.div`
   text-align: center;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
   padding: 4px 0;
@@ -88,7 +88,6 @@ const DaysGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   border-top: 1px solid ${({ theme }) => theme.colors.border};
-  border-left: 1px solid ${({ theme }) => theme.colors.border};
   @media (max-width: 768px) { grid-template-columns: 1fr; }
 `;
 
@@ -97,6 +96,7 @@ const DayCell = styled.div<{ $isOutside?: boolean; $isSelected?: boolean; $isTod
   padding: 6px 8px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-width: 0 1px 1px 0;
+  &:nth-child(7n) { border-right: none; }
   cursor: pointer;
   background: ${({ $isSelected, $isToday, $accentColor }) =>
     $isToday ? `${$accentColor}10` : $isSelected ? 'rgba(0,0,0,0.03)' : 'transparent'};
@@ -128,7 +128,7 @@ const DayNumber = styled.div<{ $isToday?: boolean; $accentColor: string }>`
 const MobileDayLabel = styled.span<{ $isOutside?: boolean }>`
   display: none;
   width: 28px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme, $isOutside }) => $isOutside ? theme.colors.border : theme.colors.textMuted};
   flex-shrink: 0;
@@ -146,7 +146,7 @@ const DayItems = styled.div`
 `;
 
 const DayItem = styled.div<{ $accent?: string }>`
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ $accent, theme }) => $accent || theme.colors.textSecondary};
   background: ${({ $accent }) => $accent ? `${$accent}18` : 'transparent'};
   padding: 1px 4px;
@@ -159,14 +159,14 @@ const DayItem = styled.div<{ $accent?: string }>`
 `;
 
 const MoreLabel = styled.div`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
   padding: 1px 4px;
 `;
 
 const MobileEntryCount = styled.span`
   display: none;
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-left: auto;
   @media (max-width: 768px) { display: inline; }

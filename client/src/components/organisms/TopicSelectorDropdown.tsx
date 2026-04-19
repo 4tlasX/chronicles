@@ -53,7 +53,7 @@ const SearchInput = styled.input`
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  font-size: 16px;
+  font-size: 18px;
   color: ${({ theme }) => theme.colors.text};
   outline: none;
   box-sizing: border-box;
@@ -92,7 +92,7 @@ const TopicIcon = styled.span<{ $color: string }>`
   justify-content: center;
   width: 20px;
   color: ${({ $color }) => $color};
-  font-size: 16px;
+  font-size: 18px;
   flex-shrink: 0;
 `;
 

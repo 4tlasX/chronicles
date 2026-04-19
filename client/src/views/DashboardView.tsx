@@ -155,18 +155,20 @@ const Greeting = styled.h1`
   font-size: 32px;
   font-weight: 400;
   font-style: italic;
+  line-height: 1.48em;
   color: ${({ theme }) => theme.colors.text};
-  margin: 0 0 3px;
-  @media (max-width: 640px) { font-size: 26px; }
+  margin: 0;
+  @media (max-width: 640px) { font-size: 28px; }
 `;
 
 const DateLine = styled.p`
-  font-family: 'Playfair Display', serif;
-  font-size: 13px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
   font-weight: 400;
   font-style: italic;
   color: ${({ theme }) => theme.colors.textMuted};
   margin: 0;
+  padding-left: 0.35rem;
 `;
 
 const DateLineRow = styled.div`
@@ -179,8 +181,8 @@ const InlineWeatherWrap = styled.div`
   display: flex;
   align-items: center;
   gap: 5px;
-  font-family: 'Playfair Display', serif;
-  font-size: 13px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
   font-weight: 400;
   font-style: italic;
   color: ${({ theme }) => theme.colors.textMuted};
@@ -202,7 +204,8 @@ const InlineTemp = styled.button`
 
 const InlineHiLo = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 12px;
+  font-style: normal;
+  font-size: 11px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
 
@@ -215,7 +218,7 @@ const QuoteBlock = styled.div`
 
 const QuoteText = styled.p`
   font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 14px;
+  font-size: 19px;
   font-weight: 400;
   font-style: italic;
   color: ${({ theme }) => theme.colors.text};
@@ -228,7 +231,7 @@ const QuoteText = styled.p`
 
 const QuoteAuthor = styled.p`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 400;
   color: ${({ theme }) => theme.colors.textMuted};
   margin: 0;
@@ -238,7 +241,7 @@ const Grid = styled.div`
   display: flex;
   gap: 0;
   align-items: flex-start;
-  @media (max-width: 640px) { flex-direction: column; }
+  @media (max-width: 1024px) { flex-direction: column; }
 `;
 
 const LeftColumn = styled.div`
@@ -250,8 +253,7 @@ const LeftColumn = styled.div`
   gap: 24px;
   padding-right: 20px;
   border-right: 1px solid ${({ theme }) => theme.colors.border};
-  @media (max-width: 1024px) and (min-width: 641px) { flex: 0 0 50%; width: 50%; }
-  @media (max-width: 640px) { flex: none; width: 100%; border-right: none; padding-right: 0; }
+  @media (max-width: 1024px) { flex: none; width: 100%; border-right: none; padding-right: 0; }
 `;
 
 const RightColumn = styled.div`
@@ -262,8 +264,7 @@ const RightColumn = styled.div`
   flex-direction: column;
   gap: 24px;
   padding-left: 20px;
-  @media (max-width: 1024px) and (min-width: 641px) { flex: 0 0 50%; width: 50%; }
-  @media (max-width: 640px) { flex: none; width: 100%; padding-left: 0; }
+  @media (max-width: 1024px) { flex: none; width: 100%; padding-left: 0; }
 `;
 
 const DashCard = styled.div`
@@ -276,20 +277,20 @@ const CardHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px 10px;
+  padding: 10px 14px;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const CardIconWrap = styled.span<{ $color: string }>`
   color: ${({ $color }) => $color};
-  font-size: 12px;
+  font-size: 14px;
   flex-shrink: 0;
 `;
 
 const CardTitle = styled.span`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -299,7 +300,7 @@ const CardTitle = styled.span`
 
 const CardViewLink = styled(Link)`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   text-transform: capitalize;
   color: ${({ theme }) => theme.colors.textMuted};
@@ -311,6 +312,7 @@ const CardViewLink = styled(Link)`
 
 const CardBody = styled.div`
   padding: 12px 14px;
+  margin-top: 10px;
   flex: 1;
 `;
 
@@ -324,7 +326,7 @@ const AddBtn = styled.button`
   background: none;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 13px;
+  font-size: 15px;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   transition: color 0.15s, background 0.15s;
   &:hover { color: ${({ theme }) => theme.colors.text}; background: rgba(0,0,0,0.04); }
@@ -350,13 +352,13 @@ const CheckBtn = styled.button<{ $done?: boolean; $color: string }>`
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   transition: background 0.15s, border-color 0.15s;
   padding: 0;
 `;
 
 const ItemText = styled.span<{ $done?: boolean }>`
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
   text-decoration: ${({ $done }) => $done ? 'line-through' : 'none'};
@@ -369,7 +371,7 @@ const InlineInput = styled.input`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
   padding: 6px 10px;
@@ -390,7 +392,7 @@ const QuickEditorWrap = styled.div`
   /* Compact content padding and size for dashboard context */
   .tiptap {
     padding: 8px 12px;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.6;
     font-weight: 300;
     min-height: 120px;
@@ -414,7 +416,7 @@ const SaveRow = styled.div`
 const SaveBtn = styled.button<{ $accent: string; $active?: boolean }>`
   padding: 7px 16px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -427,16 +429,15 @@ const SaveBtn = styled.button<{ $accent: string; $active?: boolean }>`
 `;
 
 const StatusText = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.success};
 `;
 
 const EmptyNote = styled.p`
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.textMuted};
   margin: 4px 0;
-  font-style: italic;
 `;
 
 
@@ -454,7 +455,7 @@ const FieldCol = styled.div`
 `;
 
 const FieldLabel = styled.label`
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   text-transform: uppercase;
   color: ${({ theme }) => theme.colors.textMuted};
@@ -464,7 +465,7 @@ const FieldInput = styled.input`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
   padding: 6px 8px;
@@ -481,7 +482,7 @@ const FieldSelect = styled.select`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   background: transparent;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
   padding: 6px 8px;
@@ -503,13 +504,13 @@ const CheckRow = styled.div`
 
 
 const EventMeta = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
   font-weight: 300;
 `;
 
 const PriorityNumber = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textMuted};
   width: 14px;
@@ -598,7 +599,7 @@ const DragGrip = styled.button`
   padding: 0;
   cursor: grab;
   color: ${({ theme }) => theme.colors.border};
-  font-size: 13px;
+  font-size: 15px;
   flex-shrink: 0;
   touch-action: none;
   &:hover { color: ${({ theme }) => theme.colors.textMuted}; }
@@ -647,7 +648,7 @@ const RemoveBtn = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   &:hover { background: #7a3030; }
 `;
@@ -661,7 +662,7 @@ const EditWidgetsBtn = styled.button`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 4px;
   padding: 5px 12px;
-  font-size: 12px;
+  font-size: 14px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   color: ${({ theme }) => theme.colors.textMuted};
   cursor: pointer;
@@ -691,7 +692,7 @@ const WidgetMenuHeader = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   color: ${({ theme }) => theme.colors.textMuted};
   text-transform: uppercase;
@@ -701,7 +702,7 @@ const WidgetMenuHeader = styled.button`
 
 const WidgetMenuChevron = styled.span<{ $open: boolean }>`
   display: inline-flex;
-  font-size: 11px;
+  font-size: 13px;
   transition: transform 0.2s ease;
   transform: ${({ $open }) => $open ? 'rotate(0deg)' : 'rotate(-90deg)'};
 `;
@@ -720,7 +721,7 @@ const WidgetMenuSection = styled.div`
 `;
 
 const WidgetSectionLabel = styled.p`
-  font-size: 11px;
+  font-size: 13px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   color: ${({ theme }) => theme.colors.textMuted};
   text-transform: uppercase;
@@ -742,7 +743,7 @@ const WidgetChip = styled.button`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 4px;
   padding: 6px 14px;
-  font-size: 13px;
+  font-size: 15px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   color: ${({ theme }) => theme.colors.text};
   cursor: pointer;
@@ -1348,13 +1349,13 @@ const MedCircle = styled.button<{ $taken: boolean; $color: string }>`
   border: 1.5px solid ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.border};
   background: ${({ $taken, $color }) => $taken ? $color : 'transparent'};
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0; color: white; font-size: 10px; padding: 0;
+  cursor: pointer; flex-shrink: 0; color: white; font-size: 12px; padding: 0;
   transition: all 0.15s;
   &:disabled { opacity: 0.5; cursor: wait; }
 `;
 
 const MedName = styled.span<{ $taken: boolean }>`
-  font-size: 14px;
+  font-size: 16px;
   font-weight: ${({ $taken }) => $taken ? 300 : 400};
   color: ${({ theme }) => theme.colors.text};
   text-decoration: ${({ $taken }) => $taken ? 'line-through' : 'none'};
@@ -1365,7 +1366,7 @@ const MedName = styled.span<{ $taken: boolean }>`
 `;
 
 const MedTimeLabel = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
   font-weight: 300;
   flex-shrink: 0;
@@ -1516,27 +1517,27 @@ const WeatherDayLabel = styled.span<{ $today?: boolean }>`
 `;
 
 const WeatherTodayTemp = styled.span`
-  font-size: 28px;
+  font-size: 31px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
   line-height: 1;
 `;
 
 const WeatherCondition = styled.span`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   flex: 1;
 `;
 
 const WeatherHiLo = styled.span`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
   white-space: nowrap;
   margin-left: auto;
 `;
 
 const WeatherPrecip = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
   white-space: nowrap;
 `;
@@ -1545,7 +1546,7 @@ const UnitToggle = styled.button`
   background: none;
   border: none;
   padding: 2px 7px;
-  font-size: 11px;
+  font-size: 13px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   color: ${({ theme }) => theme.colors.textMuted};
   cursor: pointer;
@@ -1690,7 +1691,7 @@ const TopicEntryRow = styled.div`
 `;
 
 const TopicEntryPreview = styled.span`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.text};
   flex: 1;
   overflow: hidden;
@@ -1699,7 +1700,7 @@ const TopicEntryPreview = styled.span`
 `;
 
 const TopicEntryDate = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
   flex-shrink: 0;
 `;
@@ -1781,7 +1782,7 @@ const MealRow = styled.div`
 `;
 
 const MealLabel = styled.span`
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1791,7 +1792,7 @@ const MealLabel = styled.span`
 `;
 
 const MealName = styled.span`
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.text};
   flex: 1;
   overflow: hidden;
@@ -1898,9 +1899,9 @@ function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentCo
 
 const AffirmationDisplay = styled.div`
   font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 15px;
-  font-style: italic;
+  font-size: 20px;
   font-weight: 400;
+  font-style: italic;
   line-height: 1.6;
   color: ${({ theme }) => theme.colors.text};
   padding: 8px 0 12px;
@@ -1921,13 +1922,13 @@ const AffirmationNavBtn = styled.button`
   padding: 4px 6px;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 11px;
+  font-size: 13px;
   &:hover { color: ${({ theme }) => theme.colors.text}; }
 `;
 
 const AffirmationCount = styled.span`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 11px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
   min-width: 40px;
   text-align: center;
@@ -1945,13 +1946,13 @@ const AffirmationEditRow = styled.div`
   align-items: center;
   gap: 6px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.text};
 `;
 
 const AffirmationEditText = styled.span`
   flex: 1;
-  font-size: 13px;
+  font-size: 15px;
 `;
 
 const AffirmationAddRow = styled.div`
@@ -1965,7 +1966,7 @@ const AffirmationInput = styled.input`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 4px;
   padding: 5px 8px;
-  font-size: 13px;
+  font-size: 15px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   background: ${({ theme }) => theme.colors.inputBg};
   color: ${({ theme }) => theme.colors.text};
@@ -1976,7 +1977,7 @@ const AffirmationToggle = styled.button`
   background: none;
   border: none;
   padding: 0;
-  font-size: 11px;
+  font-size: 13px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   color: ${({ theme }) => theme.colors.textMuted};
   cursor: pointer;
@@ -2298,7 +2299,7 @@ const WSection = styled.div`
 
 const WSectionLabel = styled.div`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -2318,7 +2319,7 @@ const GlassBtn = styled.button<{ $filled: boolean }>`
   border: none;
   padding: 4px 3px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
   color: ${({ $filled, theme }) => $filled ? theme.colors.text : theme.colors.border};
   transition: color 0.1s, transform 0.1s;
@@ -2328,7 +2329,7 @@ const GlassBtn = styled.button<{ $filled: boolean }>`
 
 const GlassCount = styled.span`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 12px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   margin-left: 6px;
 `;
@@ -2344,7 +2345,7 @@ const MoodBtn = styled.button<{ $active: boolean }>`
   border: none;
   padding: 4px;
   cursor: pointer;
-  font-size: 22px;
+  font-size: 25px;
   line-height: 1;
   color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.border};
   transition: color 0.1s, transform 0.1s;
