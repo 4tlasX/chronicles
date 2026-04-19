@@ -40,7 +40,7 @@ export function App() {
   const activeTheme = themeMode === 'dark' ? darkTheme : lightTheme;
 
   useEffect(() => {
-    const color = headerColor || '#4E6E7E';
+    const color = headerColor || '#6A9B9B';
     document.documentElement.style.setProperty('--focus-color', color);
     document.documentElement.style.setProperty('--focus-color-rgb', hexToRgb(color));
   }, [headerColor]);

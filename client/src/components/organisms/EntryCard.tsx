@@ -162,7 +162,7 @@ export function EntryCard({
   active, onClick, onDelete, onTopicClick, onToggleComplete, onToggleBookmark,
   hasCheckbox, isCompleted, isFavorite, customType,
 }: EntryCardProps) {
-  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
+  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
   const plainText = stripHtml(content);
   const preview = plainText.slice(0, 160) || 'Untitled entry';
 

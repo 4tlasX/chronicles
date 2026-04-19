@@ -84,7 +84,7 @@ const SidebarTitle = styled.h2`
 export function Sidebar() {
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
-  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
+  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
   const topics = useEntriesStore(s => s.topics);
   const entries = useEntriesStore(s => s.decryptedEntries);
 

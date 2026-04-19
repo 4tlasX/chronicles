@@ -71,7 +71,7 @@ export function JournalView() {
   const setViewMode = useUIStore(s => s.setViewMode);
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
-  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
+  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
   const setThemeMode = useUIStore(s => s.setThemeMode);

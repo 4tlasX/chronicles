@@ -79,7 +79,7 @@ export function TopicEntriesView({ title, topicNames, metaFields = [], showDateF
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
+  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
   const navigate = useNavigate();
 
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');

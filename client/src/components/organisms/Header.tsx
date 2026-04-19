@@ -382,7 +382,7 @@ function NavDropdown({ label, items, activePath, bgColor, light }: NavDropdownPr
         </DropdownChevron>
       </DropdownTrigger>
       {open && (
-        <DropdownMenu $bgColor={bgColor || '#4E6E7E'} style={closing ? { opacity: 0, transform: 'translateY(-4px)', transition: 'opacity 0.15s, transform 0.15s' } : undefined}>
+        <DropdownMenu $bgColor={bgColor || '#6A9B9B'} style={closing ? { opacity: 0, transform: 'translateY(-4px)', transition: 'opacity 0.15s, transform 0.15s' } : undefined}>
           {items.map(item => (
             <DropdownItem key={item.to} to={item.to} $light={light} onClick={() => { closeMenu(); }}>
               {item.label}
@@ -419,7 +419,7 @@ export function Header() {
   };
 
   const isActive = (path: string) => location.pathname === path;
-  const bgColor = headerColor || '#4E6E7E';
+  const bgColor = headerColor || '#6A9B9B';
   const light = isLightColor(bgColor);
 
   // Feature-gated nav items

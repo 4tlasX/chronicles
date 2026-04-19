@@ -51,7 +51,7 @@ export const GlobalStyle = createGlobalStyle`
   select:focus-visible,
   textarea:focus-visible {
     outline: none;
-    border-color: var(--focus-color, #4E6E7E);
+    border-color: var(--focus-color, #6A9B9B);
   }
 
   /* Reduced motion for users who prefer it */

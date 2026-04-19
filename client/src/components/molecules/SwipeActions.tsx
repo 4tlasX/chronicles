@@ -97,7 +97,7 @@ interface SwipeActionsProps {
 }
 
 export function SwipeActions({
-  children, onEdit, onDelete, accentColor = '#4E6E7E', disabled, buttonWidth = 70,
+  children, onEdit, onDelete, accentColor = '#6A9B9B', disabled, buttonWidth = 70,
 }: SwipeActionsProps) {
   const actionW       = buttonWidth * (onEdit ? 2 : 1);
   const contentRef    = useRef<HTMLDivElement>(null);

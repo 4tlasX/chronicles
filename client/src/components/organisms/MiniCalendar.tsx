@@ -146,7 +146,7 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates, expanded 
   const [currentMonth, setCurrentMonth] = useState(() => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
   const [collapsed, setCollapsed] = useState(!expanded);
   const today = useMemo(() => new Date(), []);
-  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
+  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
 
   const days = useMemo(() => {
     const year = currentMonth.getFullYear();

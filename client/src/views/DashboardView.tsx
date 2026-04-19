@@ -156,14 +156,15 @@ const Greeting = styled.h1`
   font-weight: 400;
   font-style: italic;
   color: ${({ theme }) => theme.colors.text};
-  margin: 0 0 10px;
+  margin: 0 0 3px;
   @media (max-width: 640px) { font-size: 26px; }
 `;
 
 const DateLine = styled.p`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-family: 'Playfair Display', serif;
   font-size: 13px;
-  font-weight: 300;
+  font-weight: 400;
+  font-style: italic;
   color: ${({ theme }) => theme.colors.textMuted};
   margin: 0;
 `;
@@ -178,9 +179,10 @@ const InlineWeatherWrap = styled.div`
   display: flex;
   align-items: center;
   gap: 5px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-family: 'Playfair Display', serif;
   font-size: 13px;
-  font-weight: 300;
+  font-weight: 400;
+  font-style: italic;
   color: ${({ theme }) => theme.colors.textMuted};
   &::before { content: '·'; margin-right: 2px; opacity: 0.5; }
 `;
@@ -189,15 +191,17 @@ const InlineTemp = styled.button`
   background: none;
   border: none;
   padding: 0;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   font-weight: 500;
+  font-style: normal;
   color: ${({ theme }) => theme.colors.text};
   cursor: pointer;
   &:hover { opacity: 0.7; }
 `;
 
 const InlineHiLo = styled.span`
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   color: ${({ theme }) => theme.colors.textMuted};
 `;
@@ -246,6 +250,7 @@ const LeftColumn = styled.div`
   gap: 24px;
   padding-right: 20px;
   border-right: 1px solid ${({ theme }) => theme.colors.border};
+  @media (max-width: 1024px) and (min-width: 641px) { flex: 0 0 50%; width: 50%; }
   @media (max-width: 640px) { flex: none; width: 100%; border-right: none; padding-right: 0; }
 `;
 
@@ -257,6 +262,7 @@ const RightColumn = styled.div`
   flex-direction: column;
   gap: 24px;
   padding-left: 20px;
+  @media (max-width: 1024px) and (min-width: 641px) { flex: 0 0 50%; width: 50%; }
   @media (max-width: 640px) { flex: none; width: 100%; padding-left: 0; }
 `;
 
@@ -2541,7 +2547,7 @@ export function DashboardView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
+  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
   const displayName = useUIStore(s => s.displayName);
   const weatherEnabled = useUIStore(s => s.weatherEnabled);
   const cityName = useUIStore(s => s.weatherCity);

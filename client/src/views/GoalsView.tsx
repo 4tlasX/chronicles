@@ -69,7 +69,7 @@ export function GoalsView() {
   const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
-  const headerColor = useUIStore(s => s.headerColor) || '#4E6E7E';
+  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
   const navigate = useNavigate();
   const location = useLocation();
   const { encryptPost } = useEncryption();
