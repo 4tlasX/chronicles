@@ -320,8 +320,7 @@ const CardBody = styled.div`
 const QuickEntryDashCard = styled(DashCard)`
   background: transparent;
   border-radius: 10px;
-  padding: 0 12px;
-  & ${CardHeader} { border-top: none; }
+  & ${CardHeader} { border-top: 1px solid ${({ theme }) => theme.colors.border}; }
 `;
 
 const AddBtn = styled.button`

@@ -23,7 +23,7 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: 8px 12px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
@@ -79,7 +79,7 @@ const BackLink = styled.button`
 const ListArea = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 8px 12px;
+  padding: 4px 6px;
 `;
 
 interface TopicEntryListProps {

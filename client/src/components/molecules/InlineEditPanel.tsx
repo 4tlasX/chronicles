@@ -15,7 +15,7 @@ const overlay = (theme: { colors: { background: string } }, alpha: number) =>
 const Panel = styled.div<{ $hasFields?: boolean }>`
   background: transparent;
   border-radius: 10px;
-  margin: 8px 8px 16px;
+  margin: 0 8px 16px;
   padding-top: ${({ $hasFields }) => $hasFields ? 28 : 20}px;
   padding-bottom: 20px;
 
