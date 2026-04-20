@@ -15,8 +15,11 @@ Key privacy guarantees:
 ## UI Design Rules
 
 - **No circles or pills** — All shapes use rounded square edges (border-radius: 4-8px). No circular badges, no pill-shaped chips.
-- **Icons are plain** — Topic icons are displayed as plain FontAwesome icons colored with the user's selected header color. No circle backgrounds, no colored dot indicators.
-- **User's header color** — Topic icons throughout the app (dropdowns, entry card badges) use the user's selected header color, not individual topic colors.
+- **Icons are plain** — Topic icons are displayed as plain FontAwesome icons. No circle backgrounds, no colored dot indicators.
+- **Icon colors — muted** — Topic icons in entry cards (`EntryCard`, `EditableEntryCard`), topic sidebar (`SortableTopicItem`), and topic selector dropdowns (`TopicSelector`, `TopicSelectorDropdown`) use `theme.colors.textMuted`. Do not use the header color or full `theme.colors.text` for these icons.
+- **Nav link unselected color (dark header)** — Unselected nav links and icon buttons (`NavLink`, `DropdownTrigger`) on dark-background headers use `rgb(240, 235, 223)`, not semi-transparent white.
+- **Wellness icon unselected color** — Tap-to-fill icons (`GlassBtn`, `MoodBtn`) in both the dashboard widget and `WellnessFields` use `theme.colors.border` when not selected/filled.
+- **Quick entry card** — `QuickEntryDashCard` has transparent background, no horizontal padding, no `overflow: hidden` (so the topic picker dropdown can escape), and a top border via `CardHeader`.
 - **No `window.confirm`** — Safari on iPad blocks pop-ups by default, silently returning `false`. Use inline state-based confirmation or delete directly. Never use `window.confirm` / `window.alert` / `window.prompt`.
 - **TipTap node views with overlays** — Always portal overlays (`position: fixed`) from TipTap `NodeViewWrapper` to `document.body` via `createPortal`. The node view DOM can create stacking contexts that trap pointer events.
 
@@ -243,7 +246,7 @@ Views     → Route logic + top-level data orchestration
   - Priorities widget auto-creates a "Priorities" topic on first save
   - Events widget shows Event + Meeting topic entries with `startDate`, up to 10, 90-day lookahead
   - Meds widget only renders when active medication entries exist
-  - Wellness widget: tap-to-fill water glasses (8), mood faces (5), sleep hours (10 cloud-moon icons); debounced save with optimistic store updates; reactive to journal edits via Zustand; auto-creates "Wellness" topic so entries appear in journal
+  - Wellness widget: tap-to-fill water glasses (8), mood faces (5), sleep hours (10 cloud-moon icons), period toggle, and flow intensity (4 levels); debounced save with optimistic store updates; reactive to journal edits via Zustand; auto-creates "Wellness" topic so entries appear in journal
   - Mini Calendar widget: monthly grid with entry-presence dots; clicking a day sets `viewMode: 'date'` and navigates to journal filtered to that day
 
 **Apple Pencil / Drawing:**
@@ -317,8 +320,8 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - Symptom tracking with severity scale
 - Exercise tracking with type, duration, intensity, distance
 - Allergy tracking
-- Wellness check-ins — water glasses, mood (1–5), sleep hours; stored as `_widgetType: 'wellness-checkin'` entries with Wellness topic; editable via `WellnessFields` custom fields in journal
-- Reporting view with wellness trends + cross-correlations (sleep→mood, water→symptoms, exercise→sleep, mood→symptoms)
+- Wellness check-ins — water glasses, mood (1–5), sleep hours, period toggle, flow intensity; stored as `_widgetType: 'wellness-checkin'` entries with Wellness topic; editable via `WellnessFields` custom fields in journal
+- Reporting view with wellness trends + cross-correlations (sleep→mood, water→symptoms, exercise→sleep, mood→symptoms); cycle calendar showing period/flow days by month
 
 **Calendar**
 - Monthly grid with entry previews per day

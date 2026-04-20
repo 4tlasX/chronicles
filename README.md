@@ -17,8 +17,8 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - **Shopping Lists** - Checklist-style lists linkable to recipes; dashboard widget shows active list with inline check-off
 - **Health Tracking** - Medications, symptoms, food, exercise, and allergies; printable medication lists (with dosage and schedule), symptom logs, and allergy records
 - **Medication Schedule** - Daily dose tracking with time-based scheduling; real-time sync on tab focus
-- **Daily Wellness Check-in** - Tap-to-fill water glasses, mood faces (1–5), and sleep hours (cloud-moon icons) on the dashboard; entries stored encrypted under the Wellness topic and fully editable in the journal
-- **Health Reporting** - Correlation analysis, severity trends, exercise impact, and wellness trends (water/mood/sleep) with cross-correlation insights (sleep→mood, water→symptoms, exercise→sleep, mood→symptoms); date range filtering
+- **Daily Wellness Check-in** - Tap-to-fill water glasses, mood faces (1–5), sleep hours, period toggle, and flow intensity on the dashboard; entries stored encrypted under the Wellness topic and fully editable in the journal
+- **Health Reporting** - Correlation analysis, severity trends, exercise impact, and wellness trends (water/mood/sleep) with cross-correlation insights (sleep→mood, water→symptoms, exercise→sleep, mood→symptoms); cycle calendar showing period and flow days by month; date range filtering
 - **Mini Calendar Widget** - Monthly grid on dashboard with entry-presence dots; click any day to jump to that day's journal entries
 - **Calendar View** - Visual month overview; events and meetings appear on their scheduled date in your header colour
 - **Entry Sharing** - Share entries via encrypted public links
