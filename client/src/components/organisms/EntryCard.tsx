@@ -66,7 +66,7 @@ const TopicIcon = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.textMuted};
   font-size: 13px;
   flex-shrink: 0;
 `;

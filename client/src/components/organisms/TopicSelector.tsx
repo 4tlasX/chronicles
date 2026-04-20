@@ -42,7 +42,7 @@ const TopicIcon = styled.span<{ $color?: string }>`
   align-items: center;
   justify-content: center;
   width: 20px;
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.textMuted};
   font-size: 18px;
   flex-shrink: 0;
 `;

@@ -30,7 +30,7 @@ const Row = styled.div<{ $active?: boolean }>`
 `;
 
 const TopicIcon = styled.span`
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.textMuted};
   font-size: 16px;
   width: 20px;
   text-align: center;

@@ -140,7 +140,7 @@ const NavLink = styled(Link)<{ $active?: boolean; $light?: boolean }>`
   letter-spacing: 0.09rem;
   color: ${({ $active, $light }) => $active
     ? ($light ? 'rgba(0,0,0,0.9)' : 'white')
-    : ($light ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)')};
+    : ($light ? 'rgba(0,0,0,0.6)' : 'rgb(240,235,223)')};
   text-decoration: none;
   transition: color 0.15s;
   white-space: nowrap;
@@ -163,7 +163,7 @@ const DropdownTrigger = styled.button<{ $active?: boolean; $light?: boolean }>`
   letter-spacing: 0.09rem;
   color: ${({ $active, $light }) => $active
     ? ($light ? 'rgba(0,0,0,0.9)' : 'white')
-    : ($light ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)')};
+    : ($light ? 'rgba(0,0,0,0.6)' : 'rgb(240,235,223)')};
   background: none;
   border: none;
   cursor: pointer;
@@ -320,7 +320,7 @@ const DrawerLink = styled(Link)<{ $active?: boolean }>`
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.09rem;
-  color: ${({ $active }) => $active ? 'white' : 'rgba(255,255,255,0.75)'};
+  color: ${({ $active }) => $active ? 'white' : 'rgb(240,235,223)'};
   text-decoration: none;
   transition: background 0.1s;
 

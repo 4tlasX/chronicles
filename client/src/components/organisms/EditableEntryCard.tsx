@@ -14,6 +14,7 @@ import { SymptomFields } from '../molecules/fields/SymptomFields.js';
 import { ExerciseFields } from '../molecules/fields/ExerciseFields.js';
 import { EventFields } from '../molecules/fields/EventFields.js';
 import { MeetingFields } from '../molecules/fields/MeetingFields.js';
+import { WellnessFields, type WellnessFieldValues } from '../molecules/fields/WellnessFields.js';
 import { UserFieldsForm } from '../molecules/fields/UserFieldsForm.js';
 import { Badge } from '../atoms/Badge.js';
 import { SwipeActions } from '../molecules/SwipeActions.js';
@@ -32,6 +33,7 @@ const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
   food: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
+  wellness: 'wellness',
 };
 
 function getCustomType(topicName: string | undefined): string | null {
@@ -72,7 +74,7 @@ const PreviewRow = styled.div`
 `;
 
 const IconWrap = styled.span`
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.textMuted};
   font-size: 16px;
   margin-top: 3px;
   flex-shrink: 0;
@@ -185,6 +187,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   const allEntries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
+  const cycleTrackingEnabled = useUIStore(s => s.cycleTrackingEnabled);
 
   const goalOptions = useMemo(() => {
     const goalTopicId = allTopics.find(t => t.name.toLowerCase() === 'goal')?.id;
@@ -252,6 +255,39 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
     } catch (err) {
       console.error('Task status update failed:', err);
     }
+  };
+
+  const wellnessAutoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wellnessAutoSaveDoRef = useRef<() => Promise<void>>(async () => {});
+  wellnessAutoSaveDoRef.current = async () => {
+    const entryMeta = entry.metadata as Record<string, unknown>;
+    const metadata: Record<string, unknown> = { _taxonomyId: selectedTopicId };
+    if (entryMeta._widgetType) metadata._widgetType = entryMeta._widgetType;
+    if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
+    const hasText = !!stripHtml(editContent).trim();
+    let finalContent = editContent;
+    if (!hasText) {
+      const w = (customFields.waterGlasses as number) || 0;
+      const g = (customFields.waterGoal as number) || 8;
+      const m = (customFields.moodScore as number) || 0;
+      const s = (customFields.sleepHours as number) || 0;
+      const parts = [w > 0 ? `${w}/${g} glasses` : '', m > 0 ? `Mood ${m}/5` : '', s > 0 ? `${s}h sleep` : ''].filter(Boolean);
+      finalContent = `<p>${parts.join(' · ') || 'Wellness check-in'}</p>`;
+    }
+    try {
+      const encrypted = await encryptPost(finalContent, metadata);
+      await entriesApi.update(entry.id, {
+        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+        taxonomyIds: selectedTopicId ? [selectedTopicId] : [],
+      });
+      updateDecryptedEntry(entry.id, { content: finalContent, metadata });
+      setStatus('Saved'); setTimeout(() => setStatus(''), 1200);
+    } catch (err) { console.error('Wellness auto-save failed:', err); }
+  };
+  const scheduleWellnessAutoSave = () => {
+    if (wellnessAutoDebounceRef.current) clearTimeout(wellnessAutoDebounceRef.current);
+    wellnessAutoDebounceRef.current = setTimeout(() => { wellnessAutoSaveDoRef.current(); }, 600);
   };
 
   const prevEditingRef = useRef(false);
@@ -333,6 +369,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
         case 'exercise': return <ExerciseFields values={{ exerciseType: 'running', duration: '', intensity: 'medium', distance: '', distanceUnit: 'miles', calories: '', performedDate: '', performedTime: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
         case 'event': return <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
         case 'meeting': return <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
+        case 'wellness': return <WellnessFields values={{ date: '', waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0, ...customFields } as WellnessFieldValues} onChange={v => setCustomFields(v as unknown as Record<string, unknown>)} cycleTrackingEnabled={cycleTrackingEnabled} onAutoSave={scheduleWellnessAutoSave} />;
         default: return null;
       }
     })();

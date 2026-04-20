@@ -317,6 +317,13 @@ const CardBody = styled.div`
   flex: 1;
 `;
 
+const QuickEntryDashCard = styled(DashCard)`
+  background: transparent;
+  border-radius: 10px;
+  padding: 0 12px;
+  & ${CardHeader} { border-top: none; }
+`;
+
 const AddBtn = styled.button`
   display: flex;
   align-items: center;
@@ -907,12 +914,12 @@ type FieldType = 'text' | 'number' | 'boolean' | 'date' | 'time' | 'select';
 interface FieldDef { key: string; label: string; type: FieldType; options?: string[]; }
 
 const TOPIC_FIELDS: Record<string, FieldDef[]> = {
-  'medication':  [{ key: 'dosage', label: 'Dosage', type: 'text' }, { key: 'frequency', label: 'Frequency', type: 'text' }, { key: 'isActive', label: 'Active', type: 'boolean' }],
+  'medication':  [],
   'symptom':     [{ key: 'severity', label: 'Severity', type: 'select', options: ['Mild', 'Moderate', 'Severe'] }, { key: 'duration', label: 'Duration', type: 'text' }],
   'food':        [{ key: 'mealType', label: 'Meal', type: 'select', options: ['Breakfast', 'Lunch', 'Dinner', 'Snack'] }, { key: 'calories', label: 'Calories', type: 'number' }, { key: 'ingredients', label: 'Ingredients', type: 'text' }],
   'exercise':    [{ key: 'exerciseType', label: 'Type', type: 'text' }, { key: 'duration', label: 'Duration (min)', type: 'number' }, { key: 'intensity', label: 'Intensity', type: 'select', options: ['Low', 'Medium', 'High'] }],
   'allergy':     [{ key: 'allergen', label: 'Allergen', type: 'text' }, { key: 'severity', label: 'Severity', type: 'select', options: ['Mild', 'Moderate', 'Severe'] }, { key: 'reaction', label: 'Reaction', type: 'text' }],
-  'task':        [{ key: 'isCompleted', label: 'Completed', type: 'boolean' }],
+  'task':        [{ key: 'priority', label: 'Priority', type: 'select', options: ['urgent', 'high', 'medium', 'low', 'none'] }],
   'event':       [{ key: 'startDate', label: 'Date', type: 'date' }, { key: 'startTime', label: 'Time', type: 'time' }],
   'meeting':     [{ key: 'startDate', label: 'Date', type: 'date' }, { key: 'startTime', label: 'Time', type: 'time' }],
 };
@@ -934,14 +941,42 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
   }, []);
 
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
+  const allEntries = useEntriesStore(s => s.decryptedEntries);
+  const allTopics = useEntriesStore(s => s.allTopics);
   const selectedTopic = topics.find(t => t.id === selectedTopicId) ?? null;
   const fieldDefs = selectedTopic ? (TOPIC_FIELDS[selectedTopic.name.toLowerCase()] ?? []) : [];
   const userFieldDefs = selectedTopicId != null ? (topicCustomFields[selectedTopicId] ?? []) : [];
 
+  const isTaskTopic = selectedTopic?.name.toLowerCase() === 'task';
+  const isMedicationTopic = selectedTopic?.name.toLowerCase() === 'medication';
+  const goalTopicId = useMemo(() => allTopics.find(t => t.name.toLowerCase() === 'goal')?.id, [allTopics]);
+  const milestoneTopicId = useMemo(() => allTopics.find(t => t.name.toLowerCase() === 'milestone')?.id, [allTopics]);
+  const goalOptions = useMemo(() => {
+    if (!goalTopicId) return [];
+    return allEntries
+      .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === goalTopicId)
+      .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || 'Untitled' }));
+  }, [allEntries, goalTopicId]);
+  const milestoneOptions = useMemo(() => {
+    if (!milestoneTopicId) return [];
+    return allEntries
+      .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === milestoneTopicId)
+      .map(e => {
+        const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
+        return { id: e.id, title: stripHtml(e.content).slice(0, 60) || 'Untitled', parentGoalId: (cf.parentGoalId as number) || null };
+      });
+  }, [allEntries, milestoneTopicId]);
+  const visibleMilestones = useMemo(() => {
+    const selectedGoalId = customFields.parentGoalId as number | undefined;
+    if (!selectedGoalId) return milestoneOptions;
+    return milestoneOptions.filter(m => m.parentGoalId === selectedGoalId);
+  }, [milestoneOptions, customFields.parentGoalId]);
+
   const hasContent = !!stripHtml(content).trim();
   const userFields = (customFields._userFields as Record<string, unknown>) ?? {};
   const hasUserFieldValues = userFieldDefs.length > 0 && summarizeUserFields(userFieldDefs, userFields) !== '';
-  const canSave = hasContent || hasUserFieldValues;
+  const hasBuiltInFieldValues = fieldDefs.length > 0 || isMedicationTopic || isTaskTopic;
+  const canSave = hasContent || hasUserFieldValues || (hasBuiltInFieldValues && selectedTopic !== null);
 
   const setField = (key: string, value: unknown) => setCustomFields(prev => ({ ...prev, [key]: value }));
 
@@ -957,7 +992,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
       const finalContent = hasContent ? content : `<p>${summarizeUserFields(userFieldDefs, userFields)}</p>`;
       const effectiveTopicId = selectedTopic ? selectedTopic.id : await getOrCreateJournalTopic();
       const metadata: Record<string, unknown> = { _taxonomyId: effectiveTopicId };
-      if ((fieldDefs.length > 0 || userFieldDefs.length > 0) && selectedTopic) metadata._customFields = customFields;
+      if ((fieldDefs.length > 0 || userFieldDefs.length > 0 || isMedicationTopic || isTaskTopic) && selectedTopic) metadata._customFields = customFields;
       const encrypted = await encryptPost(finalContent, metadata);
       const result = await entriesApi.create({
         contentEncrypted: encrypted.contentEncrypted,
@@ -977,7 +1012,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
   };
 
   return (
-    <DashCard>
+    <QuickEntryDashCard>
       <CardHeader>
         <CardIconWrap><FontAwesomeIcon icon={faPencil} /></CardIconWrap>
         <CardTitle>Quick Entry</CardTitle>
@@ -1023,6 +1058,83 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
             ))}
           </FieldGrid>
         )}
+        {isTaskTopic && (
+          <FieldGrid>
+            <FieldCol style={{ gridColumn: 'span 2' }}>
+              <FieldLabel>Goal</FieldLabel>
+              <FieldSelect
+                value={(customFields.parentGoalId as number | undefined) ?? ''}
+                onChange={e => setCustomFields(prev => ({ ...prev, parentGoalId: e.target.value ? Number(e.target.value) : undefined, parentMilestoneId: undefined }))}
+              >
+                <option value="">No goal</option>
+                {goalOptions.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
+              </FieldSelect>
+            </FieldCol>
+            <FieldCol style={{ gridColumn: 'span 2' }}>
+              <FieldLabel>Milestone</FieldLabel>
+              <FieldSelect
+                value={(customFields.parentMilestoneId as number | undefined) ?? ''}
+                onChange={e => setField('parentMilestoneId', e.target.value ? Number(e.target.value) : undefined)}
+              >
+                <option value="">No milestone</option>
+                {visibleMilestones.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+              </FieldSelect>
+            </FieldCol>
+          </FieldGrid>
+        )}
+        {isMedicationTopic && (
+          <FieldGrid>
+            <FieldCol>
+              <FieldLabel>Dosage</FieldLabel>
+              <FieldInput
+                type="text"
+                placeholder="e.g. 500mg"
+                value={(customFields.dosage as string) ?? ''}
+                onChange={e => setField('dosage', e.target.value)}
+              />
+            </FieldCol>
+            <FieldCol>
+              <FieldLabel>Frequency</FieldLabel>
+              <FieldSelect value={(customFields.frequency as string) || 'once_daily'} onChange={e => setField('frequency', e.target.value)}>
+                <option value="once_daily">Once daily</option>
+                <option value="twice_daily">Twice daily</option>
+                <option value="three_times_daily">Three times daily</option>
+                <option value="as_needed">As needed</option>
+                <option value="custom">Custom</option>
+              </FieldSelect>
+            </FieldCol>
+            <FieldCol style={{ gridColumn: 'span 2' }}>
+              <FieldLabel>Schedule Times</FieldLabel>
+              {((customFields.scheduleTimes as string[]) ?? []).map((t, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <FieldInput
+                    type="time"
+                    value={t}
+                    onChange={e => {
+                      const times = [...((customFields.scheduleTimes as string[]) ?? [])];
+                      times[i] = e.target.value;
+                      setField('scheduleTimes', times);
+                    }}
+                  />
+                  <button
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.5, fontSize: 12 }}
+                    onClick={() => setField('scheduleTimes', ((customFields.scheduleTimes as string[]) ?? []).filter((_, j) => j !== i))}
+                  >✕</button>
+                </div>
+              ))}
+              <button
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'inherit', opacity: 0.6, padding: '2px 0' }}
+                onClick={() => setField('scheduleTimes', [...((customFields.scheduleTimes as string[]) ?? []), '08:00'])}
+              >+ Add time</button>
+            </FieldCol>
+            <FieldCol style={{ gridColumn: 'span 2' }}>
+              <CheckRow>
+                <input type="checkbox" id="qe-isActive" checked={!!(customFields.isActive ?? true)} onChange={e => setField('isActive', e.target.checked)} />
+                <FieldLabel htmlFor="qe-isActive" style={{ textTransform: 'none', fontSize: 12, fontWeight: 300 }}>Currently active</FieldLabel>
+              </CheckRow>
+            </FieldCol>
+          </FieldGrid>
+        )}
         {userFieldDefs.length > 0 && (
           <div style={{ marginBottom: 10 }}>
             <UserFieldsForm
@@ -1047,7 +1159,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
           </SaveBtn>
         </SaveRow>
       </CardBody>
-    </DashCard>
+    </QuickEntryDashCard>
   );
 }
 
@@ -2269,7 +2381,7 @@ const SLEEP_GOAL = 10;
 const MOOD_ICONS = [faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam] as const;
 
 const WSection = styled.div`
-  padding: 10px 0;
+  padding: 14px 0;
   & + & { border-top: 1px solid ${({ theme }) => theme.colors.border}; }
 `;
 
@@ -2280,7 +2392,7 @@ const WSectionLabel = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: ${({ theme }) => theme.colors.textMuted};
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 `;
 
 const GlassRow = styled.div`
@@ -2330,9 +2442,23 @@ const MoodBtn = styled.button<{ $active: boolean }>`
 `;
 
 
+const CyclePredictionLine = styled.div`
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-top: 12px;
+  letter-spacing: 0.01em;
+`;
+
+const FLOW_OPTIONS = ['spotting', 'light', 'medium', 'heavy'] as const;
+type FlowIntensity = typeof FLOW_OPTIONS[number] | '';
+const FLOW_INDEX: Record<FlowIntensity, number> = { '': 0, spotting: 1, light: 2, medium: 3, heavy: 4 };
+const FLOW_BY_INDEX: FlowIntensity[] = ['', 'spotting', 'light', 'medium', 'heavy'];
+
 function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
   const { encryptPost } = useEncryption();
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
+  const cycleTrackingEnabled = useUIStore(s => s.cycleTrackingEnabled);
   const allTopics = useEntriesStore(s => s.allTopics);
   const setTopics = useEntriesStore(s => s.setTopics);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
@@ -2358,11 +2484,15 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
   const [pendingWater, setPendingWater] = useState(0);
   const [pendingMood, setPendingMood] = useState(0);
   const [pendingSleep, setPendingSleep] = useState(0);
+  const [pendingPeriod, setPendingPeriod] = useState(false);
+  const [pendingFlow, setPendingFlow] = useState<FlowIntensity>('');
 
   // Display values: prefer stored, fall back to pending
   const waterGlasses = wellnessEntry ? ((storedCf?.waterGlasses as number) || 0) : pendingWater;
   const moodScore    = wellnessEntry ? ((storedCf?.moodScore   as number) || 0) : pendingMood;
   const sleepHours   = wellnessEntry ? ((storedCf?.sleepHours  as number) || 0) : pendingSleep;
+  const periodToday  = wellnessEntry ? !!(storedCf?.periodToday) : pendingPeriod;
+  const flowIntensity = wellnessEntry ? ((storedCf?.flowIntensity as FlowIntensity) || '') : pendingFlow;
 
   const entryIdRef = useRef<number | null>(null);
   // Keep entryIdRef in sync with store
@@ -2371,17 +2501,52 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
   }, [wellnessEntry]);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const latestRef = useRef({ water: 0, mood: 0, sleepH: 0 });
+  const latestRef = useRef({ water: 0, mood: 0, sleepH: 0, period: false, flow: '' as FlowIntensity });
 
   const wellnessTopicId = useMemo(
     () => allTopics.find(t => t.name.toLowerCase() === 'wellness')?.id ?? null,
     [allTopics]
   );
 
+  const cyclePrediction = useMemo(() => {
+    if (!cycleTrackingEnabled) return null;
+    // Build date map from stored entries, then overlay today's live value
+    const dateMap = new Map<string, boolean>();
+    for (const e of decryptedEntries) {
+      const meta = e.metadata as Record<string, unknown>;
+      if (meta._widgetType !== 'wellness-checkin') continue;
+      const cf = (meta._customFields as Record<string, unknown>) ?? {};
+      const d = cf.date as string;
+      if (d) dateMap.set(d, !!(cf.periodToday));
+    }
+    const allDates = [...dateMap.entries()]
+      .map(([date, period]) => ({ date, period }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const firstDays: string[] = [];
+    let inPeriod = false;
+    for (const d of allDates) {
+      if (d.period && !inPeriod) { firstDays.push(d.date); inPeriod = true; }
+      else if (!d.period) inPeriod = false;
+    }
+    if (firstDays.length === 0) return { lastLabel: null, nextLabel: null, avgLen: null };
+    const last = firstDays[firstDays.length - 1];
+    const lastLabel = new Date(last + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const gaps: number[] = [];
+    for (let i = 1; i < firstDays.length; i++) {
+      const diff = Math.round((new Date(firstDays[i]).getTime() - new Date(firstDays[i - 1]).getTime()) / 86400000);
+      if (diff > 0 && diff < 60) gaps.push(diff);
+    }
+    const avgLen = gaps.length > 0 ? Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length) : 28;
+    const predicted = new Date(new Date(last + 'T12:00:00').getTime() + avgLen * 86400000);
+    const nextLabel = predicted.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return { lastLabel, nextLabel, avgLen };
+  }, [cycleTrackingEnabled, decryptedEntries]);
+
   // doSaveRef pattern — debounce timer always calls the latest version, avoiding stale closures
   const doSaveRef = useRef<() => Promise<void>>(async () => {});
   doSaveRef.current = async () => {
-    const { water, mood, sleepH } = latestRef.current;
+    const { water, mood, sleepH, period, flow } = latestRef.current;
     // Resolve the existing entry id — check ref first, then scan the store directly
     // (guards against race where useEffect hasn't run yet on first tap)
     if (!entryIdRef.current) {
@@ -2404,7 +2569,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
     }
     const metadata: Record<string, unknown> = {
       _widgetType: 'wellness-checkin',
-      _customFields: { date: todayStr, waterGlasses: water, waterGoal: WATER_GOAL, moodScore: mood, sleepHours: sleepH, sleepQuality: 0 },
+      _customFields: { date: todayStr, waterGlasses: water, waterGoal: WATER_GOAL, moodScore: mood, sleepHours: sleepH, sleepQuality: 0, periodToday: period, flowIntensity: flow },
     };
     if (topicId) metadata._taxonomyId = topicId;
     const summary = [
@@ -2432,13 +2597,13 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
     } catch { /* fire-and-forget */ }
   };
 
-  const scheduleSave = (water: number, mood: number, sleepH: number) => {
-    latestRef.current = { water, mood, sleepH };
+  const scheduleSave = (water: number, mood: number, sleepH: number, period: boolean, flow: FlowIntensity) => {
+    latestRef.current = { water, mood, sleepH, period, flow };
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => doSaveRef.current(), 600);
   };
 
-  const optimisticUpdate = (updates: Partial<{ waterGlasses: number; moodScore: number; sleepHours: number }>) => {
+  const optimisticUpdate = (updates: Partial<{ waterGlasses: number; moodScore: number; sleepHours: number; periodToday: boolean; flowIntensity: FlowIntensity }>) => {
     if (!entryIdRef.current) return;
     const entry = useEntriesStore.getState().decryptedEntries.find(e => e.id === entryIdRef.current);
     if (!entry) return;
@@ -2451,21 +2616,29 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
     const newVal = i < waterGlasses ? i : i + 1;
     if (wellnessEntry) optimisticUpdate({ waterGlasses: newVal });
     else setPendingWater(newVal);
-    scheduleSave(newVal, moodScore, sleepHours);
+    scheduleSave(newVal, moodScore, sleepHours, periodToday, flowIntensity);
   };
 
   const handleMood = (score: number) => {
     const newVal = moodScore === score ? 0 : score;
     if (wellnessEntry) optimisticUpdate({ moodScore: newVal });
     else setPendingMood(newVal);
-    scheduleSave(waterGlasses, newVal, sleepHours);
+    scheduleSave(waterGlasses, newVal, sleepHours, periodToday, flowIntensity);
   };
 
   const handleSleepHours = (i: number) => {
     const newVal = i < sleepHours ? i : i + 1;
     if (wellnessEntry) optimisticUpdate({ sleepHours: newVal });
     else setPendingSleep(newVal);
-    scheduleSave(waterGlasses, moodScore, newVal);
+    scheduleSave(waterGlasses, moodScore, newVal, periodToday, flowIntensity);
+  };
+
+  const handleFlow = (f: FlowIntensity) => {
+    const newFlow: FlowIntensity = flowIntensity === f ? '' : f;
+    const newPeriod = newFlow !== '';
+    if (wellnessEntry) optimisticUpdate({ periodToday: newPeriod, flowIntensity: newFlow });
+    else { setPendingPeriod(newPeriod); setPendingFlow(newFlow); }
+    scheduleSave(waterGlasses, moodScore, sleepHours, newPeriod, newFlow);
   };
 
   return (
@@ -2512,6 +2685,28 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
             <GlassCount>{sleepHours > 0 ? `${sleepHours}h` : '—'}</GlassCount>
           </GlassRow>
         </WSection>
+
+        {cycleTrackingEnabled && (
+          <WSection>
+            <WSectionLabel>Cycle</WSectionLabel>
+            <GlassRow>
+              {Array.from({ length: 4 }, (_, i) => (
+                <GlassBtn key={i} $filled={i < FLOW_INDEX[flowIntensity]} onClick={() => handleFlow(FLOW_OPTIONS[i])} title={FLOW_OPTIONS[i]}>
+                  <FontAwesomeIcon icon={faDroplet} />
+                </GlassBtn>
+              ))}
+              <GlassCount>{flowIntensity || '—'}</GlassCount>
+            </GlassRow>
+            <CyclePredictionLine>
+              {`LAST PERIOD: ${cyclePrediction?.lastLabel ?? '—'}`}
+            </CyclePredictionLine>
+            <CyclePredictionLine>
+              {cyclePrediction?.nextLabel
+                ? `NEXT PERIOD: ${cyclePrediction.nextLabel} (${cyclePrediction.avgLen}-day cycle)`
+                : 'NEXT PERIOD: Log more to predict'}
+            </CyclePredictionLine>
+          </WSection>
+        )}
       </CardBody>
     </DashCard>
   );
