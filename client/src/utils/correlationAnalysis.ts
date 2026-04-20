@@ -294,6 +294,8 @@ export interface DecryptedWellness {
   moodScore: number;   // 1–5, 0 = unset
   sleepHours: number;  // 0–12, 0 = unset
   sleepQuality: number; // 1–5, 0 = unset
+  periodToday?: boolean;
+  flowIntensity?: string;
 }
 
 export interface WellnessTrendPoint {

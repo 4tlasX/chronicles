@@ -166,6 +166,14 @@ export function SettingsView() {
   const [weatherCityDraft, setWeatherCityDraft] = useState('');
   const [weatherCitySaving, setWeatherCitySaving] = useState(false);
 
+  // Cycle tracking
+  const cycleTrackingEnabled = useUIStore(s => s.cycleTrackingEnabled);
+  const setCycleTrackingEnabled = useUIStore(s => s.setCycleTrackingEnabled);
+  const handleCycleTrackingToggle = async (enabled: boolean) => {
+    setCycleTrackingEnabled(enabled);
+    await settingsApi.upsert('cycleTrackingEnabled', enabled).catch(() => {});
+  };
+
   // Password
   const [showPassword, setShowPassword] = useState(false);
   const [currentPw, setCurrentPw] = useState('');
@@ -1050,12 +1058,28 @@ export function SettingsView() {
       <SectionDescription>Enable optional topics for specialized tracking</SectionDescription>
       <SettingsCard>
         {FEATURES.map(feat => (
-          <SettingsRow
-            key={feat.key}
-            title={feat.title}
-            description={feat.description}
-            action={<Toggle checked={features[feat.key] ?? false} onChange={v => handleFeatureToggle(feat.key, v)} activeColor={themeMode === 'dark' ? '#2D2C2A' : '#ecebe7'} />}
-          />
+          <>
+            <SettingsRow
+              key={feat.key}
+              title={feat.title}
+              description={feat.description}
+              action={<Toggle checked={features[feat.key] ?? false} onChange={v => handleFeatureToggle(feat.key, v)} activeColor={themeMode === 'dark' ? '#2D2C2A' : '#ecebe7'} />}
+            />
+            {feat.key === 'allergiesEnabled' && (
+              <SettingsRow
+                key="cycleTracking"
+                title="Cycle Tracking"
+                description="Add period and flow tracking to the daily wellness check-in"
+                action={
+                  <Toggle
+                    checked={cycleTrackingEnabled}
+                    onChange={handleCycleTrackingToggle}
+                    activeColor={themeMode === 'dark' ? '#2D2C2A' : '#ecebe7'}
+                  />
+                }
+              />
+            )}
+          </>
         ))}
       </SettingsCard>
 

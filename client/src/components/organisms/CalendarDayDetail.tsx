@@ -56,7 +56,7 @@ const List = styled.div`
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   flex: 1;
-  padding-bottom: 48px;
+  padding: 0 16px 48px;
 `;
 
 interface CalendarDayDetailProps {

@@ -68,6 +68,10 @@ interface UIState {
   setWeatherEnabled: (v: boolean) => void;
   setWeatherCity: (city: string) => void;
   setWeatherUnit: (unit: 'f' | 'c') => void;
+
+  // Cycle tracking
+  cycleTrackingEnabled: boolean;
+  setCycleTrackingEnabled: (v: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -125,4 +129,7 @@ export const useUIStore = create<UIState>((set) => ({
   setWeatherEnabled: (v) => set({ weatherEnabled: v }),
   setWeatherCity: (city) => set({ weatherCity: city }),
   setWeatherUnit: (unit) => set({ weatherUnit: unit }),
+
+  cycleTrackingEnabled: false,
+  setCycleTrackingEnabled: (v) => set({ cycleTrackingEnabled: v }),
 }));

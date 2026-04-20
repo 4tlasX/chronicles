@@ -27,6 +27,7 @@ export function useInitializeData() {
   const setWeatherCity = useUIStore(s => s.setWeatherCity);
   const setWeatherUnit = useUIStore(s => s.setWeatherUnit);
   const setTopicCustomFields = useUIStore(s => s.setTopicCustomFields);
+  const setCycleTrackingEnabled = useUIStore(s => s.setCycleTrackingEnabled);
 
   const handleUnlock = useCallback(async (password: string) => {
     if (!encryptionData?.kekSalt || !encryptionData?.encryptedMasterKey || !encryptionData?.kekWrapIv) {
@@ -58,6 +59,7 @@ export function useInitializeData() {
         if (typeof settingsMap.weatherEnabled === 'boolean') setWeatherEnabled(settingsMap.weatherEnabled);
         if (typeof settingsMap.weatherCity === 'string') setWeatherCity(settingsMap.weatherCity);
         if (settingsMap.weatherUnit === 'f' || settingsMap.weatherUnit === 'c') setWeatherUnit(settingsMap.weatherUnit);
+        if (typeof settingsMap.cycleTrackingEnabled === 'boolean') setCycleTrackingEnabled(settingsMap.cycleTrackingEnabled);
 
         // Feature flags — default to true (enabled) when not explicitly saved
         const KNOWN_FLAGS = [

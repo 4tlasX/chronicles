@@ -11,7 +11,8 @@ import { HealthReport } from '../components/organisms/HealthReport.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
-import { doses as dosesApi } from '../services/api.js';
+import { useEncryption } from '../contexts/EncryptionContext.js';
+import { doses as dosesApi, entries as entriesApi, topics as topicsApi } from '../services/api.js';
 import { stripHtml } from '../utils/stripHtml.js';
 import { useNavigate } from 'react-router-dom';
 import type { PeriodType } from '../types/health.js';
@@ -61,8 +62,12 @@ export function HealthReportingView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
+  const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
+  const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
+  const cycleTrackingEnabled = useUIStore(s => s.cycleTrackingEnabled);
   const navigate = useNavigate();
+  const { encryptPost } = useEncryption();
 
   const [period, setPeriod] = useState<PeriodType>('month');
   const [customFrom, setCustomFrom] = useState('');
@@ -152,6 +157,8 @@ export function HealthReportingView() {
           moodScore: (cf.moodScore as number) || 0,
           sleepHours: (cf.sleepHours as number) || 0,
           sleepQuality: (cf.sleepQuality as number) || 0,
+          periodToday: !!(cf.periodToday),
+          flowIntensity: (cf.flowIntensity as string) || '',
         };
       }),
     [entries, startDate, endDate]);
@@ -196,6 +203,53 @@ export function HealthReportingView() {
     fetchLogs();
   }, [isReady, startDate, endDate, entries, topicIdMap]);
 
+  const onSaveCycleDay = useCallback(async (date: string, periodToday: boolean, flowIntensity: string) => {
+    const store = useEntriesStore.getState();
+    const wellnessTopicId = store.allTopics.find(t => t.name.toLowerCase() === 'wellness')?.id;
+    const existing = store.decryptedEntries.find(e => {
+      const meta = e.metadata as Record<string, unknown>;
+      if (meta._widgetType !== 'wellness-checkin') return false;
+      const cf = meta._customFields as Record<string, unknown> | undefined;
+      return (cf?.date as string) === date;
+    });
+
+    if (existing) {
+      const existingMeta = existing.metadata as Record<string, unknown>;
+      const existingCf = (existingMeta._customFields as Record<string, unknown>) || {};
+      const updatedMeta = { ...existingMeta, _customFields: { ...existingCf, periodToday, flowIntensity } };
+      const encrypted = await encryptPost(existing.content, updatedMeta);
+      await entriesApi.update(existing.id, {
+        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+      });
+      updateDecryptedEntry(existing.id, { metadata: updatedMeta });
+    } else {
+      // Create a new wellness entry for this date
+      let wellnessId = wellnessTopicId;
+      if (!wellnessId) {
+        const newTopic = await topicsApi.create({ name: 'Wellness', icon: 'heart', color: '#9B4444' });
+        wellnessId = newTopic.id;
+      }
+      const metadata = {
+        _widgetType: 'wellness-checkin',
+        _taxonomyId: wellnessId,
+        _customFields: {
+          date,
+          waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0,
+          periodToday, flowIntensity,
+        },
+      };
+      const content = `Wellness check-in for ${date}`;
+      const encrypted = await encryptPost(content, metadata);
+      const created = await entriesApi.create({
+        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+        topicId: wellnessId,
+      });
+      addDecryptedEntry({ id: created.id as number, content, metadata, isEncrypted: false, createdAt: new Date(date + 'T12:00:00'), updatedAt: new Date() });
+    }
+  }, [encryptPost, updateDecryptedEntry, addDecryptedEntry]);
+
   if (needsUnlock) return (<><ContentTemplate><EmptyState message="Unlock your journal to view reports" /></ContentTemplate><UnlockDialog onUnlock={handleUnlock} /></>);
   if (isLoading || !isReady) return (<ContentTemplate><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}><Spinner size={40} /></div></ContentTemplate>);
 
@@ -222,6 +276,8 @@ export function HealthReportingView() {
         wellness={wellness}
         period={period}
         headerColor={headerColor}
+        cycleTrackingEnabled={cycleTrackingEnabled}
+        onSaveCycleDay={onSaveCycleDay}
       />
     </ContentTemplate>
   );

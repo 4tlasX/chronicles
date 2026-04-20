@@ -101,6 +101,56 @@ export function JournalView() {
   const [shareOpen, setShareOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
 
+  const isWellnessEntry = useMemo(() => {
+    if (!editorTopicId) return false;
+    return topics.find(t => t.id === editorTopicId)?.name?.toLowerCase() === 'wellness';
+  }, [editorTopicId, topics]);
+
+  // Wellness auto-save: saves without closing the editor
+  const wellnessAutoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wellnessAutoSaveDoRef = useRef<() => Promise<void>>(async () => {});
+  wellnessAutoSaveDoRef.current = async () => {
+    if (!editorTopicId) return;
+    const metadata: Record<string, unknown> = { _taxonomyId: editorTopicId };
+    if (widgetType) metadata._widgetType = widgetType;
+    if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
+    const hasText = !!stripHtml(editorContent).trim();
+    let finalContent = editorContent;
+    if (!hasText) {
+      const w = (customFields.waterGlasses as number) || 0;
+      const g = (customFields.waterGoal as number) || 8;
+      const m = (customFields.moodScore as number) || 0;
+      const s = (customFields.sleepHours as number) || 0;
+      const parts = [w > 0 ? `${w}/${g} glasses` : '', m > 0 ? `Mood ${m}/5` : '', s > 0 ? `${s}h sleep` : ''].filter(Boolean);
+      finalContent = `<p>${parts.join(' · ') || 'Wellness check-in'}</p>`;
+    }
+    try {
+      const encrypted = await encryptPost(finalContent, metadata);
+      if (selectedEntryId) {
+        await entriesApi.update(selectedEntryId, {
+          contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+          metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+          taxonomyIds: [editorTopicId],
+        });
+        updateDecryptedEntry(selectedEntryId, { content: finalContent, metadata });
+      } else {
+        const result = await entriesApi.create({
+          contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+          metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+          isEncrypted: true, taxonomyIds: [editorTopicId],
+        });
+        addDecryptedEntry({ id: result.id as number, content: finalContent, metadata, isEncrypted: true,
+          createdAt: new Date(result.createdAt as string), updatedAt: new Date((result.updatedAt || result.createdAt) as string) });
+        setSelectedEntryId(result.id as number);
+      }
+    } catch (err) { console.error('Wellness auto-save failed:', err); }
+  };
+
+  const scheduleWellnessAutoSave = useCallback(() => {
+    if (wellnessAutoDebounceRef.current) clearTimeout(wellnessAutoDebounceRef.current);
+    wellnessAutoDebounceRef.current = setTimeout(() => { wellnessAutoSaveDoRef.current(); }, 600);
+  }, []);
+
   const handleUnlock = useCallback(async (password: string) => {
     if (!encryptionData?.kekSalt || !encryptionData?.encryptedMasterKey || !encryptionData?.kekWrapIv) {
       throw new Error('Missing encryption data');
@@ -425,6 +475,7 @@ export function JournalView() {
               customFields={customFields}
               onCustomFieldsChange={setCustomFields}
               onSave={handleSave}
+              onAutoSave={isWellnessEntry ? scheduleWellnessAutoSave : undefined}
               onDelete={selectedEntryId ? handleDelete : undefined}
               onNew={handleNew}
               onBookmark={handleBookmark}

@@ -155,4 +155,6 @@ export interface WellnessFieldValues {
   moodScore: number;   // 1–5, 0 = unset
   sleepHours: number;  // 0–12, 0.5 increments, 0 = unset
   sleepQuality: number; // 1–5, 0 = unset
+  periodToday?: boolean;
+  flowIntensity?: string;
 }

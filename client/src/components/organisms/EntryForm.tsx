@@ -236,6 +236,7 @@ interface EntryFormProps {
   customFields: Record<string, unknown>;
   onCustomFieldsChange: (fields: Record<string, unknown>) => void;
   onSave: () => Promise<void>;
+  onAutoSave?: () => void;
   onDelete?: () => Promise<void>;
   onNew: () => void;
   onBookmark?: () => void;
@@ -249,7 +250,7 @@ interface EntryFormProps {
 
 export function EntryForm({
   entryId, content, onContentChange, topicId, onTopicChange, topics,
-  customFields, onCustomFieldsChange, onSave, onNew,
+  customFields, onCustomFieldsChange, onSave, onAutoSave, onNew,
   onBookmark, onShare, onBack,
   isEditing, isSaving, saveStatus, placeholder = 'Start writing...',
 }: EntryFormProps) {
@@ -261,6 +262,8 @@ export function EntryForm({
   const entries = useEntriesStore(s => s.decryptedEntries);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
+  const cycleTrackingEnabled = useUIStore(s => s.cycleTrackingEnabled);
+
   const userFieldDefs = topicId != null ? (topicCustomFields[topicId] ?? []) : [];
 
   const selectedTopic = topics.find(t => t.id === topicId);
@@ -414,7 +417,7 @@ export function EntryForm({
                 {customType === 'shopping_list' && <ShoppingListFields values={{ items: [], notes: '', linkedRecipeIds: [], ...(customFields as Partial<ShoppingListFieldValues>) } as ShoppingListFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} recipeOptions={recipeOptions} />}
                 {customType === 'recipe' && <RecipeFields values={{ servings: '', prepTime: '', cookTime: '', cuisine: '', ingredients: [], instructions: '', linkedShoppingListIds: [], ...(customFields as Partial<RecipeFieldValues>) } as RecipeFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} shoppingListOptions={shoppingListOptions} />}
                 {customType === 'priorities' && <PrioritiesFields values={{ priorities: [], ...(customFields as Partial<PrioritiesFieldValues>) } as PrioritiesFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
-                {customType === 'wellness' && <WellnessFields values={{ date: '', waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0, ...customFields } as WellnessFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
+                {customType === 'wellness' && <WellnessFields values={{ date: '', waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0, ...customFields } as WellnessFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} cycleTrackingEnabled={cycleTrackingEnabled} onAutoSave={onAutoSave} />}
               </CustomFieldsBody>
             )}
           </CustomFieldsSection>

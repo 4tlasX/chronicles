@@ -13,7 +13,9 @@ import { SymptomFields } from '../molecules/fields/SymptomFields.js';
 import { ExerciseFields } from '../molecules/fields/ExerciseFields.js';
 import { EventFields } from '../molecules/fields/EventFields.js';
 import { MeetingFields } from '../molecules/fields/MeetingFields.js';
+import { WellnessFields, type WellnessFieldValues } from '../molecules/fields/WellnessFields.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
+import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { entries as entriesApi } from '../../services/api.js';
 import type { Topic } from '../../types/topics.js';
@@ -22,6 +24,7 @@ const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
   food: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
+  wellness: 'wellness',
 };
 
 function getCustomType(topicName: string | undefined): string | null {
@@ -66,6 +69,7 @@ interface NewEntryCardProps {
 
 export function NewEntryCard({ topic, headerColor, onCreated }: NewEntryCardProps) {
   const { encryptPost } = useEncryption();
+  const cycleTrackingEnabled = useUIStore(s => s.cycleTrackingEnabled);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
@@ -98,19 +102,31 @@ export function NewEntryCard({ topic, headerColor, onCreated }: NewEntryCardProp
   const customType = getCustomType(topic.name);
 
   const handleSave = async () => {
-    if (!content.trim()) return;
+    const isWellness = customType === 'wellness';
+    const hasText = !!content.trim();
+    if (!hasText && !isWellness) return;
     setSaving(true); setStatus('');
+    let finalContent = content;
+    if (!hasText && isWellness) {
+      const w = (customFields.waterGlasses as number) || 0;
+      const g = (customFields.waterGoal as number) || 8;
+      const m = (customFields.moodScore as number) || 0;
+      const s = (customFields.sleepHours as number) || 0;
+      const parts = [w > 0 ? `${w}/${g} glasses` : '', m > 0 ? `Mood ${m}/5` : '', s > 0 ? `${s}h sleep` : ''].filter(Boolean);
+      finalContent = `<p>${parts.join(' · ') || 'Wellness check-in'}</p>`;
+    }
     try {
-      const metadata: Record<string, unknown> = { _taxonomyId: topic.id };
+      const metadata: Record<string, unknown> = { _taxonomyId: topic.id, _widgetType: 'wellness-checkin' };
       if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
-      const encrypted = await encryptPost(content, metadata);
+      if (!isWellness) delete metadata._widgetType;
+      const encrypted = await encryptPost(finalContent, metadata);
       const result = await entriesApi.create({
         contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
         metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
         isEncrypted: true, taxonomyIds: [topic.id],
       });
       addDecryptedEntry({
-        id: result.id as number, content, metadata, isEncrypted: true,
+        id: result.id as number, content: finalContent, metadata, isEncrypted: true,
         createdAt: new Date(result.createdAt as string),
         updatedAt: new Date((result.updatedAt || result.createdAt) as string),
       });
@@ -140,6 +156,7 @@ export function NewEntryCard({ topic, headerColor, onCreated }: NewEntryCardProp
       case 'exercise': return <ExerciseFields values={{ exerciseType: 'running', duration: '', intensity: 'medium', distance: '', distanceUnit: 'miles', calories: '', performedDate: '', performedTime: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
       case 'event': return <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
       case 'meeting': return <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
+      case 'wellness': return <WellnessFields values={{ date: '', waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0, ...customFields } as WellnessFieldValues} onChange={onChange as never} cycleTrackingEnabled={cycleTrackingEnabled} />;
       default: return null;
     }
   };
