@@ -321,6 +321,7 @@ const QuickEntryDashCard = styled(DashCard)`
   background: transparent;
   border-radius: 10px;
   & ${CardHeader} { border-top: 1px solid ${({ theme }) => theme.colors.border}; }
+  & ${CardBody} { padding: 12px 0; }
 `;
 
 const AddBtn = styled.button`
@@ -451,14 +452,14 @@ const EmptyNote = styled.p`
 const FieldGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px 12px;
-  margin-bottom: 10px;
+  gap: 14px 12px;
+  margin-bottom: 14px;
 `;
 
 const FieldCol = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 6px;
 `;
 
 const FieldLabel = styled.label`
