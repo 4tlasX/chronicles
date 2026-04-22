@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { faPlus, faArrowRightFromBracket, faBars, faXmark, faHome, faBookOpen, faCalendar, faTag, faGear, faMagnifyingGlass, faCircleUser } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowRightFromBracket, faBars, faXmark, faHome, faBookOpen, faCalendar, faTag, faGear, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { UserCircle } from '@phosphor-icons/react';
 import { faNoteSticky } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -30,7 +31,7 @@ const Logo = styled(Link)`
   text-decoration: none;
   flex-shrink: 0;
 
-  @media (max-width: 1199px) {
+  @media (max-width: 1366px) {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -57,7 +58,7 @@ const RightSection = styled.div`
   flex-shrink: 0;
   margin-left: auto;
 
-  @media (max-width: 1199px) { display: none; }
+  @media (max-width: 1366px) { display: none; }
 `;
 
 const DateText = styled.span<{ $light?: boolean }>`
@@ -89,7 +90,7 @@ const HeaderIconBtn = styled.button<{ $light?: boolean }>`
 
   &:hover { opacity: 1; }
 
-  @media (max-width: 1199px) { display: none; }
+  @media (max-width: 1366px) { display: none; }
 `;
 
 const Nav = styled.nav`
@@ -100,7 +101,7 @@ const Nav = styled.nav`
   left: 50%;
   transform: translateX(-50%);
 
-  @media (max-width: 1199px) {
+  @media (max-width: 1366px) {
     display: none;
   }
 `;
@@ -189,6 +190,35 @@ const AvatarMenuItem = styled.button`
   &:hover { background: var(--paper-hover); color: var(--ink); }
 `;
 
+const MobileAvatarWrapper = styled.div`
+  display: none;
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+
+  @media (max-width: 1366px) {
+    display: flex;
+    align-items: center;
+  }
+`;
+
+const MobileAvatarIconBtn = styled.button<{ $light?: boolean }>`
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+
+  &:hover { background: rgba(255,255,255,0.08); }
+`;
+
 const HamburgerButton = styled.button<{ $light?: boolean }>`
   display: none;
   align-items: center;
@@ -202,29 +232,11 @@ const HamburgerButton = styled.button<{ $light?: boolean }>`
   font-size: 18px;
   flex-shrink: 0;
 
-  @media (max-width: 1199px) {
+  @media (max-width: 1366px) {
     display: flex;
   }
 `;
 
-const MobileAvatarBtn = styled.button<{ $light?: boolean }>`
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  font-size: 20px;
-  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
-  background: none;
-  border: none;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin-left: auto;
-
-  @media (max-width: 1199px) {
-    display: flex;
-  }
-`;
 
 const MobileDrawerOverlay = styled.div<{ $open: boolean }>`
   display: none;
@@ -237,7 +249,7 @@ const MobileDrawerOverlay = styled.div<{ $open: boolean }>`
   transition: opacity 0.25s ease;
   pointer-events: ${({ $open }) => $open ? 'auto' : 'none'};
 
-  @media (max-width: 1199px) {
+  @media (max-width: 1366px) {
     display: block;
   }
 `;
@@ -258,7 +270,7 @@ const MobileDrawer = styled.div<{ $open: boolean }>`
   flex-direction: column;
   overflow: hidden;
 
-  @media (max-width: 1199px) {
+  @media (max-width: 1366px) {
     display: flex;
   }
 `;
@@ -273,28 +285,18 @@ const DrawerHead = styled.div<{ $bgColor: string }>`
   flex-shrink: 0;
 `;
 
-const DrawerUserInfo = styled.div`
-  display: flex;
-  gap: 10px;
-  align-items: center;
-`;
-
-const DrawerAvatar = styled.div`
-  width: 38px;
-  height: 38px;
-  border-radius: var(--r-sm, 2px);
-  background: var(--paper-surface);
-  color: var(--ink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
+const DrawerGreeting = styled.div`
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--h-active-ink, #f0ebdf);
+  opacity: 0.75;
+  margin-bottom: 2px;
 `;
 
 const DrawerUserName = styled.div`
   font-family: var(--serif);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 500;
   color: var(--h-active-ink, #f0ebdf);
 `;
@@ -412,6 +414,13 @@ const DrawerLogout = styled.button`
 `;
 
 
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning,';
+  if (h < 17) return 'Good afternoon,';
+  return 'Good evening,';
+}
+
 function formatHeaderDate(): string {
   const now = new Date();
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -432,7 +441,9 @@ export function Header() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const [mobileAvatarMenuOpen, setMobileAvatarMenuOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
+  const mobileAvatarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!avatarMenuOpen) return;
@@ -442,6 +453,15 @@ export function Header() {
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
   }, [avatarMenuOpen]);
+
+  useEffect(() => {
+    if (!mobileAvatarMenuOpen) return;
+    const handle = (e: MouseEvent) => {
+      if (mobileAvatarRef.current && !mobileAvatarRef.current.contains(e.target as Node)) setMobileAvatarMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [mobileAvatarMenuOpen]);
 
   const handleLogout = async () => {
     setMobileMenuOpen(false);
@@ -528,7 +548,7 @@ export function Header() {
             </AvatarMenuItem>
             <AvatarMenuItem onClick={handleLogout}>
               <FontAwesomeIcon icon={faArrowRightFromBracket} />
-              Lock journal
+              Logout
             </AvatarMenuItem>
           </AvatarMenu>
         )}
@@ -550,23 +570,37 @@ export function Header() {
         {/* Desktop center nav */}
         {centerNav}
 
+        {/* Mobile avatar — right of header, hidden on desktop */}
+        <MobileAvatarWrapper ref={mobileAvatarRef}>
+          <MobileAvatarIconBtn $light={light} onClick={() => setMobileAvatarMenuOpen(v => !v)}>
+            <UserCircle size={28} weight="fill" />
+          </MobileAvatarIconBtn>
+          {mobileAvatarMenuOpen && (
+            <AvatarMenu>
+              <AvatarMenuItem onClick={() => { setMobileAvatarMenuOpen(false); navigate('/settings'); }}>
+                <FontAwesomeIcon icon={faGear} />
+                Settings
+              </AvatarMenuItem>
+              <AvatarMenuItem onClick={() => { setMobileAvatarMenuOpen(false); handleLogout(); }}>
+                <FontAwesomeIcon icon={faArrowRightFromBracket} />
+                Logout
+              </AvatarMenuItem>
+            </AvatarMenu>
+          )}
+        </MobileAvatarWrapper>
+
         {/* Desktop right section */}
         {rightEl}
-
-        {/* Mobile: rightmost avatar icon — hidden on desktop */}
-        <MobileAvatarBtn $light={light} onClick={() => setMobileMenuOpen(true)}>
-          <FontAwesomeIcon icon={faCircleUser} />
-        </MobileAvatarBtn>
       </HeaderBar>
 
       {/* Mobile drawer — slides from left */}
       <MobileDrawerOverlay $open={mobileMenuOpen} onClick={() => setMobileMenuOpen(false)} />
       <MobileDrawer $open={mobileMenuOpen}>
         <DrawerHead $bgColor={bgColor}>
-          <DrawerUserInfo>
-            <DrawerAvatar><FontAwesomeIcon icon={faCircleUser} /></DrawerAvatar>
+          <div>
+            <DrawerGreeting>{getGreeting()}</DrawerGreeting>
             <DrawerUserName>{displayName || 'Chronicles'}</DrawerUserName>
-          </DrawerUserInfo>
+          </div>
           <DrawerCloseButton onClick={() => setMobileMenuOpen(false)}>
             <FontAwesomeIcon icon={faXmark} />
           </DrawerCloseButton>
@@ -639,7 +673,7 @@ export function Header() {
         <DrawerFoot>
           <DrawerLogout onClick={handleLogout}>
             <FontAwesomeIcon icon={faArrowRightFromBracket} />
-            Lock journal
+            Logout
           </DrawerLogout>
         </DrawerFoot>
       </MobileDrawer>

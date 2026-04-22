@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome, faBookOpen, faCalendar, faTag, faGear, faPlus,
-  faFlag, faCheck, faCircleCheck,
-  faPills, faChartLine,
+  faFlag, faLayerGroup, faCheck, faCircleCheck, faSlidersH,
+  faPills, faCalendarCheck, faUtensils, faThermometerHalf, faPersonRunning, faTriangleExclamation, faChartLine,
   faMusic, faBook, faTv, faLightbulb, faQuoteLeft,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -24,7 +24,7 @@ const SidebarRoot = styled.aside`
   flex-direction: column;
   flex-shrink: 0;
 
-  @media (max-width: 768px) {
+  @media (max-width: 1366px) {
     display: none;
   }
 `;
@@ -150,15 +150,22 @@ export function Sidebar() {
       {/* Planning */}
       <NavSection>Planning</NavSection>
       {ff.goalsEnabled && <NavLink to="/goals" icon={faFlag} label="Goals" active={at('/goals')} />}
+      {ff.goalsEnabled && <NavLink to="/goals/milestones" icon={faLayerGroup} label="Milestones" active={at('/goals/milestones')} />}
       <NavLink to="/goals/tasks" icon={faCheck} label="Tasks" active={at('/goals/tasks')} />
       <NavLink to="/goals/todos" icon={faCircleCheck} label="Todos" active={at('/goals/todos')} />
+      <NavLink to="/goals/filter" icon={faSlidersH} label="Filters" active={startsWith('/goals/filter')} />
 
       {/* Health */}
       {hasHealth && (
         <>
           <NavSection>Health</NavSection>
-          {ff.medicationEnabled && <NavLink to="/health/meds" icon={faPills} label="Medications" active={startsWith('/health/meds') || at('/health/schedule')} />}
-          <NavLink to="/health/reporting" icon={faChartLine} label="Reports" active={startsWith('/health/reporting')} />
+          {ff.medicationEnabled && <NavLink to="/health/schedule" icon={faCalendarCheck} label="Schedule" active={at('/health/schedule')} />}
+          {ff.medicationEnabled && <NavLink to="/health/meds" icon={faPills} label="Medications" active={startsWith('/health/meds')} />}
+          {ff.foodEnabled && <NavLink to="/health/food" icon={faUtensils} label="Food" active={at('/health/food')} />}
+          {hasHealth && <NavLink to="/health/symptoms" icon={faThermometerHalf} label="Symptoms" active={at('/health/symptoms')} />}
+          {ff.exerciseEnabled && <NavLink to="/health/exercise" icon={faPersonRunning} label="Exercise" active={at('/health/exercise')} />}
+          {ff.allergiesEnabled && <NavLink to="/health/allergies" icon={faTriangleExclamation} label="Allergies" active={at('/health/allergies')} />}
+          <NavLink to="/health/reporting" icon={faChartLine} label="Reports" active={at('/health/reporting')} />
         </>
       )}
 
