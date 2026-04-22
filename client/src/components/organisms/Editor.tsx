@@ -4,7 +4,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import styled, { keyframes, css } from 'styled-components';
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenNib, faPencil, faMicrophone } from '@fortawesome/free-solid-svg-icons';
 import { useDictation } from '../../hooks/useDictation.js';
@@ -15,18 +15,18 @@ const EditorWrapper = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 200px;
   position: relative;
 
   .tiptap {
     flex: 1;
     position: relative;
     z-index: 1;
-    padding: 16px 48px 32px 24px;
+    padding: 16px 0 32px;
     outline: none;
-    font-size: 18px;
-    line-height: 1.85;
-    color: ${({ theme }) => theme.colors.text};
+    font-family: var(--sans, 'Lato', -apple-system, sans-serif);
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--ink, ${({ theme }) => theme.colors.text});
     touch-action: auto;
     user-select: text;
     -webkit-user-select: text;
@@ -66,8 +66,8 @@ strong { font-weight: 700; }
 const ToolbarRow = styled.div<{ $collapsed: boolean }>`
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding: 0 24px;
+  justify-content: flex-start;
+  padding: 0;
   border-bottom: none;
   ${({ $collapsed }) => $collapsed && `
     position: absolute;
@@ -102,7 +102,6 @@ const Toolbar = styled.div`
   display: flex;
   align-items: center;
   gap: 2px;
-  margin-right: auto;
   flex-wrap: wrap;
 `;
 
@@ -184,6 +183,10 @@ function createCharLimitPlugin(getLimit: () => number | undefined) {
   });
 }
 
+export interface DictationControls {
+  toggle: () => void;
+}
+
 interface EditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -194,9 +197,11 @@ interface EditorProps {
   toolbarOpen?: boolean;
   onToolbarToggle?: (open: boolean) => void;
   hideToolbarToggle?: boolean;
+  dictationControlRef?: React.MutableRefObject<DictationControls | null>;
+  onDictationChange?: (isListening: boolean, interimText: string, error: string) => void;
 }
 
-export function Editor({ content, onChange, readOnly = false, placeholder = 'Start writing...', charLimit, onEnterSave, toolbarOpen: externalToolbarOpen, onToolbarToggle, hideToolbarToggle }: EditorProps) {
+export function Editor({ content, onChange, readOnly = false, placeholder = 'Start writing...', charLimit, onEnterSave, toolbarOpen: externalToolbarOpen, onToolbarToggle, hideToolbarToggle, dictationControlRef, onDictationChange }: EditorProps) {
   const [internalToolbarOpen, setInternalToolbarOpen] = useState(false);
   const [drawingOpen, setDrawingOpen] = useState(false);
   const toolbarOpen = externalToolbarOpen ?? internalToolbarOpen;
@@ -212,6 +217,19 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
   }, []);
 
   const { isSupported: dictationSupported, isListening, interimText, error: dictationError, startListening, stopListening } = useDictation({ onFinalResult: handleFinalResult });
+
+  // Expose dictation toggle to parent via ref
+  useEffect(() => {
+    if (dictationControlRef) {
+      dictationControlRef.current = { toggle: () => isListening ? stopListening() : startListening() };
+    }
+  }, [dictationControlRef, isListening, startListening, stopListening]);
+
+  // Notify parent of dictation state changes
+  useEffect(() => {
+    onDictationChange?.(isListening, interimText, dictationError ?? '');
+  }, [isListening, interimText, dictationError, onDictationChange]);
+
   // Store charLimit in a ref-like closure so the plugin always sees the latest value
   const limitRef = useMemo(() => ({ current: charLimit }), []);
   limitRef.current = charLimit;
@@ -369,7 +387,7 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
           {!hideToolbarToggle && <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)} aria-label="Toggle formatting toolbar" aria-expanded={toolbarOpen}>
             <FontAwesomeIcon icon={faPenNib} />
           </ToolbarToggle>}
-          {dictationSupported && (
+          {!hideToolbarToggle && dictationSupported && (
             <MicButton
               $active={isListening}
               onClick={isListening ? stopListening : startListening}

@@ -14,18 +14,18 @@ describe('Badge', () => {
     expect(screen.getByText('Health')).toBeInTheDocument();
   });
 
-  it('accepts color prop', () => {
-    renderWithTheme(<Badge color="#ff0000">Alert</Badge>);
+  it('accepts variant prop', () => {
+    renderWithTheme(<Badge variant="accent">Alert</Badge>);
     expect(screen.getByText('Alert')).toBeInTheDocument();
   });
 
-  it('renders without color prop (default styling)', () => {
+  it('renders without variant prop (default styling)', () => {
     renderWithTheme(<Badge>Default</Badge>);
     expect(screen.getByText('Default')).toBeInTheDocument();
   });
 
-  it('accepts capitalize prop', () => {
-    renderWithTheme(<Badge capitalize>topic name</Badge>);
+  it('accepts ink variant', () => {
+    renderWithTheme(<Badge variant="ink">topic name</Badge>);
     expect(screen.getByText('topic name')).toBeInTheDocument();
   });
 
@@ -36,7 +36,7 @@ describe('Badge', () => {
 
   it('renders complex children', () => {
     renderWithTheme(
-      <Badge color="#00ff00">
+      <Badge variant="success">
         <span>Icon</span> Label
       </Badge>
     );

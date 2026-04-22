@@ -23,7 +23,7 @@ import { useEntriesStore } from '../../stores/entriesStore.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { entries as entriesApi } from '../../services/api.js';
 import { getTopicIcon } from '../../utils/topicIcons.js';
-import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
+import { stripHtml } from '../../utils/stripHtml.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 import type { Topic } from '../../types/topics.js';
 
@@ -45,13 +45,13 @@ function getCustomType(topicName: string | undefined): string | null {
 
 const TopicSelectorBorder = styled.div`
   display: inline-block;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
 `;
 
 const Card = styled.div<{ $editing?: boolean }>`
   border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: 0;
   background: transparent;
   min-width: 0;
@@ -67,15 +67,15 @@ const PreviewRow = styled.div`
   background: none;
   border: none;
   cursor: pointer;
-  transition: background 0.1s;
-  &:hover { background: rgba(0, 0, 0, 0.02); }
+  transition: background 120ms ease;
+  &:hover { background: var(--paper-hover, rgba(0,0,0,0.02)); }
   @media (max-width: 768px) { padding: 14px 16px 18px; }
   @media (max-width: 480px) { padding: 12px 12px 16px; gap: 8px; flex-wrap: wrap; }
 `;
 
 const IconWrap = styled.span`
-  color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 16px;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 14px;
   margin-top: 3px;
   flex-shrink: 0;
 `;
@@ -86,19 +86,21 @@ const Content = styled.div`
 `;
 
 const Preview = styled.div<{ $done?: boolean }>`
-  font-size: 17px;
-  line-height: 1.5;
-  color: ${({ theme }) => theme.colors.text};
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: ${({ $done }) => $done ? 'var(--ink-4)' : 'var(--ink-2)'};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-decoration: ${({ $done }) => $done ? 'line-through' : 'none'};
-  opacity: ${({ $done }) => $done ? 0.55 : 1};
 `;
 
 const Meta = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
   margin-top: 4px;
   display: flex;
   gap: 8px;
@@ -106,22 +108,22 @@ const Meta = styled.div`
 `;
 
 const DateLabel = styled.span`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
   flex-shrink: 0;
   margin-top: 2px;
   margin-left: 12px;
 `;
 
 const TaskCheckButton = styled.button<{ $state: 'none' | 'progress' | 'done'; $color: string }>`
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
-  border-radius: 50%;
-  border: 2px solid ${({ $state, $color, theme }) =>
-    $state === 'done' ? $color :
-    $state === 'progress' ? $color :
-    theme.colors.border};
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: var(--r-sm, 2px);
+  border: 1px solid ${({ $state, $color }) =>
+    $state !== 'none' ? $color : 'var(--ink-3)'};
   background: ${({ $state, $color }) =>
     $state === 'done' ? $color :
     $state === 'progress' ? `${$color}30` :
@@ -134,8 +136,8 @@ const TaskCheckButton = styled.button<{ $state: 'none' | 'progress' | 'done'; $c
   margin-top: 2px;
   padding: 0;
   transition: all 0.15s;
-  color: ${({ $state }) => $state === 'done' ? 'white' : 'inherit'};
-  font-size: 12px;
+  color: ${({ $state }) => $state === 'done' ? 'var(--paper-surface)' : 'var(--ink)'};
+  font-size: 11px;
   &:hover { opacity: 0.8; }
 `;
 
@@ -149,18 +151,20 @@ const RightInfo = styled.div`
 `;
 
 const StatusLabel = styled.span<{ $clickable?: boolean }>`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: ${({ theme }) => theme.colors.text};
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   ${({ $clickable }) => $clickable && `cursor: pointer; &:hover { opacity: 0.6; }`}
 `;
 
 const DeadlineLabel = styled.span<{ $overdue?: boolean }>`
-  font-size: 13px;
-  color: ${({ $overdue, theme }) => $overdue ? theme.colors.danger : theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: ${({ $overdue }) => $overdue ? 'var(--danger)' : 'var(--ink-4)'};
   white-space: nowrap;
   @media (max-width: 480px) { white-space: normal; }
 `;
@@ -178,9 +182,10 @@ interface EditableEntryCardProps {
   metaFields?: { key: string; label: string }[];
   onStatusClick?: (status: string) => void;
   showAsPlain?: boolean;
+  hidePreview?: boolean;
 }
 
-export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain }: EditableEntryCardProps) {
+export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain, hidePreview }: EditableEntryCardProps) {
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const removeEntry = useEntriesStore(s => s.removeEntry);
@@ -264,16 +269,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
     const metadata: Record<string, unknown> = { _taxonomyId: selectedTopicId };
     if (entryMeta._widgetType) metadata._widgetType = entryMeta._widgetType;
     if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
-    const hasText = !!stripHtml(editContent).trim();
-    let finalContent = editContent;
-    if (!hasText) {
-      const w = (customFields.waterGlasses as number) || 0;
-      const g = (customFields.waterGoal as number) || 8;
-      const m = (customFields.moodScore as number) || 0;
-      const s = (customFields.sleepHours as number) || 0;
-      const parts = [w > 0 ? `${w}/${g} glasses` : '', m > 0 ? `Mood ${m}/5` : '', s > 0 ? `${s}h sleep` : ''].filter(Boolean);
-      finalContent = `<p>${parts.join(' · ') || 'Wellness check-in'}</p>`;
-    }
+    const finalContent = editContent;
     try {
       const encrypted = await encryptPost(finalContent, metadata);
       await entriesApi.update(entry.id, {
@@ -312,10 +308,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   const handleSave = async () => {
     setSaving(true); setStatus('');
     try {
-      const hasText = !!stripHtml(editContent).trim();
-      const userFieldValues = (customFields._userFields as Record<string, unknown>) ?? {};
-      const fieldSummary = !hasText ? summarizeUserFields(userFieldDefs, userFieldValues) : '';
-      const finalContent = hasText ? editContent : (fieldSummary ? `<p>${fieldSummary}</p>` : editContent);
+      const finalContent = editContent;
       const metadata: Record<string, unknown> = { _taxonomyId: selectedTopicId };
       if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
       const encrypted = await encryptPost(finalContent, metadata);
@@ -386,7 +379,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
 
   return (
     <Card $editing={isEditing}>
-      <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing}>
+      {!hidePreview && <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing}>
       <PreviewRow role="button" tabIndex={0} onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}>
         {customType === 'task' && !showAsPlain ? (
           <TaskCheckButton
@@ -431,7 +424,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
           <DateLabel>{dateStr}</DateLabel>
         )}
       </PreviewRow>
-      </SwipeActions>
+      </SwipeActions>}
 
       {isEditing && (
         <InlineEditPanel

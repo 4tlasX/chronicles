@@ -4,53 +4,57 @@ import { faSearch, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const Wrapper = styled.div`
-  position: relative;
   display: flex;
   align-items: center;
+  gap: 10px;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-md, ${({ theme }) => theme.borderRadius.md}px);
+  padding: 8px 12px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+
+  &:focus-within {
+    border-color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+    box-shadow: var(--focus, 0 0 0 2px rgba(78,110,126,0.28));
+  }
 `;
 
 const SearchIcon = styled.span`
-  position: absolute;
-  left: 10px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  pointer-events: none;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+  font-size: 13px;
+  flex-shrink: 0;
 `;
 
 const Input = styled.input`
-  width: 100%;
-  padding: ${({ theme }) => theme.spacing.sm}px ${({ theme }) => theme.spacing.md}px;
-  padding-left: 32px;
-  padding-right: 32px;
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
+  flex: 1;
+  border: none;
   outline: none;
-
-  &:focus {
-    border-color: ${({ theme }) => theme.colors.borderFocus};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.accentLight};
-  }
+  background: transparent;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 14px;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
 
   &::placeholder {
-    color: ${({ theme }) => theme.colors.textMuted};
+    color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+    font-style: italic;
   }
 `;
 
 const ClearButton = styled.button`
-  position: absolute;
-  right: 8px;
-  padding: 6px;
-  min-width: 28px;
-  min-height: 28px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
   background: none;
   border: none;
   cursor: pointer;
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  font-size: 13px;
+  flex-shrink: 0;
+  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
+  transition: color 120ms ease;
+  &:hover { color: var(--ink, ${({ theme }) => theme.colors.text}); }
 `;
 
 interface SearchInputProps {

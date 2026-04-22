@@ -49,15 +49,6 @@ describe('TopicSidebarPanel', () => {
     totalEntryCount: 10,
     entryCounts: new Map([[1, 5], [2, 3]]),
     headerColor: '#4281a4',
-    showAddForm: false,
-    newName: '',
-    newIcon: null,
-    isAdding: false,
-    onToggleAddForm: vi.fn(),
-    onNewNameChange: vi.fn(),
-    onNewIconChange: vi.fn(),
-    onAdd: vi.fn(),
-    onCancelAdd: vi.fn(),
     editingId: null,
     editName: '',
     editIcon: null,
@@ -69,17 +60,17 @@ describe('TopicSidebarPanel', () => {
     onStartEdit: vi.fn(),
     onDelete: vi.fn(),
     onDragEnd: vi.fn(),
+    onAdd: vi.fn().mockResolvedValue(undefined),
   };
 
-  it('renders topics title', () => {
+  it('renders Your Topics title', () => {
     renderWithTheme(<TopicSidebarPanel {...defaultProps} />);
-    expect(screen.getByText('Topics')).toBeInTheDocument();
+    expect(screen.getByText('Your Topics')).toBeInTheDocument();
   });
 
-  it('renders all entries item with count', () => {
+  it('renders all entries item', () => {
     renderWithTheme(<TopicSidebarPanel {...defaultProps} />);
     expect(screen.getByText('All Entries')).toBeInTheDocument();
-    expect(screen.getByText('(10)')).toBeInTheDocument();
   });
 
   it('renders topic items', () => {
@@ -95,17 +86,8 @@ describe('TopicSidebarPanel', () => {
     expect(onSelectTopic).toHaveBeenCalledWith(null);
   });
 
-  it('calls onToggleAddForm when add button is clicked', () => {
-    const onToggle = vi.fn();
-    renderWithTheme(<TopicSidebarPanel {...defaultProps} onToggleAddForm={onToggle} />);
-    // The add button has a title
-    const addBtn = screen.getByTitle('Add topic');
-    fireEvent.click(addBtn);
-    expect(onToggle).toHaveBeenCalled();
-  });
-
   it('shows empty state when no topics', () => {
     renderWithTheme(<TopicSidebarPanel {...defaultProps} topics={[]} />);
-    expect(screen.getByText('No topics yet. Click + to create one.')).toBeInTheDocument();
+    expect(screen.getByText('No topics yet. Add one below.')).toBeInTheDocument();
   });
 });

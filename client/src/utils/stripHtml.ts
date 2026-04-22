@@ -10,19 +10,14 @@ export function stripHtml(html: string): string {
   return tmp.textContent || tmp.innerText || '';
 }
 
-/**
- * Build a one-line summary from user-defined field values.
- * Used as auto-generated entry content when no manual text is written.
- */
+/** Build a one-line summary from user-defined field values, for preview display only. */
 export function summarizeUserFields(defs: UserFieldDef[], values: Record<string, unknown>): string {
   const parts: string[] = [];
   for (const def of defs) {
     const val = values[def.id];
     if (val === undefined || val === null || val === '') continue;
-    if (def.type === 'boolean') {
-      if (val) parts.push(def.label);
-    } else {
-      parts.push(`${def.label}: ${val}`);
+    if (def.type !== 'boolean') {
+      parts.push(String(val));
     }
   }
   return parts.join(' · ');

@@ -11,13 +11,13 @@ const ContentArea = styled.div`
 `;
 
 const StyledSidePanel = styled.div<{ $hiddenMobile?: boolean; $hasBackground?: boolean }>`
-  width: 33%;
-  min-width: 320px;
-  max-width: 480px;
+  width: 380px;
+  min-width: 380px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
+  background: var(--paper-surface);
   border-right: 1px solid ${({ theme }) => theme.colors.border};
 
   @media (max-width: 1024px) {
@@ -33,7 +33,7 @@ const StyledEditorPanel = styled.div<{ $visibleMobile?: boolean; $hasBackground?
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: ${({ $hasBackground, theme }) => $hasBackground ? theme.colors.surfaceOverlay : theme.colors.surfaceOverlay};
+  background: ${({ $hasBackground, theme }) => $hasBackground ? theme.colors.surfaceOverlay : 'var(--paper)'};
 
   @media (max-width: 1024px) {
     display: ${({ $visibleMobile }) => $visibleMobile ? 'flex' : 'none'};

@@ -24,15 +24,112 @@ import { MenuView } from './views/MenuView.js';
 import { ShoppingListsView } from './views/ShoppingListsView.js';
 import { DashboardView } from './views/DashboardView.js';
 
-function R({ children }: { children: React.ReactNode }) {
-  return <ProtectedRoute>{children}</ProtectedRoute>;
+/* ── Design token CSS variable sets ─────────────────────────────────────── */
+
+const LIGHT_CSS_VARS: Record<string, string> = {
+  '--paper':             'rgb(240, 235, 223)',
+  '--paper-deep':        'rgb(231, 224, 208)',
+  '--paper-surface':     '#f7f4ee',
+  '--paper-hover':       '#f0eeea',
+  '--ink':               '#2b2824',
+  '--ink-2':             '#453f38',
+  '--ink-3':             '#6b645a',
+  '--ink-4':             '#8a857c',
+  '--rule':              '#d4cfc5',
+  '--rule-2':            '#e5dfd2',
+  '--btn-primary':       '#2b2824',
+  '--btn-primary-ink':   '#f0ebdf',
+  '--btn-primary-hover': '#453f38',
+  '--accent-fill':       '#2b2824',
+  '--accent-fill-ink':   '#f0ebdf',
+  '--danger':            '#9B4444',
+  '--success':           '#5A8A6A',
+  '--warning':           '#B8965A',
+  '--info':              '#5C6B8A',
+  '--shadow-1':          '0 1px 2px rgba(0,0,0,0.04)',
+  '--shadow-2':          '0 2px 8px rgba(0,0,0,0.06)',
+  '--shadow-3':          '0 4px 12px rgba(0,0,0,0.08)',
+};
+
+const DARK_CSS_VARS: Record<string, string> = {
+  '--paper':             '#1a1815',
+  '--paper-deep':        '#120f0c',
+  '--paper-surface':     '#24211d',
+  '--paper-hover':       '#2d2a25',
+  '--ink':               '#efeadd',
+  '--ink-2':             '#cfc7b6',
+  '--ink-3':             '#9a9385',
+  '--ink-4':             '#6f6a5e',
+  '--rule':              '#3a352e',
+  '--rule-2':            '#2c2822',
+  '--btn-primary':       '#efeadd',
+  '--btn-primary-ink':   '#1a1815',
+  '--btn-primary-hover': '#cfc7b6',
+  '--accent-fill':       '#efeadd',
+  '--accent-fill-ink':   '#1a1815',
+  '--danger':            '#C47A7A',
+  '--success':           '#7BAA8A',
+  '--warning':           '#D4B47A',
+  '--info':              '#7B9EB2',
+  '--shadow-1':          '0 1px 2px rgba(0,0,0,0.35)',
+  '--shadow-2':          '0 2px 8px rgba(0,0,0,0.45)',
+  '--shadow-3':          '0 8px 24px rgba(0,0,0,0.55)',
+};
+
+/* Structural tokens that never change with theme or accent */
+const STATIC_CSS_VARS: Record<string, string> = {
+  '--r-sm':  '2px',
+  '--r-md':  '4px',
+  '--r-lg':  '6px',
+  '--r-xl':  '8px',
+  '--s-1':   '4px',
+  '--s-2':   '8px',
+  '--s-3':   '12px',
+  '--s-4':   '16px',
+  '--s-5':   '20px',
+  '--s-6':   '24px',
+  '--s-7':   '32px',
+  '--s-8':   '48px',
+  '--s-9':   '64px',
+  '--s-10':  '96px',
+  '--serif':  "'Playfair Display', Georgia, serif",
+  '--sans':   "'Lato', -apple-system, sans-serif",
+  '--mono':   "'JetBrains Mono', ui-monospace, Menlo, monospace",
+  '--brand':  "'Josefin Sans', 'Inter', sans-serif",
+  '--ui':     "'Lato', -apple-system, sans-serif",
+};
+
+/* Apply structural vars once at module load */
+const root = document.documentElement;
+Object.entries(STATIC_CSS_VARS).forEach(([k, v]) => root.style.setProperty(k, v));
+
+/* ── Color derivation helpers ────────────────────────────────────────────── */
+
+function hexToRgbParts(hex: string): [number, number, number] {
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ];
 }
 
-function hexToRgb(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `${r}, ${g}, ${b}`;
+function isLightHex(hex: string): boolean {
+  const [r, g, b] = hexToRgbParts(hex);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.75;
+}
+
+function deriveAccentStroke(hex: string): string {
+  const [r, g, b] = hexToRgbParts(hex);
+  return `rgb(${Math.round(r * 0.75)},${Math.round(g * 0.75)},${Math.round(b * 0.75)})`;
+}
+
+function deriveDarker(hex: string, factor: number): string {
+  const [r, g, b] = hexToRgbParts(hex);
+  return `rgb(${Math.round(r * factor)},${Math.round(g * factor)},${Math.round(b * factor)})`;
+}
+
+function R({ children }: { children: React.ReactNode }) {
+  return <ProtectedRoute>{children}</ProtectedRoute>;
 }
 
 export function App() {
@@ -41,10 +138,29 @@ export function App() {
   const activeTheme = themeMode === 'dark' ? darkTheme : lightTheme;
 
   useEffect(() => {
-    const color = headerColor || '#6A9B9B';
-    document.documentElement.style.setProperty('--focus-color', color);
-    document.documentElement.style.setProperty('--focus-color-rgb', hexToRgb(color));
-  }, [headerColor]);
+    const color = headerColor || '#2d2c2a';
+    const isDark = themeMode === 'dark';
+    const [r, g, b] = hexToRgbParts(color);
+
+    root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+
+    /* Theme-based tokens (flip between light and dark) */
+    const themeVars = isDark ? DARK_CSS_VARS : LIGHT_CSS_VARS;
+    Object.entries(themeVars).forEach(([k, v]) => root.style.setProperty(k, v));
+
+    /* Accent-derived tokens (from user's header color) */
+    root.style.setProperty('--accent', color);
+    root.style.setProperty('--accent-hover', deriveDarker(color, 0.85));
+    root.style.setProperty('--accent-tint', `rgba(${r},${g},${b},0.12)`);
+    root.style.setProperty('--accent-stroke', deriveAccentStroke(color));
+    root.style.setProperty('--h-active', color);
+    root.style.setProperty('--h-active-ink', isLightHex(color) ? 'rgba(0,0,0,0.85)' : '#f0ebdf');
+    root.style.setProperty('--focus', `0 0 0 2px rgba(${r},${g},${b},0.28)`);
+
+    /* Legacy vars for existing components that depend on them */
+    root.style.setProperty('--focus-color', color);
+    root.style.setProperty('--focus-color-rgb', `${r},${g},${b}`);
+  }, [headerColor, themeMode]);
 
   return (
     <ThemeProvider theme={activeTheme}>

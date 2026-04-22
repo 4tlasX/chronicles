@@ -1,19 +1,17 @@
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
-const isDark = (theme: { colors: { background: string } }) => theme.colors.background === '#1a1b1d';
-
 export const ActionButton = styled.button`
   && {
     padding: 6px 16px;
     font-size: 16px;
     color: ${({ theme }) => theme.colors.text};
-    background: ${({ theme }) => isDark(theme) ? '#2a2b2d' : '#faf8f2'};
+    background: var(--paper-surface);
     border: 1px solid ${({ theme }) => theme.colors.border};
     border-radius: ${({ theme }) => theme.borderRadius.md}px;
     cursor: pointer;
     transition: background 0.15s, opacity 0.15s;
-    &:hover { background: ${({ theme }) => isDark(theme) ? '#3a3b3d' : '#ecebe7'}; }
+    &:hover { background: var(--paper-hover); }
     &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
 `;

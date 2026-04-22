@@ -7,28 +7,32 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 
 const StyledTextarea = styled.textarea<{ $error?: boolean }>`
   width: 100%;
-  min-height: 80px;
-  padding: 8px 12px;
-  font-size: 16px;
+  min-height: 96px;
+  padding: 10px 12px;
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.6;
   -webkit-appearance: none;
-  border: 1px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: transparent;
-  color: ${({ theme }) => theme.colors.text};
+  border: 1px solid ${({ $error }) => $error ? 'var(--danger)' : 'var(--rule)'};
+  border-radius: var(--r-md, ${({ theme }) => theme.borderRadius.md}px);
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
   resize: vertical;
   outline: none;
   touch-action: auto;
   user-select: text;
   -webkit-user-select: text;
-  transition: border-color 0.15s;
-  font-family: inherit;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 
   &:focus {
-    border-color: var(--focus-color, ${({ theme }) => theme.colors.text});
+    border-color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+    box-shadow: var(--focus, 0 0 0 2px rgba(78,110,126,0.28));
   }
 
   &::placeholder {
-    color: ${({ theme }) => theme.colors.textMuted};
+    font-style: italic;
+    color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
   }
 `;
 

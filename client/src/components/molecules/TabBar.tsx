@@ -3,37 +3,43 @@ import { useRef, useCallback, type ReactNode, type KeyboardEvent } from 'react';
 
 const Row = styled.div`
   display: flex;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 1px solid var(--accent-stroke, ${({ theme }) => theme.colors.accentStroke});
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   &::-webkit-scrollbar { display: none; }
 `;
 
-const TabButton = styled.button<{ $active?: boolean; $color: string }>`
+const TabButton = styled.button<{ $active?: boolean }>`
   flex: none;
   padding: 10px 16px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
   font-size: 13px;
-  font-weight: ${({ $active }) => $active ? 700 : 600};
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textSecondary};
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: ${({ $active }) =>
+    $active ? 'var(--ink, #2b2824)' : 'var(--ink-3, #6b645a)'};
   background: none;
   border: none;
-  border-bottom: none;
+  border-bottom: 2px solid ${({ $active }) =>
+    $active ? 'var(--ink, #2b2824)' : 'transparent'};
+  margin-bottom: -1px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   white-space: nowrap;
+  transition: color 120ms ease, border-color 120ms ease;
+
+  &:hover {
+    color: var(--ink, ${({ theme }) => theme.colors.text});
+  }
+
   @media (max-width: 480px) {
-    flex: none;
     padding: 10px 14px;
     font-size: 13px;
     gap: 4px;
   }
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
 `;
 
 interface Tab<T extends string> {
@@ -45,10 +51,10 @@ interface TabBarProps<T extends string> {
   tabs: Tab<T>[];
   active: T;
   onChange: (value: T) => void;
-  accentColor: string;
+  accentColor?: string;
 }
 
-export function TabBar<T extends string>({ tabs, active, onChange, accentColor }: TabBarProps<T>) {
+export function TabBar<T extends string>({ tabs, active, onChange }: TabBarProps<T>) {
   const tabElRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent, index: number) => {
@@ -75,7 +81,6 @@ export function TabBar<T extends string>({ tabs, active, onChange, accentColor }
           aria-selected={active === tab.value}
           tabIndex={active === tab.value ? 0 : -1}
           $active={active === tab.value}
-          $color={accentColor}
           onClick={() => onChange(tab.value)}
           onKeyDown={e => handleKeyDown(e, i)}
         >

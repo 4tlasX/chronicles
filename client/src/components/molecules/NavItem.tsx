@@ -5,27 +5,40 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 const Item = styled.button<{ $active?: boolean }>`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
-  padding: 8px 12px;
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  font-weight: ${({ $active, theme }) => $active ? theme.fontWeight.semibold : theme.fontWeight.normal};
-  color: ${({ $active, theme }) => $active ? theme.colors.accent : theme.colors.text};
-  background: ${({ $active }) => $active ? 'rgba(0, 180, 216, 0.08)' : 'transparent'};
+  padding: 8px 10px;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 14px;
+  font-weight: ${({ $active }) => $active ? 700 : 400};
+  color: ${({ $active }) =>
+    $active ? 'var(--ink, #2b2824)' : 'var(--ink-2, #453f38)'};
+  background: ${({ $active }) =>
+    $active ? 'var(--paper-hover, #f0eeea)' : 'transparent'};
   border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  border-left: 3px solid ${({ $active }) =>
+    $active ? 'var(--ink, #2b2824)' : 'transparent'};
+  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
+  margin-left: -3px;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
+  transition: background 120ms ease, color 120ms ease;
 
   &:hover {
-    background: ${({ $active }) => $active ? 'rgba(0, 180, 216, 0.12)' : 'rgba(0, 0, 0, 0.04)'};
+    background: var(--paper-hover, ${({ theme }) => theme.colors.surfaceHover});
+    color: var(--ink, ${({ theme }) => theme.colors.text});
   }
 `;
 
-const IconWrapper = styled.span`
-  width: 20px;
-  text-align: center;
+const IconWrapper = styled.span<{ $active?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  font-size: 13px;
+  color: ${({ $active }) =>
+    $active ? 'var(--ink, #2b2824)' : 'var(--ink-4, #8a857c)'};
+  flex-shrink: 0;
 `;
 
 interface NavItemProps {
@@ -39,7 +52,11 @@ interface NavItemProps {
 export function NavItem({ icon, label, active, onClick, trailing }: NavItemProps) {
   return (
     <Item $active={active} onClick={onClick}>
-      {icon && <IconWrapper><FontAwesomeIcon icon={icon} /></IconWrapper>}
+      {icon && (
+        <IconWrapper $active={active}>
+          <FontAwesomeIcon icon={icon} />
+        </IconWrapper>
+      )}
       <span style={{ flex: 1 }}>{label}</span>
       {trailing}
     </Item>

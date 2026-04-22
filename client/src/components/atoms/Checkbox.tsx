@@ -2,10 +2,12 @@ import styled from 'styled-components';
 import type { ReactNode } from 'react';
 
 const Wrapper = styled.label`
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm}px;
+  gap: 10px;
   cursor: pointer;
+  user-select: none;
+  font-size: 14px;
 `;
 
 const HiddenInput = styled.input`
@@ -15,33 +17,33 @@ const HiddenInput = styled.input`
   height: 0;
 
   &:focus-visible + div {
-    outline: 2px solid ${({ theme }) => theme.colors.borderFocus};
-    outline-offset: 2px;
+    box-shadow: var(--focus, 0 0 0 2px rgba(78,110,126,0.28));
   }
 `;
 
 const Box = styled.div<{ $checked: boolean }>`
   width: 18px;
   height: 18px;
-  border-radius: 3px;
-  border: 1.5px solid ${({ theme }) => theme.colors.border};
-  background: transparent;
-  display: flex;
+  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
+  border: 1px solid ${({ $checked }) =>
+    $checked ? 'var(--ink, #2b2824)' : 'var(--ink-3, #6b645a)'};
+  background: ${({ $checked }) =>
+    $checked ? 'var(--ink, #2b2824)' : 'var(--paper-surface, #f7f4ee)'};
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 14px;
+  color: var(--paper-surface, #f7f4ee);
+  font-size: 12px;
+  font-weight: 700;
   flex-shrink: 0;
-  transition: border-color 0.15s;
+  transition: background 120ms ease, border-color 120ms ease;
 `;
 
 const CheckLabel = styled.span`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 14px;
   font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
 `;
 
 interface CheckboxProps {

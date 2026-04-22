@@ -7,6 +7,7 @@ declare module 'styled-components' {
       sans: string;
       ui: string;
       brand: string;
+      mono: string;
     };
     typography: {
       display: { fontFamily: string; fontSize: string; fontWeight: number };
@@ -22,7 +23,9 @@ declare module 'styled-components' {
       accent: string;
       accentHover: string;
       accentLight: string;
+      accentStroke: string;
       background: string;
+      surfaceDeep: string;
       surface: string;
       surfaceHover: string;
       surfaceOverlay: string;
@@ -30,8 +33,10 @@ declare module 'styled-components' {
       text: string;
       textSecondary: string;
       textMuted: string;
+      textFaint: string;
       textInverse: string;
       border: string;
+      borderSoft: string;
       borderFocus: string;
       danger: string;
       dangerHover: string;
@@ -46,6 +51,16 @@ declare module 'styled-components' {
       lg: number;
       xl: number;
       xxl: number;
+      s1: number;
+      s2: number;
+      s3: number;
+      s4: number;
+      s5: number;
+      s6: number;
+      s7: number;
+      s8: number;
+      s9: number;
+      s10: number;
     };
     fontSize: {
       xs: number;

@@ -10,9 +10,9 @@ const Overlay = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(43, 40, 36, 0.48);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 `;
 
 const Content = styled.div<{ $size: string }>`
@@ -22,51 +22,62 @@ const Content = styled.div<{ $size: string }>`
     $size === 'lg' ? '600px' :
     $size === 'xl' ? '800px' : '480px'};
   margin: 0 16px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  box-shadow: ${({ theme }) => theme.shadow.lg};
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  border: 1px solid var(--ink, ${({ theme }) => theme.colors.text});
+  border-radius: var(--r-lg, ${({ theme }) => theme.borderRadius.lg}px);
+  box-shadow: var(--shadow-3, ${({ theme }) => theme.shadow.lg});
+  overflow: hidden;
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: ${({ theme }) => theme.spacing.md}px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
 `;
 
 const Title = styled.h3`
-  font-family: ${({ theme }) => theme.typography.h3.fontFamily};
-  font-size: ${({ theme }) => theme.typography.h3.fontSize};
-  font-weight: ${({ theme }) => theme.typography.h3.fontWeight};
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
+  margin: 0;
 `;
 
 const CloseButton = styled.button`
-  padding: 8px 12px;
-  min-width: 32px;
-  min-height: 32px;
-  font-size: ${({ theme }) => theme.fontSize.lg}px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   background: none;
   border: none;
   cursor: pointer;
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  &:hover { background: rgba(0,0,0,0.05); }
+  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
+  transition: background 120ms ease;
+  &:hover {
+    background: var(--paper-hover, ${({ theme }) => theme.colors.surfaceHover});
+    color: var(--ink, ${({ theme }) => theme.colors.text});
+  }
 `;
 
 const Body = styled.div`
-  padding: ${({ theme }) => theme.spacing.md}px;
+  padding: 20px;
+  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
+  font-size: 14.5px;
+  line-height: 1.55;
 `;
 
 const Footer = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: ${({ theme }) => theme.spacing.sm}px;
-  padding: ${({ theme }) => theme.spacing.md}px;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  background: var(--paper, ${({ theme }) => theme.colors.background});
 `;
 
 interface ModalProps {

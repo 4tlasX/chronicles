@@ -1,51 +1,39 @@
 import styled from 'styled-components';
-import { useUIStore } from '../../stores/uiStore.js';
-import { useTheme } from 'styled-components';
-import { BACKGROUND_IMAGES } from '@shared/theme/backgrounds';
+import { useUIStore } from '../../stores/uiStore';
 
-const BackgroundWrapper = styled.div`
+const BackgroundWrapper = styled.div<{ $image?: string; $opacity: number; $dark: boolean }>`
   position: fixed;
-  top: -100px;
-  left: -100px;
-  right: -100px;
-  bottom: 0;
-  z-index: -1;
-  background-color: ${({ theme }) => theme.colors.background};
-`;
-
-const ImageOverlay = styled.div<{ $image: string; $opacity: number }>`
-  position: absolute;
   inset: 0;
-  background-image: ${({ $image }) => `url(${$image})`};
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center bottom;
-  opacity: ${({ $opacity }) => $opacity};
-  pointer-events: none;
-`;
+  z-index: -1;
+  background-color: var(--paper, ${({ theme }) => theme.colors.background});
 
-function isDarkTheme(bg: string): boolean {
-  const c = bg.replace('#', '');
-  if (c.length !== 6) return false;
-  const r = parseInt(c.substring(0, 2), 16);
-  const g = parseInt(c.substring(2, 4), 16);
-  const b = parseInt(c.substring(4, 6), 16);
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
-}
+  ${({ $image, $opacity, $dark }) =>
+    $image
+      ? `
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url(${$image});
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: ${$opacity * ($dark ? 0.35 : 0.6)};
+    }
+  `
+      : ''}
+`;
 
 export function Background() {
   const backgroundImage = useUIStore(s => s.backgroundImage);
-  const theme = useTheme();
-  const isBW = BACKGROUND_IMAGES.find(b => b.value === backgroundImage)?.bw ?? false;
-  const opacity = isDarkTheme(theme.colors.background)
-    ? (isBW ? 0.15 : 0.2)
-    : (isBW ? 0.45 : 0.8);
+  const backgroundOpacity = useUIStore(s => s.backgroundOpacity);
+  const themeMode = useUIStore(s => s.themeMode);
 
   return (
-    <BackgroundWrapper>
-      {backgroundImage && (
-        <ImageOverlay $image={backgroundImage} $opacity={opacity} />
-      )}
-    </BackgroundWrapper>
+    <BackgroundWrapper
+      $image={backgroundImage || undefined}
+      $opacity={backgroundOpacity ?? 0.7}
+      $dark={themeMode === 'dark'}
+    />
   );
 }

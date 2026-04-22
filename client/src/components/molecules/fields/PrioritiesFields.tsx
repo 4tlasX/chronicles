@@ -41,7 +41,7 @@ const Input = styled.input`
   flex: 1;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: transparent;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
   font-size: 15px;
   font-weight: 300;
   color: ${({ theme }) => theme.colors.text};

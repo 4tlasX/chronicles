@@ -4,43 +4,42 @@ import { useRef, useCallback, type KeyboardEvent } from 'react';
 const Row = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 4px;
+  flex-wrap: wrap;
   padding: 8px 24px;
-  @media (max-width: 768px) { padding: 8px 16px; justify-content: flex-start; }
-  @media (max-width: 480px) { padding: 8px 12px; justify-content: flex-start; }
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  overflow-x: auto;
-  &::-webkit-scrollbar { display: none; }
+  @media (max-width: 768px) { padding: 8px 16px; }
+  @media (max-width: 480px) { padding: 8px 12px; }
 `;
 
 const Label = styled.span`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  opacity: 0.5;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
   white-space: nowrap;
   margin-right: 4px;
   flex-shrink: 0;
 `;
 
 const Btn = styled.button<{ $active?: boolean }>`
-  padding: 6px 14px;
-  font-family: 'Montserrat', sans-serif;
+  padding: 5px 12px;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
   font-size: 13px;
-  font-weight: ${({ $active }) => $active ? 700 : 400};
-  font-style: normal;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textSecondary};
-  background: none;
-  border: none;
+  font-weight: ${({ $active }) => $active ? 600 : 400};
+  color: ${({ $active }) =>
+    $active ? 'var(--ink, #2b2824)' : 'var(--ink-3, #6b645a)'};
+  background: ${({ $active }) => $active ? 'var(--paper-surface, #f7f4ee)' : 'transparent'};
+  border: 1px solid ${({ $active }) => $active ? 'var(--rule, #d4cfc5)' : 'transparent'};
+  border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  transition: background 120ms ease, color 120ms ease;
+
+  &:hover:not([aria-selected="true"]) {
+    background: var(--paper-hover, #f0eeea);
+    color: var(--ink, #2b2824);
+  }
 `;
 
 interface FilterTabsProps<T extends string> {
@@ -70,7 +69,7 @@ export function FilterTabs<T extends string>({ options, active, onChange, label 
 
   return (
     <Row role="tablist">
-      {label && <Label>{label}:</Label>}
+      {label && <Label>{label}</Label>}
       {safeOptions.map((opt, i) => (
         <Btn
           key={opt.value}

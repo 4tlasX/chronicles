@@ -8,15 +8,15 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   html {
-    font-size: 18px;
-    -webkit-font-smoothing: subpixel-antialiased;
-    -moz-osx-font-smoothing: auto;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    font-family: ${({ theme }) => theme.fontFamily.sans};
-    color: ${({ theme }) => theme.colors.text};
-    background-color: ${({ theme }) => theme.colors.background};
+    font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+    color: var(--ink, ${({ theme }) => theme.colors.text});
+    background-color: var(--paper, ${({ theme }) => theme.colors.background});
     line-height: 1.5;
   }
 

@@ -22,7 +22,7 @@ const Card = styled.div`
   width: 100%;
   max-width: 380px;
   padding: ${({ theme }) => theme.spacing.xl}px;
-  background: ${({ theme }) => theme.colors.background === '#1a1b1d' ? '#1a1b1d' : '#faf8f2'};
+  background: var(--paper);
   border-radius: 0;
   box-shadow: ${({ theme }) => theme.shadow.lg};
 `;

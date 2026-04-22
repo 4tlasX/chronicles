@@ -1,18 +1,18 @@
 import { useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faXmark, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faMagnifyingGlass, faArrowDownAZ, faPlus } from '@fortawesome/free-solid-svg-icons';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { EmptyState } from '../atoms/EmptyState.js';
-import { Badge } from '../atoms/Badge.js';
 import { TopicEditForm } from '../molecules/TopicEditForm.js';
 import { SortableTopicItem } from './SortableTopicItem.js';
 import type { Topic } from '../../types/topics.js';
 import { useUIStore } from '../../stores/uiStore.js';
+import { useEntriesStore } from '../../stores/entriesStore.js';
 import { settings as settingsApi } from '../../services/api.js';
 import type { UserFieldDef } from '../../types/userFields.js';
 
@@ -21,8 +21,8 @@ const Pane = styled.div<{ $hidden?: boolean }>`
   min-width: 300px;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
+  overflow: hidden;
+  background: var(--paper-surface);
   border-right: 1px solid ${({ theme }) => theme.colors.border};
   @media (max-width: 1024px) {
     width: 100%;
@@ -31,118 +31,210 @@ const Pane = styled.div<{ $hidden?: boolean }>`
   }
 `;
 
-const Header = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+const Head = styled.div`
   padding: 16px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
 `;
 
-const Title = styled.h2`
+const HeadTitle = styled.h2`
   font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 1.25rem;
-  font-weight: 500;
   font-style: italic;
+  font-size: 20px;
+  font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
+  margin: 0;
 `;
 
-const AddBtn = styled.button<{ $color: string }>`
+const HeadSub = styled.span`
+  font-family: 'Lato', sans-serif;
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textFaint};
+`;
+
+const SearchBar = styled.div`
+  padding: 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.borderSoft};
+  position: relative;
+`;
+
+const SearchIconWrap = styled.span`
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: ${({ theme }) => theme.colors.textFaint};
+  font-size: 13px;
+  pointer-events: none;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 10px 32px 10px 36px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-family: ${({ theme }) => theme.fontFamily.sans};
+  font-size: 15px;
+  color: ${({ theme }) => theme.colors.text};
+  outline: none;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.textFaint};
+    font-style: italic;
+  }
+`;
+
+const ClearBtn = styled.button`
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  color: ${({ $color }) => $color};
+  color: ${({ theme }) => theme.colors.textFaint};
   background: none;
   border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   cursor: pointer;
-  &:hover { background: rgba(0, 0, 0, 0.04); }
+  font-size: 11px;
+  padding: 0;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
+const ScrollHint = styled.div`
+  padding: 6px 12px;
+  font-family: ${({ theme }) => theme.fontFamily.mono};
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textFaint};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.borderSoft};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const SortToggle = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: ${({ theme }) => theme.fontFamily.mono};
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textFaint};
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
+const AllRow = styled.button<{ $active?: boolean; $headerColor?: string }>`
+  display: grid;
+  grid-template-columns: 14px 22px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.borderSoft};
+  font-family: ${({ theme }) => theme.fontFamily.sans};
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.text};
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+  &:hover { background: ${({ theme }) => theme.colors.surface}; }
+`;
+
+const AllName = styled.span`
+  grid-column: 2 / 4;
+  font-style: italic;
+  color: ${({ theme }) => theme.colors.textMuted};
+`;
+
+const AllCount = styled.span`
+  font-family: ${({ theme }) => theme.fontFamily.mono};
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: ${({ theme }) => theme.colors.textFaint};
 `;
 
 const List = styled.div`
   flex: 1;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-`;
-
-const AllItem = styled.button<{ $active?: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: ${({ theme }) => theme.colors.text};
-  background: ${({ $active }) => $active ? 'rgba(0, 0, 0, 0.06)' : 'transparent'};
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  cursor: pointer;
-  text-align: left;
-  &:hover { background: rgba(0, 0, 0, 0.04); }
-`;
-
-const CountBadge = styled.span`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.text};
-  font-weight: 400;
-  margin-left: auto;
-`;
-
-const FilterWrap = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-`;
-
-const FilterIcon = styled.span`
-  color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 14px;
-  flex-shrink: 0;
-`;
-
-const FilterInput = styled.input`
-  flex: 1;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 15px;
-  color: ${({ theme }) => theme.colors.text};
-  background: none;
-  border: none;
-  outline: none;
-  &::placeholder { color: ${({ theme }) => theme.colors.textMuted}; }
-`;
-
-const ClearBtn = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 13px;
-  padding: 0;
-  flex-shrink: 0;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  overflow-y: auto;
 `;
 
 const NoMatch = styled.div`
   padding: 16px 12px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 15px;
+  font-family: ${({ theme }) => theme.fontFamily.sans};
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textMuted};
   text-align: center;
+`;
+
+const AddBar = styled.div`
+  padding: 8px 12px;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+`;
+
+const AddInput = styled.input`
+  flex: 1;
+  padding: 6px 10px;
+  font-family: ${({ theme }) => theme.fontFamily.sans};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  outline: none;
+  &::placeholder { color: ${({ theme }) => theme.colors.textFaint}; font-style: italic; }
+  &:focus { border-color: ${({ theme }) => theme.colors.borderFocus}; }
+`;
+
+const AddIconBtn = styled.button`
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  background: none;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  cursor: pointer;
+  flex-shrink: 0;
+  &:hover { background: ${({ theme }) => theme.colors.surface}; }
+`;
+
+const AddSubmitBtn = styled.button<{ $headerColor?: string }>`
+  padding: 6px 14px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: ${({ $headerColor }) => $headerColor || '#4E6E7E'};
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  &:hover { opacity: 0.85; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
 interface TopicSidebarPanelProps {
@@ -152,16 +244,6 @@ interface TopicSidebarPanelProps {
   entryCounts: Map<number, number>;
   headerColor: string;
   hiddenMobile?: boolean;
-  // Add form state
-  showAddForm: boolean;
-  newName: string;
-  newIcon: string | null;
-  isAdding: boolean;
-  onToggleAddForm: () => void;
-  onNewNameChange: (name: string) => void;
-  onNewIconChange: (icon: string | null) => void;
-  onAdd: () => void;
-  onCancelAdd: () => void;
   // Edit form state
   editingId: number | null;
   editName: string;
@@ -175,23 +257,28 @@ interface TopicSidebarPanelProps {
   onStartEdit: (topic: Topic) => void;
   onDelete: (id: number) => void;
   onDragEnd: (event: DragEndEvent) => void;
+  onAdd: (name: string, icon: string | null) => Promise<void>;
 }
 
 export function TopicSidebarPanel({
   topics, selectedTopicId, totalEntryCount, entryCounts, headerColor, hiddenMobile,
-  showAddForm, newName, newIcon, isAdding, onToggleAddForm, onNewNameChange, onNewIconChange, onAdd, onCancelAdd,
   editingId, editName, editIcon, onEditNameChange, onEditIconChange, onEditSave, onEditCancel,
-  onSelectTopic, onStartEdit, onDelete, onDragEnd,
+  onSelectTopic, onStartEdit, onDelete, onDragEnd, onAdd,
 }: TopicSidebarPanelProps) {
   const [filter, setFilter] = useState('');
+  const [sortAZ, setSortAZ] = useState(false);
+  const [addName, setAddName] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+
+  const entries = useEntriesStore(s => s.decryptedEntries);
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const recentCount = entries.filter(e => new Date(e.createdAt).getTime() >= cutoff).length;
 
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
   const updateTopicFields = useUIStore(s => s.updateTopicFields);
-  // getState() used in handleFieldDefsChange to avoid stale closure
 
   const handleFieldDefsChange = useCallback((topicId: number, defs: UserFieldDef[]) => {
     updateTopicFields(topicId, defs);
-    // Read latest state directly to avoid stale closure
     const currentFields = useUIStore.getState().topicCustomFields;
     const updated = { ...currentFields, [topicId]: defs };
     settingsApi.upsert('topicCustomFields', updated)
@@ -203,99 +290,84 @@ export function TopicSidebarPanel({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const filteredTopics = filter.trim()
-    ? topics.filter(t => t.name.toLowerCase().includes(filter.toLowerCase()))
-    : topics;
-
   const isFiltering = filter.trim().length > 0;
+
+  let displayTopics = isFiltering
+    ? topics.filter(t => t.name.toLowerCase().includes(filter.toLowerCase()))
+    : [...topics];
+
+  if (sortAZ) {
+    displayTopics = [...displayTopics].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  const handleAdd = async () => {
+    if (!addName.trim() || isAdding) return;
+    setIsAdding(true);
+    try {
+      await onAdd(addName.trim(), null);
+      setAddName('');
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   return (
     <Pane $hidden={hiddenMobile}>
-      <Header>
-        <Title>Topics</Title>
-        <AddBtn $color={headerColor} onClick={onToggleAddForm} title={showAddForm ? 'Cancel' : 'Add topic'}>
-          <FontAwesomeIcon icon={showAddForm ? faXmark : faPlus} />
-        </AddBtn>
-      </Header>
+      <Head>
+        <HeadTitle>Your Topics</HeadTitle>
+      </Head>
 
-      <FilterWrap>
-        <FilterIcon><FontAwesomeIcon icon={faMagnifyingGlass} /></FilterIcon>
-        <FilterInput
+      <SearchBar>
+        <SearchIconWrap><FontAwesomeIcon icon={faMagnifyingGlass} /></SearchIconWrap>
+        <SearchInput
           type="text"
           placeholder="Filter topics…"
           value={filter}
           onChange={e => setFilter(e.target.value)}
         />
         {isFiltering && (
-          <ClearBtn onClick={() => setFilter('')} title="Clear filter">
+          <ClearBtn onClick={() => setFilter('')} title="Clear">
             <FontAwesomeIcon icon={faXmark} />
           </ClearBtn>
         )}
-      </FilterWrap>
+      </SearchBar>
 
-      {showAddForm && (
-        <TopicEditForm
-          name={newName}
-          icon={newIcon}
-          accentColor={headerColor}
-          saving={isAdding}
-          saveLabel={isAdding ? 'Adding...' : 'Add Topic'}
-          onNameChange={onNewNameChange}
-          onIconChange={onNewIconChange}
-          onSave={onAdd}
-          onCancel={onCancelAdd}
-        />
-      )}
+      <ScrollHint>
+        <span>
+          {isFiltering
+            ? `${displayTopics.length} match${displayTopics.length !== 1 ? 'es' : ''}`
+            : `${topics.length} topic${topics.length !== 1 ? 's' : ''}`}
+        </span>
+        <SortToggle onClick={() => setSortAZ(v => !v)} title={sortAZ ? 'Manual order' : 'Sort A–Z'}>
+          <FontAwesomeIcon icon={faArrowDownAZ} style={{ fontSize: 10 }} />
+          {sortAZ ? 'A–Z' : 'Manual'}
+        </SortToggle>
+      </ScrollHint>
 
       <List>
         {!isFiltering && (
-          <AllItem $active={selectedTopicId === null} onClick={() => onSelectTopic(null)}>
-            All Entries
-          </AllItem>
+          <AllRow $active={selectedTopicId === null} $headerColor={headerColor} onClick={() => onSelectTopic(null)}>
+            <span />
+            <AllName>All Entries</AllName>
+          </AllRow>
         )}
 
         {isFiltering ? (
           <>
-            {filteredTopics.map(topic => (
-              editingId === topic.id ? (
-                <TopicEditForm
-                  key={topic.id}
-                  name={editName}
-                  icon={editIcon}
-                  accentColor={headerColor}
-                  cancelLabel="Close"
-                  onNameChange={onEditNameChange}
-                  onIconChange={onEditIconChange}
-                  onSave={onEditSave}
-                  onCancel={onEditCancel}
-                  topicId={topic.id}
-                  fieldDefs={topicCustomFields[topic.id] ?? []}
-                  onFieldDefsChange={defs => handleFieldDefsChange(topic.id, defs)}
-                />
-              ) : (
+            {displayTopics.map(topic => (
+              <div key={topic.id}>
                 <SortableTopicItem
-                  key={topic.id}
                   topic={topic}
                   isActive={selectedTopicId === topic.id}
                   count={entryCounts.get(topic.id) || 0}
                   headerColor={headerColor}
+                  filterText={filter}
                   onSelect={() => onSelectTopic(topic.id)}
                   onEdit={() => onStartEdit(topic)}
                   onDelete={() => onDelete(topic.id)}
                 />
-              )
-            ))}
-            {filteredTopics.length === 0 && (
-              <NoMatch>No topics match "{filter}"</NoMatch>
-            )}
-          </>
-        ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-            <SortableContext items={topics.map(t => t.id)} strategy={verticalListSortingStrategy}>
-              {topics.map(topic => (
-                editingId === topic.id ? (
+                {editingId === topic.id && (
                   <TopicEditForm
-                    key={topic.id}
                     name={editName}
                     icon={editIcon}
                     accentColor={headerColor}
@@ -308,9 +380,19 @@ export function TopicSidebarPanel({
                     fieldDefs={topicCustomFields[topic.id] ?? []}
                     onFieldDefsChange={defs => handleFieldDefsChange(topic.id, defs)}
                   />
-                ) : (
+                )}
+              </div>
+            ))}
+            {displayTopics.length === 0 && (
+              <NoMatch>No topics match "{filter}"</NoMatch>
+            )}
+          </>
+        ) : (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+            <SortableContext items={topics.map(t => t.id)} strategy={verticalListSortingStrategy}>
+              {displayTopics.map(topic => (
+                <div key={topic.id}>
                   <SortableTopicItem
-                    key={topic.id}
                     topic={topic}
                     isActive={selectedTopicId === topic.id}
                     count={entryCounts.get(topic.id) || 0}
@@ -319,16 +401,46 @@ export function TopicSidebarPanel({
                     onEdit={() => onStartEdit(topic)}
                     onDelete={() => onDelete(topic.id)}
                   />
-                )
+                  {editingId === topic.id && (
+                    <TopicEditForm
+                      name={editName}
+                      icon={editIcon}
+                      accentColor={headerColor}
+                      cancelLabel="Close"
+                      onNameChange={onEditNameChange}
+                      onIconChange={onEditIconChange}
+                      onSave={onEditSave}
+                      onCancel={onEditCancel}
+                      topicId={topic.id}
+                      fieldDefs={topicCustomFields[topic.id] ?? []}
+                      onFieldDefsChange={defs => handleFieldDefsChange(topic.id, defs)}
+                    />
+                  )}
+                </div>
               ))}
             </SortableContext>
           </DndContext>
         )}
 
-        {topics.length === 0 && !showAddForm && !isFiltering && (
-          <EmptyState message="No topics yet. Click + to create one." />
+        {topics.length === 0 && !isFiltering && (
+          <EmptyState message="No topics yet. Add one below." />
         )}
       </List>
+
+      <AddBar>
+        <AddInput
+          placeholder="New topic…"
+          value={addName}
+          onChange={e => setAddName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleAdd()}
+        />
+        <AddIconBtn title="Choose icon">
+          <FontAwesomeIcon icon={faPlus} />
+        </AddIconBtn>
+        <AddSubmitBtn $headerColor={headerColor} onClick={handleAdd} disabled={!addName.trim() || isAdding}>
+          {isAdding ? 'Adding…' : 'Add'}
+        </AddSubmitBtn>
+      </AddBar>
     </Pane>
   );
 }

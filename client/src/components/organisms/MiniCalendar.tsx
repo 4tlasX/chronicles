@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import { useUIStore } from '../../stores/uiStore.js';
 
 interface MiniCalendarProps {
   selectedDate: Date;
@@ -21,37 +20,37 @@ const ToggleBar = styled.button`
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 4px 8px;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: ${({ theme }) => theme.colors.textMuted};
+  padding: 8px 16px;
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   background: transparent;
   border: none;
   cursor: pointer;
 
   &:hover {
-    color: ${({ theme }) => theme.colors.textSecondary};
+    color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
   }
 `;
 
 const CalendarContainer = styled.div`
-  padding: 8px 12px 12px;
+  padding: 20px 6px 6px;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 `;
 
 const MonthLabel = styled.span`
-  font-size: 13px;
-  font-weight: ${({ theme }) => theme.fontWeight.semibold};
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: ${({ theme }) => theme.colors.text};
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
 `;
 
 const NavButton = styled.button`
@@ -62,28 +61,28 @@ const NavButton = styled.button`
   height: 28px;
   background: transparent;
   border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
   cursor: pointer;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
 
   &:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--paper-hover, ${({ theme }) => theme.colors.surfaceHover});
   }
 `;
 
 const WeekdayRow = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 4px;
 `;
 
 const WeekdayLabel = styled.span`
-  font-size: 13px;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
   text-align: center;
-  line-height: 20px;
+  padding: 0 0 4px;
 `;
 
 const DaysGrid = styled.div`
@@ -94,35 +93,57 @@ const DaysGrid = styled.div`
 
 const DayButton = styled.button<{
   $isToday?: boolean;
-  $isSelected?: boolean;
   $isOutside?: boolean;
   $hasEntry?: boolean;
-  $accentColor?: string;
 }>`
-  position: relative;
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin: 0 auto;
-  font-size: 14px;
-  font-weight: ${({ $isToday, theme }) => $isToday ? theme.fontWeight.bold : theme.fontWeight.normal};
-  color: ${({ $hasEntry, $isOutside, $accentColor, theme }) =>
-    $isOutside ? theme.colors.border : $hasEntry ? ($accentColor || theme.colors.text) : theme.colors.text};
+  font-size: 11px;
+  font-weight: ${({ $isToday }) => $isToday ? 700 : 400};
+  color: ${({ $isToday, $isOutside }) =>
+    $isToday ? 'var(--ink, #2b2824)' :
+    $isOutside ? 'var(--ink-4)' :
+    'var(--ink-2)'};
   background: transparent;
   border: none;
-  border-radius: 0;
-  border: ${({ $isToday, theme }) => $isToday ? `1.5px solid ${theme.colors.border}87` : '1.5px solid transparent'};
+  border-radius: var(--r-sm, 2px);
   cursor: pointer;
-  line-height: 1;
-  box-sizing: border-box;
+  position: relative;
 
-  &:hover {
-    background: rgba(0, 0, 0, 0.05);
-  }
+  ${({ $isToday }) => $isToday && `
+    &::before {
+      content: '';
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      background: var(--paper-surface);
+      border-radius: 2px;
+      z-index: 0;
+    }
+    span { position: relative; z-index: 1; }
+  `}
 
-  ${({ $isOutside }) => $isOutside && 'visibility: hidden;'}
+  ${({ $isToday }) => !$isToday && `
+    &:hover {
+      background: var(--paper-hover);
+    }
+  `}
+
+  ${({ $hasEntry }) => $hasEntry && `
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 1px;
+    }
+  `}
+
+  ${({ $isOutside }) => $isOutside && 'color: var(--ink-4); opacity: 0.5;'}
 `;
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -146,7 +167,6 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates, expanded 
   const [currentMonth, setCurrentMonth] = useState(() => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
   const [collapsed, setCollapsed] = useState(!expanded);
   const today = useMemo(() => new Date(), []);
-  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
 
   const days = useMemo(() => {
     const year = currentMonth.getFullYear();
@@ -221,19 +241,16 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates, expanded 
           <DaysGrid>
             {days.map(({ date, isOutside }, i) => {
               const isToday = isSameDay(date, today);
-              const isSelected = isSameDay(date, selectedDate);
               const hasEntry = entryDates?.has(toISODateString(date)) ?? false;
               return (
                 <DayButton
                   key={i}
                   $isToday={isToday}
-                  $isSelected={isSelected}
                   $isOutside={isOutside}
                   $hasEntry={hasEntry}
-                  $accentColor={headerColor}
                   onClick={() => onSelectDate(date)}
                 >
-                  {date.getDate()}
+                  <span>{date.getDate()}</span>
                 </DayButton>
               );
             })}

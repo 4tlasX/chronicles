@@ -16,7 +16,7 @@ const Panel = styled.div<{ $hasFields?: boolean }>`
   background: transparent;
   border-radius: 10px;
   margin: 0 8px 16px;
-  padding-top: ${({ $hasFields }) => $hasFields ? 28 : 20}px;
+  padding-top: ${({ $hasFields }) => $hasFields ? 36 : 28}px;
   padding-bottom: 20px;
 
   & input, & select, & textarea {
@@ -25,11 +25,11 @@ const Panel = styled.div<{ $hasFields?: boolean }>`
 `;
 
 const EditorWrap = styled.div<{ $bordered?: boolean }>`
-  margin: 8px 24px 0 50px;
+  margin: 8px 24px 0;
   border: ${({ $bordered, theme }) => $bordered ? `1px solid ${theme.colors.border}` : 'none'};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   overflow: hidden;
-  @media (max-width: 768px) { margin: 0 16px 0 40px; }
+  @media (max-width: 768px) { margin: 0 16px; }
   @media (max-width: 480px) { margin: 0 12px; }
 
   /* Compact the TipTap editor for inline use */
@@ -43,8 +43,8 @@ const EditorWrap = styled.div<{ $bordered?: boolean }>`
 `;
 
 const FieldsWrap = styled.div`
-  padding: 12px 24px 20px 50px;
-  @media (max-width: 768px) { padding: 12px 16px 18px 40px; }
+  padding: 12px 24px 20px;
+  @media (max-width: 768px) { padding: 12px 16px 18px; }
   @media (max-width: 480px) { padding: 10px 12px 16px; }
 `;
 
@@ -52,10 +52,10 @@ const Actions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 16px 24px 8px 50px;
+  padding: 16px 24px 8px;
   border-radius: 0;
   flex-wrap: wrap;
-  @media (max-width: 768px) { padding: 16px 16px 8px 40px; }
+  @media (max-width: 768px) { padding: 16px 16px 8px; }
   @media (max-width: 480px) { padding: 12px 12px 8px; gap: 8px; }
 `;
 
@@ -101,8 +101,8 @@ const EditTitle = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: ${({ theme }) => theme.colors.textMuted};
-  padding: 0 24px 8px 50px;
-  @media (max-width: 768px) { padding: 0 16px 8px 40px; }
+  padding: 0 24px 8px;
+  @media (max-width: 768px) { padding: 0 16px 8px; }
   @media (max-width: 480px) { padding: 0 12px 8px; }
 `;
 

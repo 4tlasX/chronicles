@@ -50,7 +50,7 @@ const MainContent = styled.main<{ $transparent?: boolean; $hasBackground?: boole
   min-height: 0;
   overflow-y: ${({ $transparent }) => $transparent ? 'hidden' : 'auto'};
   background: ${({ $transparent, $hasBackground, theme }) =>
-    $transparent ? 'transparent' : $hasBackground ? theme.colors.surfaceOverlay : theme.colors.surfaceOverlay};
+    $transparent ? 'transparent' : $hasBackground ? theme.colors.surfaceOverlay : 'var(--paper)'};
   padding-bottom: 0;
 `;
 
@@ -61,6 +61,7 @@ interface AppTemplateProps {
 }
 
 export function AppTemplate({ children, hideSidebar, transparentContent }: AppTemplateProps) {
+  const backgroundImage = useUIStore(s => s.backgroundImage);
   return (
     <>
       <Background />
@@ -69,7 +70,7 @@ export function AppTemplate({ children, hideSidebar, transparentContent }: AppTe
         <Header />
         <Body>
           {!hideSidebar && <Sidebar />}
-          <MainContent id="main-content" $transparent={transparentContent}>{children}</MainContent>
+          <MainContent id="main-content" $transparent={transparentContent} $hasBackground={!!backgroundImage}>{children}</MainContent>
         </Body>
       </Layout>
     </>

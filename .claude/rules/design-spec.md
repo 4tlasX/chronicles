@@ -1,0 +1,1 @@
+CRITICAL: All UI implementation MUST strictly follow the HTML structure and Tailwind classes defined in /design_handoff/chronicles-design-system.html.

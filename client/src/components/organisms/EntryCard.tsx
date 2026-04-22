@@ -1,10 +1,10 @@
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar } from '@fortawesome/free-solid-svg-icons';
+import { faBookmark } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import DOMPurify from 'dompurify';
-import { useUIStore } from '../../stores/uiStore.js';
 import { SwipeActions } from '../molecules/SwipeActions.js';
+import { useUIStore } from '../../stores/uiStore.js';
+import { stripHtml } from '../../utils/stripHtml.js';
 
 interface EntryCardProps {
   id: number;
@@ -24,210 +24,199 @@ interface EntryCardProps {
   isCompleted?: boolean;
   isFavorite?: boolean;
   customType?: string;
+  previewText?: string;
 }
 
-/* Card is a div so we can safely nest buttons inside (action buttons) */
-const Card = styled.div<{ $active?: boolean }>`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  text-align: left;
-  background: ${({ $active }) => $active ? 'rgba(0, 0, 0, 0.04)' : 'transparent'};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+function extractTitle(html: string, fallback?: string): string {
+  const headingMatch = html.match(/<h[1-4][^>]*>(.*?)<\/h[1-4]>/i);
+  if (headingMatch) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = headingMatch[1];
+    const text = (tmp.textContent || tmp.innerText || '').trim();
+    if (text) return text;
+  }
+  const plain = stripHtml(html).trim();
+  return plain.slice(0, 70) || fallback || 'Untitled entry';
+}
+
+function extractPreview(html: string): string {
+  const headingMatch = html.match(/<h[1-4][^>]*>.*?<\/h[1-4]>/i);
+  let remainder = html;
+  if (headingMatch) {
+    remainder = html.slice((headingMatch.index ?? 0) + headingMatch[0].length);
+  } else {
+    const plain = stripHtml(html).trim();
+    if (plain.length <= 70) return '';
+    remainder = plain.slice(70);
+  }
+  return stripHtml(remainder).trim();
+}
+
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function readTimeLabel(words: number): string {
+  return Math.max(1, Math.round(words / 200)) + ' min read';
+}
+
+const Row = styled.div<{ $active?: boolean }>`
+  padding: 14px var(--s-4, 16px);
+  border-bottom: 1px solid var(--rule-2, #e5dfd2);
   cursor: pointer;
-  transition: background 0.15s ease;
-  &:hover { background: rgba(0, 0, 0, 0.04); }
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: start;
+  background: ${({ $active }) => $active ? 'var(--paper-surface, #f7f4ee)' : 'transparent'};
+  border-left: 2px solid ${({ $active }) => $active ? 'var(--accent-stroke, #2b2824)' : 'transparent'};
+  padding-left: ${({ $active }) => $active ? 'calc(var(--s-4, 16px) - 2px)' : 'var(--s-4, 16px)'};
+  transition: background 120ms;
+
+  &:hover {
+    background: var(--paper-surface, #f7f4ee);
+  }
 `;
 
-const CardContent = styled.div`
-  padding: 20px 24px 25px 24px;
-  width: 100%;
-  box-sizing: border-box;
-`;
-
-const HeaderRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 17px;
-`;
-
-const TopicBadge = styled.div<{ $bgColor: string }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0;
-  background: none;
-  flex-shrink: 0;
-  cursor: pointer;
-`;
-
-const TopicIcon = styled.span`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 13px;
-  flex-shrink: 0;
-`;
-
-const TopicLabel = styled.span`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
-  font-weight: 500;
+const DateStamp = styled.div`
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  color: var(--ink-4, #8a857c);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.03rem;
-  color: ${({ theme }) => theme.colors.text};
-  opacity: 0.75;
+  text-align: right;
+  line-height: 1.3;
+  padding-right: 7px;
 `;
 
-const Separator = styled.span`
-  color: ${({ theme }) => theme.colors.border};
-  font-size: 13px;
-  user-select: none;
-`;
-
-const Timestamp = styled.span`
-  font-size: 13px;
-  font-weight: 300;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: ${({ theme }) => theme.colors.text};
-  opacity: 0.75;
-  flex-shrink: 0;
+const DayNum = styled.span`
+  font-family: var(--serif, 'Playfair Display', Georgia, serif);
+  font-style: italic;
+  font-size: 26px;
+  color: var(--ink, #2b2824);
+  letter-spacing: 0;
+  display: block;
+  line-height: 1;
+  margin-top: 0;
+  margin-bottom: 7px;
+  padding-bottom: 5px;
 `;
 
 const ContentArea = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  min-width: 0;
 `;
 
-const PreviewText = styled.div<{ $completed?: boolean }>`
-  font-family: ${({ theme }) => theme.fontFamily.sans};
-  font-size: 17px;
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-  color: ${({ $completed, theme }) =>
-    $completed ? theme.colors.textMuted : theme.colors.textSecondary};
-  text-decoration: ${({ $completed }) => ($completed ? 'line-through' : 'none')};
+const TitleText = styled.div<{ $completed?: boolean }>`
+  font-family: var(--serif, 'Playfair Display', Georgia, serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink, #2b2824);
+  line-height: 1.35;
+  text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
+  margin: 0 0 3px;
+`;
+
+const PreviewText = styled.div`
+  font-family: var(--sans, 'Lato', sans-serif);
+  font-size: 12.5px;
+  color: var(--ink-3, #6b645a);
+  line-height: 1.45;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  line-height: 1.5;
-
-  p, li, h1, h2, h3, blockquote { display: inline; }
-  p + p::before { content: ' '; }
-  strong { font-weight: 700; }
-  em { font-style: italic; }
-  s { text-decoration: line-through; }
-  code { font-size: 0.9em; font-family: monospace; }
 `;
 
-const Footer = styled.div`
+const FooterMeta = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 6px;
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4, #8a857c);
 `;
 
-const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  task:       { bg: 'rgba(59, 130, 246, 0.15)',  text: '#2563eb' },
-  goal:       { bg: 'rgba(139, 92, 246, 0.15)',  text: '#7c3aed' },
-  food:       { bg: 'rgba(245, 158, 11, 0.15)',  text: '#b45309' },
-  medication: { bg: 'rgba(16, 185, 129, 0.15)',  text: '#047857' },
-  exercise:   { bg: 'rgba(239, 68, 68, 0.15)',   text: '#9B4444' },
-  symptom:    { bg: 'rgba(236, 72, 153, 0.15)',  text: '#be185d' },
-};
-
-const TypeBadge = styled.span<{ $type: string }>`
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 8px;
-  font-size: 13px;
-  font-weight: ${({ theme }) => theme.fontWeight.medium};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: ${({ $type }) => TYPE_COLORS[$type]?.bg || 'rgba(0,0,0,0.05)'};
-  color: ${({ $type, theme }) => TYPE_COLORS[$type]?.text || theme.colors.textSecondary};
-  text-transform: capitalize;
-`;
-
-const FavoriteStar = styled.span<{ $color: string }>`
-  margin-left: auto;
-  color: ${({ $color }) => $color};
-  font-size: 14px;
-  background: none;
-  border: none;
-  padding: 2px 4px;
+const TopicDot = styled.span<{ $color?: string }>`
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: ${({ $color }) => $color || 'var(--ink-3, #6b645a)'};
+  flex-shrink: 0;
+  display: inline-block;
   cursor: pointer;
-  border-radius: 4px;
+`;
+
+const BookmarkIcon = styled.span`
+  margin-left: auto;
+  color: var(--accent-stroke, #2b2824);
+  font-size: 11px;
   line-height: 1;
-  transition: opacity 0.15s;
+  flex-shrink: 0;
+  cursor: pointer;
   &:hover { opacity: 0.7; }
 `;
 
 export function EntryCard({
-  id, content, date, topicName, topicColor, topicIcon, topicId,
-  active, onClick, onDelete, onTopicClick, onToggleComplete, onToggleBookmark,
-  hasCheckbox, isCompleted, isFavorite, customType,
+  id, content, date, topicName, topicColor, topicId,
+  active, onClick, onDelete, onTopicClick, onToggleBookmark,
+  isCompleted, isFavorite, previewText,
 }: EntryCardProps) {
   const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
-  const previewHtml = DOMPurify.sanitize(content, {
-    ALLOWED_TAGS: ['strong', 'em', 's', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'blockquote', 'code'],
-    ALLOWED_ATTR: [],
-  }) || 'Untitled entry';
 
   const d = new Date(date);
-  const formatted = d.toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-  });
+  const dayNum = d.getDate();
+  const monthCode = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  const title = extractTitle(content, previewText);
+  const preview = extractPreview(content);
+  const plainText = stripHtml(content);
+  const wordCount = countWords(plainText);
+  const readTime = wordCount >= 50 ? readTimeLabel(wordCount) : null;
 
   const inner = (
-    <CardContent onClick={onClick}>
-      <HeaderRow>
-        {topicName && (
-          <TopicBadge
-            $bgColor={headerColor}
-            onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }}
-          >
-            {topicIcon && <TopicIcon><FontAwesomeIcon icon={topicIcon} /></TopicIcon>}
-            <TopicLabel>{topicName}</TopicLabel>
-          </TopicBadge>
-        )}
-        {topicName && <Separator>|</Separator>}
-        <Timestamp>{formatted}</Timestamp>
-        {isFavorite && (
-          <FavoriteStar
-            $color={headerColor}
-            onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
-            title="Remove bookmark"
-          >
-            <FontAwesomeIcon icon={faStar} />
-          </FavoriteStar>
-        )}
-      </HeaderRow>
+    <Row $active={active} onClick={onClick}>
+      <DateStamp>
+        <DayNum>{dayNum}</DayNum>
+        {monthCode}<br />{timeStr}
+      </DateStamp>
 
       <ContentArea>
-        <PreviewText $completed={isCompleted} dangerouslySetInnerHTML={{ __html: previewHtml }} />
+        <TitleText $completed={isCompleted}>{title}</TitleText>
+        {preview && <PreviewText>{preview}</PreviewText>}
+        <FooterMeta>
+          {topicName && (
+            <>
+              <TopicDot
+                $color={topicColor || undefined}
+                onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }}
+              />
+              <span
+                style={{ cursor: 'pointer' }}
+                onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }}
+              >{topicName}</span>
+            </>
+          )}
+          {readTime && <><span>·</span><span>{readTime}</span></>}
+          {isFavorite && (
+            <BookmarkIcon
+              onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
+              title="Remove bookmark"
+            >
+              <FontAwesomeIcon icon={faBookmark} />
+            </BookmarkIcon>
+          )}
+        </FooterMeta>
       </ContentArea>
-
-      {(!topicName && customType) && (
-        <Footer>
-          <TypeBadge $type={customType}>{customType}</TypeBadge>
-        </Footer>
-      )}
-    </CardContent>
+    </Row>
   );
 
-  return (
-    <Card $active={active}>
-      {onDelete ? (
-        <SwipeActions onDelete={onDelete} accentColor={headerColor}>
-          {inner}
-        </SwipeActions>
-      ) : inner}
-    </Card>
-  );
+  return onDelete ? (
+    <SwipeActions onDelete={onDelete} accentColor={headerColor}>
+      {inner}
+    </SwipeActions>
+  ) : inner;
 }

@@ -4,10 +4,11 @@
  */
 
 const fontFamily = {
-  serif: "'Cormorant Garamond', Georgia, 'Times New Roman', serif",
+  serif: "'Playfair Display', Georgia, 'Times New Roman', serif",
   sans: "'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-  ui: "'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+  ui: "'Lato', 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
   brand: "'Josefin Sans', 'Inter', sans-serif",
+  mono: "'JetBrains Mono', ui-monospace, Menlo, 'Courier New', monospace",
 };
 
 const typography = {
@@ -28,6 +29,16 @@ const spacing = {
   lg: 24,
   xl: 32,
   xxl: 48,
+  s1: 4,
+  s2: 8,
+  s3: 12,
+  s4: 16,
+  s5: 20,
+  s6: 24,
+  s7: 32,
+  s8: 48,
+  s9: 64,
+  s10: 96,
 };
 
 const fontSize = {
@@ -77,18 +88,22 @@ export const lightTheme = {
   ...shared,
   colors: {
     background: 'rgb(240, 235, 223)',
-    surface: '#faf8f4',
+    surfaceDeep: 'rgb(231, 224, 208)',
+    surface: '#f7f4ee',
     surfaceHover: '#f0eeea',
-    surfaceOverlay: 'rgba(250, 248, 244, 0.92)',
+    surfaceOverlay: 'rgba(240, 235, 223, 0.92)',
     surfaceOverlayBlur: 'rgba(240, 235, 223, 0.82)',
 
-    text: '#1a1a1a',
-    textSecondary: '#363636',
-    textMuted: '#5a5a5a',
-    textInverse: '#ffffff',
+    text: '#2b2824',
+    textSecondary: '#453f38',
+    textMuted: '#6b645a',
+    textFaint: '#8a857c',
+    textInverse: '#f0ebdf',
 
     border: '#d4cfc5',
+    borderSoft: '#e5dfd2',
     borderFocus: '#8B6B4A',
+    accentStroke: '#45606d',
 
     accent: '#4E6E7E',
     accentHover: '#3B5E6E',
@@ -104,27 +119,31 @@ export const lightTheme = {
     sm: '0 1px 2px rgba(0, 0, 0, 0.04)',
     md: '0 2px 8px rgba(0, 0, 0, 0.06)',
     lg: '0 4px 12px rgba(0, 0, 0, 0.08)',
-    focus: '0 0 0 2px rgba(139, 107, 74, 0.2)',
+    focus: '0 0 0 2px rgba(139, 107, 74, 0.28)',
   },
 } as const;
 
-/** Dark theme — dark paper */
+/** Dark theme — midnight graphite */
 export const darkTheme = {
   ...shared,
   colors: {
-    background: '#1a1b1d',
-    surface: '#222325',
-    surfaceHover: '#2a2b2e',
-    surfaceOverlay: 'rgba(26, 27, 29, 0.92)',
-    surfaceOverlayBlur: 'rgba(26, 27, 29, 0.82)',
+    background: '#1a1815',
+    surfaceDeep: '#120f0c',
+    surface: '#24211d',
+    surfaceHover: '#2d2a25',
+    surfaceOverlay: 'rgba(26, 24, 21, 0.92)',
+    surfaceOverlayBlur: 'rgba(26, 24, 21, 0.82)',
 
-    text: '#979797',
-    textSecondary: '#a8a4a4',
-    textMuted: '#a8a4a4',
-    textInverse: '#2e2f31',
+    text: '#efeadd',
+    textSecondary: '#cfc7b6',
+    textMuted: '#9a9385',
+    textFaint: '#6f6a5e',
+    textInverse: '#1a1815',
 
-    border: '#2e2f33',
+    border: '#3a352e',
+    borderSoft: '#2c2822',
     borderFocus: '#A67C52',
+    accentStroke: '#5a7486',
 
     accent: '#6B8BA4',
     accentHover: '#7B9EB2',
@@ -137,10 +156,10 @@ export const darkTheme = {
     info: '#7B9EB2',
   },
   shadow: {
-    sm: '0 1px 2px rgba(0, 0, 0, 0.1)',
-    md: '0 2px 8px rgba(0, 0, 0, 0.15)',
-    lg: '0 4px 12px rgba(0, 0, 0, 0.2)',
-    focus: '0 0 0 2px rgba(166, 124, 82, 0.25)',
+    sm: '0 1px 2px rgba(0, 0, 0, 0.35)',
+    md: '0 2px 8px rgba(0, 0, 0, 0.45)',
+    lg: '0 8px 24px rgba(0, 0, 0, 0.55)',
+    focus: '0 0 0 2px rgba(166, 124, 82, 0.28)',
   },
 } as const;
 

@@ -5,6 +5,7 @@ import { EntryCard } from './EntryCard.js';
 import { getTopicIcon } from '../../utils/topicIcons.js';
 import { entries as entriesApi } from '../../services/api.js';
 import { useMemo, useCallback } from 'react';
+import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 
 const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
@@ -30,7 +31,58 @@ const EmptyState = styled.div`
   font-size: ${({ theme }) => theme.fontSize.sm}px;
 `;
 
+const DateGroupHeader = styled.div`
+  padding: var(--s-4, 16px) var(--s-4, 16px) var(--s-4, 16px);
+  font-family: var(--serif, 'Playfair Display', Georgia, serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-3, #6b645a);
+  border-bottom: 1px solid var(--rule-2, #e5dfd2);
+  background: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+`;
+
+const DgLabel = styled.span`
+  white-space: nowrap;
+  line-height: 1;
+`;
+
+const DgCount = styled.span`
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-style: normal;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-4, #8a857c);
+`;
+
 const CHECKABLE_TYPES = new Set(['task', 'goal', 'milestone']);
+
+// ── Helpers ────────────────────────────────────────────────────────
+
+function ordinalSuffix(n: number): 'st' | 'nd' | 'rd' | 'th' {
+  const v = n % 100;
+  if (v >= 11 && v <= 13) return 'th';
+  switch (v % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+}
+
+/** YYYY-MM-DD string in local time */
+function toLocalDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+
+// ── Interface ──────────────────────────────────────────────────────
 
 interface EntryListProps {
   onToggleBookmark?: (entryId: number, isFavorite: boolean) => void;
@@ -39,7 +91,6 @@ interface EntryListProps {
 export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const topics = useEntriesStore(s => s.topics);
-  const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const removeEntry = useEntriesStore(s => s.removeEntry);
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
@@ -48,6 +99,7 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   const setSelectedEntryId = useUIStore(s => s.setSelectedEntryId);
   const viewMode = useUIStore(s => s.viewMode);
   const selectedDate = useUIStore(s => s.selectedDate);
+  const topicCustomFields = useUIStore(s => s.topicCustomFields);
   const searchKeyword = useUIStore(s => s.searchKeyword);
   const searchDateFrom = useUIStore(s => s.searchDateFrom);
   const searchDateTo = useUIStore(s => s.searchDateTo);
@@ -57,7 +109,6 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   }, [setSelectedTopicId]);
 
   const handleToggleBookmarkLocal = useCallback((entryId: number, isFavorite: boolean) => {
-    // Optimistic store update
     const entry = entries.find(e => e.id === entryId);
     if (!entry) return;
     const meta = entry.metadata as Record<string, unknown>;
@@ -65,7 +116,6 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
     const updatedFields = { ...existingFields, _isFavorite: isFavorite };
     const updatedMeta = { ...meta, _customFields: updatedFields };
     updateDecryptedEntry(entryId, { metadata: updatedMeta });
-    // Delegate persist to parent if provided
     onToggleBookmark?.(entryId, isFavorite);
   }, [entries, updateDecryptedEntry, onToggleBookmark]);
 
@@ -98,7 +148,6 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
     return TOPIC_TO_TYPE[topicName.toLowerCase()] || null;
   };
 
-  // Set of enabled (visible) topic IDs for fast lookup
   const enabledTopicIds = useMemo(() => new Set(topics.map(t => t.id)), [topics]);
 
   const filteredEntries = useMemo(() => {
@@ -107,10 +156,8 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
       const customFields = meta?._customFields as Record<string, unknown> | undefined;
       const taxId = meta?._taxonomyId as number | undefined;
 
-      // Hide entries whose topic is disabled (exists in allTopics but not in filtered topics)
       if (taxId && !enabledTopicIds.has(taxId)) return false;
 
-      // View mode filters
       if (viewMode === 'date') {
         const entryDate = new Date(entry.createdAt);
         if (
@@ -121,8 +168,8 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
       }
 
       if (viewMode === 'tasks') {
-        const taxId = meta?._taxonomyId as number | undefined;
-        const topic = taxId ? topics.find(t => t.id === taxId) : undefined;
+        const tid = meta?._taxonomyId as number | undefined;
+        const topic = tid ? topics.find(t => t.id === tid) : undefined;
         const type = getCustomType(topic?.name);
         if (type !== 'task') return false;
       }
@@ -131,12 +178,10 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
         if (!customFields?._isFavorite) return false;
       }
 
-      // Topic filter
       if (selectedTopicId !== null) {
         if (meta?._taxonomyId !== selectedTopicId) return false;
       }
 
-      // Keyword search (client-side on decrypted content + topic name)
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         const contentMatch = entry.content.toLowerCase().includes(keyword);
@@ -146,7 +191,6 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
         if (!contentMatch && !metadataMatch && !topicMatch) return false;
       }
 
-      // Date range
       if (searchDateFrom || searchDateTo) {
         const entryDate = new Date(entry.createdAt);
         if (searchDateFrom && entryDate < new Date(searchDateFrom)) return false;
@@ -161,42 +205,88 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
     });
   }, [entries, topics, enabledTopicIds, selectedTopicId, selectedDate, viewMode, searchKeyword, searchDateFrom, searchDateTo]);
 
+  // Group entries by local date key, newest first
+  const groups = useMemo(() => {
+    const map = new Map<string, typeof filteredEntries>();
+    for (const entry of filteredEntries) {
+      const key = toLocalDateKey(new Date(entry.createdAt));
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(entry);
+    }
+    // Sort groups descending (newest first)
+    return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [filteredEntries]);
+
   if (filteredEntries.length === 0) {
     return <EmptyState>No entries yet</EmptyState>;
   }
 
   return (
     <ListContainer>
-      {filteredEntries.map(entry => {
-        const meta = entry.metadata as Record<string, unknown>;
-        const customFields = meta?._customFields as Record<string, unknown> | undefined;
-        const topic = getTopicForEntry(entry);
-        const customType = getCustomType(topic?.name);
-        const hasCheckbox = customType !== null && CHECKABLE_TYPES.has(customType);
-        const isCompleted = hasCheckbox && !!customFields?.isCompleted;
-        const isFavorite = !!customFields?._isFavorite;
+      {groups.map(([dateKey, groupEntries]) => {
+        const groupDate = new Date(dateKey + 'T00:00:00');
+        const day = groupDate.getDate();
+        const suffix = ordinalSuffix(day);
+        const monthName = groupDate.toLocaleDateString('en-US', { month: 'long' });
+        const dowLabel = groupDate.toLocaleDateString('en-US', { weekday: 'long' });
 
         return (
-          <EntryCard
-            key={entry.id}
-            id={entry.id}
-            content={entry.content}
-            date={entry.createdAt instanceof Date ? entry.createdAt.toISOString() : String(entry.createdAt)}
-            topicName={topic?.name}
-            topicColor={topic?.color || undefined}
-            topicIcon={getTopicIcon(topic?.icon)}
-            topicId={topic?.id}
-            active={selectedEntryId === entry.id}
-            onClick={() => setSelectedEntryId(entry.id)}
-            onDelete={() => handleDelete(entry.id)}
-            onTopicClick={handleTopicClick}
-            onToggleComplete={hasCheckbox ? handleToggleComplete : undefined}
-            onToggleBookmark={handleToggleBookmarkLocal}
-            hasCheckbox={hasCheckbox}
-            isCompleted={isCompleted}
-            isFavorite={isFavorite}
-            customType={customType || undefined}
-          />
+          <div key={dateKey}>
+            <DateGroupHeader>
+              <DgLabel>{dowLabel}, {monthName} {day}<sup style={{ fontSize: '0.7em' }}>{suffix}</sup></DgLabel>
+              <DgCount>{groupEntries.length} {groupEntries.length === 1 ? 'entry' : 'entries'}</DgCount>
+            </DateGroupHeader>
+
+            {groupEntries.map(entry => {
+              const meta = entry.metadata as Record<string, unknown>;
+              const customFields = meta?._customFields as Record<string, unknown> | undefined;
+              const topic = getTopicForEntry(entry);
+              const customType = getCustomType(topic?.name);
+              const hasCheckbox = customType !== null && CHECKABLE_TYPES.has(customType);
+              const isCompleted = hasCheckbox && !!customFields?.isCompleted;
+              const isFavorite = !!customFields?._isFavorite;
+
+              let previewText: string | undefined;
+              if (!stripHtml(entry.content).trim() && customFields) {
+                if ((meta._widgetType as string) === 'wellness-checkin') {
+                  const w = (customFields.waterGlasses as number) || 0;
+                  const g = (customFields.waterGoal as number) || 8;
+                  const m = (customFields.moodScore as number) || 0;
+                  const s = (customFields.sleepHours as number) || 0;
+                  const parts = [w > 0 ? `${w}/${g} glasses` : '', m > 0 ? `Mood ${m}/5` : '', s > 0 ? `${s}h sleep` : ''].filter(Boolean);
+                  previewText = parts.join(' · ') || 'Wellness check-in';
+                } else if (topic?.id) {
+                  const defs = topicCustomFields[topic.id] ?? [];
+                  const uf = (customFields._userFields as Record<string, unknown>) ?? {};
+                  previewText = summarizeUserFields(defs, uf) || undefined;
+                }
+              }
+
+              return (
+                <EntryCard
+                  key={entry.id}
+                  id={entry.id}
+                  content={entry.content}
+                  date={entry.createdAt instanceof Date ? entry.createdAt.toISOString() : String(entry.createdAt)}
+                  topicName={topic?.name}
+                  topicColor={topic?.color || undefined}
+                  topicIcon={getTopicIcon(topic?.icon)}
+                  topicId={topic?.id}
+                  active={selectedEntryId === entry.id}
+                  onClick={() => setSelectedEntryId(entry.id)}
+                  onDelete={() => handleDelete(entry.id)}
+                  onTopicClick={handleTopicClick}
+                  onToggleComplete={hasCheckbox ? handleToggleComplete : undefined}
+                  onToggleBookmark={handleToggleBookmarkLocal}
+                  hasCheckbox={hasCheckbox}
+                  isCompleted={isCompleted}
+                  isFavorite={isFavorite}
+                  customType={customType || undefined}
+                  previewText={previewText}
+                />
+              );
+            })}
+          </div>
         );
       })}
     </ListContainer>

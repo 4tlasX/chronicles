@@ -16,7 +16,7 @@ Key privacy guarantees:
 
 - **No circles or pills** — All shapes use rounded square edges (border-radius: 4-8px). No circular badges, no pill-shaped chips.
 - **Icons are plain** — Topic icons are displayed as plain FontAwesome icons. No circle backgrounds, no colored dot indicators.
-- **Icon colors — muted** — Topic icons in entry cards (`EntryCard`, `EditableEntryCard`), topic sidebar (`SortableTopicItem`), and topic selector dropdowns (`TopicSelector`, `TopicSelectorDropdown`) use `theme.colors.textMuted`. Do not use the header color or full `theme.colors.text` for these icons.
+- **Icon colors — body text** — Topic icons in entry cards (`EntryCard`, `EditableEntryCard`), topic sidebar (`SortableTopicItem`), and topic selector dropdowns (`TopicSelector`, `TopicSelectorDropdown`) use `theme.colors.text` (body font color). Do not use the header color or a muted color for these icons.
 - **Nav link unselected color (dark header)** — Unselected nav links and icon buttons (`NavLink`, `DropdownTrigger`) on dark-background headers use `rgb(240, 235, 223)`, not semi-transparent white.
 - **Wellness icon unselected color** — Tap-to-fill icons (`GlassBtn`, `MoodBtn`) in both the dashboard widget and `WellnessFields` use `theme.colors.border` when not selected/filled.
 - **Quick entry card** — `QuickEntryDashCard` has transparent background, no horizontal padding, no `overflow: hidden` (so the topic picker dropdown can escape), and a top border via `CardHeader`.
@@ -411,7 +411,7 @@ Applied via Express middleware (`server/src/middleware/security.ts`):
 ### Default Colors
 - Default header: `#2d2c2a` (dark)
 - Default accent: `#00b4d8` (cyan)
-- Neutral background: `#f7f7f7`
+- Neutral background: `#f0ebdf`
 
 ## React Native Readiness
 

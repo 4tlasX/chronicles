@@ -13,6 +13,7 @@ import { ViewTabs } from '../components/organisms/ViewTabs.js';
 import { QuickEntry } from '../components/organisms/QuickEntry.js';
 import { EntryList } from '../components/organisms/EntryList.js';
 import { EntryForm } from '../components/organisms/EntryForm.js';
+import type { DictationControls } from '../components/organisms/Editor.js';
 import { SearchPanel } from '../components/organisms/SearchPanel.js';
 import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
@@ -35,10 +36,13 @@ const DateFilterBar = styled.div`
   margin: 8px 16px 4px;
   padding: 8px 12px;
   background: transparent;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  color: ${({ theme }) => theme.colors.text};
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-sm, 4px);
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3, ${({ theme }) => theme.colors.text});
 `;
 
 const DateFilterClear = styled.button`
@@ -46,14 +50,17 @@ const DateFilterClear = styled.button`
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
-  color: ${({ theme }) => theme.colors.text};
+  padding: 3px 8px;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3, ${({ theme }) => theme.colors.text});
   background: transparent;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-sm, 2px);
   cursor: pointer;
-  &:hover { background: rgba(0, 0, 0, 0.04); }
+  &:hover { background: var(--paper-hover); }
 `;
 
 export function JournalView() {
@@ -78,6 +85,7 @@ export function JournalView() {
   const setThemeMode = useUIStore(s => s.setThemeMode);
   const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
   const setBackgroundOpacity = useUIStore(s => s.setBackgroundOpacity);
+  const setTopicCustomFields = useUIStore(s => s.setTopicCustomFields);
   const filterTopic = topics.find(t => t.id === selectedTopicId);
 
   const entryCounts = useMemo(() => {
@@ -98,6 +106,9 @@ export function JournalView() {
   const [widgetType, setWidgetType] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const loadedStateRef = useRef({ content: '', customFields: '{}' });
+  const dictationControlRef = useRef<DictationControls | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
 
@@ -151,6 +162,58 @@ export function JournalView() {
     wellnessAutoDebounceRef.current = setTimeout(() => { wellnessAutoSaveDoRef.current(); }, 600);
   }, []);
 
+  // Auto-save: fires 3s after user stops editing, saves in place without closing the editor
+  const autoSaveDoRef = useRef<() => Promise<void>>(async () => {});
+  autoSaveDoRef.current = async () => {
+    const currentContent = editorContent;
+    const currentFields = JSON.stringify(customFields);
+    if (
+      currentContent === loadedStateRef.current.content &&
+      currentFields === loadedStateRef.current.customFields
+    ) return;
+    const hasText = !!stripHtml(currentContent).trim();
+    const hasDrawing = currentContent.includes('data-type="drawing"');
+    if (!hasText && !hasDrawing) return;
+
+    let effectiveTopicId = editorTopicId;
+    if (!effectiveTopicId) {
+      effectiveTopicId = await getOrCreateJournalTopic();
+      setEditorTopicId(effectiveTopicId);
+    }
+    const metadata: Record<string, unknown> = {};
+    if (effectiveTopicId) metadata._taxonomyId = effectiveTopicId;
+    if (widgetType) metadata._widgetType = widgetType;
+    if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
+    try {
+      const encrypted = await encryptPost(currentContent, metadata);
+      if (selectedEntryId) {
+        await entriesApi.update(selectedEntryId, {
+          contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+          metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+          taxonomyIds: effectiveTopicId ? [effectiveTopicId] : [],
+        });
+        updateDecryptedEntry(selectedEntryId, { content: currentContent, metadata });
+      } else {
+        const result = await entriesApi.create({
+          contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+          metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+          isEncrypted: true, taxonomyIds: effectiveTopicId ? [effectiveTopicId] : [],
+        });
+        const newId = result.id as number;
+        addDecryptedEntry({ id: newId, content: currentContent, metadata, isEncrypted: true,
+          createdAt: new Date(result.createdAt as string), updatedAt: new Date((result.updatedAt || result.createdAt) as string) });
+        setSelectedEntryId(newId);
+      }
+      loadedStateRef.current = { content: currentContent, customFields: currentFields };
+      setLastSavedAt(new Date());
+    } catch (err) { console.error('Auto-save failed:', err); }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => { autoSaveDoRef.current(); }, 3000);
+    return () => clearTimeout(timer);
+  }, [editorContent, customFields]);
+
   const handleUnlock = useCallback(async (password: string) => {
     if (!encryptionData?.kekSalt || !encryptionData?.encryptedMasterKey || !encryptionData?.kekWrapIv) {
       throw new Error('Missing encryption data');
@@ -173,6 +236,9 @@ export function JournalView() {
         if (settingsMap.themeMode === 'light' || settingsMap.themeMode === 'dark') setThemeMode(settingsMap.themeMode);
         if (typeof settingsMap.backgroundImage === 'string') setBackgroundImage(settingsMap.backgroundImage);
         if (typeof settingsMap.backgroundOpacity === 'string') setBackgroundOpacity(parseFloat(settingsMap.backgroundOpacity as string));
+        if (settingsMap.topicCustomFields && typeof settingsMap.topicCustomFields === 'object' && !Array.isArray(settingsMap.topicCustomFields)) {
+          setTopicCustomFields(settingsMap.topicCustomFields as import('../types/userFields.js').TopicCustomFields);
+        }
         // Extract feature flags and store them (must be set before setTopics so filtering works)
         const flags: Record<string, boolean> = {};
         for (const key of Object.keys(settingsMap)) {
@@ -232,16 +298,21 @@ export function JournalView() {
       if (entry) {
         setEditorContent(entry.content);
         const meta = entry.metadata as Record<string, unknown>;
+        const cf = meta?._customFields as Record<string, unknown> ?? {};
         setEditorTopicId(meta?._taxonomyId as number | null ?? null);
-        setCustomFields(meta?._customFields as Record<string, unknown> ?? {});
+        setCustomFields(cf);
         setWidgetType(meta?._widgetType as string | null ?? null);
         setShowMobileEditor(true);
+        loadedStateRef.current = { content: entry.content, customFields: JSON.stringify(cf) };
+        setLastSavedAt(null);
       }
     } else {
       setEditorContent('');
       setEditorTopicId(null);
       setCustomFields({});
       setWidgetType(null);
+      loadedStateRef.current = { content: '', customFields: '{}' };
+      setLastSavedAt(null);
     }
   }, [selectedEntryId, decryptedEntries]);
 
@@ -250,9 +321,9 @@ export function JournalView() {
     const hasText = !!stripHtml(editorContent).trim();
     const userFieldDefs = editorTopicId != null ? (topicCustomFields[editorTopicId] ?? []) : [];
     const userFieldValues = (customFields._userFields as Record<string, unknown>) ?? {};
-    const fieldSummary = !hasText && !hasDrawing ? summarizeUserFields(userFieldDefs, userFieldValues) : '';
-    if (!hasText && !hasDrawing && !fieldSummary) return;
-    const finalContent = hasText || hasDrawing ? editorContent : `<p>${fieldSummary}</p>`;
+    const hasFieldValues = userFieldDefs.length > 0 && summarizeUserFields(userFieldDefs, userFieldValues) !== '';
+    if (!hasText && !hasDrawing && !hasFieldValues) return;
+    const finalContent = editorContent;
     setIsSaving(true); setSaveStatus('');
 
     // Resolve effective topic — fall back to "Journal" if none selected
@@ -305,12 +376,25 @@ export function JournalView() {
 
   const handleNew = () => {
     setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+    setLastSavedAt(null);
     setShowMobileEditor(false);
   };
 
   const handleMobileBack = () => {
     setShowMobileEditor(false);
   };
+
+  const handleDictate = useCallback(() => {
+    setSelectedEntryId(null);
+    setEditorContent('');
+    setEditorTopicId(null);
+    setCustomFields({});
+    setWidgetType(null);
+    setLastSavedAt(null);
+    if (!showMobileEditor) setShowMobileEditor(true);
+    // Give the editor a tick to mount/focus before toggling dictation
+    setTimeout(() => dictationControlRef.current?.toggle(), 80);
+  }, [showMobileEditor, setSelectedEntryId, setShowMobileEditor]);
 
   // Keep a fresh ref to handleSave so the global keydown listener never captures a stale version
   const handleSaveRef = useRef(handleSave);
@@ -440,6 +524,12 @@ export function JournalView() {
               headerColor={headerColor}
               entryCounts={entryCounts}
               onSelect={setSelectedTopicId}
+              totalCount={decryptedEntries.length}
+              onNewEntry={() => {
+                setSelectedEntryId(null);
+                if (!showMobileEditor) setShowMobileEditor(true);
+              }}
+              onDictate={handleDictate}
             />
             {viewMode === 'date' && (
               <DateFilterBar>
@@ -484,6 +574,8 @@ export function JournalView() {
               isEditing={selectedEntryId !== null}
               isSaving={isSaving}
               saveStatus={saveStatus}
+              lastSavedAt={lastSavedAt}
+              dictationControlRef={dictationControlRef}
             />
           </EditorPanel>
         }

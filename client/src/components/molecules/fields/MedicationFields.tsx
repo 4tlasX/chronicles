@@ -36,7 +36,7 @@ const TimeInput = styled.input`
   font-size: ${({ theme }) => theme.fontSize.sm}px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: transparent;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
   color: ${({ theme }) => theme.colors.text};
   outline: none;
 

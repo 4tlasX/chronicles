@@ -33,7 +33,7 @@ const StyledInput = styled.input<{ $error?: boolean }>`
   &:-webkit-autofill,
   &:-webkit-autofill:hover,
   &:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 1000px #faf8f2 inset;
+    -webkit-box-shadow: 0 0 0 1000px var(--paper-surface, #f7f4ee) inset;
     -webkit-text-fill-color: ${({ theme }) => theme.colors.text};
     transition: background-color 5000s ease-in-out 0s;
   }

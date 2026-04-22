@@ -74,7 +74,7 @@ const EditorWrap = styled.div`
   & > div { min-height: unset; }
   && .tiptap {
     min-height: 48px;
-    padding: 6px 0;
+    padding: 20px 0;
     font-size: 17px;
     font-style: italic;
     line-height: 1.6;

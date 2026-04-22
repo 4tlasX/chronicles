@@ -1,13 +1,17 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { faPlus, faArrowRightFromBracket, faChevronDown, faChevronUp, faBars, faXmark, faSliders } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowRightFromBracket, faBars, faXmark, faHome, faBookOpen, faCalendar, faTag, faGear, faMagnifyingGlass, faCircleUser } from '@fortawesome/free-solid-svg-icons';
 import { faNoteSticky } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
+import { getTopicIcon } from '../../utils/topicIcons.js';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { HeaderBar } from '../atoms/HeaderBar.js';
+import { InlineWeather } from '../molecules/InlineWeather.js';
 
 function isLightColor(hex: string): boolean {
   if (hex === 'transparent') return false;
@@ -19,113 +23,82 @@ function isLightColor(hex: string): boolean {
   return luminance > 0.75;
 }
 
-const HeaderBar = styled.header<{ $bgColor: string; $light: boolean }>`
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  height: 65px;
-  background: ${({ $bgColor }) => $bgColor};
-  color: ${({ $light }) => $light ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)'};
-  position: sticky;
-  top: 0;
-  z-index: ${({ theme }) => theme.zIndex.header};
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-`;
-
-const LeftSection = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  @media (max-width: 480px) { gap: 6px; }
-`;
 
 const Logo = styled(Link)`
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   text-decoration: none;
+  flex-shrink: 0;
+
+  @media (max-width: 1199px) {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: auto;
+  }
 `;
 
 const LogoText = styled.span<{ $light?: boolean }>`
   display: flex;
   align-items: center;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 25px;
-  font-weight: 300;
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  color: inherit;
-  margin-bottom: 0.1rem;
-  padding-top: 4px;
-  @media (max-width: 480px) { font-size: 22px; margin-bottom: 0; }
-`;
-
-const LogoLetters = styled.span`
-  line-height: 1;
-  align-self: center;
-`;
-
-const LogoPoppySVG = styled.svg`
-  height: 1.1em;
-  width: 1.1em;
-  align-self: center;
-  margin: 0 0.25em 0 0;
-  flex-shrink: 0;
-`;
-
-function LogoPoppy() {
-  return (
-    <LogoPoppySVG viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-      {[0, 72, 144, 216, 288].map(angle => (
-        <g key={angle} transform={angle ? `rotate(${angle},50,50)` : undefined}>
-          <path strokeWidth="1.1" d="M44,47 C34,42 24,28 28,13 C32,4 48,4 50,8 C52,4 68,4 72,13 C76,28 66,42 56,47 Z"/>
-          <path strokeWidth="0.7" d="M50,46 C50,36 50,22 50,10"/>
-        </g>
-      ))}
-      <circle cx="50" cy="50" r="9" strokeWidth="1.1"/>
-      {[0,36,72,108,144,180,216,252,288,324].map(angle => (
-        <line key={angle} transform={angle ? `rotate(${angle},50,50)` : undefined} x1="50" y1="39" x2="50" y2="36" strokeWidth="1"/>
-      ))}
-      <circle cx="50" cy="50" r="2.5" fill="currentColor" stroke="none"/>
-    </LogoPoppySVG>
-  );
-}
-
-const NewEntryButton = styled.button<{ $light?: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  font-size: 14px;
-  @media (max-width: 480px) { font-size: 25px; padding: 5px 2px; }
+  font-family: 'Lato', sans-serif;
+  font-size: 18px;
   font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.09rem;
-  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : 'rgba(255, 255, 255, 0.85)'};
+  letter-spacing: 0.22em;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.85)' : '#f0ebdf'};
+  @media (max-width: 480px) { font-size: 16px; }
+`;
+
+const RightSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  margin-left: auto;
+
+  @media (max-width: 1199px) { display: none; }
+`;
+
+const DateText = styled.span<{ $light?: boolean }>`
+  font-family: 'Lato', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
+  opacity: 0.85;
+  white-space: nowrap;
+
+  @media (max-width: 900px) { display: none; }
+`;
+
+const HeaderIconBtn = styled.button<{ $light?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
   background: none;
   border: none;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: opacity 0.15s;
+  opacity: 0.85;
 
-  &:hover { color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'}; }
-`;
+  &:hover { opacity: 1; }
 
-const NewEntryLabel = styled.span`
-  @media (max-width: 480px) { display: none; }
-`;
-
-const Divider = styled.div`
-  width: 1px;
-  height: 24px;
-  background: currentColor;
-  opacity: 0.25;
-  margin: 0 4px;
+  @media (max-width: 1199px) { display: none; }
 `;
 
 const Nav = styled.nav`
   display: flex;
   align-items: center;
-  margin-left: auto;
-  gap: 0;
+  gap: 20px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 
   @media (max-width: 1199px) {
     display: none;
@@ -133,118 +106,120 @@ const Nav = styled.nav`
 `;
 
 const NavLink = styled(Link)<{ $active?: boolean; $light?: boolean }>`
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 400;
+  padding: 4px 0;
+  font-family: 'Lato', sans-serif;
+  font-size: 11px;
+  font-weight: ${({ $active }) => $active ? 700 : 600};
   text-transform: uppercase;
-  letter-spacing: 0.09rem;
-  color: ${({ $active, $light }) => $active
-    ? ($light ? 'rgba(0,0,0,0.9)' : 'white')
-    : ($light ? 'rgba(0,0,0,0.6)' : 'rgb(240,235,223)')};
+  letter-spacing: 0.15em;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.85)' : '#f0ebdf'};
+  opacity: ${({ $active }) => $active ? 1 : 0.8};
   text-decoration: none;
-  transition: color 0.15s;
+  border-bottom: 1px solid ${({ $active, $light }) => $active
+    ? ($light ? 'rgba(0,0,0,0.85)' : '#f0ebdf')
+    : 'transparent'};
+  transition: opacity 0.15s, border-color 0.15s;
   white-space: nowrap;
 
-  &:hover { color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'}; }
+  &:hover {
+    opacity: 1;
+  }
 `;
 
-const DropdownWrapper = styled.div`
+
+const AvatarWrapper = styled.div`
   position: relative;
 `;
 
-const DropdownTrigger = styled.button<{ $active?: boolean; $light?: boolean }>`
+const Avatar = styled.button<{ $light?: boolean }>`
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm, 2px);
+  border: 1px solid ${({ $light }) => $light ? 'rgba(0,0,0,0.25)' : 'rgba(240,235,223,0.35)'};
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 14px;
+  justify-content: center;
+  font-family: var(--sans);
   font-size: 12px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.09rem;
-  color: ${({ $active, $light }) => $active
-    ? ($light ? 'rgba(0,0,0,0.9)' : 'white')
-    : ($light ? 'rgba(0,0,0,0.6)' : 'rgb(240,235,223)')};
+  font-weight: 700;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
   background: none;
-  border: none;
   cursor: pointer;
-  transition: color 0.15s;
-  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+  transition: opacity 0.15s;
 
-  &:hover { color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'}; }
+  &:hover { opacity: 0.8; }
 `;
 
-const DropdownChevron = styled.span`
-  font-size: 11px;
-  margin-left: 2px;
-`;
-
-const DropdownMenu = styled.div<{ $bgColor: string }>`
+const AvatarMenu = styled.div`
   position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 4px;
+  top: calc(100% + 8px);
+  right: 0;
   min-width: 160px;
-  padding: 4px 0;
-  background: ${({ $bgColor }) => $bgColor};
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  box-shadow: ${({ theme }) => theme.shadow.lg};
-  animation: dropdownIn 0.15s ease-out;
+  background: var(--paper-surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md, 4px);
+  box-shadow: var(--shadow-3, 0 4px 12px rgba(0,0,0,0.12));
+  overflow: hidden;
+  z-index: 200;
+  animation: dropIn 0.12s ease-out;
 
-  @keyframes dropdownIn {
+  @keyframes dropIn {
     from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 `;
 
-const DropdownItem = styled(Link)<{ $light?: boolean }>`
-  display: block;
-  padding: 8px 16px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 12px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.09rem;
-  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.6)' : 'rgba(255, 255, 255, 0.7)'};
-  text-decoration: none;
-  transition: background 0.1s, color 0.15s;
-
-  &:hover {
-    color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'};
-    background: ${({ $light }) => $light ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.2)'};
-  }
-`;
-
-const LogoutButton = styled.button<{ $light?: boolean }>`
+const AvatarMenuItem = styled.button`
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  font-size: 14px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.09rem;
-  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)'};
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-2);
   background: none;
   border: none;
   cursor: pointer;
-  transition: color 0.15s;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
 
-  &:hover { color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : 'white'}; }
+  &:hover { background: var(--paper-hover); color: var(--ink); }
 `;
 
-const HamburgerButton = styled.button`
+const HamburgerButton = styled.button<{ $light?: boolean }>`
   display: none;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  margin-left: auto;
-  color: rgba(255, 255, 255, 0.9);
+  width: 36px;
+  height: 36px;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)'};
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 22px;
+  font-size: 18px;
+  flex-shrink: 0;
+
+  @media (max-width: 1199px) {
+    display: flex;
+  }
+`;
+
+const MobileAvatarBtn = styled.button<{ $light?: boolean }>`
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: auto;
 
   @media (max-width: 1199px) {
     display: flex;
@@ -256,9 +231,10 @@ const MobileDrawerOverlay = styled.div<{ $open: boolean }>`
   position: fixed;
   inset: 0;
   z-index: ${({ theme }) => theme.zIndex.modal};
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(43, 40, 36, 0.42);
+  backdrop-filter: blur(2px);
   opacity: ${({ $open }) => $open ? 1 : 0};
-  transition: opacity 0.2s ease;
+  transition: opacity 0.25s ease;
   pointer-events: ${({ $open }) => $open ? 'auto' : 'none'};
 
   @media (max-width: 1199px) {
@@ -266,24 +242,61 @@ const MobileDrawerOverlay = styled.div<{ $open: boolean }>`
   }
 `;
 
-const MobileDrawer = styled.div<{ $open: boolean; $bgColor: string }>`
+const MobileDrawer = styled.div<{ $open: boolean }>`
   position: fixed;
   top: 0;
-  right: 0;
-  width: 280px;
-  max-width: 80vw;
+  left: 0;
+  width: 82%;
+  max-width: 320px;
   height: 100vh;
   z-index: ${({ theme }) => theme.zIndex.modal + 1};
-  background: ${({ $bgColor }) => $bgColor};
-  transform: translateX(${({ $open }) => $open ? '0' : '100%'});
+  background: var(--paper-surface);
+  box-shadow: 6px 0 24px rgba(0,0,0,0.18);
+  transform: translateX(${({ $open }) => $open ? '0' : '-100%'});
   transition: transform 0.25s ease;
   display: none;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
 
   @media (max-width: 1199px) {
     display: flex;
   }
+`;
+
+const DrawerHead = styled.div<{ $bgColor: string }>`
+  background: ${({ $bgColor }) => $bgColor};
+  color: var(--h-active-ink, #f0ebdf);
+  padding: 40px 16px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-shrink: 0;
+`;
+
+const DrawerUserInfo = styled.div`
+  display: flex;
+  gap: 10px;
+  align-items: center;
+`;
+
+const DrawerAvatar = styled.div`
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-sm, 2px);
+  background: var(--paper-surface);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+`;
+
+const DrawerUserName = styled.div`
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--h-active-ink, #f0ebdf);
 `;
 
 const DrawerHeader = styled.div`
@@ -300,171 +313,154 @@ const DrawerCloseButton = styled.button`
   justify-content: center;
   width: 36px;
   height: 36px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--h-active-ink, rgba(255,255,255,0.9));
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 18px;
 `;
 
 const DrawerNav = styled.nav`
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 8px;
   display: flex;
   flex-direction: column;
-  padding: 8px 0;
 `;
 
 const DrawerLink = styled(Link)<{ $active?: boolean }>`
-  display: block;
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.09rem;
-  color: ${({ $active }) => $active ? 'white' : 'rgb(240,235,223)'};
-  text-decoration: none;
-  transition: background 0.1s;
-
-  &:hover { background: rgba(255,255,255,0.1); }
-`;
-
-const DrawerSectionLabel = styled.button`
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 12px 20px;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--r-sm, 2px);
+  font-family: var(--sans);
   font-size: 14px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.75);
-  text-transform: uppercase;
-  letter-spacing: 0.09rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
+  font-weight: ${({ $active }) => $active ? 700 : 400};
+  color: ${({ $active }) => $active ? 'var(--ink)' : 'var(--ink-2)'};
+  text-decoration: none;
+  border-left: ${({ $active }) => $active ? '2px solid var(--accent-stroke)' : '2px solid transparent'};
+  padding-left: ${({ $active }) => $active ? '10px' : '12px'};
+  background: ${({ $active }) => $active ? 'var(--paper-hover)' : 'transparent'};
+  min-height: 44px;
   transition: background 0.1s;
-  &:hover { background: rgba(255,255,255,0.1); }
+
+  &:hover { background: var(--paper-hover); }
+`;
+
+const DrawerLinkIcon = styled.span`
+  font-size: 16px;
+  color: var(--ink-3);
+  flex: 0 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const DrawerSectionLabel = styled.div`
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  padding: 14px 12px 6px;
+  border-top: 1px dashed var(--rule);
+  margin-top: 10px;
+`;
+
+
+const DrawerCount = styled.span`
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-4);
+  letter-spacing: 0.08em;
 `;
 
 const DrawerDivider = styled.div`
   height: 1px;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--rule);
+  margin: 4px 0;
+`;
+
+const DrawerFoot = styled.footer`
+  padding: 12px 8px;
+  border-top: 1px solid var(--rule);
+  flex-shrink: 0;
 `;
 
 const DrawerLogout = styled.button`
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  padding: 12px 20px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm, 2px);
+  font-family: var(--sans);
   font-size: 14px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.09rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--ink-3);
   background: none;
   border: none;
   cursor: pointer;
   text-align: left;
-  transition: background 0.1s;
+  transition: background 0.1s, color 0.1s;
 
-  &:hover { background: rgba(255,255,255,0.1); }
+  &:hover {
+    background: var(--paper-hover);
+    color: var(--ink);
+  }
 `;
 
-interface NavDropdownProps {
-  label: React.ReactNode;
-  items: { label: string; to: string }[];
-  activePath: string;
-  bgColor?: string;
-  light?: boolean;
-}
 
-function NavDropdown({ label, items, activePath, bgColor, light }: NavDropdownProps) {
-  const [open, setOpen] = useState(false);
-  const [closing, setClosing] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const isActive = items.some(item => activePath.startsWith(item.to));
-
-  const closeMenu = useCallback(() => {
-    if (open && !closing) {
-      setClosing(true);
-      setTimeout(() => {
-        setOpen(false);
-        setClosing(false);
-      }, 150);
-    }
-  }, [open, closing]);
-
-  // Click outside to close
-  useEffect(() => {
-    if (!open) return;
-    const handle = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        closeMenu();
-      }
-    };
-    document.addEventListener('mousedown', handle);
-    return () => document.removeEventListener('mousedown', handle);
-  }, [open, closeMenu]);
-
-  return (
-    <DropdownWrapper ref={wrapperRef}>
-      <DropdownTrigger $active={isActive || open} $light={light} onClick={() => open ? closeMenu() : setOpen(true)}>
-        {label}
-        <DropdownChevron style={{ transform: open && !closing ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
-          <FontAwesomeIcon icon={faChevronDown} />
-        </DropdownChevron>
-      </DropdownTrigger>
-      {open && (
-        <DropdownMenu $bgColor={bgColor || '#6A9B9B'} style={closing ? { opacity: 0, transform: 'translateY(-4px)', transition: 'opacity 0.15s, transform 0.15s' } : undefined}>
-          {items.map(item => (
-            <DropdownItem key={item.to} to={item.to} $light={light} onClick={() => { closeMenu(); }}>
-              {item.label}
-            </DropdownItem>
-          ))}
-        </DropdownMenu>
-      )}
-    </DropdownWrapper>
-  );
+function formatHeaderDate(): string {
+  const now = new Date();
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
+  return `${days[now.getDay()]} · ${now.getDate()} ${months[now.getMonth()]}`;
 }
 
 export function Header() {
   const headerColor = useUIStore(s => s.headerColor);
+  const displayName = useUIStore(s => s.displayName);
   const featureFlags = useEntriesStore(s => s.featureFlags);
+  const topics = useEntriesStore(s => s.topics);
+  const entries = useEntriesStore(s => s.decryptedEntries);
   const { logout } = useAuth();
   const { lock } = useEncryption();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [drawerSections, setDrawerSections] = useState<Record<string, boolean>>({ planning: false, health: false, quicklinks: false });
-  const toggleDrawerSection = (key: string) => setDrawerSections(prev => ({ ...prev, [key]: !prev[key] }));
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!avatarMenuOpen) return;
+    const handle = (e: MouseEvent) => {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) setAvatarMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [avatarMenuOpen]);
 
   const handleLogout = async () => {
     setMobileMenuOpen(false);
+    setAvatarMenuOpen(false);
     lock();
     await logout();
     navigate('/login');
   };
 
-  const handleNewEntry = () => {
-    useUIStore.getState().setSelectedEntryId(null);
-    useUIStore.getState().setShowMobileEditor(true);
-    navigate('/journal');
-  };
-
   const isActive = (path: string) => location.pathname === path;
+  const themeMode = useUIStore(s => s.themeMode);
   const bgColor = headerColor || '#6A9B9B';
   const light = isLightColor(bgColor);
+  const userInitial = (displayName || 'J')[0].toUpperCase();
 
-  // Feature-gated nav items
+  const countForTopic = (topicId: number) =>
+    entries.filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === topicId).length;
+
   const ff = featureFlags;
-  // Planning dropdown items — each gated by its own flag
-  const goalsItems: { label: string; to: string }[] = [];
-  if (ff.goalsEnabled) goalsItems.push({ label: 'Goals', to: '/goals' });
-  if (ff.milestonesEnabled) goalsItems.push({ label: 'Milestones', to: '/goals/milestones' });
-  goalsItems.push({ label: 'Tasks', to: '/goals/tasks' });
-  goalsItems.push({ label: 'Todos', to: '/goals/todos' });
-  goalsItems.push({ label: 'Custom Filters', to: '/goals/filter' });
-  goalsItems.push({ label: 'Menu Planner', to: '/menu' });
-  goalsItems.push({ label: 'Shopping Lists', to: '/shopping' });
 
   const healthItems: { label: string; to: string }[] = [];
   if (ff.medicationEnabled) {
@@ -477,165 +473,175 @@ export function Header() {
   if (ff.allergiesEnabled) healthItems.push({ label: 'Allergies', to: '/health/allergies' });
   if (healthItems.length > 0) healthItems.push({ label: 'Reporting', to: '/health/reporting' });
 
-  const mobileNav = (to: string, label: string) => (
-    <DrawerLink to={to} $active={isActive(to)} onClick={() => setMobileMenuOpen(false)}>
+  const mobileNav = (to: string, label: string, icon?: IconDefinition) => (
+    <DrawerLink key={to} to={to} $active={isActive(to)} onClick={() => setMobileMenuOpen(false)}>
+      {icon && <DrawerLinkIcon><FontAwesomeIcon icon={icon} /></DrawerLinkIcon>}
       {label}
     </DrawerLink>
   );
 
+  const logoEl = (
+    <Logo to="/" onClick={() => {
+      useUIStore.getState().setViewMode('all');
+      useUIStore.getState().setSelectedTopicId(null);
+      useUIStore.getState().setSelectedEntryId(null);
+      useUIStore.getState().setShowMobileEditor(false);
+    }}>
+      <LogoText $light={light}>Chronicles</LogoText>
+    </Logo>
+  );
+
+  const centerNav = (
+    <Nav>
+      <NavLink to="/" $active={isActive('/')} $light={light}>Dashboard</NavLink>
+      <NavLink to="/journal" $active={isActive('/journal')} $light={light}>Journal</NavLink>
+      <NavLink to="/topics" $active={isActive('/topics')} $light={light}>Topics</NavLink>
+      <NavLink to="/calendar" $active={isActive('/calendar')} $light={light}>Calendar</NavLink>
+      <NavLink to="/goals/tasks" $active={location.pathname.startsWith('/goals')} $light={light}>Planning</NavLink>
+      {healthItems.length > 0 && (
+        <NavLink to="/health/meds" $active={location.pathname.startsWith('/health')} $light={light}>Health</NavLink>
+      )}
+    </Nav>
+  );
+
+  const rightEl = (
+    <RightSection>
+      <DateText $light={light}>{formatHeaderDate()}</DateText>
+      <InlineWeather $light={light} />
+      <HeaderIconBtn $light={light} title="Search" onClick={() => navigate('/journal')}>
+        <FontAwesomeIcon icon={faMagnifyingGlass} />
+      </HeaderIconBtn>
+      <Link to="/settings" style={{ display: 'flex' }}>
+        <HeaderIconBtn $light={light} title="Settings">
+          <FontAwesomeIcon icon={faGear} />
+        </HeaderIconBtn>
+      </Link>
+      <AvatarWrapper ref={avatarRef}>
+        <Avatar $light={light} title="Account" onClick={() => setAvatarMenuOpen(v => !v)}>
+          {userInitial}
+        </Avatar>
+        {avatarMenuOpen && (
+          <AvatarMenu>
+            <AvatarMenuItem onClick={() => { setAvatarMenuOpen(false); navigate('/settings'); }}>
+              <FontAwesomeIcon icon={faGear} />
+              Settings
+            </AvatarMenuItem>
+            <AvatarMenuItem onClick={handleLogout}>
+              <FontAwesomeIcon icon={faArrowRightFromBracket} />
+              Lock journal
+            </AvatarMenuItem>
+          </AvatarMenu>
+        )}
+      </AvatarWrapper>
+    </RightSection>
+  );
+
   return (
     <>
-      <HeaderBar $bgColor={bgColor} $light={light}>
-        <LeftSection>
-          <Logo to="/" onClick={() => {
-            useUIStore.getState().setViewMode('all');
-            useUIStore.getState().setSelectedTopicId(null);
-            useUIStore.getState().setSelectedEntryId(null);
-            useUIStore.getState().setShowMobileEditor(false);
-          }}>
-            <LogoText $light={light}>Chronicles</LogoText>
-          </Logo>
-          <Divider />
-          <NewEntryButton $light={light} onClick={handleNewEntry}>
-            <FontAwesomeIcon icon={faPlus} size="sm" />
-            <NewEntryLabel>New Entry</NewEntryLabel>
-          </NewEntryButton>
-        </LeftSection>
-
-        <Nav>
-          <NavLink to="/" $active={isActive('/')} $light={light}>Dashboard</NavLink>
-          <NavLink to="/journal" $active={isActive('/journal')} $light={light}>Journal</NavLink>
-          <NavLink to="/topics" $active={isActive('/topics')} $light={light}>Topics</NavLink>
-          <NavLink to="/calendar" $active={isActive('/calendar')} $light={light}>Calendar</NavLink>
-          {goalsItems.length > 0 && (
-            <NavDropdown
-              label="Planner"
-              activePath={location.pathname}
-              items={goalsItems}
-              bgColor={bgColor}
-              light={light}
-            />
-          )}
-
-          {healthItems.length > 0 && (
-            <NavDropdown
-              label="Health"
-              activePath={location.pathname}
-              items={healthItems}
-              bgColor={bgColor}
-              light={light}
-            />
-          )}
-
-          {(ff.entertainmentEnabled || ff.inspirationEnabled) && (
-            <NavDropdown
-              label={<FontAwesomeIcon icon={faNoteSticky as unknown as import('@fortawesome/fontawesome-svg-core').IconDefinition} size="lg" style={{ opacity: 0.5 }} />}
-              activePath={location.pathname}
-              bgColor={bgColor}
-              light={light}
-              items={[
-                ...(ff.entertainmentEnabled ? [
-                  { label: 'Music', to: '/entertainment/music' },
-                  { label: 'Books', to: '/entertainment/books' },
-                  { label: 'TV/Movies', to: '/entertainment/tv' },
-                ] : []),
-                ...(ff.inspirationEnabled ? [
-                  { label: 'Research', to: '/inspiration/research' },
-                  { label: 'Ideas', to: '/inspiration/ideas' },
-                  { label: 'Quotes', to: '/inspiration/quotes' },
-                ] : []),
-              ]}
-            />
-          )}
-          <NavLink to="/settings" $active={isActive('/settings')} $light={light} title="Settings"><FontAwesomeIcon icon={faSliders} size="lg" /></NavLink>
-          <Divider />
-          <LogoutButton $light={light} onClick={handleLogout} title="Logout">
-            <FontAwesomeIcon icon={faArrowRightFromBracket} size="lg" />
-          </LogoutButton>
-        </Nav>
-
-        <HamburgerButton onClick={() => setMobileMenuOpen(true)}>
+      <HeaderBar accentColor={bgColor} dark={themeMode === 'dark'} height={56}>
+        {/* Mobile: leftmost — hidden on desktop */}
+        <HamburgerButton $light={light} onClick={() => setMobileMenuOpen(true)}>
           <FontAwesomeIcon icon={faBars} />
         </HamburgerButton>
+
+        {/* Logo — left on desktop, absolute-centered on mobile */}
+        {logoEl}
+
+        {/* Desktop center nav */}
+        {centerNav}
+
+        {/* Desktop right section */}
+        {rightEl}
+
+        {/* Mobile: rightmost avatar icon — hidden on desktop */}
+        <MobileAvatarBtn $light={light} onClick={() => setMobileMenuOpen(true)}>
+          <FontAwesomeIcon icon={faCircleUser} />
+        </MobileAvatarBtn>
       </HeaderBar>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer — slides from left */}
       <MobileDrawerOverlay $open={mobileMenuOpen} onClick={() => setMobileMenuOpen(false)} />
-      <MobileDrawer $open={mobileMenuOpen} $bgColor={bgColor}>
-        <DrawerHeader>
+      <MobileDrawer $open={mobileMenuOpen}>
+        <DrawerHead $bgColor={bgColor}>
+          <DrawerUserInfo>
+            <DrawerAvatar><FontAwesomeIcon icon={faCircleUser} /></DrawerAvatar>
+            <DrawerUserName>{displayName || 'Chronicles'}</DrawerUserName>
+          </DrawerUserInfo>
           <DrawerCloseButton onClick={() => setMobileMenuOpen(false)}>
             <FontAwesomeIcon icon={faXmark} />
           </DrawerCloseButton>
-        </DrawerHeader>
+        </DrawerHead>
+
         <DrawerNav>
-          {mobileNav('/', 'Dashboard')}
-          {mobileNav('/journal', 'Journal')}
-          {mobileNav('/topics', 'Topics')}
-          {mobileNav('/calendar', 'Calendar')}
-          {goalsItems.length > 0 && (
-            <>
-              <DrawerDivider />
-              <DrawerSectionLabel onClick={() => toggleDrawerSection('planning')}>
-                <span>Planner</span>
-                <FontAwesomeIcon icon={drawerSections.planning ? faChevronUp : faChevronDown} size="xs" />
-              </DrawerSectionLabel>
-              {drawerSections.planning && (
-                <>
-                  {ff.goalsEnabled && mobileNav('/goals', 'Goals')}
-                  {ff.milestonesEnabled && mobileNav('/goals/milestones', 'Milestones')}
-                  {mobileNav('/goals/tasks', 'Tasks')}
-                  {mobileNav('/goals/todos', 'Todos')}
-                  {mobileNav('/goals/filter', 'Custom Filters')}
-                  {mobileNav('/menu', 'Menu Planner')}
-                  {mobileNav('/shopping', 'Shopping Lists')}
-                </>
-              )}
-            </>
-          )}
+          {mobileNav('/', 'Dashboard', faHome)}
+          {mobileNav('/journal', 'Journal', faBookOpen)}
+          {mobileNav('/calendar', 'Calendar', faCalendar)}
+          {mobileNav('/topics', 'Topics', faTag)}
+
+          <DrawerSectionLabel>Planning</DrawerSectionLabel>
+          {ff.goalsEnabled && mobileNav('/goals', 'Goals')}
+          {mobileNav('/goals/tasks', 'Tasks')}
+          {mobileNav('/goals/todos', 'Todos')}
+
           {healthItems.length > 0 && (
             <>
-              <DrawerDivider />
-              <DrawerSectionLabel onClick={() => toggleDrawerSection('health')}>
-                <span>Health</span>
-                <FontAwesomeIcon icon={drawerSections.health ? faChevronUp : faChevronDown} size="xs" />
-              </DrawerSectionLabel>
-              {drawerSections.health && (
-                <>
-                  {ff.medicationEnabled && mobileNav('/health/meds', 'Meds List')}
-                  {ff.medicationEnabled && mobileNav('/health/schedule', 'Meds Schedule')}
-                  {ff.foodEnabled && mobileNav('/health/food', 'Food')}
-                  {ff.medicationEnabled && mobileNav('/health/symptoms', 'Symptoms')}
-                  {ff.exerciseEnabled && mobileNav('/health/exercise', 'Exercise')}
-                  {ff.allergiesEnabled && mobileNav('/health/allergies', 'Allergies')}
-                  {mobileNav('/health/reporting', 'Reporting')}
-                </>
-              )}
+              <DrawerSectionLabel>Health</DrawerSectionLabel>
+              {ff.medicationEnabled && mobileNav('/health/meds', 'Medications')}
+              {mobileNav('/health/reporting', 'Reports')}
             </>
           )}
+
           {(ff.entertainmentEnabled || ff.inspirationEnabled) && (
             <>
-              <DrawerDivider />
-              <DrawerSectionLabel onClick={() => toggleDrawerSection('quicklinks')}>
-                <span>Quick Links</span>
-                <FontAwesomeIcon icon={drawerSections.quicklinks ? faChevronUp : faChevronDown} size="xs" />
-              </DrawerSectionLabel>
-              {drawerSections.quicklinks && (
-                <>
-                  {ff.entertainmentEnabled && mobileNav('/entertainment/music', 'Music')}
-                  {ff.entertainmentEnabled && mobileNav('/entertainment/books', 'Books')}
-                  {ff.entertainmentEnabled && mobileNav('/entertainment/tv', 'TV/Movies')}
-                  {ff.inspirationEnabled && mobileNav('/inspiration/research', 'Research')}
-                  {ff.inspirationEnabled && mobileNav('/inspiration/ideas', 'Ideas')}
-                  {ff.inspirationEnabled && mobileNav('/inspiration/quotes', 'Quotes')}
-                </>
-              )}
+              <DrawerSectionLabel>Inspiration</DrawerSectionLabel>
+              {ff.inspirationEnabled && mobileNav('/inspiration/quotes', 'Quotes')}
+              {ff.inspirationEnabled && mobileNav('/inspiration/ideas', 'Ideas')}
+              {ff.entertainmentEnabled && mobileNav('/entertainment/music', 'Music')}
+              {ff.entertainmentEnabled && mobileNav('/entertainment/books', 'Books')}
+              {ff.entertainmentEnabled && mobileNav('/entertainment/tv', 'TV/Movies')}
             </>
           )}
-          <DrawerDivider />
-          {mobileNav('/settings', 'Settings')}
-          <DrawerDivider />
-          <DrawerLogout onClick={handleLogout}>Logout</DrawerLogout>
+
+
+          {topics.length > 0 && (
+            <>
+              <DrawerSectionLabel>Your Topics</DrawerSectionLabel>
+              {topics.map(topic => {
+                const count = countForTopic(topic.id);
+                return (
+                  <DrawerLink
+                    key={topic.id}
+                    to="/journal"
+                    $active={isActive('/journal') && useUIStore.getState().selectedTopicId === topic.id}
+                    onClick={() => {
+                      useUIStore.getState().setSelectedTopicId(topic.id);
+                      useUIStore.getState().setViewMode('all');
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <DrawerLinkIcon><FontAwesomeIcon icon={getTopicIcon(topic.icon)} /></DrawerLinkIcon>
+                    <span style={{ flex: 1 }}>{topic.name}</span>
+                    {count > 0 && <DrawerCount>{count.toLocaleString()}</DrawerCount>}
+                  </DrawerLink>
+                );
+              })}
+              <DrawerLink to="/topics" onClick={() => setMobileMenuOpen(false)}>
+                <DrawerLinkIcon><FontAwesomeIcon icon={faPlus} /></DrawerLinkIcon>
+                Add topic…
+              </DrawerLink>
+            </>
+          )}
+
+          <DrawerSectionLabel>Settings</DrawerSectionLabel>
+          {mobileNav('/settings', 'Preferences', faGear)}
         </DrawerNav>
+
+        <DrawerFoot>
+          <DrawerLogout onClick={handleLogout}>
+            <FontAwesomeIcon icon={faArrowRightFromBracket} />
+            Lock journal
+          </DrawerLogout>
+        </DrawerFoot>
       </MobileDrawer>
     </>
   );

@@ -17,7 +17,7 @@ const Thumbnail = styled.div<{ $selected: boolean }>`
   aspect-ratio: 16 / 10;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   border: none;
-  background: ${({ theme }) => theme.colors.background === '#1a1b1d' ? '#2a2b2d' : '#faf8f2'};
+  background: var(--paper-surface);
   cursor: pointer;
   overflow: hidden;
   transition: border-color 0.15s;
