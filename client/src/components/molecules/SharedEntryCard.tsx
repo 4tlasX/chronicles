@@ -8,7 +8,8 @@ const Card = styled.div`
   width: 100%;
   max-width: 680px;
   background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-left: 3px solid var(--accent, ${({ theme }) => theme.colors.accent});
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
   overflow: hidden;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);

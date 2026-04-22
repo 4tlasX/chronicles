@@ -1,18 +1,10 @@
 import { useMemo } from 'react';
-import styled, { useTheme } from 'styled-components';
+import styled from 'styled-components';
 import type { ReactNode } from 'react';
 import { BACKGROUND_IMAGES } from '@shared/theme/backgrounds';
 
 const options = BACKGROUND_IMAGES.filter(b => b.value !== '');
 
-function isDarkTheme(bg: string): boolean {
-  const c = bg.replace('#', '');
-  if (c.length !== 6) return false;
-  const r = parseInt(c.substring(0, 2), 16);
-  const g = parseInt(c.substring(2, 4), 16);
-  const b = parseInt(c.substring(4, 6), 16);
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
-}
 
 const Wrapper = styled.div`
   display: flex;
@@ -21,24 +13,20 @@ const Wrapper = styled.div`
   min-height: 100vh;
   padding: ${({ theme }) => theme.spacing.md}px;
   position: relative;
-  background-color: ${({ theme }) => theme.colors.background};
-  overflow: hidden;
 `;
 
-const ImageOverlay = styled.div<{ $image: string; $opacity: number }>`
+const BgLayer = styled.div<{ $bg?: string }>`
   position: fixed;
-  top: -100px;
-  left: -100px;
-  right: -100px;
-  bottom: 0;
-  background-image: url(${({ $image }) => $image});
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center bottom;
-  opacity: ${({ $opacity }) => $opacity};
-  pointer-events: none;
+  inset: 0;
   z-index: 0;
+  pointer-events: none;
+  background-image: ${({ $bg }) => $bg ? `url('${$bg}')` : 'none'};
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.15;
 `;
+
 
 const Card = styled.div`
   position: relative;
@@ -47,33 +35,36 @@ const Card = styled.div`
   max-width: 420px;
   padding: ${({ theme }) => theme.spacing.xl}px;
   font-style: normal;
-  background: #f7f6f3;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.xl}px;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  border: 1px solid var(--accent-stroke, var(--rule, ${({ theme }) => theme.colors.border}));
+  border-radius: var(--r-xl, ${({ theme }) => theme.borderRadius.xl}px);
+  box-shadow: var(--shadow-2, ${({ theme }) => theme.shadow.md});
 `;
 
 const LogoMark = styled.div`
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 36px;
-  font-weight: 300;
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  color: ${({ theme }) => theme.colors.text};
-  padding-top: 4px;
+  gap: 10px;
+  padding-top: 32px;
   margin-bottom: 10px;
 `;
 
-const PoppySVG = styled.svg`
-  height: 0.85em;
-  width: 0.85em;
-  flex-shrink: 0;
-  margin: 0 0.22em 0 0;
-  vertical-align: middle;
+const PoppyImg = styled.img`
+  width: 52px;
+  height: 52px;
+  filter: invert(1);
+  opacity: 0.65;
+`;
+
+const LogoText = styled.div`
+  font-family: var(--brand, 'Josefin Sans', sans-serif);
+  font-size: 32px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: ${({ theme }) => theme.colors.text};
 `;
 
 const LogoDivider = styled.div`
@@ -85,7 +76,7 @@ const LogoDivider = styled.div`
 `;
 
 const LogoTagline = styled.div`
-  font-family: 'Cormorant Garamond', serif;
+  font-family: ${({ theme }) => theme.fontFamily.serif};
   font-size: 17px;
   font-style: italic;
   font-weight: 400;
@@ -108,7 +99,7 @@ const BrandTitle = styled.h1`
 `;
 
 const PageTitle = styled.h1`
-  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-family: var(--serif, 'Playfair Display', serif);
   font-size: 1.5rem;
   font-weight: 500;
   font-style: italic;
@@ -139,21 +130,18 @@ interface AuthTemplateProps {
 }
 
 export function AuthTemplate({ title, children, footer, brand }: AuthTemplateProps) {
-  const theme = useTheme();
-
-  const { bg, opacity } = useMemo(() => {
+  const bg = useMemo(() => {
     const idx = Math.floor(Math.random() * options.length);
-    const picked = options[idx];
-    const op = 0.10;
-    return { bg: picked.value, opacity: op };
+    return options[idx].value;
   }, []);
 
   return (
     <Wrapper>
-      <ImageOverlay $image={bg} $opacity={opacity} />
+      <BgLayer $bg={bg} />
       <Card>
-        <LogoMark>Chronicles</LogoMark>
-        <LogoTagline>a record of your days</LogoTagline>
+        <LogoMark>
+          <LogoText>Chronicles</LogoText>
+        </LogoMark>
         {!brand && <PageTitle>{title}</PageTitle>}
         {children}
         {footer && <Footer>{footer}</Footer>}

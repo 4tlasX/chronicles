@@ -7,7 +7,7 @@ const Row = styled.div`
   justify-content: space-between;
   padding: ${({ theme }) => theme.spacing.sm}px ${({ theme }) => theme.spacing.md}px;
   background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid var(--accent-stroke, ${({ theme }) => theme.colors.border});
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
 `;
 

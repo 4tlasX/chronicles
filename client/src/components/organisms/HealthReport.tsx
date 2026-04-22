@@ -35,9 +35,9 @@ const StatsGrid = styled.div`
 `;
 
 const StatCard = styled.div`
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: ${({ theme }) => theme.colors.surface};
+  background: transparent;
   padding: 14px;
   text-align: center;
 `;
@@ -61,9 +61,9 @@ const StatSub = styled.div`
 `;
 
 const SectionCard = styled.div`
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: ${({ theme }) => theme.colors.surface};
+  background: transparent;
   padding: 16px;
 `;
 
@@ -103,7 +103,6 @@ const CoRow = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 8px 10px;
-  background: rgba(0, 0, 0, 0.02);
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   & + & { margin-top: 6px; }
 `;
@@ -211,7 +210,6 @@ const ImpactRow = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 8px 10px;
-  background: rgba(0, 0, 0, 0.02);
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   & + & { margin-top: 6px; }
 `;
@@ -332,7 +330,6 @@ const TrendLegendItem = styled.div`
 const InsightRow = styled.div`
   padding: 10px 12px;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  background: rgba(0, 0, 0, 0.02);
   & + & { margin-top: 8px; }
 `;
 
@@ -368,139 +365,6 @@ function strengthColor(c: number): string {
   return '#B8965A';
 }
 
-/* ── Cycle calendar styles ── */
-
-const CalNav = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-`;
-
-const CalMonthLabel = styled.span`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 14px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const CalNavBtn = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  padding: 4px 8px;
-  border-radius: 4px;
-  &:hover { background: rgba(0,0,0,0.05); }
-`;
-
-const CalGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
-`;
-
-const CalDayLabel = styled.div`
-  text-align: center;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: ${({ theme }) => theme.colors.textMuted};
-  padding-bottom: 4px;
-`;
-
-const CalDay = styled.button<{ $period?: boolean; $predicted?: boolean; $today?: boolean; $selected?: boolean; $future?: boolean; $color: string }>`
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 12px;
-  font-weight: ${({ $today }) => $today ? 700 : 400};
-  border-radius: 4px;
-  cursor: pointer;
-  border: ${({ $today, $selected, $predicted, $color, theme }) =>
-    $selected ? `2px solid ${$color}` :
-    $today ? `1.5px solid ${theme.colors.textMuted}` :
-    $predicted ? `1.5px dashed ${$color}88` :
-    '1.5px solid transparent'};
-  background: ${({ $period, $color }) => $period ? $color + '33' : 'transparent'};
-  color: ${({ $future, $period, $color, theme }) =>
-    $period ? $color :
-    $future ? theme.colors.textMuted :
-    theme.colors.text};
-  opacity: ${({ $future }) => $future ? 0.5 : 1};
-  transition: background 0.1s;
-  &:hover { background: ${({ $period, $color }) => $period ? $color + '44' : 'rgba(0,0,0,0.06)'}; }
-  &:disabled { cursor: default; }
-`;
-
-const CalEditRow = styled.div`
-  margin-top: 10px;
-  padding: 10px 12px;
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const CalEditLabel = styled.div`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: ${({ theme }) => theme.colors.textMuted};
-`;
-
-const FlowChipRow = styled.div`
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-`;
-
-const FlowChip = styled.button<{ $active: boolean; $color: string }>`
-  padding: 4px 10px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 12px;
-  border-radius: 4px;
-  border: 1px solid ${({ $active, $color, theme }) => $active ? $color : theme.colors.border};
-  background: ${({ $active, $color }) => $active ? $color + '22' : 'transparent'};
-  color: ${({ $active, $color, theme }) => $active ? $color : theme.colors.textSecondary};
-  cursor: pointer;
-`;
-
-const PeriodToggle = styled.button<{ $active: boolean; $color: string }>`
-  padding: 5px 14px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: 4px;
-  border: 1px solid ${({ $active, $color, theme }) => $active ? $color : theme.colors.border};
-  background: ${({ $active, $color }) => $active ? $color + '22' : 'transparent'};
-  color: ${({ $active, $color, theme }) => $active ? $color : theme.colors.textSecondary};
-  cursor: pointer;
-  align-self: flex-start;
-`;
-
-const PredictionBanner = styled.div<{ $color: string }>`
-  margin-top: 10px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: ${({ $color }) => $color + '12'};
-  border: 1px dashed ${({ $color }) => $color + '55'};
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const FLOW_OPTIONS = ['spotting', 'light', 'medium', 'heavy'] as const;
-const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
 /* ── Props ── */
 
 interface HealthReportProps {
@@ -511,30 +375,12 @@ interface HealthReportProps {
   wellness: DecryptedWellness[];
   period: PeriodType;
   headerColor: string;
-  cycleTrackingEnabled?: boolean;
-  onSaveCycleDay?: (date: string, periodToday: boolean, flowIntensity: string) => Promise<void>;
 }
 
 /* ── Component ── */
 
-export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, period, headerColor, cycleTrackingEnabled, onSaveCycleDay }: HealthReportProps) {
+export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, period, headerColor }: HealthReportProps) {
   const today = new Date();
-  const [calYear, setCalYear] = useState(today.getFullYear());
-  const [calMonth, setCalMonth] = useState(today.getMonth());
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
-  const [cycleSaving, setCycleSaving] = useState(false);
-
-  const periodDaySet = useMemo(() => {
-    const s = new Set<string>();
-    for (const w of wellness) if (w.periodToday) s.add(w.date);
-    return s;
-  }, [wellness]);
-
-  const flowByDate = useMemo(() => {
-    const m: Record<string, string> = {};
-    for (const w of wellness) if (w.periodToday && w.flowIntensity) m[w.date] = w.flowIntensity;
-    return m;
-  }, [wellness]);
   const correlations = useMemo(() => {
     if (symptoms.length === 0) return [];
     return [...calculateCorrelations(symptoms, foods, medLogs), ...calculateExerciseCorrelations(symptoms, exercises)];
@@ -615,46 +461,6 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
     };
   }, [wellness]);
 
-  const cycleSummary = useMemo(() => {
-    const allPeriodDays = [...wellness].filter(w => w.periodToday).sort((a, b) => a.date.localeCompare(b.date));
-    const flowCounts: Record<string, number> = {};
-    for (const w of allPeriodDays) if (w.flowIntensity) flowCounts[w.flowIntensity] = (flowCounts[w.flowIntensity] || 0) + 1;
-
-    // First days of each run
-    const sortedAll = [...wellness].sort((a, b) => a.date.localeCompare(b.date));
-    const firstDays: string[] = [];
-    let inPeriod = false;
-    for (const w of sortedAll) {
-      if (w.periodToday && !inPeriod) { firstDays.push(w.date); inPeriod = true; }
-      else if (!w.periodToday) inPeriod = false;
-    }
-    const cycleLengths: number[] = [];
-    for (let i = 1; i < firstDays.length; i++) {
-      const diff = Math.round((new Date(firstDays[i]).getTime() - new Date(firstDays[i - 1]).getTime()) / 86400000);
-      if (diff > 0 && diff < 60) cycleLengths.push(diff);
-    }
-    const avgCycleLength = cycleLengths.length > 0
-      ? Math.round(cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length)
-      : null;
-
-    // Predict next period from last known first day + avg (or 28 days if only 1 cycle)
-    const lastFirstDay = firstDays[firstDays.length - 1] ?? null;
-    const predictedLength = avgCycleLength ?? 28;
-    const predictedStart = lastFirstDay
-      ? new Date(new Date(lastFirstDay + 'T12:00:00').getTime() + predictedLength * 86400000)
-      : null;
-
-    return {
-      periodDays: allPeriodDays.length,
-      flowCounts,
-      avgCycleLength,
-      cycleCount: firstDays.length,
-      predictedStart: predictedStart ? predictedStart.toISOString().split('T')[0] : null,
-      predictedLength,
-      isEstimated: avgCycleLength === null,
-    };
-  }, [wellness]);
-
   return (
     <ScrollList $gap="16px">
       {/* Summary stats */}
@@ -698,170 +504,6 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
             {wellnessSummary.avgSleepQ > 0 && <StatSub>Quality {wellnessSummary.avgSleepQ.toFixed(1)}/5</StatSub>}
           </StatCard>
         </WellnessGrid>
-      )}
-
-      {/* Cycle tracking calendar */}
-      {cycleTrackingEnabled && (
-        <SectionCard>
-          <SectionTitle>Cycle Tracking</SectionTitle>
-
-          {/* Stats row */}
-          {cycleSummary && cycleSummary.periodDays > 0 && (
-            <WellnessGrid style={{ marginBottom: 12 }}>
-              <StatCard>
-                <StatValue $color={headerColor}>{cycleSummary.periodDays}</StatValue>
-                <StatLabel>Period Days</StatLabel>
-              </StatCard>
-              {cycleSummary.avgCycleLength && (
-                <StatCard>
-                  <StatValue $color={headerColor}>{cycleSummary.avgCycleLength}</StatValue>
-                  <StatLabel>Avg Cycle</StatLabel>
-                  <StatSub>days</StatSub>
-                </StatCard>
-              )}
-              {cycleSummary.cycleCount > 0 && (
-                <StatCard>
-                  <StatValue $color={headerColor}>{cycleSummary.cycleCount}</StatValue>
-                  <StatLabel>Period{cycleSummary.cycleCount !== 1 ? 's' : ''}</StatLabel>
-                </StatCard>
-              )}
-            </WellnessGrid>
-          )}
-
-          {/* Prediction banner */}
-          {cycleSummary?.predictedStart && (() => {
-            const ps = new Date(cycleSummary.predictedStart + 'T12:00:00');
-            const todayMs = new Date(today.toISOString().split('T')[0] + 'T12:00:00').getTime();
-            const daysUntil = Math.round((ps.getTime() - todayMs) / 86400000);
-            const label = daysUntil === 0 ? 'today' : daysUntil > 0 ? `in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}` : `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} ago`;
-            return (
-              <PredictionBanner $color={headerColor}>
-                🩸 Next period predicted {label} — {ps.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                {cycleSummary.isEstimated && <span style={{ opacity: 0.6, fontSize: 11 }}> (estimated · log more cycles to improve accuracy)</span>}
-              </PredictionBanner>
-            );
-          })()}
-
-          {/* Month calendar */}
-          <CalNav style={{ marginTop: 12 }}>
-            <CalNavBtn onClick={() => { const d = new Date(calYear, calMonth - 1); setCalYear(d.getFullYear()); setCalMonth(d.getMonth()); setSelectedDay(null); }}>‹</CalNavBtn>
-            <CalMonthLabel>{new Date(calYear, calMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</CalMonthLabel>
-            <CalNavBtn onClick={() => { const d = new Date(calYear, calMonth + 1); setCalYear(d.getFullYear()); setCalMonth(d.getMonth()); setSelectedDay(null); }}>›</CalNavBtn>
-          </CalNav>
-          <CalGrid>
-            {DAYS_OF_WEEK.map(d => <CalDayLabel key={d}>{d}</CalDayLabel>)}
-            {(() => {
-              const firstOfMonth = new Date(calYear, calMonth, 1);
-              const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-              const startDow = firstOfMonth.getDay();
-              const todayStr = today.toISOString().split('T')[0];
-              const cells: React.ReactElement[] = [];
-
-              // Predicted days set (±1 around predicted start)
-              const predictedDays = new Set<string>();
-              if (cycleSummary?.predictedStart) {
-                const base = new Date(cycleSummary.predictedStart + 'T12:00:00');
-                for (let offset = -1; offset <= 4; offset++) {
-                  const d = new Date(base.getTime() + offset * 86400000);
-                  predictedDays.add(d.toISOString().split('T')[0]);
-                }
-              }
-
-              for (let i = 0; i < startDow; i++) cells.push(<div key={`e${i}`} />);
-              for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const isPeriod = periodDaySet.has(dateStr);
-                const isPredicted = !isPeriod && predictedDays.has(dateStr);
-                const isToday = dateStr === todayStr;
-                const isFuture = dateStr > todayStr && !isPredicted;
-                const isSelected = selectedDay === dateStr;
-                cells.push(
-                  <CalDay
-                    key={dateStr}
-                    $period={isPeriod}
-                    $predicted={isPredicted}
-                    $today={isToday}
-                    $selected={isSelected}
-                    $future={isFuture && !isPredicted}
-                    $color={headerColor}
-                    onClick={() => setSelectedDay(isSelected ? null : dateStr)}
-                    title={isPeriod ? `Period day${flowByDate[dateStr] ? ` · ${flowByDate[dateStr]}` : ''}` : isPredicted ? 'Predicted period' : dateStr}
-                  >
-                    {d}
-                  </CalDay>
-                );
-              }
-              return cells;
-            })()}
-          </CalGrid>
-
-          {/* Inline editor for selected day */}
-          {selectedDay && onSaveCycleDay && (
-            <CalEditRow>
-              <CalEditLabel>{new Date(selectedDay + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</CalEditLabel>
-              <PeriodToggle
-                $active={periodDaySet.has(selectedDay)}
-                $color={headerColor}
-                disabled={cycleSaving}
-                onClick={async () => {
-                  const wasOn = periodDaySet.has(selectedDay);
-                  setCycleSaving(true);
-                  await onSaveCycleDay(selectedDay, !wasOn, wasOn ? '' : 'medium');
-                  setCycleSaving(false);
-                }}
-              >
-                {periodDaySet.has(selectedDay) ? '🩸 Period — tap to remove' : 'Mark as period day'}
-              </PeriodToggle>
-              {periodDaySet.has(selectedDay) && (
-                <>
-                  <CalEditLabel>Flow</CalEditLabel>
-                  <FlowChipRow>
-                    {FLOW_OPTIONS.map(f => (
-                      <FlowChip
-                        key={f}
-                        $active={flowByDate[selectedDay] === f}
-                        $color={headerColor}
-                        disabled={cycleSaving}
-                        onClick={async () => {
-                          setCycleSaving(true);
-                          await onSaveCycleDay(selectedDay, true, flowByDate[selectedDay] === f ? '' : f);
-                          setCycleSaving(false);
-                        }}
-                      >
-                        {f.charAt(0).toUpperCase() + f.slice(1)}
-                      </FlowChip>
-                    ))}
-                  </FlowChipRow>
-                </>
-              )}
-            </CalEditRow>
-          )}
-
-          {/* Flow breakdown */}
-          {cycleSummary && Object.keys(cycleSummary.flowCounts).length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <SectionDesc style={{ marginBottom: 8 }}>Flow breakdown</SectionDesc>
-              {FLOW_OPTIONS.map(f => {
-                const count = cycleSummary.flowCounts[f] || 0;
-                if (!count) return null;
-                const pct = Math.round((count / cycleSummary.periodDays) * 100);
-                return (
-                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <span style={{ width: 64, fontSize: 12, textTransform: 'capitalize', flexShrink: 0 }}>{f}</span>
-                    <div style={{ flex: 1, height: 8, background: 'rgba(0,0,0,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                      <div style={{ width: `${pct}%`, height: '100%', background: headerColor, borderRadius: 4 }} />
-                    </div>
-                    <span style={{ fontSize: 12, opacity: 0.6, width: 40, textAlign: 'right' }}>{count}d</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {!cycleSummary?.periodDays && (
-            <SectionDesc style={{ marginTop: 8 }}>No period days logged yet. Tap any day above to add tracking.</SectionDesc>
-          )}
-        </SectionCard>
       )}
 
       {/* Wellness trends */}

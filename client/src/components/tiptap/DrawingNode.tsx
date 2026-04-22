@@ -24,7 +24,7 @@ const DrawingImg = styled.img`
   display: block;
   max-width: 100%;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid var(--accent-stroke, ${({ theme }) => theme.colors.border});
 `;
 
 const EditBtn = styled.button`

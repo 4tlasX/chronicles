@@ -1,89 +1,337 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faPrint } from '@fortawesome/free-solid-svg-icons';
 import { EmptyState } from '../atoms/EmptyState.js';
 import { EditableEntryCard } from './EditableEntryCard.js';
-import { NewEntryCard } from './NewEntryCard.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 import type { Topic } from '../../types/topics.js';
+import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
+import { useUIStore } from '../../stores/uiStore.js';
 
+type DateFilter = 'all' | 'today' | 'week' | 'month';
+
+/* ── Layout ── */
 const Panel = styled.div<{ $hidden?: boolean }>`
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
   background: ${({ theme }) => theme.colors.surfaceOverlay};
   @media (max-width: 1024px) {
     display: ${({ $hidden }) => $hidden ? 'none' : 'flex'};
   }
 `;
 
-const Header = styled.div`
+/* ── Header ── */
+const Head = styled.div`
+  padding: 20px 24px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-shrink: 0;
+`;
+
+const TitleBlock = styled.div``;
+
+const Kicker = styled.span`
+  font-family: ${({ theme }) => theme.fontFamily.mono};
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textFaint};
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 400;
+`;
+
+const TitleText = styled.h1`
+  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-size: 32px;
+  font-style: italic;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.text};
+  letter-spacing: -0.005em;
+  line-height: 1;
+  margin: 0;
+`;
+
+const MetaText = styled.span`
+  font-family: 'Lato', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: ${({ theme }) => theme.colors.textFaint};
+  white-space: nowrap;
+  align-self: flex-end;
+  padding-bottom: 4px;
+`;
+
+/* ── Date filter tabs ── */
+const Filters = styled.div`
+  display: flex;
+  gap: 4px;
+  padding: 8px 24px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.borderSoft};
+  align-items: center;
+  flex-shrink: 0;
+`;
+
+const FilterBtn = styled.button<{ $active?: boolean }>`
+  padding: 4px 12px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.textMuted};
+  border: 1px solid ${({ $active, theme }) => $active ? theme.colors.border : 'transparent'};
+  background: ${({ $active, theme }) => $active ? theme.colors.surface : 'transparent'};
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  &:hover {
+    background: ${({ theme }) => theme.colors.surface};
+    border-color: ${({ theme }) => theme.colors.border};
+    color: ${({ theme }) => theme.colors.text};
+  }
+`;
+
+const FiltersRight = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const PrintBtn = styled.button`
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  justify-content: center;
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  background: none;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  cursor: pointer;
+  &:hover { background: ${({ theme }) => theme.colors.surface}; }
 `;
 
-const Title = styled.button`
+/* ── Summary bar (Wellness topics) ── */
+const Summary = styled.div`
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.borderSoft};
+  flex-shrink: 0;
+`;
+
+const SumItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+`;
+
+const SumLabel = styled.span`
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: ${({ theme }) => theme.colors.textFaint};
+`;
+
+const SumVal = styled.span`
   font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 1.25rem;
-  font-weight: 500;
   font-style: italic;
+  font-size: 22px;
   color: ${({ theme }) => theme.colors.text};
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-  &:hover { opacity: 0.7; }
 `;
 
-const MobileBack = styled.button`
-  display: none;
-  align-items: center;
-  gap: 4px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: ${({ theme }) => theme.colors.text};
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 0;
-  &:hover { opacity: 0.7; }
-  @media (max-width: 1024px) { display: flex; }
+const SumUnit = styled.span`
+  font-family: ${({ theme }) => theme.fontFamily.mono};
+  font-size: 10px;
+  color: ${({ theme }) => theme.colors.textFaint};
+  font-style: normal;
+  margin-left: 3px;
 `;
 
-const BackLink = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: ${({ theme }) => theme.colors.text};
-  background: none;
-  border: none;
-  cursor: pointer;
-  &:hover { opacity: 0.7; }
-  @media (max-width: 1024px) { display: none; }
-`;
-
+/* ── Entry list ── */
 const ListArea = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 4px 6px;
+  padding: 20px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 `;
+
+/* ── Entry card ── */
+const Card = styled.div`
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-left: 3px solid var(--accent, ${({ theme }) => theme.colors.accent});
+  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: border-color 0.12s;
+
+  &:hover { border-color: var(--accent, ${({ theme }) => theme.colors.accent}); }
+`;
+
+const EditorWrap = styled.div`
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
+  overflow: hidden;
+  margin: 16px 12px 8px;
+`;
+
+const CardTitle = styled.div`
+  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-style: italic;
+  font-size: 17px;
+  color: ${({ theme }) => theme.colors.text};
+  margin: 0 0 6px;
+`;
+
+const CardBody = styled.div`
+  font-family: ${({ theme }) => theme.fontFamily.sans};
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  line-height: 1.55;
+  margin: 0 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+const CardMeta = styled.div`
+  font-family: ${({ theme }) => theme.fontFamily.mono};
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textFaint};
+  display: flex;
+  gap: 16px;
+`;
+
+/* ── Day groups ── */
+const DayGroup = styled.div`
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 20px;
+  align-items: start;
+`;
+
+const DayLabel = styled.div`
+  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-style: italic;
+  font-size: 15px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  text-align: right;
+  padding-top: 10px;
+`;
+
+const DayDate = styled.span`
+  display: block;
+  font-family: 'Lato', sans-serif;
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textFaint};
+  text-transform: uppercase;
+  margin-top: 3px;
+`;
+
+const DayEntries = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+/* ── Helpers ── */
+function startOfDay(d: Date) {
+  const r = new Date(d);
+  r.setHours(0, 0, 0, 0);
+  return r;
+}
+
+function relativeDay(date: Date): string {
+  const today = startOfDay(new Date());
+  const d = startOfDay(date);
+  const diff = Math.round((today.getTime() - d.getTime()) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { weekday: 'long' });
+}
+
+function monoDate(date: Date): string {
+  return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function applyDateFilter(entries: DecryptedPost[], filter: DateFilter): DecryptedPost[] {
+  if (filter === 'all') return entries;
+  const todayStart = startOfDay(new Date());
+  return entries.filter(e => {
+    const d = new Date(e.createdAt);
+    if (filter === 'today') return d >= todayStart;
+    if (filter === 'week') return d >= new Date(todayStart.getTime() - 6 * 86400000);
+    if (filter === 'month') return d >= new Date(todayStart.getTime() - 29 * 86400000);
+    return true;
+  });
+}
+
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function countFields(metadata: Record<string, unknown>): number {
+  const cf = metadata._customFields as Record<string, unknown> | undefined;
+  if (!cf) return 0;
+  const uf = cf._userFields as Record<string, unknown> | undefined;
+  const builtIn = Object.keys(cf).filter(k => k !== '_userFields' && cf[k] !== null && cf[k] !== undefined && cf[k] !== '').length;
+  const user = uf ? Object.values(uf).filter(v => v !== null && v !== undefined && v !== '').length : 0;
+  return builtIn + user;
+}
+
+function groupByDay(entries: DecryptedPost[]) {
+  const map = new Map<string, { label: string; mono: string; entries: DecryptedPost[] }>();
+  for (const e of entries) {
+    const d = new Date(e.createdAt);
+    const key = startOfDay(d).toISOString();
+    if (!map.has(key)) map.set(key, { label: relativeDay(d), mono: monoDate(d), entries: [] });
+    map.get(key)!.entries.push(e);
+  }
+  return Array.from(map.entries()).map(([dayKey, v]) => ({ dayKey, ...v }));
+}
+
+interface WellnessSummary { water: number; avgMood: number | null; sleep: number; count: number }
+
+function computeWellnessSummary(entries: DecryptedPost[]): WellnessSummary | null {
+  let water = 0, moodSum = 0, moodCount = 0, sleep = 0, count = 0;
+  for (const e of entries) {
+    const cf = e.metadata._customFields as Record<string, unknown> | undefined;
+    if (!cf || !('water' in cf || 'mood' in cf || 'sleep' in cf)) continue;
+    count++;
+    water += Number(cf.water || 0);
+    if (cf.mood) { moodSum += Number(cf.mood); moodCount++; }
+    sleep += Number(cf.sleep || 0);
+  }
+  if (count === 0) return null;
+  return { water, avgMood: moodCount > 0 ? Math.round((moodSum / moodCount) * 10) / 10 : null, sleep, count };
+}
 
 interface TopicEntryListProps {
   title: string;
+  kicker?: string;
   entries: DecryptedPost[];
   allTopics: Topic[];
   headerColor: string;
@@ -91,47 +339,147 @@ interface TopicEntryListProps {
   onMobileBack: () => void;
   onBackToJournal: () => void;
   backLabel?: string;
-  /** When a specific topic is selected, show a "New Entry" button */
   selectedTopic?: Topic;
+  entryCount?: number;
 }
 
-export function TopicEntryList({ title, entries, allTopics, headerColor, hiddenMobile, onMobileBack, onBackToJournal, backLabel = 'Back', selectedTopic }: TopicEntryListProps) {
-  const [editingId, setEditingId] = useState<number | null>(null);
+export function TopicEntryList({
+  title, kicker, entries, allTopics, headerColor, hiddenMobile,
+  onMobileBack, onBackToJournal, backLabel = 'Back', selectedTopic, entryCount,
+}: TopicEntryListProps) {
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [editingId, setExpandedId] = useState<number | null>(null);
+  const topicCustomFields = useUIStore(s => s.topicCustomFields);
+
+  const filtered = useMemo(() => applyDateFilter(entries, dateFilter), [entries, dateFilter]);
+  const groups = useMemo(() => groupByDay(filtered), [filtered]);
+
+  const wellnessSummary = useMemo(
+    () => dateFilter !== 'all' ? computeWellnessSummary(filtered) : null,
+    [filtered, dateFilter]
+  );
+
+  const total = entryCount ?? entries.length;
+  const metaText = `${total} entr${total !== 1 ? 'ies' : 'y'} · last 30 days`;
 
   const getTopicForEntry = (entry: DecryptedPost) => {
-    const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
+    const taxId = entry.metadata._taxonomyId as number | undefined;
     return taxId ? allTopics.find(t => t.id === taxId) : undefined;
   };
 
   return (
     <Panel $hidden={hiddenMobile}>
-      <Header>
-        <Title onClick={onBackToJournal}>{title}</Title>
-        <MobileBack onClick={onMobileBack}>
-          <FontAwesomeIcon icon={faChevronLeft} size="xs" /> {backLabel}
-        </MobileBack>
-        <BackLink onClick={onBackToJournal}><FontAwesomeIcon icon={faChevronLeft} size="xs" /> {backLabel}</BackLink>
-      </Header>
+      <Head>
+        <TitleBlock>
+          {kicker && <Kicker>{kicker}</Kicker>}
+          <TitleText>{title}</TitleText>
+        </TitleBlock>
+        <MetaText>{metaText}</MetaText>
+      </Head>
+
+      <Filters>
+        {(['all', 'today', 'week', 'month'] as DateFilter[]).map(f => (
+          <FilterBtn key={f} $active={dateFilter === f} onClick={() => setDateFilter(f)}>
+            {f === 'all' ? 'All' : f === 'today' ? 'Today' : f === 'week' ? 'This Week' : 'This Month'}
+          </FilterBtn>
+        ))}
+        <FiltersRight>
+          <PrintBtn title="Print" onClick={() => window.print()}>
+            <FontAwesomeIcon icon={faPrint} />
+          </PrintBtn>
+        </FiltersRight>
+      </Filters>
+
+      {wellnessSummary && (
+        <Summary>
+          <SumItem>
+            <SumLabel>Water</SumLabel>
+            <SumVal>{wellnessSummary.water}<SumUnit>gl</SumUnit></SumVal>
+          </SumItem>
+          {wellnessSummary.avgMood !== null && (
+            <SumItem>
+              <SumLabel>Avg mood</SumLabel>
+              <SumVal>{wellnessSummary.avgMood}</SumVal>
+            </SumItem>
+          )}
+          <SumItem>
+            <SumLabel>Sleep</SumLabel>
+            <SumVal>{wellnessSummary.sleep}<SumUnit>hrs</SumUnit></SumVal>
+          </SumItem>
+          <SumItem>
+            <SumLabel>Entries</SumLabel>
+            <SumVal>{wellnessSummary.count}</SumVal>
+          </SumItem>
+        </Summary>
+      )}
 
       <ListArea>
-        {selectedTopic && <NewEntryCard topic={selectedTopic} headerColor={headerColor} />}
-        {entries.length === 0 && !selectedTopic ? (
-          <EmptyState message="No entries found." />
-        ) : (
-          entries.map(entry => (
-            <EditableEntryCard
-              key={entry.id}
-              entry={entry}
-              topic={getTopicForEntry(entry)}
-              headerColor={headerColor}
-              isEditing={editingId === entry.id}
-              onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
-              onClose={() => setEditingId(null)}
-              onDeleted={() => setEditingId(null)}
-              showAsPlain
-            />
-          ))
+        {filtered.length === 0 && (
+          <EmptyState message={dateFilter === 'all' ? 'No entries.' : 'No entries for this period.'} />
         )}
+
+        {groups.map(group => (
+          <DayGroup key={group.dayKey}>
+            <DayLabel>
+              {group.label}
+              <DayDate>{group.mono}</DayDate>
+            </DayLabel>
+            <DayEntries>
+              {group.entries.map(entry => {
+                const bodyText = stripHtml(entry.content).trim();
+                const titleText = entry.metadata._title as string | undefined;
+                const meta = entry.metadata as Record<string, unknown>;
+                const cf = meta._customFields as Record<string, unknown> | undefined;
+                let fieldPreview: string | undefined;
+                if (!bodyText && cf) {
+                  if ((meta._widgetType as string) === 'wellness-checkin') {
+                    const w = (cf.waterGlasses as number) || 0;
+                    const g = (cf.waterGoal as number) || 8;
+                    const m = (cf.moodScore as number) || 0;
+                    const s = (cf.sleepHours as number) || 0;
+                    const parts = [w > 0 ? `${w}/${g} glasses` : '', m > 0 ? `Mood ${m}/5` : '', s > 0 ? `${s}h sleep` : ''].filter(Boolean);
+                    fieldPreview = parts.join(' · ') || 'Wellness check-in';
+                  } else {
+                    const topicId = meta._taxonomyId as number | undefined;
+                    const defs = topicId ? (topicCustomFields[topicId] ?? []) : [];
+                    const uf = (cf._userFields as Record<string, unknown>) ?? {};
+                    fieldPreview = summarizeUserFields(defs, uf) || undefined;
+                  }
+                }
+                const cardTitle = titleText || bodyText.slice(0, 80) || fieldPreview || 'Untitled';
+                const cardBody = titleText ? bodyText : '';
+                const fieldCount = countFields(entry.metadata);
+                return (
+                  <div key={entry.id}>
+                    <Card onClick={() => setExpandedId(editingId === entry.id ? null : entry.id)}>
+                      <CardTitle>{cardTitle}</CardTitle>
+                      {cardBody && <CardBody>{cardBody}</CardBody>}
+                      <CardMeta>
+                        <span>{formatTime(new Date(entry.createdAt))}</span>
+                        {fieldCount > 0 && <span>{fieldCount} field{fieldCount !== 1 ? 's' : ''}</span>}
+                      </CardMeta>
+                    </Card>
+                    {editingId === entry.id && (
+                      <EditorWrap>
+                        <EditableEntryCard
+                          entry={entry}
+                          topic={getTopicForEntry(entry)}
+                          headerColor={headerColor}
+                          isEditing
+                          hidePreview
+                          onSelect={() => setExpandedId(null)}
+                          onClose={() => setExpandedId(null)}
+                          onDeleted={() => setExpandedId(null)}
+                          showAsPlain
+                        />
+                      </EditorWrap>
+                    )}
+                  </div>
+                );
+              })}
+            </DayEntries>
+          </DayGroup>
+        ))}
       </ListArea>
     </Panel>
   );

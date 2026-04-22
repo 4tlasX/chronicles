@@ -35,7 +35,7 @@ const Form = styled.form`
   gap: ${({ theme }) => theme.spacing.md}px;
   margin-top: ${({ theme }) => theme.spacing.md}px;
   padding: ${({ theme }) => theme.spacing.md}px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid var(--accent-stroke, ${({ theme }) => theme.colors.border});
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   background: ${({ theme }) => theme.colors.surface};
 `;

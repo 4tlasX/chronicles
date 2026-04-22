@@ -11,7 +11,7 @@ const Wrapper = styled.div`
 const KeyBox = styled.div`
   padding: ${({ theme }) => theme.spacing.md}px;
   background: ${({ theme }) => theme.colors.surfaceHover};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid var(--accent-stroke, ${({ theme }) => theme.colors.border});
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   font-family: 'Courier New', monospace;
   font-size: ${({ theme }) => theme.fontSize.sm}px;

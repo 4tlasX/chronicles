@@ -47,7 +47,7 @@ export const CollapsibleHeader = styled.button`
   justify-content: space-between;
   width: 100%;
   padding: 16px;
-  background: transparent;
+  background: var(--paper-surface);
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.xl}px;
   cursor: pointer;
@@ -73,7 +73,7 @@ export const CollapsibleBody = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-top: none;
   border-radius: 0 0 ${({ theme }) => theme.borderRadius.xl}px ${({ theme }) => theme.borderRadius.xl}px;
-  background: transparent;
+  background: var(--paper-surface);
   font-size: 16px;
   line-height: 1.6;
   color: ${({ theme }) => theme.colors.textSecondary};
@@ -83,7 +83,7 @@ export const PrivacyCard = styled.div`
   padding: 16px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.xl}px;
-  background: transparent;
+  background: var(--paper-surface);
   font-size: 16px;
   line-height: 1.6;
   color: ${({ theme }) => theme.colors.text};
@@ -92,7 +92,7 @@ export const PrivacyCard = styled.div`
 export const DangerCard = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.xl}px;
-  background: transparent;
+  background: var(--paper-surface);
   overflow: hidden;
   padding: 0 16px;
 `;

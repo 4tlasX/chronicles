@@ -6,7 +6,7 @@ import {
   faPlus, faTrash, faCalendarDay, faCalendarDays, faListCheck,
   faBolt, faCartShopping, faCheck, faPencil, faGripVertical, faPills,
   faSun, faCloud, faCloudRain, faSnowflake, faWind, faXmark, faSlidersH, faChevronDown, faUtensils, faDroplet,
-  faHeart, faChevronLeft, faChevronRight,
+  faHeart, faChevronLeft, faChevronRight, faMicrophone, faPenNib,
   faGlassWater, faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam, faCloudMoon,
 } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -35,11 +35,12 @@ import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { stripHtml, summarizeUserFields } from '../utils/stripHtml.js';
 import { TopicSelector } from '../components/organisms/TopicSelector.js';
-import { Editor } from '../components/organisms/Editor.js';
+import { Editor, type DictationControls } from '../components/organisms/Editor.js';
 import type { Topic } from '../types/topics.js';
 import { getTopicIcon } from '../utils/topicIcons.js';
 import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
 import { UserFieldsForm } from '../components/molecules/fields/UserFieldsForm.js';
+import { SectionDivider } from '../components/atoms/SectionDivider.js';
 
 /* ── Constants ── */
 
@@ -138,38 +139,44 @@ const Page = styled.div`
 `;
 
 const PageHeader = styled.div`
-  display: flex;
-  align-items: flex-end;
-  margin-bottom: 36px;
-  @media (max-width: 640px) { flex-direction: column; align-items: flex-start; gap: 4px; padding-left: 10px; margin-bottom: 28px; }
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s-8, 48px);
+  align-items: center;
+  margin-bottom: var(--s-8, 48px);
+  padding-bottom: var(--s-5, 20px);
+  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  @media (max-width: 640px) { grid-template-columns: 1fr; gap: var(--s-3); margin-bottom: var(--s-6); }
 `;
 
 const GreetingBlock = styled.div`
   display: flex;
   flex-direction: column;
-  flex: 2;
-  padding-right: 20px;
+  align-self: center;
+  gap: 8px;
 `;
 
 const Greeting = styled.h1`
-  font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 32px;
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-size: 40px;
   font-weight: 400;
   font-style: italic;
-  line-height: 1.48em;
-  color: ${({ theme }) => theme.colors.text};
+  line-height: 1;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
   margin: 0;
+  letter-spacing: -0.005em;
   @media (max-width: 640px) { font-size: 28px; }
 `;
 
 const DateLine = styled.p`
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 16px;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 11px;
   font-weight: 400;
-  font-style: italic;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin: 0;
-  padding-left: 0.35rem;
+  font-style: normal;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+  margin: 6px 0 0;
 `;
 
 const DateLineRow = styled.div`
@@ -182,11 +189,10 @@ const InlineWeatherWrap = styled.div`
   display: flex;
   align-items: center;
   gap: 5px;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 16px;
-  font-weight: 400;
-  font-style: italic;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
   &::before { content: '·'; margin-right: 2px; opacity: 0.5; }
 `;
 
@@ -194,48 +200,50 @@ const InlineTemp = styled.button`
   background: none;
   border: none;
   padding: 0;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 11px;
   font-weight: 500;
   font-style: normal;
-  color: ${({ theme }) => theme.colors.text};
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   cursor: pointer;
   &:hover { opacity: 0.7; }
 `;
 
 const InlineHiLo = styled.span`
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
   font-style: normal;
-  font-size: 11px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 10px;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
 `;
 
-const QuoteBlock = styled.div`
-  flex: 1;
-  padding-left: 20px;
+const QuoteBlock = styled.blockquote`
+  margin: 0;
+  max-width: 320px;
   text-align: right;
+  align-self: end;
+  padding-bottom: 4px;
   @media (max-width: 640px) { display: none; }
 `;
 
 const QuoteText = styled.p`
-  font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 19px;
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-size: 15px;
   font-weight: 400;
   font-style: italic;
-  color: ${({ theme }) => theme.colors.text};
-  margin: 0 0 4px;
+  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
+  margin: 0;
   line-height: 1.5;
-  @media (max-width: 640px) {
-    margin: 0 0 10px;
-  }
 `;
 
-const QuoteAuthor = styled.p`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
-  font-weight: 400;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin: 0;
+const QuoteAuthor = styled.cite`
+  display: block;
+  margin-top: 4px;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
 `;
 
 const Grid = styled.div`
@@ -251,9 +259,9 @@ const LeftColumn = styled.div`
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   padding-right: 20px;
-  border-right: 1px solid ${({ theme }) => theme.colors.border};
+  border-right: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   @media (max-width: 1024px) { flex: none; width: 100%; border-right: none; padding-right: 0; }
 `;
 
@@ -263,7 +271,7 @@ const RightColumn = styled.div`
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   padding-left: 20px;
   @media (max-width: 1024px) { flex: none; width: 100%; padding-left: 0; }
 `;
@@ -271,57 +279,61 @@ const RightColumn = styled.div`
 const DashCard = styled.div`
   display: flex;
   flex-direction: column;
-  flex: 1;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-lg, 6px);
+  overflow: hidden;
 `;
 
 const CardHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
 `;
 
 const CardIconWrap = styled.span`
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 14px;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+  font-size: 13px;
   flex-shrink: 0;
 `;
 
 const CardTitle = styled.span`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: ${({ theme }) => theme.colors.text};
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
   flex: 1;
 `;
 
 const CardViewLink = styled(Link)`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 15px;
-  font-weight: 500;
-  text-transform: capitalize;
-  color: ${({ theme }) => theme.colors.textMuted};
-  text-decoration: none;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-stroke, ${({ theme }) => theme.colors.textMuted});
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
   white-space: nowrap;
-  opacity: 0.55;
-  &:hover { opacity: 1; text-decoration: underline; }
+  &:hover { opacity: 0.75; }
 `;
 
 const CardBody = styled.div`
-  padding: 12px 14px;
-  margin-top: 10px;
+  padding: 16px 20px;
   flex: 1;
 `;
 
 const QuickEntryDashCard = styled(DashCard)`
-  background: transparent;
-  border-radius: 10px;
-  & ${CardHeader} { border-top: 1px solid ${({ theme }) => theme.colors.border}; }
-  & ${CardBody} { padding: 12px 0; }
+  background: #f0e8d8;
+  border-color: #d9cfb8;
+  & ${CardHeader} { border-bottom-color: #d9cfb8; }
+  & ${CardBody} { padding: 16px 20px; }
+  :root[data-theme="dark"] & {
+    background: var(--paper-surface);
+    border-color: var(--rule);
+    & ${CardHeader} { border-bottom-color: var(--rule); }
+  }
 `;
 
 const AddBtn = styled.button`
@@ -330,14 +342,14 @@ const AddBtn = styled.button`
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: none;
-  background: none;
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  background: transparent;
   cursor: pointer;
-  color: ${({ theme }) => theme.colors.textMuted};
-  font-size: 15px;
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  transition: color 0.15s, background 0.15s;
-  &:hover { color: ${({ theme }) => theme.colors.text}; background: rgba(0,0,0,0.04); }
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
+  font-size: 13px;
+  border-radius: var(--r-sm, 2px);
+  transition: color 120ms ease, background 120ms ease;
+  &:hover { color: var(--ink); background: var(--paper-hover); }
 `;
 
 const ItemRow = styled.div<{ $done?: boolean }>`
@@ -345,30 +357,42 @@ const ItemRow = styled.div<{ $done?: boolean }>`
   align-items: center;
   gap: 8px;
   padding: 8px 0;
-  opacity: ${({ $done }) => $done ? 0.45 : 1};
+  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
+  &:last-child { border-bottom: 0; }
+`;
+
+const PriRow = styled.div<{ $done?: boolean }>`
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
+  font-size: 14px;
+  color: ${({ $done }) => $done ? 'var(--ink-4)' : 'var(--ink-2)'};
+  min-height: 36px;
+  &:last-child { border-bottom: 0; }
 `;
 
 const CheckBtn = styled.button<{ $done?: boolean; $color: string }>`
-  width: 20px;
-  height: 20px;
-  border: 1.5px solid ${({ $done, $color, theme }) => $done ? $color : theme.colors.border};
-  border-radius: 4px;
-  background: ${({ $done, $color }) => $done ? $color : 'transparent'};
+  width: 18px;
+  height: 18px;
+  border: 1px solid ${({ $done }) => $done ? 'var(--ink)' : 'var(--ink-3)'};
+  border-radius: var(--r-sm, 2px);
+  background: ${({ $done }) => $done ? 'var(--ink)' : 'transparent'};
   cursor: pointer;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: 12px;
-  transition: background 0.15s, border-color 0.15s;
+  color: var(--paper-surface);
+  font-size: 11px;
+  transition: background 120ms ease, border-color 120ms ease;
   padding: 0;
 `;
 
 const ItemText = styled.span<{ $done?: boolean }>`
-  font-size: 16px;
-  font-weight: 300;
-  color: ${({ theme }) => theme.colors.text};
+  font-size: 14px;
+  color: ${({ $done }) => $done ? 'var(--ink-4)' : 'var(--ink-2)'};
   text-decoration: ${({ $done }) => $done ? 'line-through' : 'none'};
   flex: 1;
   line-height: 1.4;
@@ -376,75 +400,98 @@ const ItemText = styled.span<{ $done?: boolean }>`
 
 const InlineInput = styled.input`
   flex: 1;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: transparent;
-  font-size: 16px;
-  font-weight: 300;
-  color: ${({ theme }) => theme.colors.text};
-  padding: 6px 10px;
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-sm, 2px);
+  background: var(--paper-surface);
+  font-size: 14px;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
+  padding: 8px 10px;
   outline: none;
-  font-family: ${({ theme }) => theme.fontFamily.sans};
-  &::placeholder { color: ${({ theme }) => theme.colors.textMuted}; }
-  &:focus { border-color: var(--focus-color); }
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  &::placeholder { color: var(--ink-4); font-style: italic; }
+  &:focus { border-color: var(--ink-4); box-shadow: var(--focus); }
 `;
 
 const QuickEditorWrap = styled.div`
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  border: 1px solid #d9cfb8;
+  border-radius: var(--r-sm, 2px);
+  background: var(--paper-surface, #f7f4ee);
   margin-bottom: 0;
 
-  /* Taller initial height, expands with content */
   > div { min-height: 120px; height: auto; }
 
-  /* Compact content padding and size for dashboard context */
   .tiptap {
-    padding: 8px 12px;
+    padding: 14px 12px;
+    font-family: var(--serif);
+    font-style: italic;
     font-size: 16px;
     line-height: 1.6;
-    font-weight: 300;
     min-height: 120px;
     height: auto;
   }
 
-  /* Toolbar row sits flush at the top */
-  &:focus-within { border-color: var(--focus-color); }
+  &:focus-within { border-color: var(--ink-4); box-shadow: var(--focus); }
+  :root[data-theme="dark"] & { background: var(--paper); border-color: var(--rule); }
 `;
 
 const SaveRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
   padding-top: 8px;
   padding-bottom: 8px;
   margin-top: 8px;
 `;
 
-const SaveBtn = styled.button<{ $accent: string; $active?: boolean }>`
-  padding: 7px 16px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
+const SaveRowLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const FooterIconBtn = styled.button<{ $active?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: ${({ $active }) => $active ? 'var(--ink, #2b2824)' : 'transparent'};
+  border: 1px solid ${({ $active }) => $active ? 'var(--ink, #2b2824)' : 'var(--rule, #d4cfc5)'};
+  border-radius: var(--r-sm, 2px);
+  color: ${({ $active }) => $active ? 'var(--paper, #f0ebdf)' : 'var(--ink-3, #6b645a)'};
   font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  background: ${({ $active, $accent, theme }) => $active ? $accent : theme.colors.surface};
-  color: ${({ $active, theme }) => $active ? '#fff' : theme.colors.textMuted};
-  border: 1px solid ${({ $active, $accent, theme }) => $active ? $accent : theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  &:hover { background: ${({ $active }) => $active ? 'var(--ink, #2b2824)' : 'rgba(0,0,0,0.04)'}; color: ${({ $active }) => $active ? 'var(--paper, #f0ebdf)' : 'var(--ink, #2b2824)'}; }
+`;
+
+const SaveBtn = styled.button<{ $accent: string; $active?: boolean }>`
+  padding: 8px 18px;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--paper-surface);
+  color: ${({ $active }) => $active ? 'var(--ink, #2b2824)' : 'var(--ink-4, #8a857c)'};
+  border: 1px solid var(--rule, #d4cfc5);
+  border-radius: var(--r-md, 4px);
   cursor: ${({ $active }) => $active ? 'pointer' : 'default'};
-  transition: background 0.15s, color 0.15s;
+  transition: background 150ms ease, color 150ms ease;
+  &:hover:not(:disabled) { ${({ $active }) => $active ? 'background: var(--paper-deep);' : ''} }
 `;
 
 const StatusText = styled.span`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.success};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--success, ${({ theme }) => theme.colors.success});
 `;
 
 const EmptyNote = styled.p`
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-style: italic;
   font-size: 15px;
-  font-weight: 300;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
   margin: 4px 0;
 `;
 
@@ -463,44 +510,45 @@ const FieldCol = styled.div`
 `;
 
 const FieldLabel = styled.label`
-  font-size: 16px;
-  font-weight: 600;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
 `;
 
 const FieldInput = styled.input`
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: transparent;
-  font-size: 15px;
-  font-weight: 300;
-  color: ${({ theme }) => theme.colors.text};
-  padding: 6px 8px;
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
+  background: #ffffff;
+  font-size: 14px;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
+  padding: 8px 10px;
   outline: none;
-  font-family: ${({ theme }) => theme.fontFamily.sans};
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
   width: 100%;
   box-sizing: border-box;
-  &::placeholder { color: ${({ theme }) => theme.colors.textMuted}; }
+  &::placeholder { color: var(--ink-4); font-style: italic; }
   &[type="date"], &[type="time"] { color-scheme: light dark; }
-  &:focus { border-color: var(--focus-color); }
+  &:focus { border-color: var(--ink-4); box-shadow: var(--focus); }
+  :root[data-theme="dark"] & { background: var(--paper); border-color: var(--rule); }
 `;
 
 const FieldSelect = styled.select`
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: transparent;
-  font-size: 15px;
-  font-weight: 300;
-  color: ${({ theme }) => theme.colors.text};
-  padding: 6px 8px;
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
+  background: #ffffff;
+  font-size: 14px;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
+  padding: 8px 10px;
   outline: none;
-  font-family: ${({ theme }) => theme.fontFamily.sans};
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
   width: 100%;
   box-sizing: border-box;
   appearance: none;
   cursor: pointer;
-  &:focus { border-color: var(--focus-color); }
+  &:focus { border-color: var(--ink-4); box-shadow: var(--focus); }
+  :root[data-theme="dark"] & { background: var(--paper); border-color: var(--rule); }
 `;
 
 const CheckRow = styled.div`
@@ -512,18 +560,31 @@ const CheckRow = styled.div`
 
 
 const EventMeta = styled.span`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  font-weight: 300;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
 `;
 
-const PriorityNumber = styled.span`
-  font-size: 13px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.textMuted};
-  width: 14px;
-  flex-shrink: 0;
+const PriNum = styled.div`
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-style: italic;
+  font-size: 22px;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+  min-width: 18px;
+  flex: 0 0 auto;
+  line-height: 1;
 `;
+
+const PriBody = styled.div<{ $done?: boolean }>`
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.4;
+  color: ${({ $done }) => $done ? 'var(--ink-4)' : 'var(--ink-2)'};
+  text-decoration: ${({ $done }) => $done ? 'line-through' : 'none'};
+`;
+
+const PriorityNumber = PriNum;
 
 /* ── Drag & Drop ── */
 
@@ -606,11 +667,11 @@ const DragGrip = styled.button`
   background: none;
   padding: 0;
   cursor: grab;
-  color: ${({ theme }) => theme.colors.border};
+  color: var(--rule, ${({ theme }) => theme.colors.border});
   font-size: 15px;
   flex-shrink: 0;
   touch-action: none;
-  &:hover { color: ${({ theme }) => theme.colors.textMuted}; }
+  &:hover { color: var(--ink-3, ${({ theme }) => theme.colors.textMuted}); }
   &:active { cursor: grabbing; }
 `;
 
@@ -667,14 +728,14 @@ const EditWidgetsBtn = styled.button`
   align-items: center;
   gap: 6px;
   background: none;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-sm, 4px);
   padding: 5px 12px;
   font-size: 14px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   cursor: pointer;
-  &:hover { color: ${({ theme }) => theme.colors.text}; border-color: ${({ theme }) => theme.colors.textMuted}; }
+  &:hover { color: var(--ink, ${({ theme }) => theme.colors.text}); border-color: var(--ink-3); }
 `;
 
 const EditWidgetsCard = styled.div`
@@ -685,9 +746,9 @@ const EditWidgetsCard = styled.div`
 const WidgetMenu = styled.div`
   margin-top: 10px;
   margin-bottom: 32px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 8px;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-md, 8px);
   overflow: hidden;
 `;
 
@@ -701,11 +762,11 @@ const WidgetMenuHeader = styled.button`
   border: none;
   cursor: pointer;
   font-size: 14px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  letter-spacing: 0.12em;
+  &:hover { color: var(--ink, ${({ theme }) => theme.colors.text}); }
 `;
 
 const WidgetMenuChevron = styled.span<{ $open: boolean }>`
@@ -717,23 +778,23 @@ const WidgetMenuChevron = styled.span<{ $open: boolean }>`
 
 const WidgetMenuBody = styled.div`
   padding: 4px 16px 16px;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  border-top: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
 `;
 
 const WidgetMenuSection = styled.div`
   & + & {
     margin-top: 14px;
     padding-top: 14px;
-    border-top: 1px solid ${({ theme }) => theme.colors.border};
+    border-top: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   }
 `;
 
 const WidgetSectionLabel = styled.p`
-  font-size: 13px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 10.5px;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   margin: 10px 0 8px;
 `;
 
@@ -747,15 +808,15 @@ const WidgetChip = styled.button`
   display: flex;
   align-items: center;
   gap: 6px;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-sm, 4px);
   padding: 6px 14px;
-  font-size: 15px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  color: ${({ theme }) => theme.colors.text};
+  font-size: 14px;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  color: var(--ink-2, ${({ theme }) => theme.colors.text});
   cursor: pointer;
-  &:hover { border-color: ${({ theme }) => theme.colors.textMuted}; }
+  &:hover { border-color: var(--ink-3); background: var(--paper-hover); }
 `;
 
 /* ── Widget: Daily Priorities ── */
@@ -872,30 +933,33 @@ function PrioritiesCard({ accentColor, dragAttributes, dragListeners }: { accent
     }
   };
 
+  const ROMANS = ['i', 'ii', 'iii', 'iv', 'v'];
+
   return (
     <DashCard>
       <CardHeader>
         <CardIconWrap><FontAwesomeIcon icon={faBolt} /></CardIconWrap>
-        <CardTitle>Daily Priorities</CardTitle>
+        <CardTitle>Today's Priorities</CardTitle>
         {priorities.length < 5 && <AddBtn onClick={handleAdd}><FontAwesomeIcon icon={faPlus} /></AddBtn>}
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
       </CardHeader>
       <CardBody>
         {priorities.map((p, i) => (
-          <ItemRow key={p.id} $done={p.done}>
-            <CheckBtn $done={p.done} $color={accentColor} onClick={() => handleToggle(p.id)}>
-              {p.done && <FontAwesomeIcon icon={faCheck} />}
-            </CheckBtn>
-            <PriorityNumber>{i + 1}</PriorityNumber>
-            <InlineInput
-              value={p.text}
-              placeholder={`Priority ${i + 1}`}
-              onChange={e => handleChange(p.id, e.target.value)}
-            />
-            <AddBtn onClick={() => handleRemove(p.id)} style={{ fontSize: 10 }}>
+          <PriRow key={p.id} $done={p.done} onClick={() => handleToggle(p.id)} style={{ cursor: 'pointer' }}>
+            <PriNum>{ROMANS[i]}.</PriNum>
+            <PriBody $done={p.done}>
+              <InlineInput
+                value={p.text}
+                placeholder={`Priority ${i + 1}`}
+                onChange={e => { e.stopPropagation(); handleChange(p.id, e.target.value); }}
+                onClick={e => e.stopPropagation()}
+                style={{ background: 'transparent', border: 'none', padding: '0', boxShadow: 'none', fontSize: '14px', color: 'inherit', width: '100%' }}
+              />
+            </PriBody>
+            <AddBtn onClick={e => { e.stopPropagation(); handleRemove(p.id); }} style={{ fontSize: 10, border: 'none', background: 'none', width: 20, height: 20 }}>
               <FontAwesomeIcon icon={faTrash} />
             </AddBtn>
-          </ItemRow>
+          </PriRow>
         ))}
         <SaveRow>
           {status && status !== 'Saved' && <StatusText>{status}</StatusText>}
@@ -934,6 +998,10 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
+  const [toolbarOpen, setToolbarOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [dictationInterim, setDictationInterim] = useState('');
+  const dictationControlRef = useRef<DictationControls | null>(null);
   const reflectionPrompt = useMemo(() => {
     const d = new Date();
     const dayOfYear = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
@@ -989,7 +1057,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
     if (!canSave) return;
     setSaving(true);
     try {
-      const finalContent = hasContent ? content : `<p>${summarizeUserFields(userFieldDefs, userFields)}</p>`;
+      const finalContent = content;
       const effectiveTopicId = selectedTopic ? selectedTopic.id : await getOrCreateJournalTopic();
       const metadata: Record<string, unknown> = { _taxonomyId: effectiveTopicId };
       if ((fieldDefs.length > 0 || userFieldDefs.length > 0 || isMedicationTopic || isTaskTopic) && selectedTopic) metadata._customFields = customFields;
@@ -1014,14 +1082,13 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
   return (
     <QuickEntryDashCard>
       <CardHeader>
-        <CardIconWrap><FontAwesomeIcon icon={faPencil} /></CardIconWrap>
+        <CardIconWrap><FontAwesomeIcon icon={faPenNib} /></CardIconWrap>
         <CardTitle>Quick Entry</CardTitle>
-        <CardViewLink to="/journal">View all</CardViewLink>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
       </CardHeader>
       <CardBody>
         <div style={{ marginBottom: 10 }}>
-          <TopicSelector selectedId={selectedTopicId} onSelect={handleTopicChange} topics={topics} />
+          <TopicSelector selectedId={selectedTopicId} onSelect={handleTopicChange} topics={topics} filled />
         </div>
         {fieldDefs.length > 0 && (
           <FieldGrid>
@@ -1150,12 +1217,39 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
             onChange={setContent}
             placeholder={selectedTopicId === null ? reflectionPrompt : 'Add a note...'}
             onEnterSave={handleSave}
+            hideToolbarToggle
+            toolbarOpen={toolbarOpen}
+            onToolbarToggle={setToolbarOpen}
+            dictationControlRef={dictationControlRef}
+            onDictationChange={(listening, interim) => { setIsListening(listening); setDictationInterim(interim); }}
           />
         </QuickEditorWrap>
+        {dictationInterim && (
+          <div style={{ fontSize: 13, fontStyle: 'italic', color: 'var(--ink-4)', padding: '2px 0 4px' }}>
+            {dictationInterim}
+          </div>
+        )}
         <SaveRow>
-          {status && status !== 'Saved' && <StatusText>{status}</StatusText>}
+          <SaveRowLeft>
+            <FooterIconBtn
+              title={isListening ? 'Stop dictation' : 'Dictate'}
+              $active={isListening}
+              onClick={() => dictationControlRef.current?.toggle()}
+              type="button"
+            >
+              <FontAwesomeIcon icon={faMicrophone} />
+            </FooterIconBtn>
+            <FooterIconBtn
+              title={toolbarOpen ? 'Hide formatting' : 'Show formatting'}
+              $active={toolbarOpen}
+              onClick={() => setToolbarOpen(o => !o)}
+              type="button"
+            >
+              <FontAwesomeIcon icon={faPenNib} />
+            </FooterIconBtn>
+          </SaveRowLeft>
           <SaveBtn $accent={accentColor} $active={canSave} onClick={handleSave} disabled={saving || !canSave}>
-            {saving ? <Spinner size={10} /> : 'Save'}
+            {saving ? <Spinner size={10} /> : 'Save entry'}
           </SaveBtn>
         </SaveRow>
       </CardBody>
@@ -1263,6 +1357,55 @@ function TasksCard({ accentColor, tasks, taskTopicId, dragAttributes, dragListen
 
 /* ── Widget: Events & Meetings ── */
 
+const EvtRow = styled.div`
+  display: flex;
+  gap: var(--s-4, 16px);
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
+  &:last-child { border-bottom: 0; }
+`;
+
+const EvtDayNum = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 32px;
+  flex: 0 0 auto;
+  line-height: 1;
+`;
+
+const EvtDayNumVal = styled.span`
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-style: italic;
+  font-size: 22px;
+  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
+  line-height: 1;
+`;
+
+const EvtMonthAbbr = styled.span`
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+  margin-top: 2px;
+`;
+
+const EvtContent = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const EvtTitle = styled.div`
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
+  line-height: 1.3;
+  margin-bottom: 2px;
+`;
+
 interface EventEntry { id: number; content: string; metadata: Record<string, unknown>; }
 
 function EventsCard({ accentColor, events, dragAttributes, dragListeners }: { accentColor: string; events: EventEntry[] } & DragProps) {
@@ -1271,7 +1414,7 @@ function EventsCard({ accentColor, events, dragAttributes, dragListeners }: { ac
       <DashCard>
         <CardHeader>
           <CardIconWrap><FontAwesomeIcon icon={faCalendarDay} /></CardIconWrap>
-          <CardTitle>Upcoming Events & Meetings</CardTitle>
+          <CardTitle>Upcoming</CardTitle>
           <CardViewLink to="/calendar">View all</CardViewLink>
           {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
         </CardHeader>
@@ -1284,24 +1427,36 @@ function EventsCard({ accentColor, events, dragAttributes, dragListeners }: { ac
     <DashCard>
       <CardHeader>
         <CardIconWrap><FontAwesomeIcon icon={faCalendarDay} /></CardIconWrap>
-        <CardTitle>Upcoming Events & Meetings</CardTitle>
+        <CardTitle>Upcoming</CardTitle>
+        <EventMeta>Next 7 days</EventMeta>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
       </CardHeader>
-      <CardBody>
+      <div>
         {events.slice(0, 10).map(ev => {
           const cf = (ev.metadata._customFields as Record<string, unknown>) || {};
           const date = cf.startDate as string | undefined;
           const time = cf.startTime as string | undefined;
           const today = todayKey();
-          const label = date === today ? 'Today' : date ? new Date(date + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', '') : '';
+          const dateObj = date ? new Date(date + 'T00:00') : null;
+          const dayNum = dateObj ? dateObj.getDate() : '';
+          const monthAbbr = dateObj ? dateObj.toLocaleDateString('en-US', { month: 'short' }) : '';
+          const dayLabel = date === today ? 'Today' : dateObj ? dateObj.toLocaleDateString('en-US', { weekday: 'short' }) : '';
+          const topicType = (ev.metadata._customFields as Record<string, unknown>)?._topicType as string || 'Event';
+          const metaStr = [dayLabel, time ? formatTime12h(time) : ''].filter(Boolean).join(' · ');
           return (
-            <ItemRow key={ev.id}>
-              <ItemText>{stripHtml(ev.content).slice(0, 70)}</ItemText>
-              <EventMeta>{label}{time ? ` · ${formatTime12h(time)}` : ''}</EventMeta>
-            </ItemRow>
+            <EvtRow key={ev.id}>
+              <EvtDayNum>
+                <EvtDayNumVal>{dayNum}</EvtDayNumVal>
+                {monthAbbr && <EvtMonthAbbr>{monthAbbr}</EvtMonthAbbr>}
+              </EvtDayNum>
+              <EvtContent>
+                <EvtTitle>{stripHtml(ev.content).slice(0, 70)}</EvtTitle>
+                {metaStr && <EventMeta>{metaStr}</EventMeta>}
+              </EvtContent>
+            </EvtRow>
           );
         })}
-      </CardBody>
+      </div>
     </DashCard>
   );
 }
@@ -1430,9 +1585,9 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
 /* ── Widget: Medication Schedule ── */
 
 const MedProgressBar = styled.div`
-  height: 4px;
-  border-radius: 2px;
-  background: ${({ theme }) => theme.colors.border};
+  height: 6px;
+  border-radius: var(--r-sm, 2px);
+  background: var(--rule, ${({ theme }) => theme.colors.border});
   overflow: hidden;
   margin-bottom: 8px;
 `;
@@ -1440,8 +1595,7 @@ const MedProgressBar = styled.div`
 const MedProgressFill = styled.div<{ $pct: number; $color: string }>`
   height: 100%;
   width: ${({ $pct }) => $pct}%;
-  background: ${({ $color }) => $color};
-  border-radius: 2px;
+  background: var(--accent);
   transition: width 0.3s ease;
 `;
 
@@ -1451,13 +1605,13 @@ const MedRow = styled.div<{ $taken: boolean }>`
   gap: 8px;
   padding: 8px 0;
   opacity: ${({ $taken }) => $taken ? 0.45 : 1};
-  & + & { border-top: 1px solid ${({ theme }) => theme.colors.border}; }
+  & + & { border-top: 1px dashed var(--rule, ${({ theme }) => theme.colors.border}); }
 `;
 
 const MedCircle = styled.button<{ $taken: boolean; $color: string }>`
   width: 22px; height: 22px; min-width: 22px;
-  border-radius: 4px;
-  border: 1.5px solid ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.border};
+  border-radius: var(--r-sm, 4px);
+  border: 1.5px solid ${({ $taken, $color }) => $taken ? $color : 'var(--rule)'};
   background: ${({ $taken, $color }) => $taken ? $color : 'transparent'};
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0; color: white; font-size: 12px; padding: 0;
@@ -1466,9 +1620,9 @@ const MedCircle = styled.button<{ $taken: boolean; $color: string }>`
 `;
 
 const MedName = styled.span<{ $taken: boolean }>`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: ${({ $taken }) => $taken ? 300 : 400};
-  color: ${({ theme }) => theme.colors.text};
+  color: var(--ink, ${({ theme }) => theme.colors.text});
   text-decoration: ${({ $taken }) => $taken ? 'line-through' : 'none'};
   flex: 1;
   overflow: hidden;
@@ -1477,9 +1631,10 @@ const MedName = styled.span<{ $taken: boolean }>`
 `;
 
 const MedTimeLabel = styled.span`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  font-weight: 300;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   flex-shrink: 0;
 `;
 
@@ -1603,42 +1758,49 @@ const WeatherDayRow = styled.div<{ $today?: boolean }>`
   align-items: center;
   gap: 10px;
   padding: 6px 0;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
   &:last-child { border-bottom: none; }
   ${({ $today }) => $today && 'padding: 8px 0 10px;'}
 `;
 
 const WeatherDayLabel = styled.span<{ $today?: boolean }>`
-  font-size: ${({ $today }) => $today ? '14px' : '13px'};
-  font-weight: ${({ $today }) => $today ? 600 : 400};
-  color: ${({ theme }) => theme.colors.text};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: ${({ $today }) => $today ? '10.5px' : '10px'};
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${({ $today }) => $today ? 'var(--ink)' : 'var(--ink-3)'};
   width: 52px;
   flex-shrink: 0;
 `;
 
 const WeatherTodayTemp = styled.span`
-  font-size: 31px;
-  font-weight: 300;
-  color: ${({ theme }) => theme.colors.text};
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-size: 28px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
   line-height: 1;
 `;
 
 const WeatherCondition = styled.span`
-  font-size: 15px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 14px;
+  color: var(--ink-2, ${({ theme }) => theme.colors.textMuted});
   flex: 1;
 `;
 
 const WeatherHiLo = styled.span`
-  font-size: 15px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10.5px;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textMuted});
   white-space: nowrap;
   margin-left: auto;
 `;
 
 const WeatherPrecip = styled.span`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10px;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textMuted});
   white-space: nowrap;
 `;
 
@@ -1646,11 +1808,12 @@ const UnitToggle = styled.button`
   background: none;
   border: none;
   padding: 2px 7px;
-  font-size: 13px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   cursor: pointer;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  &:hover { color: var(--ink, ${({ theme }) => theme.colors.text}); }
 `;
 
 interface WeatherDay {
@@ -1774,13 +1937,13 @@ const TopicEntryRow = styled.div`
   align-items: baseline;
   gap: 10px;
   padding: 6px 0;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
   &:last-child { border-bottom: none; }
 `;
 
 const TopicEntryPreview = styled.span`
-  font-size: 15px;
-  color: ${({ theme }) => theme.colors.text};
+  font-size: 14px;
+  color: var(--ink-2, ${({ theme }) => theme.colors.text});
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1788,8 +1951,9 @@ const TopicEntryPreview = styled.span`
 `;
 
 const TopicEntryDate = styled.span`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10px;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textMuted});
   flex-shrink: 0;
 `;
 
@@ -1864,24 +2028,25 @@ const MealRow = styled.div`
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 5px 0;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
   &:last-child { border-bottom: none; }
 `;
 
 const MealLabel = styled.span`
-  font-size: 13px;
-  font-weight: 600;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10px;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: ${({ theme }) => theme.colors.textMuted};
+  letter-spacing: 0.1em;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textMuted});
   width: 68px;
   flex-shrink: 0;
 `;
 
 const MealName = styled.span`
-  font-size: 15px;
-  color: ${({ theme }) => theme.colors.text};
+  font-size: 14px;
+  color: var(--ink-2, ${({ theme }) => theme.colors.text});
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1986,14 +2151,15 @@ function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentCo
 /* ── Widget: Affirmations ── */
 
 const AffirmationDisplay = styled.div`
-  font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 20px;
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-size: 18px;
   font-weight: 400;
   font-style: italic;
   line-height: 1.6;
-  color: ${({ theme }) => theme.colors.text};
+  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
   padding: 8px 0 12px;
-  text-align: center;
+  border-left: 2px solid var(--accent-stroke, ${({ theme }) => theme.colors.accentStroke});
+  padding-left: 14px;
 `;
 
 const AffirmationNav = styled.div`
@@ -2009,15 +2175,16 @@ const AffirmationNavBtn = styled.button`
   border: none;
   padding: 4px 6px;
   cursor: pointer;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   font-size: 13px;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  &:hover { color: var(--ink, ${({ theme }) => theme.colors.text}); }
 `;
 
 const AffirmationCount = styled.span`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
   min-width: 40px;
   text-align: center;
 `;
@@ -2033,9 +2200,9 @@ const AffirmationEditRow = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
   font-size: 15px;
-  color: ${({ theme }) => theme.colors.text};
+  color: var(--ink, ${({ theme }) => theme.colors.text});
 `;
 
 const AffirmationEditText = styled.span`
@@ -2051,27 +2218,29 @@ const AffirmationAddRow = styled.div`
 
 const AffirmationInput = styled.input`
   flex: 1;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-sm, 4px);
   padding: 5px 8px;
-  font-size: 15px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
-  &:focus { outline: none; border-color: ${({ theme }) => theme.colors.textMuted}; }
+  font-size: 14px;
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  color: var(--ink, ${({ theme }) => theme.colors.text});
+  &:focus { outline: none; border-color: var(--ink-3); }
 `;
 
 const AffirmationToggle = styled.button`
   background: none;
   border: none;
   padding: 0;
-  font-size: 13px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textMuted});
   cursor: pointer;
   text-decoration: underline;
   margin-top: 4px;
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  &:hover { color: var(--ink-2, ${({ theme }) => theme.colors.text}); }
 `;
 
 const DEFAULT_AFFIRMATIONS: string[] = [
@@ -2162,6 +2331,7 @@ function AffirmationsCard({ accentColor, dragAttributes, dragListeners }: { acce
       <CardHeader>
         <CardIconWrap><FontAwesomeIcon icon={faHeart} /></CardIconWrap>
         <CardTitle>Affirmations</CardTitle>
+        <EventMeta style={{ marginLeft: 'auto' }}>Day {baseIdx}</EventMeta>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <FontAwesomeIcon icon={faGripVertical} />
         </DragGrip>
@@ -2362,7 +2532,7 @@ function MiniCalendarCard({ accentColor, dragAttributes, dragListeners }: { acce
           <FontAwesomeIcon icon={faGripVertical} />
         </DragGrip>
       </CardHeader>
-      <div style={{ padding: '0 4px 8px' }}>
+      <div style={{ padding: '0 20px 20px' }}>
         <MiniCalendar
           selectedDate={selectedDate}
           onSelectDate={handleSelectDate}
@@ -2381,45 +2551,50 @@ const SLEEP_GOAL = 10;
 const MOOD_ICONS = [faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam] as const;
 
 const WSection = styled.div`
-  padding: 14px 0;
-  & + & { border-top: 1px solid ${({ theme }) => theme.colors.border}; }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
+  min-height: 44px;
+  &:last-child { border-bottom: 0; }
 `;
 
 const WSectionLabel = styled.div`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 12px;
-  font-weight: 600;
+  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin-bottom: 10px;
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
+  flex: 0 0 70px;
 `;
 
 const GlassRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   flex-wrap: wrap;
 `;
 
 const GlassBtn = styled.button<{ $filled: boolean }>`
   background: none;
   border: none;
-  padding: 4px 3px;
+  padding: 2px;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1;
-  color: ${({ $filled, theme }) => $filled ? theme.colors.text : theme.colors.border};
-  transition: color 0.1s, transform 0.1s;
-  &:hover { color: ${({ theme }) => theme.colors.text}; transform: scale(1.15); }
+  color: ${({ $filled }) => $filled ? 'var(--accent)' : 'var(--rule)'};
+  transition: color 120ms ease, transform 100ms ease;
+  &:hover { color: var(--ink-3); transform: scale(1.15); }
   &:active { transform: scale(0.88); }
 `;
 
 const GlassCount = styled.span`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin-left: 6px;
+  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
+  margin-left: 4px;
 `;
 
 const MoodRow = styled.div`
@@ -2431,23 +2606,22 @@ const MoodRow = styled.div`
 const MoodBtn = styled.button<{ $active: boolean }>`
   background: none;
   border: none;
-  padding: 4px;
+  padding: 2px;
   cursor: pointer;
-  font-size: 25px;
+  font-size: 22px;
   line-height: 1;
-  color: ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.border};
-  transition: color 0.1s, transform 0.1s;
-  &:hover { color: ${({ theme }) => theme.colors.text}; transform: scale(1.15); }
+  color: ${({ $active }) => $active ? 'var(--ink)' : 'var(--ink-4)'};
+  transition: color 120ms ease, transform 100ms ease;
+  &:hover { color: var(--ink-2); transform: scale(1.15); }
   &:active { transform: scale(0.88); }
 `;
 
 
 const CyclePredictionLine = styled.div`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
   font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   margin-top: 12px;
-  letter-spacing: 0.01em;
 `;
 
 const FLOW_OPTIONS = ['spotting', 'light', 'medium', 'heavy'] as const;
@@ -2572,13 +2746,8 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
       _customFields: { date: todayStr, waterGlasses: water, waterGoal: WATER_GOAL, moodScore: mood, sleepHours: sleepH, sleepQuality: 0, periodToday: period, flowIntensity: flow },
     };
     if (topicId) metadata._taxonomyId = topicId;
-    const summary = [
-      water > 0 ? `${water}/${WATER_GOAL} glasses` : '',
-      mood > 0 ? `Mood ${mood}/5` : '',
-      sleepH > 0 ? `${sleepH}h sleep` : '',
-    ].filter(Boolean).join(' · ') || 'Wellness check-in';
     try {
-      const encrypted = await encryptPost(summary, metadata);
+      const encrypted = await encryptPost('', metadata);
       const payload = {
         contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
         metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
@@ -2587,12 +2756,12 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
       };
       if (entryIdRef.current) {
         await entriesApi.update(entryIdRef.current, payload);
-        updateDecryptedEntry(entryIdRef.current, { content: summary, metadata });
+        updateDecryptedEntry(entryIdRef.current, { content: '', metadata });
       } else {
         const result = await entriesApi.create(payload);
         const id = result.id as number;
         entryIdRef.current = id;
-        addDecryptedEntry({ id, content: summary, metadata, isEncrypted: true, createdAt: new Date(result.createdAt as string), updatedAt: new Date(result.createdAt as string) });
+        addDecryptedEntry({ id, content: '', metadata, isEncrypted: true, createdAt: new Date(result.createdAt as string), updatedAt: new Date(result.createdAt as string) });
       }
     } catch { /* fire-and-forget */ }
   };
@@ -2645,7 +2814,8 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
     <DashCard>
       <CardHeader>
         <CardIconWrap><FontAwesomeIcon icon={faHeart} /></CardIconWrap>
-        <CardTitle>Daily Check-in</CardTitle>
+        <CardTitle>Check-in</CardTitle>
+        <EventMeta style={{ marginLeft: 'auto' }}>Today</EventMeta>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <FontAwesomeIcon icon={faGripVertical} />
         </DragGrip>
@@ -2948,10 +3118,6 @@ export function DashboardView() {
         <PageHeader>
           <GreetingBlock>
             <Greeting>{getGreeting()}{displayName ? `, ${displayName}` : ''}</Greeting>
-            <DateLineRow>
-              <DateLine>{dateLabel}</DateLine>
-              {weatherEnabled && cityName && <InlineWeather />}
-            </DateLineRow>
           </GreetingBlock>
           {(() => { const q = getDailyQuote(); return (
             <QuoteBlock>

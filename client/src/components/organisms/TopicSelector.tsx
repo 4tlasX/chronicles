@@ -15,17 +15,17 @@ const Wrapper = styled.div`
   position: relative;
 `;
 
-const Trigger = styled.button`
+const Trigger = styled.button<{ $filled?: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-family: 'Lato', sans-serif;
   font-size: 13px;
   font-weight: ${({ theme }) => theme.fontWeight.medium};
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  border: none;
+  text-transform: capitalize;
+  letter-spacing: normal;
+  border: 1px solid var(--rule, #d4cfc5);
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   background: transparent;
   color: ${({ theme }) => theme.colors.text};
@@ -33,7 +33,7 @@ const Trigger = styled.button`
   transition: background 0.15s;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--paper-hover, #f0eeea);
   }
 `;
 
@@ -42,7 +42,7 @@ const TopicIcon = styled.span<{ $color?: string }>`
   align-items: center;
   justify-content: center;
   width: 20px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: ${({ theme }) => theme.colors.text};
   font-size: 18px;
   flex-shrink: 0;
 `;
@@ -68,10 +68,8 @@ const Dropdown = styled.div`
   width: 260px;
   max-height: 320px;
   overflow-y: auto;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  border: 1px solid var(--accent-stroke, var(--rule, ${({ theme }) => theme.colors.border}));
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   box-shadow: ${({ theme }) => theme.shadow.lg};
   animation: ${dropdownSlide} 0.15s ease-out;
@@ -80,11 +78,10 @@ const Dropdown = styled.div`
 
 const SearchWrapper = styled.div`
   padding: 8px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   position: sticky;
   top: 0;
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
-  backdrop-filter: blur(20px);
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
 `;
 
 const ItemList = styled.div`
@@ -121,9 +118,10 @@ interface TopicSelectorProps {
   selectedId: number | null;
   onSelect: (id: number | null) => void;
   topics: { id: number; name: string; icon: string | null; color: string | null }[];
+  filled?: boolean;
 }
 
-export function TopicSelector({ selectedId, onSelect, topics }: TopicSelectorProps) {
+export function TopicSelector({ selectedId, onSelect, topics, filled }: TopicSelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -150,7 +148,7 @@ export function TopicSelector({ selectedId, onSelect, topics }: TopicSelectorPro
 
   return (
     <Wrapper ref={wrapperRef}>
-      <Trigger onClick={() => setOpen(!open)}>
+      <Trigger $filled={filled ?? selectedId !== null} onClick={() => setOpen(!open)}>
         {selected ? (
           <>
             <TopicIcon $color={headerColor}><FontAwesomeIcon icon={getTopicIcon(selected.icon)} /></TopicIcon>

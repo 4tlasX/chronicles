@@ -2,9 +2,9 @@ import styled from 'styled-components';
 import type { FrequencyData } from '../../../utils/correlationAnalysis.js';
 
 const Card = styled.div`
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: ${({ theme }) => theme.colors.surface};
+  background: transparent;
   padding: 16px;
 `;
 

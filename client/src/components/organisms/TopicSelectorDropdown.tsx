@@ -32,8 +32,8 @@ const Wrapper = styled.div`
   margin-top: 4px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  border: 1px solid var(--accent-stroke, ${({ theme }) => theme.colors.border});
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   box-shadow: ${({ theme }) => theme.shadow.lg};
   width: 256px;
@@ -50,7 +50,7 @@ const SearchInput = styled.input`
   padding: 8px 12px;
   border: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   font-size: 18px;
@@ -91,7 +91,7 @@ const TopicIcon = styled.span<{ $color?: string }>`
   align-items: center;
   justify-content: center;
   width: 20px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: ${({ theme }) => theme.colors.text};
   font-size: 18px;
   flex-shrink: 0;
 `;
