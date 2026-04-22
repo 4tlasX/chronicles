@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { faPlus, faArrowRightFromBracket, faBars, faXmark, faHome, faBookOpen, faCalendar, faTag, faGear, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowRightFromBracket, faBars, faXmark, faHome, faBookOpen, faCalendar, faTag, faGear, faMagnifyingGlass, faFlag, faCheck, faCircleCheck, faLayerGroup, faSlidersH, faPills, faCalendarCheck, faUtensils, faThermometerHalf, faPersonRunning, faTriangleExclamation, faChartLine } from '@fortawesome/free-solid-svg-icons';
 import { UserCircle } from '@phosphor-icons/react';
 import { faNoteSticky } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -613,15 +613,22 @@ export function Header() {
           {mobileNav('/topics', 'Topics', faTag)}
 
           <DrawerSectionLabel>Planning</DrawerSectionLabel>
-          {ff.goalsEnabled && mobileNav('/goals', 'Goals')}
-          {mobileNav('/goals/tasks', 'Tasks')}
-          {mobileNav('/goals/todos', 'Todos')}
+          {ff.goalsEnabled && mobileNav('/goals', 'Goals', faFlag)}
+          {ff.goalsEnabled && mobileNav('/goals/milestones', 'Milestones', faLayerGroup)}
+          {mobileNav('/goals/tasks', 'Tasks', faCheck)}
+          {mobileNav('/goals/todos', 'Todos', faCircleCheck)}
+          {mobileNav('/goals/filter', 'Planner Filter', faSlidersH)}
 
           {healthItems.length > 0 && (
             <>
               <DrawerSectionLabel>Health</DrawerSectionLabel>
-              {ff.medicationEnabled && mobileNav('/health/meds', 'Medications')}
-              {mobileNav('/health/reporting', 'Reports')}
+              {ff.medicationEnabled && mobileNav('/health/schedule', 'Med Schedule', faCalendarCheck)}
+              {ff.medicationEnabled && mobileNav('/health/meds', 'Medications', faPills)}
+              {ff.foodEnabled && mobileNav('/health/food', 'Food', faUtensils)}
+              {mobileNav('/health/symptoms', 'Symptoms', faThermometerHalf)}
+              {ff.exerciseEnabled && mobileNav('/health/exercise', 'Exercise', faPersonRunning)}
+              {ff.allergiesEnabled && mobileNav('/health/allergies', 'Allergies', faTriangleExclamation)}
+              {mobileNav('/health/reporting', 'Reports', faChartLine)}
             </>
           )}
 
