@@ -17,7 +17,7 @@ const StyledSidePanel = styled.div<{ $hiddenMobile?: boolean; $hasBackground?: b
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  background: var(--paper-surface);
+  background: ${({ $hasBackground, theme }) => $hasBackground ? theme.colors.surfaceOverlay : 'var(--paper)'};
   border-right: 1px solid ${({ theme }) => theme.colors.border};
 
   @media (max-width: 1024px) {

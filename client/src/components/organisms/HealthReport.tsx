@@ -37,7 +37,7 @@ const StatsGrid = styled.div`
 const StatCard = styled.div`
   border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: transparent;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
   padding: 14px;
   text-align: center;
 `;
@@ -63,7 +63,7 @@ const StatSub = styled.div`
 const SectionCard = styled.div`
   border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: transparent;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
   padding: 16px;
 `;
 

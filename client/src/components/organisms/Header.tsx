@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { faPlus, faArrowRightFromBracket, faBars, faXmark, faHome, faBookOpen, faCalendar, faTag, faGear, faMagnifyingGlass, faFlag, faCheck, faCircleCheck, faLayerGroup, faSlidersH, faPills, faCalendarCheck, faUtensils, faThermometerHalf, faPersonRunning, faTriangleExclamation, faChartLine } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowRightFromBracket, faBars, faXmark, faHome, faBookOpen, faCalendar, faTag, faGear, faMagnifyingGlass, faFlag, faCheck, faCircleCheck, faLayerGroup, faSlidersH, faPills, faCalendarCheck, faUtensils, faThermometerHalf, faPersonRunning, faTriangleExclamation, faChartLine, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { UserCircle } from '@phosphor-icons/react';
 import { faNoteSticky } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -106,20 +106,92 @@ const Nav = styled.nav`
   }
 `;
 
+const NavDropdownWrap = styled.div`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  &:hover > .nav-dd-menu,
+  &:focus-within > .nav-dd-menu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+`;
+
+const NavDropdownTrigger = styled.button<{ $active?: boolean; $light?: boolean }>`
+  padding: 4px 0;
+  font-family: 'Lato', sans-serif;
+  font-size: 11px;
+  font-weight: ${({ $active }) => $active ? 900 : 600};
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.85)' : '#f0ebdf'};
+  opacity: ${({ $active }) => $active ? 1 : 0.8};
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  &:hover { opacity: 1; }
+`;
+
+const NavDropdownMenu = styled.div<{ $bgColor: string; $light?: boolean }>`
+  position: absolute;
+  top: 100%;
+  left: -10px;
+  transform: translateY(-6px);
+  /* Top padding bridges the gap to the trigger so the menu stays open while moving cursor */
+  padding-top: 14px;
+  min-width: 220px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease, transform 140ms ease;
+  z-index: 100;
+
+  & > .nav-dd-menu-inner {
+    background: ${({ $bgColor }) => $bgColor};
+    color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : '#f0ebdf'};
+    border-radius: 4px;
+    padding: 8px 0;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  }
+`;
+
+const NavDropdownItem = styled(Link)<{ $active?: boolean; $light?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 18px;
+  font-family: 'Lato', sans-serif;
+  font-size: 11px;
+  font-weight: ${({ $active }) => $active ? 900 : 600};
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.9)' : '#f0ebdf'};
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 120ms ease;
+
+  &:hover { background: ${({ $light }) => $light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)'}; }
+
+  & svg { width: 14px; opacity: 0.75; }
+`;
+
 const NavLink = styled(Link)<{ $active?: boolean; $light?: boolean }>`
   padding: 4px 0;
   font-family: 'Lato', sans-serif;
   font-size: 11px;
-  font-weight: ${({ $active }) => $active ? 700 : 600};
+  font-weight: ${({ $active }) => $active ? 900 : 600};
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: ${({ $light }) => $light ? 'rgba(0,0,0,0.85)' : '#f0ebdf'};
   opacity: ${({ $active }) => $active ? 1 : 0.8};
   text-decoration: none;
-  border-bottom: 1px solid ${({ $active, $light }) => $active
-    ? ($light ? 'rgba(0,0,0,0.85)' : '#f0ebdf')
-    : 'transparent'};
-  transition: opacity 0.15s, border-color 0.15s;
+  transition: opacity 0.15s;
   white-space: nowrap;
 
   &:hover {
@@ -487,15 +559,15 @@ export function Header() {
     healthItems.push({ label: 'Meds List', to: '/health/meds' });
     healthItems.push({ label: 'Meds Schedule', to: '/health/schedule' });
   }
-  if (ff.foodEnabled) healthItems.push({ label: 'Food', to: '/health/food' });
+  if (ff.foodEnabled) healthItems.push({ label: 'Meals', to: '/health/food' });
   if (ff.medicationEnabled) healthItems.push({ label: 'Symptoms', to: '/health/symptoms' });
   if (ff.exerciseEnabled) healthItems.push({ label: 'Exercise', to: '/health/exercise' });
   if (ff.allergiesEnabled) healthItems.push({ label: 'Allergies', to: '/health/allergies' });
   if (healthItems.length > 0) healthItems.push({ label: 'Reporting', to: '/health/reporting' });
 
-  const mobileNav = (to: string, label: string, icon?: IconDefinition) => (
+  const mobileNav = (to: string, label: string, icon?: IconDefinition, iconNode?: React.ReactNode) => (
     <DrawerLink key={to} to={to} $active={isActive(to)} onClick={() => setMobileMenuOpen(false)}>
-      {icon && <DrawerLinkIcon><FontAwesomeIcon icon={icon} /></DrawerLinkIcon>}
+      <DrawerLinkIcon>{iconNode ?? (icon && <FontAwesomeIcon icon={icon} />)}</DrawerLinkIcon>
       {label}
     </DrawerLink>
   );
@@ -511,15 +583,59 @@ export function Header() {
     </Logo>
   );
 
+  const planningItems = [
+    ff.goalsEnabled && { to: '/goals', label: 'Goals', icon: faFlag },
+    ff.goalsEnabled && { to: '/goals/milestones', label: 'Milestones', icon: faLayerGroup },
+    { to: '/goals/tasks', label: 'Tasks', icon: faCheck },
+    { to: '/goals/todos', label: 'Todos', icon: faCircleCheck },
+    { to: '/goals/filter', label: 'Planner Filter', icon: faSlidersH },
+  ].filter(Boolean) as { to: string; label: string; icon: IconDefinition }[];
+
+  const healthDropdownItems = [
+    ff.medicationEnabled && { to: '/health/schedule', label: 'Med Schedule', icon: faCalendarCheck },
+    ff.medicationEnabled && { to: '/health/meds', label: 'Medications', icon: faPills },
+    ff.foodEnabled && { to: '/health/food', label: 'Meals', icon: faUtensils },
+    { to: '/health/symptoms', label: 'Symptoms', icon: faThermometerHalf },
+    ff.exerciseEnabled && { to: '/health/exercise', label: 'Exercise', icon: faPersonRunning },
+    ff.allergiesEnabled && { to: '/health/allergies', label: 'Allergies', icon: faTriangleExclamation },
+    { to: '/health/reporting', label: 'Reports', icon: faChartLine },
+  ].filter(Boolean) as { to: string; label: string; icon: IconDefinition }[];
+
   const centerNav = (
     <Nav>
       <NavLink to="/" $active={isActive('/')} $light={light}>Dashboard</NavLink>
       <NavLink to="/journal" $active={isActive('/journal')} $light={light}>Journal</NavLink>
       <NavLink to="/topics" $active={isActive('/topics')} $light={light}>Topics</NavLink>
       <NavLink to="/calendar" $active={isActive('/calendar')} $light={light}>Calendar</NavLink>
-      <NavLink to="/goals/tasks" $active={location.pathname.startsWith('/goals')} $light={light}>Planning</NavLink>
-      {healthItems.length > 0 && (
-        <NavLink to="/health/meds" $active={location.pathname.startsWith('/health')} $light={light}>Health</NavLink>
+      <NavDropdownWrap>
+        <NavDropdownTrigger $active={location.pathname.startsWith('/goals')} $light={light}>
+          Planning <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 8 }} />
+        </NavDropdownTrigger>
+        <NavDropdownMenu className="nav-dd-menu" $bgColor={bgColor} $light={light}>
+          <div className="nav-dd-menu-inner">
+            {planningItems.map(item => (
+              <NavDropdownItem key={item.to} to={item.to} $active={location.pathname === item.to} $light={light}>
+                {item.label}
+              </NavDropdownItem>
+            ))}
+          </div>
+        </NavDropdownMenu>
+      </NavDropdownWrap>
+      {healthDropdownItems.length > 0 && (
+        <NavDropdownWrap>
+          <NavDropdownTrigger $active={location.pathname.startsWith('/health')} $light={light}>
+            Health <FontAwesomeIcon icon={faChevronDown} style={{ fontSize: 8 }} />
+          </NavDropdownTrigger>
+          <NavDropdownMenu className="nav-dd-menu" $bgColor={bgColor} $light={light}>
+            <div className="nav-dd-menu-inner">
+              {healthDropdownItems.map(item => (
+                <NavDropdownItem key={item.to} to={item.to} $active={location.pathname === item.to} $light={light}>
+                  {item.label}
+                </NavDropdownItem>
+              ))}
+            </div>
+          </NavDropdownMenu>
+        </NavDropdownWrap>
       )}
     </Nav>
   );
@@ -624,7 +740,7 @@ export function Header() {
               <DrawerSectionLabel>Health</DrawerSectionLabel>
               {ff.medicationEnabled && mobileNav('/health/schedule', 'Med Schedule', faCalendarCheck)}
               {ff.medicationEnabled && mobileNav('/health/meds', 'Medications', faPills)}
-              {ff.foodEnabled && mobileNav('/health/food', 'Food', faUtensils)}
+              {ff.foodEnabled && mobileNav('/health/food', 'Meals', faUtensils)}
               {mobileNav('/health/symptoms', 'Symptoms', faThermometerHalf)}
               {ff.exerciseEnabled && mobileNav('/health/exercise', 'Exercise', faPersonRunning)}
               {ff.allergiesEnabled && mobileNav('/health/allergies', 'Allergies', faTriangleExclamation)}

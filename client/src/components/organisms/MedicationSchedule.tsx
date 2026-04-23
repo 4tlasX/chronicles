@@ -91,32 +91,30 @@ const HelpText = styled.p`
 `;
 
 const TimeGroup = styled.div`
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-  background: transparent;
-  margin-bottom: 20px;
-  &:first-of-type { margin-top: 16px; }
+  padding: 0 var(--s-4, 16px);
+  &:first-of-type { margin-top: 8px; }
 `;
 
 const TimeHeader = styled.div`
-  padding: 12px 24px;
-  font-size: 16px;
+  padding: 16px 0 10px;
+  font-family: var(--sans, 'Lato', sans-serif);
+  font-size: 15px;
   font-weight: 600;
-  color: ${({ theme }) => theme.colors.text};
-  background: rgba(0, 0, 0, 0.02);
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  @media (max-width: 768px) { padding: 8px 16px; }
-  @media (max-width: 480px) { padding: 8px 12px; font-size: 15px; }
+  color: var(--ink-2, ${({ theme }) => theme.colors.text});
+  @media (max-width: 480px) { padding: 14px 0 8px; font-size: 14px; }
 `;
 
-const DoseRow = styled.div<{ $taken: boolean }>`
+const DoseCard = styled.div<{ $taken: boolean; $accentColor: string }>`
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 24px;
-  @media (max-width: 768px) { padding: 10px 16px; }
-  @media (max-width: 480px) { padding: 8px 12px; gap: 8px; }
-  background: ${({ $taken }) => $taken ? 'rgba(0,0,0,0.02)' : 'transparent'};
-  & + & { border-top: 1px solid ${({ theme }) => theme.colors.border}; }
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  background: var(--paper-surface, #f7f4ee);
+  border: 1px solid var(--rule, #d5d0c5);
+  border-left: 3px solid ${({ $accentColor }) => $accentColor};
+  border-radius: 6px;
+  @media (max-width: 480px) { padding: 12px 14px; gap: 10px; }
 `;
 
 const DoseCheckButton = styled.button<{ $taken: boolean; $color: string }>`
@@ -352,7 +350,7 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
               const isSaving = savingDose === key;
 
               return (
-                <DoseRow key={`${dose.medicationPostId}-${time}-${i}`} $taken={isTaken}>
+                <DoseCard key={`${dose.medicationPostId}-${time}-${i}`} $taken={isTaken} $accentColor={headerColor}>
                   <DoseCheckButton
                     $taken={isTaken}
                     $color={headerColor}
@@ -373,7 +371,7 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
                   <StatusBadge>
                     {isSaving ? 'Saving...' : isTaken ? 'Taken' : 'Pending'}
                   </StatusBadge>
-                </DoseRow>
+                </DoseCard>
               );
             })}
           </TimeGroup>

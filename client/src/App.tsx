@@ -20,6 +20,7 @@ import { PlannerFilterView } from './views/PlannerFilterView.js';
 import { TopicEntriesView } from './views/TopicEntriesView.js';
 import { MedicationScheduleView } from './views/MedicationScheduleView.js';
 import { HealthReportingView } from './views/HealthReportingView.js';
+import { HealthTabBar } from './components/molecules/HealthTabBar.js';
 import { MenuView } from './views/MenuView.js';
 import { ShoppingListsView } from './views/ShoppingListsView.js';
 import { DashboardView } from './views/DashboardView.js';
@@ -133,19 +134,19 @@ function R({ children }: { children: React.ReactNode }) {
 }
 
 export function App() {
-  const themeMode = useUIStore(s => s.themeMode);
   const headerColor = useUIStore(s => s.headerColor);
-  const activeTheme = themeMode === 'dark' ? darkTheme : lightTheme;
+  // Dark mode disabled until fully styled — force light for everyone
+  const activeTheme = lightTheme;
 
   useEffect(() => {
     const color = headerColor || '#2d2c2a';
-    const isDark = themeMode === 'dark';
+    const isDark = false;
     const [r, g, b] = hexToRgbParts(color);
 
-    root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    root.setAttribute('data-theme', 'light');
 
     /* Theme-based tokens (flip between light and dark) */
-    const themeVars = isDark ? DARK_CSS_VARS : LIGHT_CSS_VARS;
+    const themeVars = LIGHT_CSS_VARS;
     Object.entries(themeVars).forEach(([k, v]) => root.style.setProperty(k, v));
 
     /* Accent-derived tokens (from user's header color) */
@@ -160,7 +161,7 @@ export function App() {
     /* Legacy vars for existing components that depend on them */
     root.style.setProperty('--focus-color', color);
     root.style.setProperty('--focus-color-rgb', `${r},${g},${b}`);
-  }, [headerColor, themeMode]);
+  }, [headerColor]);
 
   return (
     <ThemeProvider theme={activeTheme}>
@@ -190,13 +191,13 @@ export function App() {
               <Route path="/shopping" element={<R><ShoppingListsView /></R>} />
 
               {/* Health */}
-              <Route path="/health" element={<R><TopicEntriesView title="Health" topicNames={['Medication', 'Symptom', 'Food', 'Exercise', 'Allergy']} /></R>} />
-              <Route path="/health/meds" element={<R><TopicEntriesView title="Medications" titleTo="/health" topicNames={['Medication']} metaFields={[{ key: 'dosage', label: 'Dosage' }, { key: 'frequency', label: 'Frequency' }, { key: 'isActive', label: 'Active' }]} showDateFilter={false} printable /></R>} />
+              <Route path="/health" element={<R><TopicEntriesView title="Health" topicNames={['Medication', 'Symptom', 'Food', 'Exercise', 'Allergy']} navBar={<HealthTabBar />} /></R>} />
+              <Route path="/health/meds" element={<R><TopicEntriesView title="Medications" titleTo="/health" topicNames={['Medication']} metaFields={[{ key: 'dosage', label: 'Dosage' }, { key: 'frequency', label: 'Frequency' }, { key: 'isActive', label: 'Active' }]} showDateFilter={false} printable navBar={<HealthTabBar />} /></R>} />
               <Route path="/health/schedule" element={<R><MedicationScheduleView /></R>} />
-              <Route path="/health/food" element={<R><TopicEntriesView title="Food" titleTo="/health" topicNames={['Food']} metaFields={[{ key: 'mealType', label: 'Meal' }, { key: 'calories', label: 'Calories' }, { key: 'ingredients', label: 'Ingredients' }]} summaryFields={[{ key: 'calories', label: 'Total Calories' }]} /></R>} />
-              <Route path="/health/symptoms" element={<R><TopicEntriesView title="Symptoms" titleTo="/health" topicNames={['Symptom']} metaFields={[{ key: 'severity', label: 'Severity' }, { key: 'duration', label: 'Duration' }]} printable /></R>} />
-              <Route path="/health/exercise" element={<R><TopicEntriesView title="Exercise" titleTo="/health" topicNames={['Exercise']} metaFields={[{ key: 'exerciseType', label: 'Type' }, { key: 'duration', label: 'Duration' }, { key: 'intensity', label: 'Intensity' }]} summaryFields={[{ key: 'duration', label: 'Total Minutes' }, { key: 'calories', label: 'Total Calories' }]} /></R>} />
-              <Route path="/health/allergies" element={<R><TopicEntriesView title="Allergies" titleTo="/health" topicNames={['Allergy']} metaFields={[{ key: 'severity', label: 'Severity' }, { key: 'allergen', label: 'Allergen' }, { key: 'reaction', label: 'Reaction' }]} printable /></R>} />
+              <Route path="/health/food" element={<R><TopicEntriesView title="Meals" titleTo="/health" topicNames={['Food']} metaFields={[{ key: 'mealType', label: 'Meal' }, { key: 'calories', label: 'Calories' }, { key: 'ingredients', label: 'Ingredients' }]} summaryFields={[{ key: 'calories', label: 'Total Calories' }]} navBar={<HealthTabBar />} /></R>} />
+              <Route path="/health/symptoms" element={<R><TopicEntriesView title="Symptoms" titleTo="/health" topicNames={['Symptom']} metaFields={[{ key: 'severity', label: 'Severity' }, { key: 'duration', label: 'Duration' }]} printable navBar={<HealthTabBar />} /></R>} />
+              <Route path="/health/exercise" element={<R><TopicEntriesView title="Exercise" titleTo="/health" topicNames={['Exercise']} metaFields={[{ key: 'exerciseType', label: 'Type' }, { key: 'duration', label: 'Duration' }, { key: 'intensity', label: 'Intensity' }]} summaryFields={[{ key: 'duration', label: 'Total Minutes' }, { key: 'calories', label: 'Total Calories' }]} navBar={<HealthTabBar />} /></R>} />
+              <Route path="/health/allergies" element={<R><TopicEntriesView title="Allergies" titleTo="/health" topicNames={['Allergy']} metaFields={[{ key: 'severity', label: 'Severity' }, { key: 'allergen', label: 'Allergen' }, { key: 'reaction', label: 'Reaction' }]} printable navBar={<HealthTabBar />} /></R>} />
               <Route path="/health/reporting" element={<R><HealthReportingView /></R>} />
 
               {/* Entertainment */}

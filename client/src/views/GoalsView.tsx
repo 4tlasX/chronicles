@@ -8,9 +8,10 @@ import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { ScrollList } from '../components/atoms/ScrollList.js';
 import { Spinner } from '../components/atoms/Spinner.js';
+import { HeaderAddButton } from '../components/atoms/HeaderAddButton.js';
 import { ViewHeader } from '../components/molecules/ViewHeader.js';
-import { FilterTabs } from '../components/molecules/FilterTabs.js';
-import { Select } from '../components/atoms/Select.js';
+import { DayGroupedList } from '../components/molecules/DayGroupedList.js';
+import { PlanningTabBar } from '../components/molecules/PlanningTabBar.js';
 import { GoalCard } from '../components/organisms/GoalCard.js';
 import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
@@ -22,48 +23,8 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 import { entries as entriesApi } from '../services/api.js';
 import { stripHtml } from '../utils/stripHtml.js';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { GoalEntry, MilestoneEntryData, TaskEntryData } from '../types/goals.js';
-
-/* ── Filter options ── */
-
-const GOAL_FILTERS = [
-  { value: 'active' as const, label: 'Active' },
-  { value: 'short_term' as const, label: 'Short-term' },
-  { value: 'long_term' as const, label: 'Long-term' },
-  { value: 'completed' as const, label: 'Completed' },
-  { value: 'all' as const, label: 'All' },
-];
-
-const MILESTONE_FILTERS = [
-  { value: 'all' as const, label: 'All' },
-  { value: 'not_started' as const, label: 'Not Started' },
-  { value: 'in_progress' as const, label: 'In Progress' },
-  { value: 'completed' as const, label: 'Completed' },
-];
-
-const TASK_FILTERS = [
-  { value: 'all' as const, label: 'All' },
-  { value: 'not_started' as const, label: 'Not Started' },
-  { value: 'in_progress' as const, label: 'In Progress' },
-  { value: 'completed' as const, label: 'Completed' },
-];
-
-const PRIORITY_FILTERS = [
-  { value: 'all' as const, label: 'All' },
-  { value: 'urgent' as const, label: 'Urgent' },
-  { value: 'high' as const, label: 'High' },
-  { value: 'medium' as const, label: 'Medium' },
-  { value: 'low' as const, label: 'Low' },
-  { value: 'none' as const, label: 'None' },
-];
-
-type GoalFilter = typeof GOAL_FILTERS[number]['value'];
-type MilestoneFilter = typeof MILESTONE_FILTERS[number]['value'];
-type TaskFilter = typeof TASK_FILTERS[number]['value'];
-type PriorityFilter = typeof PRIORITY_FILTERS[number]['value'];
 
 export function GoalsView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
@@ -84,12 +45,6 @@ export function GoalsView() {
   useEffect(() => {
     setTab(tabFromPath);
   }, [tabFromPath]);
-  const [goalFilter, setGoalFilter] = useState<GoalFilter>('active');
-  const [milestoneFilter, setMilestoneFilter] = useState<MilestoneFilter>('all');
-  const [taskFilter, setTaskFilter] = useState<TaskFilter>('all');
-  const [taskPriorityFilter, setTaskPriorityFilter] = useState<PriorityFilter>('all');
-  const [todoFilter, setTodoFilter] = useState<TaskFilter>('all');
-  const [todoPriorityFilter, setTodoPriorityFilter] = useState<PriorityFilter>('all');
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const sensors = useSensors(
@@ -140,7 +95,8 @@ export function GoalsView() {
           isCompleted: !!cf.isCompleted,
           parentGoalId: (cf.parentGoalId as number) || null,
           parentMilestoneId: (cf.parentMilestoneId as number) || null,
-          priority: (cf.priority as string) || 'none', customFields: cf, taxonomyId: taskTopicId };
+          priority: (cf.priority as string) || 'none', customFields: cf, taxonomyId: taskTopicId,
+          createdAt: e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt) };
       });
   }, [entries, taskTopicId]);
 
@@ -150,29 +106,14 @@ export function GoalsView() {
   const goalOptions = useMemo(() => goals.map(g => ({ id: g.id, title: g.title })), [goals]);
   const goalTitles = useMemo(() => new Map(goals.map(g => [g.id, g.title])), [goals]);
 
-  // Filtered lists
-  const filteredGoals = useMemo(() => goals
-    .filter(g => {
-      if (goalFilter === 'all') return true;
-      if (goalFilter === 'active') return g.goalStatus === 'active' || g.goalStatus === 'in_progress';
-      if (goalFilter === 'completed') return g.goalStatus === 'completed';
-      if (goalFilter === 'short_term') return g.goalType === 'short_term' && g.goalStatus !== 'completed';
-      if (goalFilter === 'long_term') return g.goalType === 'long_term' && g.goalStatus !== 'completed';
-      return true;
-    })
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
-  [goals, goalFilter]);
+  // Sorted lists
+  const filteredGoals = useMemo(() =>
+    [...goals].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+  [goals]);
 
-  const filteredMilestones = useMemo(() => milestones
-    .filter(m => {
-      if (milestoneFilter === 'all') return true;
-      if (milestoneFilter === 'not_started') return !m.isCompleted && m.milestoneStatus !== 'in_progress';
-      if (milestoneFilter === 'in_progress') return !m.isCompleted && m.milestoneStatus === 'in_progress';
-      if (milestoneFilter === 'completed') return m.isCompleted;
-      return true;
-    })
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
-  [milestones, milestoneFilter]);
+  const filteredMilestones = useMemo(() =>
+    [...milestones].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+  [milestones]);
 
   // Shared persist helper
   const persistEntry = useCallback(async (id: number, content: string, taxonomyId: number, customFields: Record<string, unknown>) => {
@@ -364,6 +305,14 @@ export function GoalsView() {
 
   const handleSelect = (id: number) => setEditingId(prev => prev === id ? null : id);
 
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const activeAddTopic = tab === 'goals' ? allTopics.find(t => t.id === goalTopicId)
+    : tab === 'milestones' ? allTopics.find(t => t.id === milestoneTopicId)
+    : allTopics.find(t => t.id === taskTopicId);
+  const addLabel = tab === 'goals' ? 'New Goal'
+    : tab === 'milestones' ? 'New Milestone'
+    : tab === 'todos' ? 'New Todo' : 'New Task';
+
   if (needsUnlock) {
     return (<><ContentTemplate><EmptyState message="Unlock your journal to view goals" /></ContentTemplate><UnlockDialog onUnlock={handleUnlock} /></>);
   }
@@ -371,65 +320,28 @@ export function GoalsView() {
     return (<ContentTemplate><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}><Spinner size={40} /></div></ContentTemplate>);
   }
 
-  const TAB_OPTIONS = [
-    { value: 'goals', label: 'Goals' },
-    { value: 'milestones', label: 'Milestones' },
-    { value: 'tasks', label: 'Tasks' },
-    { value: 'todos', label: 'Todos' },
-  ];
-
   return (
     <ContentTemplate>
       <ViewHeader
         title="Planning"
         titleTo="/goals"
         onBack={() => navigate('/')}
-        right={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 1, height: 20, background: 'currentColor', opacity: 0.15 }} />
-            <Select
-              value={tab}
-              onChange={e => {
-                const v = e.target.value as typeof tab;
-                setTab(v); setEditingId(null);
-                navigate(v === 'goals' ? '/goals' : `/goals/${v}`, { replace: true });
-              }}
-              style={{ width: 180, border: '1px solid transparent', borderRadius: 4, backgroundColor: 'rgba(0,0,0,0.04)', padding: '6px 24px 6px 8px' }}
-            >
-              {TAB_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </Select>
-            <span style={{ width: 1, height: 20, background: 'currentColor', opacity: 0.15 }} />
-            <Link
-              to="/goals/filter"
-              title="Custom Filters"
-              style={{ display: 'flex', alignItems: 'center', color: 'inherit', fontSize: 15, opacity: 0.5, textDecoration: 'none' }}
-            >
-              <FontAwesomeIcon icon={faSlidersH} />
-            </Link>
-          </div>
-        }
+        right={activeAddTopic ? <HeaderAddButton label={addLabel} onClick={() => setIsAddOpen(true)} /> : undefined}
       />
 
-      {tab === 'goals' && <FilterTabs options={GOAL_FILTERS} active={goalFilter} onChange={setGoalFilter} />}
-      {tab === 'milestones' && <FilterTabs options={MILESTONE_FILTERS} active={milestoneFilter} onChange={setMilestoneFilter} />}
-      {tab === 'tasks' && <FilterTabs options={TASK_FILTERS} active={taskFilter} onChange={setTaskFilter} label="Status" />}
-      {tab === 'tasks' && <FilterTabs options={PRIORITY_FILTERS} active={taskPriorityFilter} onChange={setTaskPriorityFilter} label="Priority" />}
-      {tab === 'todos' && <FilterTabs options={TASK_FILTERS} active={todoFilter} onChange={setTodoFilter} label="Status" />}
-      {tab === 'todos' && <FilterTabs options={PRIORITY_FILTERS} active={todoPriorityFilter} onChange={setTodoPriorityFilter} label="Priority" />}
+      <PlanningTabBar />
 
       <ScrollList $padding="0" $gap="0">
-        {tab === 'goals' && (() => {
-          const t = allTopics.find(tp => tp.id === goalTopicId);
-          return t ? <NewEntryCard topic={t} headerColor={headerColor} onCreated={(id) => setEditingId(id)} /> : null;
-        })()}
-        {tab === 'milestones' && (() => {
-          const t = allTopics.find(tp => tp.id === milestoneTopicId);
-          return t ? <NewEntryCard topic={t} headerColor={headerColor} onCreated={(id) => setEditingId(id)} /> : null;
-        })()}
-        {tab === 'tasks' && (() => {
-          const t = allTopics.find(tp => tp.id === taskTopicId);
-          return t ? <NewEntryCard topic={t} headerColor={headerColor} onCreated={(id) => setEditingId(id)} /> : null;
-        })()}
+        {activeAddTopic && (
+          <NewEntryCard
+            topic={activeAddTopic}
+            headerColor={headerColor}
+            onCreated={(id) => setEditingId(id)}
+            hideButton
+            isOpen={isAddOpen}
+            onOpenChange={setIsAddOpen}
+          />
+        )}
 
         {tab === 'goals' && (orderedGoals.length === 0
           ? <EmptyState message="No goals found." submessage="Create a journal entry with the Goal topic to get started." />
@@ -465,75 +377,59 @@ export function GoalsView() {
             </DndContext>
         )}
 
-        {tab === 'tasks' && (() => {
-          const filteredTasks = tasks.filter(t => {
-            const statusMatch = taskFilter === 'all' ? true
-              : taskFilter === 'completed' ? t.isCompleted
-              : taskFilter === 'in_progress' ? !t.isCompleted && !!(t.customFields as Record<string, unknown>).isInProgress
-              : taskFilter === 'not_started' ? !t.isCompleted && !(t.customFields as Record<string, unknown>).isInProgress
-              : true;
-            const priorityMatch = taskPriorityFilter === 'all' ? true : t.priority === taskPriorityFilter;
-            return statusMatch && priorityMatch;
-          });
-          return filteredTasks.length === 0
-            ? <EmptyState message="No tasks found." submessage={taskFilter === 'all' ? 'Create a journal entry with the Task topic to get started.' : 'No tasks match this filter.'} />
-            : filteredTasks.map(t => {
-                const entry = entries.find(e => e.id === t.id);
-                if (!entry) return null;
-                const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                return (
-                  <EditableEntryCard
-                    key={t.id}
-                    entry={entry}
-                    topic={topic}
-                    headerColor={headerColor}
-                    isEditing={editingId === t.id}
-                    onSelect={() => handleSelect(t.id)}
-                    onClose={() => setEditingId(null)}
-                    onDeleted={() => setEditingId(null)}
-                    metaFields={[]}
-                    onStatusClick={(s) => setTaskFilter(s as TaskFilter)}
-                  />
-                );
-              });
-        })()}
+        {tab === 'tasks' && (tasks.length === 0
+            ? <EmptyState message="No tasks found." submessage="Create a journal entry with the Task topic to get started." />
+            : <DayGroupedList
+                items={tasks}
+                getDate={t => t.createdAt}
+                getKey={t => t.id}
+                renderItem={t => {
+                  const entry = entries.find(e => e.id === t.id);
+                  if (!entry) return null;
+                  const topic = allTopics.find(tp => tp.id === t.taxonomyId);
+                  return (
+                    <EditableEntryCard
+                      entry={entry}
+                      topic={topic}
+                      headerColor={headerColor}
+                      isEditing={editingId === t.id}
+                      onSelect={() => handleSelect(t.id)}
+                      onClose={() => setEditingId(null)}
+                      onDeleted={() => setEditingId(null)}
+                      metaFields={[]}
+                      hideDate
+                    />
+                  );
+                }}
+              />
+        )}
 
-        {tab === 'todos' && (() => {
-          const t = allTopics.find(tp => tp.id === taskTopicId);
-          return t ? <NewEntryCard topic={t} headerColor={headerColor} onCreated={(id) => setEditingId(id)} /> : null;
-        })()}
-        {tab === 'todos' && (() => {
-          const filteredTodos = todos.filter(t => {
-            const statusMatch = todoFilter === 'all' ? true
-              : todoFilter === 'completed' ? t.isCompleted
-              : todoFilter === 'in_progress' ? !t.isCompleted && !!(t.customFields as Record<string, unknown>).isInProgress
-              : todoFilter === 'not_started' ? !t.isCompleted && !(t.customFields as Record<string, unknown>).isInProgress
-              : true;
-            const priorityMatch = todoPriorityFilter === 'all' ? true : t.priority === todoPriorityFilter;
-            return statusMatch && priorityMatch;
-          });
-          return filteredTodos.length === 0
-            ? <EmptyState message="No todos found." submessage={todoFilter === 'all' ? 'Create a task without linking it to a milestone or goal.' : 'No todos match this filter.'} />
-            : filteredTodos.map(t => {
-                const entry = entries.find(e => e.id === t.id);
-                if (!entry) return null;
-                const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                return (
-                  <EditableEntryCard
-                    key={t.id}
-                    entry={entry}
-                    topic={topic}
-                    headerColor={headerColor}
-                    isEditing={editingId === t.id}
-                    onSelect={() => handleSelect(t.id)}
-                    onClose={() => setEditingId(null)}
-                    onDeleted={() => setEditingId(null)}
-                    metaFields={[]}
-                    onStatusClick={(s) => setTodoFilter(s as TaskFilter)}
-                  />
-                );
-              });
-        })()}
+        {tab === 'todos' && (todos.length === 0
+            ? <EmptyState message="No todos found." submessage="Create a task without linking it to a milestone or goal." />
+            : <DayGroupedList
+                items={todos}
+                getDate={t => t.createdAt}
+                getKey={t => t.id}
+                renderItem={t => {
+                  const entry = entries.find(e => e.id === t.id);
+                  if (!entry) return null;
+                  const topic = allTopics.find(tp => tp.id === t.taxonomyId);
+                  return (
+                    <EditableEntryCard
+                      entry={entry}
+                      topic={topic}
+                      headerColor={headerColor}
+                      isEditing={editingId === t.id}
+                      onSelect={() => handleSelect(t.id)}
+                      onClose={() => setEditingId(null)}
+                      onDeleted={() => setEditingId(null)}
+                      metaFields={[]}
+                      hideDate
+                    />
+                  );
+                }}
+              />
+        )}
       </ScrollList>
     </ContentTemplate>
   );

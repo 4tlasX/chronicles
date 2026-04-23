@@ -24,79 +24,91 @@ const STATUS_COLORS: Record<string, string> = {
   archived: '#9ca3af',
 };
 
-const Card = styled.div<{ $isDragging?: boolean; $editing?: boolean }>`
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0;
-  background: transparent;
+const Card = styled.div<{ $isDragging?: boolean; $editing?: boolean; $accentColor?: string }>`
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid var(--rule, #d5d0c5);
+  border-left: 3px solid ${({ $accentColor }) => $accentColor || 'var(--accent)'};
+  border-radius: 6px;
+  margin: 6px var(--s-4, 16px);
+  min-width: 0;
   opacity: ${({ $isDragging }) => $isDragging ? 0.7 : 1};
   box-shadow: ${({ $isDragging }) => $isDragging ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'};
-  min-width: 0;
+  &:first-child { margin-top: 12px; }
 `;
 
-const CardHeader = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 16px 24px 20px;
+const CardHeader = styled.div<{ $active?: boolean }>`
+  padding: 14px var(--s-4, 16px);
   cursor: pointer;
-  @media (max-width: 768px) { padding: 14px 16px 18px; }
-  @media (max-width: 480px) { padding: 12px 12px 16px; gap: 8px; }
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: start;
+  background: ${({ $active }) => $active ? 'var(--paper-well, rgba(0,0,0,0.03))' : 'transparent'};
+  transition: background 120ms;
+  border-radius: var(--r-sm, 2px);
+  &:hover { background: var(--paper-well, rgba(0,0,0,0.03)); }
+  @media (max-width: 768px) { padding: 12px 16px; }
+  @media (max-width: 480px) { padding: 10px 12px; gap: 8px; }
+`;
+
+const DateCol = styled.div`
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  color: var(--ink-4, #8a857c);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: right;
+  line-height: 1.3;
+  padding-right: 7px;
+`;
+
+const DayNum = styled.span`
+  font-family: var(--serif, 'Playfair Display', Georgia, serif);
+  font-style: italic;
+  font-size: 26px;
+  color: var(--ink, #2b2824);
+  letter-spacing: 0;
+  display: block;
+  line-height: 1;
+  margin-bottom: 7px;
+  padding-bottom: 5px;
 `;
 
 const ContentWrap = styled.div`
-  flex: 1;
   min-width: 0;
 `;
 
-const Meta = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin-top: 2px;
+const TitleRow = styled.div`
   display: flex;
+  align-items: flex-start;
   gap: 8px;
-  flex-wrap: wrap;
+  min-width: 0;
 `;
 
 const Title = styled.div<{ $completed?: boolean }>`
   flex: 1;
-  font-size: 17px;
-  font-weight: 500;
-  color: ${({ theme, $completed }) => $completed ? theme.colors.textMuted : theme.colors.text};
+  font-family: var(--sans, 'Lato', sans-serif);
+  font-size: 15px;
+  color: ${({ $completed }) => $completed ? 'var(--ink-4, #8a857c)' : 'var(--ink, #2b2824)'};
+  line-height: 1.4;
   text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-bottom: 3px;
   min-width: 0;
 `;
 
-const TypeLabel = styled.span`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: ${({ theme }) => theme.colors.text};
-  flex-shrink: 0;
-  line-height: 1;
-`;
-
-const MetaGroup = styled.div`
+const FooterMeta = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  gap: 6px;
+  margin-top: 6px;
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4, #8a857c);
+  flex-wrap: wrap;
 `;
 
-const MilestoneCountLabel = styled.div`
-  padding: 16px 24px 8px;
-  @media (max-width: 768px) { padding: 16px 16px 8px; }
-  @media (max-width: 480px) { padding: 16px 12px 8px; }
-  font-size: 14px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.textMuted};
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-`;
 
 const MilestoneSectionLabel = styled.div`
   font-size: 14px;
@@ -194,6 +206,10 @@ const AddBtn = styled.button<{ $color: string }>`
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
+const EditWrapper = styled.div`
+  margin: 20px;
+`;
+
 interface GoalCardProps {
   goal: GoalEntry;
   milestones: MilestoneEntryData[];
@@ -269,20 +285,25 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
   };
 
   return (
-    <Card ref={setNodeRef} style={style} $isDragging={isDragging} $editing={isEditing}>
+    <Card ref={setNodeRef} style={style} $isDragging={isDragging} $editing={isEditing} $accentColor={headerColor}>
       <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing || isDragging}>
-      <CardHeader onClick={onSelect}>
-        <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
+      <CardHeader onClick={onSelect} $active={isEditing}>
         <ContentWrap>
-          <Title $completed={goal.goalStatus === 'completed'}>{goal.title}</Title>
-          <Meta>
-            {goal.targetDate && <span>Target: {new Date(goal.targetDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
-          </Meta>
-          {linkedMilestones.length > 0 && <div style={{ marginTop: 8 }}><ProgressBar percent={progress} color={headerColor} /></div>}
+          <TitleRow>
+            <Title $completed={goal.goalStatus === 'completed'}>{goal.title}</Title>
+            <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
+          </TitleRow>
+          {linkedMilestones.length > 0 && <div style={{ marginTop: 6 }}><ProgressBar percent={progress} color={headerColor} /></div>}
+          {linkedMilestones.length > 0 && (
+            <FooterMeta>
+              <span>{completedCount}/{linkedMilestones.length} milestones</span>
+            </FooterMeta>
+          )}
         </ContentWrap>
       </CardHeader>
 
       {isEditing && (
+        <EditWrapper>
         <InlineEditPanel
           title="Editing Goal"
           editor={<Editor content={editContent} onChange={setEditContent} placeholder="Goal description..." />}
@@ -351,6 +372,7 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
           onSave={handleSave}
           onCancel={onClose}
         />
+        </EditWrapper>
       )}
       </SwipeActions>
     </Card>

@@ -4,9 +4,11 @@ import { useRef, useCallback, type KeyboardEvent } from 'react';
 const Row = styled.div`
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 4px;
   flex-wrap: wrap;
   padding: 8px 24px;
+  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   @media (max-width: 768px) { padding: 8px 16px; }
   @media (max-width: 480px) { padding: 8px 12px; }
 `;
@@ -24,7 +26,7 @@ const Label = styled.span`
 
 const Btn = styled.button<{ $active?: boolean }>`
   padding: 5px 12px;
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-family: var(--ui, 'Montserrat', ${({ theme }) => theme.fontFamily.ui});
   font-size: 13px;
   font-weight: ${({ $active }) => $active ? 600 : 400};
   color: ${({ $active }) =>

@@ -33,11 +33,13 @@ const DateFilterBar = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 8px 16px 4px;
-  padding: 8px 12px;
+  margin: 0;
+  padding: 14px 20px;
   background: transparent;
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: var(--r-sm, 4px);
+  border: none;
+  border-top: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: 0;
   font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
   font-size: 10.5px;
   letter-spacing: 0.1em;

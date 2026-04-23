@@ -12,31 +12,29 @@ const overlay = (theme: { colors: { background: string } }, alpha: number) =>
     ? `rgba(255,255,255,${alpha})`
     : `rgba(0,0,0,${alpha})`;
 
-const Panel = styled.div<{ $hasFields?: boolean }>`
+const Panel = styled.div`
   background: transparent;
-  border-radius: 10px;
-  margin: 0 8px 16px;
-  padding-top: ${({ $hasFields }) => $hasFields ? 36 : 28}px;
-  padding-bottom: 20px;
+  margin: 20px 0;
+  padding: 16px 0 8px;
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-md, 4px);
 
   & input, & select, & textarea {
     border-color: ${({ theme }) => theme.colors.border};
   }
 `;
 
-const EditorWrap = styled.div<{ $bordered?: boolean }>`
-  margin: 8px 24px 0;
-  border: ${({ $bordered, theme }) => $bordered ? `1px solid ${theme.colors.border}` : 'none'};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+const EditorWrap = styled.div`
+  margin: 0 16px 15px;
   overflow: hidden;
-  @media (max-width: 768px) { margin: 0 16px; }
-  @media (max-width: 480px) { margin: 0 12px; }
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: 4px;
 
   /* Compact the TipTap editor for inline use */
   & > div { min-height: unset; }
   && .tiptap {
     min-height: 60px;
-    padding: 8px 12px;
+    padding: 10px 40px 10px 10px;
     font-size: 16px;
     line-height: 1.6;
   }
@@ -46,6 +44,14 @@ const FieldsWrap = styled.div`
   padding: 12px 24px 20px;
   @media (max-width: 768px) { padding: 12px 16px 18px; }
   @media (max-width: 480px) { padding: 10px 12px 16px; }
+`;
+
+const FieldsSection = styled.div`
+  margin: 10px 16px 0;
+  background: transparent;
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-md, 4px);
+  padding: 14px 16px;
 `;
 
 const Actions = styled.div`
@@ -120,11 +126,11 @@ interface InlineEditPanelProps {
 
 export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title, topicSelector }: InlineEditPanelProps) {
   return (
-    <Panel $hasFields={!!fields}>
+    <Panel>
       {title && <EditTitle>{title}</EditTitle>}
       {topicSelector && <FieldsWrap>{topicSelector}</FieldsWrap>}
-      <EditorWrap $bordered={!!fields}>{editor}</EditorWrap>
-      {fields && <FieldsWrap>{fields}</FieldsWrap>}
+      <EditorWrap>{editor}</EditorWrap>
+      {fields && <FieldsSection>{fields}</FieldsSection>}
       <Actions>
         <SaveBtn
           onClick={onSave}

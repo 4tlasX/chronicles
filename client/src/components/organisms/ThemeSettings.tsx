@@ -71,17 +71,7 @@ export function ThemeSettings() {
 
   return (
     <>
-      <Section>
-        <SectionTitle>Theme</SectionTitle>
-        <ThemeModeToggle>
-          <ModeButton $active={themeMode === 'light'} $mode="light" onClick={() => handleThemeModeChange('light')}>
-            Light
-          </ModeButton>
-          <ModeButton $active={themeMode === 'dark'} $mode="dark" onClick={() => handleThemeModeChange('dark')}>
-            Dark
-          </ModeButton>
-        </ThemeModeToggle>
-      </Section>
+      {/* Dark mode disabled until fully styled — forced light below */}
 
       <Section>
         <SectionTitle>Header Color</SectionTitle>

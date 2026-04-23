@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faMinus, faTrash, faGripVertical } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faGripVertical } from '@fortawesome/free-solid-svg-icons';
 import { ProgressBar } from '../atoms/ProgressBar.js';
 import { Badge } from '../atoms/Badge.js';
 import { Checkbox } from '../atoms/Checkbox.js';
@@ -16,14 +16,17 @@ import { useEntriesStore } from '../../stores/entriesStore.js';
 import { entries as entriesApi } from '../../services/api.js';
 import type { MilestoneEntryData, TaskEntryData } from '../../types/goals.js';
 
-const Card = styled.div<{ $editing?: boolean; $dragging?: boolean }>`
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0;
-  background: ${({ $dragging, theme }) => $dragging ? theme.colors.surfaceHover : 'transparent'};
-  opacity: ${({ $dragging }) => $dragging ? 0.6 : 1};
+const Card = styled.div<{ $editing?: boolean; $dragging?: boolean; $accentColor?: string }>`
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid var(--rule, #d5d0c5);
+  border-left: 3px solid ${({ $accentColor }) => $accentColor || 'var(--accent)'};
+  border-radius: 6px;
+  margin: 6px var(--s-4, 16px);
   min-width: 0;
+  opacity: ${({ $dragging }) => $dragging ? 0.6 : 1};
+  box-shadow: ${({ $dragging }) => $dragging ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'};
   touch-action: manipulation;
+  &:first-child { margin-top: 12px; }
 `;
 
 const DragHandle = styled.button`
@@ -44,76 +47,78 @@ const DragHandle = styled.button`
   &:active { cursor: grabbing; }
 `;
 
-const CardHeader = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 16px 24px 20px;
+const CardHeader = styled.div<{ $active?: boolean }>`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 14px var(--s-4, 16px);
   cursor: pointer;
-  @media (max-width: 768px) { padding: 14px 16px 18px; }
-  @media (max-width: 480px) { padding: 12px 12px 16px; gap: 6px; flex-wrap: wrap; }
+  background: ${({ $active }) => $active ? 'var(--paper-well, rgba(0,0,0,0.03))' : 'transparent'};
+  transition: background 120ms;
+  border-radius: var(--r-sm, 2px);
+  &:hover { background: var(--paper-well, rgba(0,0,0,0.03)); }
+  @media (max-width: 768px) { padding: 12px 16px; }
+  @media (max-width: 480px) { padding: 10px 12px; gap: 8px; }
+`;
+
+const DateCol = styled.div`
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  color: var(--ink-4, #8a857c);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: right;
+  line-height: 1.3;
+  padding-right: 7px;
+`;
+
+const DayNum = styled.span`
+  font-family: var(--serif, 'Playfair Display', Georgia, serif);
+  font-style: italic;
+  font-size: 26px;
+  color: var(--ink, #2b2824);
+  letter-spacing: 0;
+  display: block;
+  line-height: 1;
+  margin-bottom: 7px;
+  padding-bottom: 5px;
 `;
 
 const ContentWrap = styled.div`
-  flex: 1;
   min-width: 0;
 `;
 
-const Meta = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin-top: 2px;
+const TitleRow = styled.div`
   display: flex;
+  align-items: flex-start;
   gap: 8px;
-  flex-wrap: wrap;
-  @media (max-width: 480px) { display: none; }
+  min-width: 0;
 `;
 
-const MilestoneCheckButton = styled.button<{ $state: 'none' | 'progress' | 'done'; $color: string }>`
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
-  border-radius: 50%;
-  border: 2px solid ${({ $state, $color, theme }) =>
-    $state === 'done' ? $color :
-    $state === 'progress' ? $color :
-    theme.colors.border};
-  background: ${({ $state, $color }) =>
-    $state === 'done' ? $color :
-    $state === 'progress' ? `${$color}30` :
-    'transparent'};
+const FooterMeta = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  padding: 0;
-  transition: all 0.15s;
-  color: ${({ $state }) => $state === 'done' ? 'white' : 'inherit'};
-  font-size: 12px;
-  &:hover { opacity: 0.8; }
+  gap: 6px;
+  margin-top: 6px;
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4, #8a857c);
+  flex-wrap: wrap;
 `;
+
 
 const Title = styled.div<{ $completed?: boolean }>`
   flex: 1;
-  font-size: 17px;
-  font-weight: 500;
-  color: ${({ theme, $completed }) => $completed ? theme.colors.textMuted : theme.colors.text};
+  font-family: var(--sans, 'Lato', sans-serif);
+  font-size: 15px;
+  color: ${({ $completed }) => $completed ? 'var(--ink-4, #8a857c)' : 'var(--ink, #2b2824)'};
+  line-height: 1.4;
   text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-bottom: 3px;
   min-width: 0;
-`;
-
-const TypeLabel = styled.span`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: ${({ theme }) => theme.colors.text};
-  flex-shrink: 0;
 `;
 
 const TaskRow = styled.div`
@@ -150,15 +155,6 @@ const RemoveBtn = styled.button`
   &:hover { color: ${({ theme }) => theme.colors.text}; background: rgba(0,0,0,0.06); }
 `;
 
-const TaskCountLabel = styled.div`
-  padding: 16px 24px 8px;
-  @media (max-width: 768px) { padding: 16px 16px 8px; }
-  @media (max-width: 480px) { padding: 16px 12px 8px; }
-  font-size: 14px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.textMuted};
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-`;
 
 const TaskSectionLabel = styled.div`
   font-size: 14px;
@@ -171,20 +167,6 @@ const TaskSectionLabel = styled.div`
   margin-bottom: 4px;
 `;
 
-const LinkedGoalLabel = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: ${({ theme }) => theme.colors.textMuted};
-  flex-shrink: 0;
-  white-space: nowrap;
-  @media (max-width: 480px) { display: none; }
-`;
 
 const AddTaskRow = styled.form`
   display: flex;
@@ -235,6 +217,10 @@ const AddTaskBtn = styled.button<{ $color: string }>`
   white-space: nowrap;
   &:hover { background: rgba(0,0,0,0.04); }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
+`;
+
+const EditWrapper = styled.div`
+  margin: 20px;
 `;
 
 interface MilestoneCardProps {
@@ -293,33 +279,6 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
   const completedCount = linkedTasks.filter(t => t.isCompleted).length;
   const progress = linkedTasks.length > 0 ? Math.round((completedCount / linkedTasks.length) * 100) : 0;
 
-  // Three-click cycle: not started → in progress → completed → not started
-  const checkState = milestone.isCompleted ? 'done' : milestone.milestoneStatus === 'in_progress' ? 'progress' : 'none';
-
-  const handleStatusCycle = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    let newCf: Record<string, unknown>;
-    if (checkState === 'none') {
-      newCf = { ...milestone.customFields, milestoneStatus: 'in_progress', isCompleted: false };
-    } else if (checkState === 'progress') {
-      newCf = { ...milestone.customFields, milestoneStatus: 'completed', isCompleted: true };
-    } else {
-      newCf = { ...milestone.customFields, milestoneStatus: 'not_started', isCompleted: false };
-    }
-    const metadata: Record<string, unknown> = { _taxonomyId: milestone.taxonomyId, _customFields: newCf };
-    try {
-      const encrypted = await encryptPost(milestone.content, metadata);
-      await entriesApi.update(milestone.id, {
-        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
-        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
-        taxonomyIds: [milestone.taxonomyId],
-      });
-      updateDecryptedEntry(milestone.id, { metadata });
-    } catch (err) {
-      console.error('Milestone status update failed:', err);
-    }
-  };
-
   const handleSave = async () => {
     setSaving(true); setStatus('');
     try {
@@ -343,35 +302,26 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
   };
 
   return (
-    <Card ref={setNodeRef} style={dragStyle} $editing={isEditing} $dragging={isDragging}>
+    <Card ref={setNodeRef} style={dragStyle} $editing={isEditing} $dragging={isDragging} $accentColor={headerColor}>
       <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing || isDragging}>
-      <CardHeader onClick={onSelect}>
-        <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} title="Drag to reorder">
-          <FontAwesomeIcon icon={faGripVertical} />
-        </DragHandle>
-        <MilestoneCheckButton
-          $state={checkState}
-          $color={headerColor}
-          onClick={handleStatusCycle}
-          title={checkState === 'none' ? 'Mark In Progress' : checkState === 'progress' ? 'Mark Completed' : 'Mark Not Started'}
-        >
-          {checkState === 'done' && <FontAwesomeIcon icon={faCheck} />}
-          {checkState === 'progress' && <FontAwesomeIcon icon={faMinus} />}
-        </MilestoneCheckButton>
+      <CardHeader onClick={onSelect} $active={isEditing}>
         <ContentWrap>
-          <Title $completed={milestone.isCompleted}>{milestone.title}</Title>
-          <Meta>
-            {milestone.targetDate && <span>Target: {new Date(milestone.targetDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
-          </Meta>
-          {linkedTasks.length > 0 && <div style={{ marginTop: 8 }}><ProgressBar percent={progress} color={headerColor} /></div>}
+          <TitleRow>
+            <Title $completed={milestone.isCompleted}>{milestone.title}</Title>
+            <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} title="Drag to reorder">
+              <FontAwesomeIcon icon={faGripVertical} />
+            </DragHandle>
+          </TitleRow>
+          {linkedTasks.length > 0 && <div style={{ marginTop: 6 }}><ProgressBar percent={progress} color={headerColor} /></div>}
+          <FooterMeta>
+            {goalTitle && <><span>Goal: {goalTitle}</span><span>·</span></>}
+            <span>{milestone.isCompleted ? 'Completed' : milestone.milestoneStatus === 'in_progress' ? 'In Progress' : 'Not Started'}</span>
+            {linkedTasks.length > 0 && <><span>·</span><span>{completedCount}/{linkedTasks.length} tasks</span></>}
+          </FooterMeta>
         </ContentWrap>
-        {goalTitle && !isEditing && (
-          <LinkedGoalLabel>
-            Goal: {goalTitle}
-          </LinkedGoalLabel>
-        )}
       </CardHeader>
       {isEditing && (
+        <EditWrapper>
         <InlineEditPanel
           title="Editing Milestone"
           editor={<Editor content={editContent} onChange={setEditContent} placeholder="Milestone description..." />}
@@ -439,6 +389,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
           onSave={handleSave}
           onCancel={onClose}
         />
+        </EditWrapper>
       )}
       </SwipeActions>
     </Card>

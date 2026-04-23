@@ -33,7 +33,7 @@ const EmptyState = styled.div`
 
 const DateGroupHeader = styled.div`
   padding: var(--s-4, 16px) var(--s-4, 16px) var(--s-4, 16px);
-  font-family: var(--serif, 'Playfair Display', Georgia, serif);
+  font-family: var(--sans, 'Lato', sans-serif);
   font-style: italic;
   font-size: 16px;
   color: var(--ink-3, #6b645a);

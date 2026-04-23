@@ -68,13 +68,13 @@ const Row = styled.div<{ $active?: boolean }>`
   grid-template-columns: 44px 1fr;
   gap: 10px;
   align-items: start;
-  background: ${({ $active }) => $active ? 'var(--paper-surface, #f7f4ee)' : 'transparent'};
+  background: ${({ $active }) => $active ? 'var(--paper-well, rgba(0,0,0,0.04))' : 'transparent'};
   border-left: 2px solid ${({ $active }) => $active ? 'var(--accent-stroke, #2b2824)' : 'transparent'};
   padding-left: ${({ $active }) => $active ? 'calc(var(--s-4, 16px) - 2px)' : 'var(--s-4, 16px)'};
   transition: background 120ms;
 
   &:hover {
-    background: var(--paper-surface, #f7f4ee);
+    background: var(--paper-hover, rgba(0,0,0,0.02));
   }
 `;
 
@@ -90,16 +90,17 @@ const DateStamp = styled.div`
 `;
 
 const DayNum = styled.span`
-  font-family: var(--serif, 'Playfair Display', Georgia, serif);
-  font-style: italic;
-  font-size: 26px;
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 18px;
   color: var(--ink, #2b2824);
   letter-spacing: 0;
   display: block;
   line-height: 1;
-  margin-top: 0;
-  margin-bottom: 7px;
+  margin-top: 4px;
+  margin-bottom: 0;
   padding-bottom: 5px;
+  font-style: italic;
 `;
 
 const ContentArea = styled.div`
@@ -107,11 +108,11 @@ const ContentArea = styled.div`
 `;
 
 const TitleText = styled.div<{ $completed?: boolean }>`
-  font-family: var(--serif, 'Playfair Display', Georgia, serif);
+  font-family: var(--sans, 'Lato', sans-serif);
   font-style: italic;
   font-size: 15px;
   color: var(--ink, #2b2824);
-  line-height: 1.35;
+  line-height: 1.4;
   text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
   margin: 0 0 3px;
 `;
@@ -191,7 +192,6 @@ export function EntryCard({
           {topicName && (
             <>
               <TopicDot
-                $color={topicColor || undefined}
                 onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }}
               />
               <span
@@ -200,7 +200,6 @@ export function EntryCard({
               >{topicName}</span>
             </>
           )}
-          {readTime && <><span>·</span><span>{readTime}</span></>}
           {isFavorite && (
             <BookmarkIcon
               onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}

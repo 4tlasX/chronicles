@@ -18,15 +18,17 @@ const Body = styled.div`
 
 interface TwoPanelTemplateProps {
   children: ReactNode;
+  topBar?: ReactNode;
 }
 
-/** Full-height template with Header + two-panel content area (sidebar + main). */
-export function TwoPanelTemplate({ children }: TwoPanelTemplateProps) {
+/** Full-height template with Header + optional full-width topBar + two-panel content area (sidebar + main). */
+export function TwoPanelTemplate({ children, topBar }: TwoPanelTemplateProps) {
   return (
     <>
       <Background />
       <Layout>
         <Header />
+        {topBar}
         <Body>{children}</Body>
       </Layout>
     </>

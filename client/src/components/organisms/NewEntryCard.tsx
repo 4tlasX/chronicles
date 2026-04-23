@@ -37,27 +37,33 @@ const AddButton = styled.button<{ $color: string }>`
   align-items: center;
   gap: 6px;
   padding: 16px 24px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--ui, 'Montserrat', sans-serif);
   font-size: 13px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: ${({ theme }) => theme.colors.text};
-  background: none;
+  color: var(--ink, ${({ theme }) => theme.colors.text});
+  background: transparent;
   border: none;
-  border-radius: 0;
+  border-radius: var(--r-sm, 2px);
   cursor: pointer;
   width: 100%;
+  min-height: 52px;
+  transition: background 120ms;
+  &:hover { background: var(--paper-well, rgba(0,0,0,0.03)); }
   @media (max-width: 768px) { padding: 14px 16px; }
   @media (max-width: 480px) { padding: 12px 12px; }
-  background: rgba(0, 0, 0, 0.04);
 `;
 
-const Card = styled.div`
-  border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0;
+const Card = styled.div<{ $accentColor?: string }>`
   background: transparent;
+  border: none;
+  margin: 6px 0;
+  &:first-child { margin-top: 12px; }
+`;
+
+const EditWrapper = styled.div`
+  margin: 20px;
 `;
 
 interface NewEntryCardProps {
@@ -65,9 +71,14 @@ interface NewEntryCardProps {
   topic: Topic;
   headerColor: string;
   onCreated?: (id: number) => void;
+  /** Hide the built-in trigger button — caller provides their own */
+  hideButton?: boolean;
+  /** Controlled open state (only used when hideButton is true) */
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function NewEntryCard({ topic, headerColor, onCreated }: NewEntryCardProps) {
+export function NewEntryCard({ topic, headerColor, onCreated, hideButton, isOpen: isOpenProp, onOpenChange }: NewEntryCardProps) {
   const { encryptPost } = useEncryption();
   const cycleTrackingEnabled = useUIStore(s => s.cycleTrackingEnabled);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
@@ -93,7 +104,12 @@ export function NewEntryCard({ topic, headerColor, onCreated }: NewEntryCardProp
       });
   }, [entries, allTopics]);
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpenInternal, setIsOpenInternal] = useState(false);
+  const isOpen = hideButton ? !!isOpenProp : isOpenInternal;
+  const setIsOpen = (v: boolean) => {
+    if (hideButton) { onOpenChange?.(v); }
+    else { setIsOpenInternal(v); }
+  };
   const [content, setContent] = useState('');
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
@@ -162,24 +178,29 @@ export function NewEntryCard({ topic, headerColor, onCreated }: NewEntryCardProp
   };
 
   if (!isOpen) {
+    if (hideButton) return null;
     return (
-      <AddButton $color={headerColor} onClick={() => setIsOpen(true)}>
-        <FontAwesomeIcon icon={faPlus} /> New {topic.name} Entry
-      </AddButton>
+      <Card $accentColor={headerColor}>
+        <AddButton $color={headerColor} onClick={() => setIsOpen(true)}>
+          <FontAwesomeIcon icon={faPlus} /> New {topic.name} Entry
+        </AddButton>
+      </Card>
     );
   }
 
   return (
-    <Card>
-      <InlineEditPanel
-        editor={<Editor content={content} onChange={setContent} placeholder={`Write a new ${topic.name.toLowerCase()} entry...`} />}
-        fields={renderFields()}
-        accentColor={headerColor}
-        saving={saving}
-        status={status}
-        onSave={handleSave}
-        onCancel={handleCancel}
-      />
+    <Card $accentColor={headerColor}>
+      <EditWrapper>
+        <InlineEditPanel
+          editor={<Editor content={content} onChange={setContent} placeholder={`Write a new ${topic.name.toLowerCase()} entry...`} />}
+          fields={renderFields()}
+          accentColor={headerColor}
+          saving={saving}
+          status={status}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
+      </EditWrapper>
     </Card>
   );
 }

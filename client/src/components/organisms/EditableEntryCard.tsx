@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { InlineEditPanel } from '../molecules/InlineEditPanel.js';
 import { TopicSelector } from './TopicSelector.js';
 import { Editor } from './Editor.js';
@@ -12,6 +10,7 @@ import { FoodFields } from '../molecules/fields/FoodFields.js';
 import { MedicationFields } from '../molecules/fields/MedicationFields.js';
 import { SymptomFields } from '../molecules/fields/SymptomFields.js';
 import { ExerciseFields } from '../molecules/fields/ExerciseFields.js';
+import { AllergyFields } from '../molecules/fields/AllergyFields.js';
 import { EventFields } from '../molecules/fields/EventFields.js';
 import { MeetingFields } from '../molecules/fields/MeetingFields.js';
 import { WellnessFields, type WellnessFieldValues } from '../molecules/fields/WellnessFields.js';
@@ -22,7 +21,6 @@ import { useEncryption } from '../../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { entries as entriesApi } from '../../services/api.js';
-import { getTopicIcon } from '../../utils/topicIcons.js';
 import { stripHtml } from '../../utils/stripHtml.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 import type { Topic } from '../../types/topics.js';
@@ -33,7 +31,7 @@ const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
   food: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
-  wellness: 'wellness',
+  wellness: 'wellness', allergy: 'allergy',
 };
 
 function getCustomType(topicName: string | undefined): string | null {
@@ -45,128 +43,111 @@ function getCustomType(topicName: string | undefined): string | null {
 
 const TopicSelectorBorder = styled.div`
   display: inline-block;
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
 `;
 
-const Card = styled.div<{ $editing?: boolean }>`
-  border: none;
-  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: 0;
-  background: transparent;
+const Card = styled.div<{ $accentColor?: string; $flat?: boolean; $bare?: boolean }>`
+  background: ${({ theme }) => theme.colors.surface};
+  border: ${({ $bare }) => $bare ? 'none' : '1px solid var(--rule, #d5d0c5)'};
+  border-left: ${({ $bare, $accentColor }) => $bare ? 'none' : `3px solid ${$accentColor || 'var(--accent)'}`};
+  border-radius: ${({ $bare }) => $bare ? '0' : '6px'};
+  margin: ${({ $flat, $bare }) => $bare ? '0' : ($flat ? '0 0 8px 0' : '6px var(--s-4, 16px)')};
   min-width: 0;
+  ${({ $flat, $bare }) => !$flat && !$bare && `&:first-child { margin-top: 12px; }`}
 `;
 
-const PreviewRow = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  width: 100%;
-  padding: 16px 24px 20px;
-  text-align: left;
-  background: none;
-  border: none;
+const EditWrapper = styled.div<{ $compact?: boolean }>`
+  margin: ${({ $compact }) => $compact ? '20px 0' : '20px'};
+`;
+
+const Row = styled.div<{ $centered?: boolean; $active?: boolean; $noDate?: boolean }>`
+  padding: 14px var(--s-4, 16px);
   cursor: pointer;
-  transition: background 120ms ease;
-  &:hover { background: var(--paper-hover, rgba(0,0,0,0.02)); }
-  @media (max-width: 768px) { padding: 14px 16px 18px; }
-  @media (max-width: 480px) { padding: 12px 12px 16px; gap: 8px; flex-wrap: wrap; }
+  display: grid;
+  grid-template-columns: ${({ $noDate }) => $noDate ? '1fr' : '44px 1fr'};
+  gap: 10px;
+  align-items: ${({ $centered }) => $centered ? 'center' : 'start'};
+  background: ${({ $active }) => $active ? 'var(--paper-well, rgba(0,0,0,0.03))' : 'transparent'};
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background 120ms;
+  min-height: 60px;
+  border-radius: var(--r-sm, 2px);
+  &:hover { background: var(--paper-well, rgba(0,0,0,0.03)); }
+  @media (max-width: 768px) { padding: 12px 16px; }
+  @media (max-width: 480px) { padding: 10px 12px; gap: 8px; min-height: 52px; }
 `;
 
-const IconWrap = styled.span`
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 14px;
-  margin-top: 3px;
-  flex-shrink: 0;
+const DateCol = styled.div`
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  color: var(--ink-4, #8a857c);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: right;
+  line-height: 1.3;
+  padding-right: 7px;
 `;
 
-const Content = styled.div`
-  flex: 1;
+const DayNum = styled.span`
+  font-family: var(--serif, 'Playfair Display', Georgia, serif);
+  font-style: italic;
+  font-size: 26px;
+  color: var(--ink, #2b2824);
+  letter-spacing: 0;
+  display: block;
+  line-height: 1;
+  margin-bottom: 7px;
+  padding-bottom: 5px;
+`;
+
+
+const ContentArea = styled.div`
   min-width: 0;
 `;
 
-const Preview = styled.div<{ $done?: boolean }>`
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
-  font-size: 14.5px;
-  line-height: 1.55;
-  color: ${({ $done }) => $done ? 'var(--ink-4)' : 'var(--ink-2)'};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+const TitleText = styled.div<{ $done?: boolean }>`
+  font-family: var(--sans, 'Lato', sans-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: ${({ $done }) => $done ? 'var(--ink-4, #8a857c)' : 'var(--ink, #2b2824)'};
+  line-height: 1.4;
   text-decoration: ${({ $done }) => $done ? 'line-through' : 'none'};
+  margin-bottom: 3px;
 `;
 
-const Meta = styled.div`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
-  margin-top: 4px;
+const PreviewText = styled.div`
+  font-family: var(--sans, 'Lato', sans-serif);
+  font-size: 12.5px;
+  color: var(--ink-3, #6b645a);
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-bottom: 3px;
+`;
+
+const FooterMeta = styled.div`
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4, #8a857c);
   flex-wrap: wrap;
 `;
 
-const DateLabel = styled.span`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+const TopicDot = styled.span<{ $color?: string }>`
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: ${({ $color }) => $color || 'var(--ink-3, #6b645a)'};
   flex-shrink: 0;
-  margin-top: 2px;
-  margin-left: 12px;
-`;
-
-const TaskCheckButton = styled.button<{ $state: 'none' | 'progress' | 'done'; $color: string }>`
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
-  border-radius: var(--r-sm, 2px);
-  border: 1px solid ${({ $state, $color }) =>
-    $state !== 'none' ? $color : 'var(--ink-3)'};
-  background: ${({ $state, $color }) =>
-    $state === 'done' ? $color :
-    $state === 'progress' ? `${$color}30` :
-    'transparent'};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin-top: 2px;
-  padding: 0;
-  transition: all 0.15s;
-  color: ${({ $state }) => $state === 'done' ? 'var(--paper-surface)' : 'var(--ink)'};
-  font-size: 11px;
-  &:hover { opacity: 0.8; }
-`;
-
-const RightInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  flex-shrink: 0;
-  @media (max-width: 480px) { display: none; }
-`;
-
-const StatusLabel = styled.span<{ $clickable?: boolean }>`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
-  font-size: 10.5px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
-  ${({ $clickable }) => $clickable && `cursor: pointer; &:hover { opacity: 0.6; }`}
-`;
-
-const DeadlineLabel = styled.span<{ $overdue?: boolean }>`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-  color: ${({ $overdue }) => $overdue ? 'var(--danger)' : 'var(--ink-4)'};
-  white-space: nowrap;
-  @media (max-width: 480px) { white-space: normal; }
+  display: inline-block;
 `;
 
 /* ── Component ── */
@@ -183,9 +164,11 @@ interface EditableEntryCardProps {
   onStatusClick?: (status: string) => void;
   showAsPlain?: boolean;
   hidePreview?: boolean;
+  compactMargin?: boolean;
+  hideDate?: boolean;
 }
 
-export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain, hidePreview }: EditableEntryCardProps) {
+export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain, hidePreview, compactMargin, hideDate }: EditableEntryCardProps) {
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const removeEntry = useEntriesStore(s => s.removeEntry);
@@ -219,7 +202,9 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   const customType = getCustomType(topic?.name);
   const preview = stripHtml(entry.content).slice(0, 120) || 'Empty entry';
   const d = new Date(entry.createdAt);
-  const dateStr = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+  const dayNum = d.getDate();
+  const monthCode = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   const [editContent, setEditContent] = useState(entry.content);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>(cf);
@@ -235,32 +220,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   const editingCustomType = getCustomType(editingTopic?.name);
   const userFieldDefs = selectedTopicId ? (topicCustomFields[selectedTopicId] ?? []) : [];
 
-  // Task status: not started → in progress → completed → not started
   const taskState = cf.isCompleted ? 'done' : cf.isInProgress ? 'progress' : 'none';
-
-  const handleTaskCycle = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    let newCf: Record<string, unknown>;
-    if (!cf.isInProgress && !cf.isCompleted) {
-      newCf = { ...cf, isInProgress: true, isCompleted: false };
-    } else if (cf.isInProgress && !cf.isCompleted) {
-      newCf = { ...cf, isInProgress: false, isCompleted: true };
-    } else {
-      newCf = { ...cf, isInProgress: false, isCompleted: false };
-    }
-    const metadata: Record<string, unknown> = { _taxonomyId: taxonomyId, _customFields: newCf };
-    try {
-      const encrypted = await encryptPost(entry.content, metadata);
-      await entriesApi.update(entry.id, {
-        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
-        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
-        taxonomyIds: taxonomyId ? [taxonomyId] : [],
-      });
-      updateDecryptedEntry(entry.id, { metadata });
-    } catch (err) {
-      console.error('Task status update failed:', err);
-    }
-  };
 
   const wellnessAutoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wellnessAutoSaveDoRef = useRef<() => Promise<void>>(async () => {});
@@ -360,6 +320,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
         case 'medication': return <MedicationFields values={{ dosage: '', frequency: 'once_daily', scheduleTimes: ['08:00'], isActive: true, notes: '', ...customFields } as never} onChange={onChange as never} />;
         case 'symptom': return <SymptomFields values={{ severity: 5, occurredDate: '', occurredTime: '', duration: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
         case 'exercise': return <ExerciseFields values={{ exerciseType: 'running', duration: '', intensity: 'medium', distance: '', distanceUnit: 'miles', calories: '', performedDate: '', performedTime: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
+        case 'allergy': return <AllergyFields values={{ allergen: '', severity: 5, reaction: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
         case 'event': return <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
         case 'meeting': return <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
         case 'wellness': return <WellnessFields values={{ date: '', waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0, ...customFields } as WellnessFieldValues} onChange={v => setCustomFields(v as unknown as Record<string, unknown>)} cycleTrackingEnabled={cycleTrackingEnabled} onAutoSave={scheduleWellnessAutoSave} />;
@@ -378,74 +339,80 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   };
 
   return (
-    <Card $editing={isEditing}>
+    <Card $accentColor={headerColor} $flat={hideDate} $bare={hidePreview}>
       {!hidePreview && <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing}>
-      <PreviewRow role="button" tabIndex={0} onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}>
-        {customType === 'task' && !showAsPlain ? (
-          <TaskCheckButton
-            $state={taskState}
-            $color={headerColor}
-            onClick={handleTaskCycle}
-            title={taskState === 'none' ? 'Click: In Progress' : taskState === 'progress' ? 'Click: Completed' : 'Click: Not Started'}
-          >
-            {taskState === 'done' && <FontAwesomeIcon icon={faCheck} />}
-            {taskState === 'progress' && <FontAwesomeIcon icon={faMinus} />}
-          </TaskCheckButton>
-        ) : topic && (
-          <IconWrap>
-            <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
-          </IconWrap>
+      <Row role="button" tabIndex={0} onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }} $centered={!showAsPlain} $active={isEditing} $noDate={hideDate}>
+        {!hideDate && (
+          <DateCol>
+            <DayNum>{dayNum}</DayNum>
+            {monthCode}<br />{timeStr}
+          </DateCol>
         )}
-        <Content>
-          <Preview $done={taskState === 'done'}>{preview}</Preview>
+        <ContentArea>
+          <TitleText $done={taskState === 'done'}>{preview}</TitleText>
           {metaValues.length > 0 && (
-            <Meta>{metaValues.map(m => <span key={m.label}>{m.label}: {m.value}</span>)}</Meta>
+            <PreviewText>{metaValues.map(m => `${m.label}: ${m.value}`).join(' · ')}</PreviewText>
           )}
-        </Content>
-        {(customType === 'task' || customType === 'goal' || customType === 'milestone') && !showAsPlain ? (
-          <RightInfo>
-            <StatusLabel $clickable={!!onStatusClick} onClick={onStatusClick ? (e) => {
-              e.stopPropagation();
-              const s = cf.isCompleted || cf.goalStatus === 'completed' ? 'completed' :
-                cf.isInProgress || cf.milestoneStatus === 'in_progress' ? 'in_progress' : 'not_started';
-              onStatusClick(s);
-            } : undefined}>
-              {cf.isCompleted || cf.goalStatus === 'completed' ? 'Completed' :
-               cf.isInProgress || cf.milestoneStatus === 'in_progress' ? 'In Progress' :
-               'Not Started'}
-            </StatusLabel>
-            {!!(cf.deadline || cf.targetDate) && (
-              <DeadlineLabel $overdue={new Date(cf.deadline as string || cf.targetDate as string) < new Date()}>
-                {(() => { const dt = new Date((cf.deadline || cf.targetDate) as string + 'T00:00:00'); return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()}`; })()}
-              </DeadlineLabel>
+          <FooterMeta>
+            {topic && customType !== 'task' && customType !== 'medication' && customType !== 'food' && customType !== 'symptom' && customType !== 'exercise' && customType !== 'allergy' && (
+              <>
+                <TopicDot $color={topic.color ?? undefined} />
+                <span>{topic.name}</span>
+              </>
             )}
-          </RightInfo>
-        ) : (
-          <DateLabel>{dateStr}</DateLabel>
-        )}
-      </PreviewRow>
+            {(customType === 'goal' || customType === 'milestone') && !showAsPlain && (
+              <>
+                {topic && <span>·</span>}
+                <span
+                  style={{ cursor: onStatusClick ? 'pointer' : 'default' }}
+                  onClick={onStatusClick ? (e) => {
+                    e.stopPropagation();
+                    const s = cf.isCompleted || cf.goalStatus === 'completed' ? 'completed' :
+                      cf.isInProgress || cf.milestoneStatus === 'in_progress' ? 'in_progress' : 'not_started';
+                    onStatusClick(s);
+                  } : undefined}
+                >
+                  {cf.isCompleted || cf.goalStatus === 'completed' ? 'Completed' :
+                   cf.isInProgress || cf.milestoneStatus === 'in_progress' ? 'In Progress' :
+                   'Not Started'}
+                </span>
+              </>
+            )}
+            {!!(cf.deadline || cf.targetDate) && (
+              <>
+                <span>·</span>
+                <span style={{ color: new Date((cf.deadline || cf.targetDate) as string + 'T00:00:00') < new Date() ? 'var(--danger)' : undefined }}>
+                  {(() => { const dt = new Date(((cf.deadline || cf.targetDate) as string) + 'T00:00:00'); return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()}`; })()}
+                </span>
+              </>
+            )}
+          </FooterMeta>
+        </ContentArea>
+      </Row>
       </SwipeActions>}
 
       {isEditing && (
-        <InlineEditPanel
-          title={editingTopic ? `Editing ${editingTopic.name}` : 'Edit entry'}
-          topicSelector={
-            <TopicSelectorBorder>
-              <TopicSelector
-                selectedId={selectedTopicId || null}
-                onSelect={handleTopicChange}
-                topics={allTopics}
-              />
-            </TopicSelectorBorder>
-          }
-          editor={<Editor content={editContent} onChange={setEditContent} placeholder="Edit entry..." />}
-          fields={renderFields()}
-          accentColor={headerColor}
-          saving={saving}
-          status={status}
-          onSave={handleSave}
-          onCancel={onClose}
-        />
+        <EditWrapper $compact={compactMargin}>
+          <InlineEditPanel
+            title={editingTopic ? `Editing ${editingTopic.name}` : 'Edit entry'}
+            topicSelector={
+              <TopicSelectorBorder>
+                <TopicSelector
+                  selectedId={selectedTopicId || null}
+                  onSelect={handleTopicChange}
+                  topics={allTopics}
+                />
+              </TopicSelectorBorder>
+            }
+            editor={<Editor content={editContent} onChange={setEditContent} placeholder="Edit entry..." />}
+            fields={renderFields()}
+            accentColor={headerColor}
+            saving={saving}
+            status={status}
+            onSave={handleSave}
+            onCancel={onClose}
+          />
+        </EditWrapper>
       )}
     </Card>
   );

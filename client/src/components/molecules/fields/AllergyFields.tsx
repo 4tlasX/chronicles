@@ -2,7 +2,6 @@ import styled from 'styled-components';
 import { RangeInput } from '../../atoms/RangeInput.js';
 import { TextInput } from '../../atoms/TextInput.js';
 import { Textarea } from '../../atoms/Textarea.js';
-import { DateTimeInput } from '../../atoms/DateTimeInput.js';
 import { FormField } from '../FormField.js';
 import type { AllergyFieldValues } from '../../../types/fields.js';
 export type { AllergyFieldValues } from '../../../types/fields.js';
@@ -42,14 +41,6 @@ export function AllergyFields({ values, onChange }: AllergyFieldsProps) {
           value={values.reaction}
           onChange={e => onChange({ ...values, reaction: e.target.value })}
           placeholder="e.g. Hives, Swelling, Difficulty breathing"
-        />
-      </FormField>
-      <FormField label="When Occurred">
-        <DateTimeInput
-          dateValue={values.occurredDate}
-          timeValue={values.occurredTime}
-          onDateChange={v => onChange({ ...values, occurredDate: v })}
-          onTimeChange={v => onChange({ ...values, occurredTime: v })}
         />
       </FormField>
       <FormField label="Notes">

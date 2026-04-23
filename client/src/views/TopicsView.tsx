@@ -124,7 +124,7 @@ export function TopicsView() {
       />
 
       <TopicEntryList
-        title={selectedTopic ? selectedTopic.name : 'All Entries'}
+        title={selectedTopic ? selectedTopic.name : 'All Topics'}
         entries={filteredEntries}
         allTopics={allTopics}
         headerColor={headerColor}

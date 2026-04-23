@@ -5,35 +5,38 @@ import { faPrint } from '@fortawesome/free-solid-svg-icons';
 const Btn = styled.button`
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
+  padding: 4px 6px;
+  font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   background: none;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  border: none;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s;
 
-  &:hover {
-    color: ${({ theme }) => theme.colors.text};
-    border-color: ${({ theme }) => theme.colors.text};
-  }
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
 
   @media print {
     display: none !important;
   }
 `;
 
+const SrOnly = styled.span`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+`;
+
 export function PrintButton() {
   return (
     <Btn onClick={() => window.print()} aria-label="Print this page" data-print-hide>
-      <FontAwesomeIcon icon={faPrint} />
-      Print
+      <FontAwesomeIcon icon={faPrint} aria-hidden="true" />
+      <SrOnly>Print</SrOnly>
     </Btn>
   );
 }

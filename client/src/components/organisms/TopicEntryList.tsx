@@ -50,11 +50,10 @@ const Kicker = styled.span`
 
 const TitleText = styled.h1`
   font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 32px;
+  font-size: 24px;
   font-style: italic;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
-  letter-spacing: -0.005em;
   line-height: 1;
   margin: 0;
 `;
@@ -180,22 +179,16 @@ const Card = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
   padding: 12px 16px;
   cursor: pointer;
-  transition: border-color 0.12s;
-
-  &:hover { border-color: var(--accent, ${({ theme }) => theme.colors.accent}); }
 `;
 
 const EditorWrap = styled.div`
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  overflow: hidden;
-  margin: 16px 12px 8px;
+  margin: 4px 0 8px;
 `;
 
 const CardTitle = styled.div`
-  font-family: ${({ theme }) => theme.fontFamily.serif};
+  font-family: ${({ theme }) => theme.fontFamily.sans};
   font-style: italic;
-  font-size: 17px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.text};
   margin: 0 0 6px;
 `;
@@ -231,12 +224,13 @@ const DayGroup = styled.div`
 `;
 
 const DayLabel = styled.div`
-  font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-style: italic;
-  font-size: 15px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: #453f38;
   text-align: right;
   padding-top: 10px;
+  letter-spacing: 0.05rem;
 `;
 
 const DayDate = styled.span`
@@ -341,11 +335,12 @@ interface TopicEntryListProps {
   backLabel?: string;
   selectedTopic?: Topic;
   entryCount?: number;
+  hideTitle?: boolean;
 }
 
 export function TopicEntryList({
   title, kicker, entries, allTopics, headerColor, hiddenMobile,
-  onMobileBack, onBackToJournal, backLabel = 'Back', selectedTopic, entryCount,
+  onMobileBack, onBackToJournal, backLabel = 'Back', selectedTopic, entryCount, hideTitle,
 }: TopicEntryListProps) {
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [editingId, setExpandedId] = useState<number | null>(null);
@@ -369,13 +364,14 @@ export function TopicEntryList({
 
   return (
     <Panel $hidden={hiddenMobile}>
-      <Head>
-        <TitleBlock>
-          {kicker && <Kicker>{kicker}</Kicker>}
-          <TitleText>{title}</TitleText>
-        </TitleBlock>
-        <MetaText>{metaText}</MetaText>
-      </Head>
+      {!hideTitle && (
+        <Head>
+          <TitleBlock>
+            {kicker && <Kicker>{kicker}</Kicker>}
+            <TitleText>{title}</TitleText>
+          </TitleBlock>
+        </Head>
+      )}
 
       <Filters>
         {(['all', 'today', 'week', 'month'] as DateFilter[]).map(f => (
@@ -383,11 +379,6 @@ export function TopicEntryList({
             {f === 'all' ? 'All' : f === 'today' ? 'Today' : f === 'week' ? 'This Week' : 'This Month'}
           </FilterBtn>
         ))}
-        <FiltersRight>
-          <PrintBtn title="Print" onClick={() => window.print()}>
-            <FontAwesomeIcon icon={faPrint} />
-          </PrintBtn>
-        </FiltersRight>
       </Filters>
 
       {wellnessSummary && (
@@ -455,7 +446,7 @@ export function TopicEntryList({
                       <CardTitle>{cardTitle}</CardTitle>
                       {cardBody && <CardBody>{cardBody}</CardBody>}
                       <CardMeta>
-                        <span>{formatTime(new Date(entry.createdAt))}</span>
+                        {getTopicForEntry(entry) && <span>{getTopicForEntry(entry)!.name}</span>}
                         {fieldCount > 0 && <span>{fieldCount} field{fieldCount !== 1 ? 's' : ''}</span>}
                       </CardMeta>
                     </Card>
@@ -471,6 +462,7 @@ export function TopicEntryList({
                           onClose={() => setExpandedId(null)}
                           onDeleted={() => setExpandedId(null)}
                           showAsPlain
+                          compactMargin
                         />
                       </EditorWrap>
                     )}

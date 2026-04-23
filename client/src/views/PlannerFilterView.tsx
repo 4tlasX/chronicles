@@ -7,6 +7,8 @@ import { EmptyState } from '../components/atoms/EmptyState.js';
 import { ScrollList } from '../components/atoms/ScrollList.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { ViewHeader } from '../components/molecules/ViewHeader.js';
+import { DayGroupedList } from '../components/molecules/DayGroupedList.js';
+import { PlanningTabBar } from '../components/molecules/PlanningTabBar.js';
 import { GoalCard } from '../components/organisms/GoalCard.js';
 import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
@@ -26,7 +28,6 @@ import { EMPTY_PLANNER_FILTER, isFilterEmpty, filtersEqual } from '../types/plan
 
 const FilterPanel = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface};
 `;
 
 const FilterToggleRow = styled.button`
@@ -94,7 +95,7 @@ const KeywordInput = styled.input`
   font-family: ${({ theme }) => theme.fontFamily.ui};
   font-size: 14px;
   color: ${({ theme }) => theme.colors.text};
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
+  background: transparent;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   outline: none;
@@ -109,7 +110,7 @@ const TypeChip = styled.button<{ $active: boolean; $color: string }>`
   font-weight: 500;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   border: 1px solid ${({ $active, $color, theme }) => $active ? $color : theme.colors.border};
-  background: ${({ $active, $color }) => $active ? $color + '22' : 'transparent'};
+  background: transparent;
   color: ${({ $active, $color, theme }) => $active ? $color : theme.colors.textSecondary};
   cursor: pointer;
   white-space: nowrap;
@@ -120,7 +121,7 @@ const FilterSelect = styled.select`
   font-family: ${({ theme }) => theme.fontFamily.ui};
   font-size: 13px;
   color: ${({ theme }) => theme.colors.text};
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
+  background: transparent;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   outline: none;
@@ -147,12 +148,12 @@ const SavedDropdown = styled.select<{ $active: boolean; $color: string }>`
   font-family: ${({ theme }) => theme.fontFamily.ui};
   font-size: 13px;
   color: ${({ theme }) => theme.colors.text};
-  background: ${({ $active, $color }) => $active ? $color + '18' : 'transparent'};
+  background: transparent;
   border: 1px solid ${({ $active, $color, theme }) => $active ? $color : theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   outline: none;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s;
 `;
 
 const IconOnlyBtn = styled.button`
@@ -418,7 +419,8 @@ export function PlannerFilterView() {
           isCompleted: !!cf.isCompleted,
           parentGoalId: (cf.parentGoalId as number) || null,
           parentMilestoneId: (cf.parentMilestoneId as number) || null,
-          priority: (cf.priority as string) || 'none', customFields: cf, taxonomyId: taskTopicId };
+          priority: (cf.priority as string) || 'none', customFields: cf, taxonomyId: taskTopicId,
+          createdAt: e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt) };
       });
   }, [entries, taskTopicId]);
 
@@ -613,7 +615,9 @@ export function PlannerFilterView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Planning" titleTo="/goals" subtitle="Custom Filters" onBack={() => navigate('/goals')} />
+      <ViewHeader title="Planning" titleTo="/goals" onBack={() => navigate('/goals')} />
+
+      <PlanningTabBar />
 
       {/* Filter panel */}
       <FilterPanel>
@@ -762,13 +766,18 @@ export function PlannerFilterView() {
                 <SectionHeader $color={headerColor}>
                   Goals <ResultCount>({results.goalResults.length})</ResultCount>
                 </SectionHeader>
-                {results.goalResults.map(g => (
-                  <GoalCard key={g.id} goal={g} milestones={milestones} headerColor={headerColor}
-                    isEditing={editingId === g.id} onSelect={() => setEditingId(prev => prev === g.id ? null : g.id)}
-                    onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
-                    onToggleMilestone={handleToggleMilestone} onUnlinkMilestone={async () => {}}
-                    onLinkMilestone={async () => {}} onCreateMilestone={async () => {}} />
-                ))}
+                <DayGroupedList
+                  items={results.goalResults}
+                  getDate={g => g.createdAt}
+                  getKey={g => g.id}
+                  renderItem={g => (
+                    <GoalCard goal={g} milestones={milestones} headerColor={headerColor}
+                      isEditing={editingId === g.id} onSelect={() => setEditingId(prev => prev === g.id ? null : g.id)}
+                      onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
+                      onToggleMilestone={handleToggleMilestone} onUnlinkMilestone={async () => {}}
+                      onLinkMilestone={async () => {}} onCreateMilestone={async () => {}} />
+                  )}
+                />
               </>
             )}
 
@@ -777,15 +786,20 @@ export function PlannerFilterView() {
                 <SectionHeader $color={headerColor}>
                   Milestones <ResultCount>({results.milestoneResults.length})</ResultCount>
                 </SectionHeader>
-                {results.milestoneResults.map(m => (
-                  <MilestoneCard key={m.id} milestone={m} tasks={tasks}
-                    goalTitle={m.parentGoalId ? (goalTitles.get(m.parentGoalId) || null) : null}
-                    goalOptions={goalOptions} headerColor={headerColor}
-                    isEditing={editingId === m.id} onSelect={() => setEditingId(prev => prev === m.id ? null : m.id)}
-                    onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
-                    onToggleTask={handleToggleTask} onUnlinkTask={async () => {}}
-                    onCreateTask={async () => {}} onLinkTask={async () => {}} />
-                ))}
+                <DayGroupedList
+                  items={results.milestoneResults}
+                  getDate={m => m.createdAt}
+                  getKey={m => m.id}
+                  renderItem={m => (
+                    <MilestoneCard milestone={m} tasks={tasks}
+                      goalTitle={m.parentGoalId ? (goalTitles.get(m.parentGoalId) || null) : null}
+                      goalOptions={goalOptions} headerColor={headerColor}
+                      isEditing={editingId === m.id} onSelect={() => setEditingId(prev => prev === m.id ? null : m.id)}
+                      onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
+                      onToggleTask={handleToggleTask} onUnlinkTask={async () => {}}
+                      onCreateTask={async () => {}} onLinkTask={async () => {}} />
+                  )}
+                />
               </>
             )}
 
@@ -794,17 +808,22 @@ export function PlannerFilterView() {
                 <SectionHeader $color={headerColor}>
                   Tasks <ResultCount>({results.taskResults.length})</ResultCount>
                 </SectionHeader>
-                {results.taskResults.map(t => {
-                  const entry = entries.find(e => e.id === t.id);
-                  if (!entry) return null;
-                  const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                  return (
-                    <EditableEntryCard key={t.id} entry={entry} topic={topic} headerColor={headerColor}
-                      isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
-                      onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
-                      metaFields={[]} />
-                  );
-                })}
+                <DayGroupedList
+                  items={results.taskResults}
+                  getDate={t => t.createdAt}
+                  getKey={t => t.id}
+                  renderItem={t => {
+                    const entry = entries.find(e => e.id === t.id);
+                    if (!entry) return null;
+                    const topic = allTopics.find(tp => tp.id === t.taxonomyId);
+                    return (
+                      <EditableEntryCard entry={entry} topic={topic} headerColor={headerColor}
+                        isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
+                        onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
+                        metaFields={[]} hideDate />
+                    );
+                  }}
+                />
               </>
             )}
 
@@ -813,17 +832,22 @@ export function PlannerFilterView() {
                 <SectionHeader $color={headerColor}>
                   Todos <ResultCount>({results.todoResults.length})</ResultCount>
                 </SectionHeader>
-                {results.todoResults.map(t => {
-                  const entry = entries.find(e => e.id === t.id);
-                  if (!entry) return null;
-                  const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                  return (
-                    <EditableEntryCard key={t.id} entry={entry} topic={topic} headerColor={headerColor}
-                      isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
-                      onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
-                      metaFields={[]} />
-                  );
-                })}
+                <DayGroupedList
+                  items={results.todoResults}
+                  getDate={t => t.createdAt}
+                  getKey={t => t.id}
+                  renderItem={t => {
+                    const entry = entries.find(e => e.id === t.id);
+                    if (!entry) return null;
+                    const topic = allTopics.find(tp => tp.id === t.taxonomyId);
+                    return (
+                      <EditableEntryCard entry={entry} topic={topic} headerColor={headerColor}
+                        isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
+                        onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
+                        metaFields={[]} hideDate />
+                    );
+                  }}
+                />
               </>
             )}
           </>

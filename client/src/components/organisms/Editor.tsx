@@ -21,9 +21,9 @@ const EditorWrapper = styled.div`
     flex: 1;
     position: relative;
     z-index: 1;
-    padding: 16px 0 32px;
+    padding: 16px 72px 32px 0;
     outline: none;
-    font-family: var(--sans, 'Lato', -apple-system, sans-serif);
+    font-family: var(--sans, 'Lato', sans-serif);
     font-size: 17px;
     line-height: 1.65;
     color: var(--ink, ${({ theme }) => theme.colors.text});

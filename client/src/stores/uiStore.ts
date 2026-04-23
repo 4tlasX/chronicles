@@ -5,6 +5,8 @@ interface UIState {
   // Sidebar
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (v: boolean) => void;
 
   // Search
   searchKeyword: string;
@@ -77,6 +79,8 @@ interface UIState {
 export const useUIStore = create<UIState>((set) => ({
   isSidebarOpen: true,
   toggleSidebar: () => set(s => ({ isSidebarOpen: !s.isSidebarOpen })),
+  sidebarCollapsed: true,
+  setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
 
   searchKeyword: '',
   searchDateFrom: '',

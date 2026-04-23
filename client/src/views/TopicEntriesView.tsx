@@ -1,12 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { ScrollList } from '../components/atoms/ScrollList.js';
 import { Spinner } from '../components/atoms/Spinner.js';
-import { DateGroup, DateGroupLabel } from '../components/atoms/DateGroupLabel.js';
+import { DayGroupedList } from '../components/molecules/DayGroupedList.js';
 import styled from 'styled-components';
-import { Badge } from '../components/atoms/Badge.js';
 import { PrintButton } from '../components/atoms/PrintButton.js';
+import { HeaderAddButton } from '../components/atoms/HeaderAddButton.js';
 
 const SummaryBar = styled.div`
   display: flex;
@@ -47,7 +48,6 @@ import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 import { useUIStore } from '../stores/uiStore.js';
-import { useNavigate } from 'react-router-dom';
 import { toDateStr, startOfWeek, startOfMonth } from '../utils/dateUtils.js';
 import type { DateFilter } from '../types/health.js';
 
@@ -73,18 +73,24 @@ interface TopicEntriesViewProps {
   metaFields?: { key: string; label: string }[];
   showDateFilter?: boolean;
   printable?: boolean;
+  navBar?: ReactNode;
   summaryFields?: SummaryField[];
 }
 
-export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], showDateFilter = true, printable = false, summaryFields = [] }: TopicEntriesViewProps) {
+export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], showDateFilter = true, printable = false, summaryFields = [], navBar }: TopicEntriesViewProps) {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
   const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
-  const navigate = useNavigate();
 
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+
+  const addTopic = useMemo(
+    () => topicNames.length === 1 ? allTopics.find(t => t.name.toLowerCase() === topicNames[0].toLowerCase()) : undefined,
+    [allTopics, topicNames]
+  );
 
   const topicIds = useMemo(() => {
     const lowerNames = new Set(topicNames.map(n => n.toLowerCase()));
@@ -109,22 +115,15 @@ export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], 
     });
   }, [entries, topicIds, dateFilter]);
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, typeof filtered>();
-    const sorted = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    for (const entry of sorted) {
-      const key = toDateStr(entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt));
-      const arr = map.get(key) || [];
-      arr.push(entry);
-      map.set(key, arr);
-    }
-    return map;
-  }, [filtered]);
-
-  const getTopicForEntry = (entry: typeof entries[number]) => {
+  const getTopicForEntry = useCallback((entry: typeof entries[number]) => {
     const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
     return taxId ? allTopics.find(t => t.id === taxId) : undefined;
-  };
+  }, [allTopics]);
+
+  const getEntryDate = useCallback(
+    (entry: typeof entries[number]) => entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt),
+    []
+  );
 
   const summaries = useMemo(() => {
     if (summaryFields.length === 0) return [];
@@ -147,9 +146,17 @@ export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], 
       <ViewHeader
         title={title}
         titleTo={titleTo}
-        onBack={() => navigate('/')}
-        right={<>{printable && <PrintButton />}</>}
+        right={
+          (addTopic || printable) ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {addTopic && <HeaderAddButton label="New Entry" onClick={() => setIsAddOpen(true)} />}
+              {printable && <PrintButton />}
+            </div>
+          ) : undefined
+        }
       />
+
+      {navBar}
 
       {showDateFilter && <div data-print-hide><FilterTabs options={DATE_FILTERS} active={dateFilter} onChange={setDateFilter} /></div>}
 
@@ -165,17 +172,26 @@ export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], 
       )}
 
       <ScrollList $padding="0" $gap="0">
-        {topicNames.length === 1 && (() => {
-          const t = allTopics.find(tp => tp.name.toLowerCase() === topicNames[0].toLowerCase());
-          return t ? <div data-print-hide><NewEntryCard topic={t} headerColor={headerColor} /></div> : null;
-        })()}
+        {addTopic && (
+          <div data-print-hide>
+            <NewEntryCard
+              topic={addTopic}
+              headerColor={headerColor}
+              hideButton
+              isOpen={isAddOpen}
+              onOpenChange={setIsAddOpen}
+            />
+          </div>
+        )}
         {filtered.length === 0 ? (
           <EmptyState message={`No ${title.toLowerCase()} entries yet.`} />
         ) : (
-          [...grouped.entries()].map(([dateStr, dayEntries]) => (
-            dayEntries.map(entry => (
+          <DayGroupedList
+            items={filtered}
+            getDate={getEntryDate}
+            getKey={entry => entry.id}
+            renderItem={entry => (
               <EditableEntryCard
-                key={entry.id}
                 entry={entry}
                 topic={getTopicForEntry(entry)}
                 headerColor={headerColor}
@@ -184,9 +200,10 @@ export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], 
                 onClose={() => setEditingId(null)}
                 onDeleted={() => setEditingId(null)}
                 metaFields={metaFields}
+                hideDate
               />
-            ))
-          ))
+            )}
+          />
         )}
       </ScrollList>
     </ContentTemplate>

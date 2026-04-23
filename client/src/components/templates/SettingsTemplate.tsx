@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Header } from '../organisms/Header.js';
 import { Sidebar } from '../organisms/Sidebar.js';
 import { Background } from '../organisms/Background.js';
+import { SidebarToggle } from '../atoms/SidebarToggle.js';
 import { useUIStore } from '../../stores/uiStore.js';
 
 const Layout = styled.div`
@@ -30,11 +31,18 @@ const Content = styled.div`
   padding: ${({ theme }) => theme.spacing.xl}px;
 `;
 
+const PageTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: ${({ theme }) => theme.spacing.xl}px;
+`;
+
 const PageTitle = styled.h1`
   font-family: ${({ theme }) => theme.typography.h1.fontFamily};
   font-size: ${({ theme }) => theme.typography.h1.fontSize};
   font-weight: ${({ theme }) => theme.typography.h1.fontWeight};
-  margin-bottom: ${({ theme }) => theme.spacing.xl}px;
+  margin: 0;
 `;
 
 interface SettingsTemplateProps {
@@ -53,7 +61,12 @@ export function SettingsTemplate({ title, children }: SettingsTemplateProps) {
           <div data-print-hide><Sidebar /></div>
           <Body $hasBackground={!!backgroundImage}>
             <Content>
-              {title && <PageTitle>{title}</PageTitle>}
+              {title && (
+                <PageTitleRow>
+                  <SidebarToggle />
+                  <PageTitle>{title}</PageTitle>
+                </PageTitleRow>
+              )}
               {children}
             </Content>
           </Body>

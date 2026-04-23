@@ -7,7 +7,7 @@ import {
   faBolt, faCartShopping, faCheck, faPencil, faGripVertical, faPills,
   faSun, faCloud, faCloudRain, faSnowflake, faWind, faXmark, faSlidersH, faChevronDown, faUtensils, faDroplet,
   faHeart, faChevronLeft, faChevronRight, faMicrophone, faPenNib,
-  faGlassWater, faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam, faCloudMoon,
+  faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam, faMoon,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   DndContext, closestCenter,
@@ -41,6 +41,7 @@ import { getTopicIcon } from '../utils/topicIcons.js';
 import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
 import { UserFieldsForm } from '../components/molecules/fields/UserFieldsForm.js';
 import { SectionDivider } from '../components/atoms/SectionDivider.js';
+import { StackedLinesIcon } from '../components/atoms/StackedLinesIcon.js';
 
 /* ── Constants ── */
 
@@ -151,9 +152,28 @@ const PageHeader = styled.div`
 
 const GreetingBlock = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+`;
+
+const SidebarToggleBtn = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
   align-self: center;
-  gap: 8px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
+  cursor: pointer;
+  font-size: 18px;
+  transition: color 120ms ease;
+  &:hover { color: var(--ink); }
+
+  @media (max-width: 1366px) { display: none; }
 `;
 
 const Greeting = styled.h1`
@@ -279,10 +299,14 @@ const RightColumn = styled.div`
 const DashCard = styled.div`
   display: flex;
   flex-direction: column;
-  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  background: rgba(240, 235, 223, 0.45);
   border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: var(--r-lg, 6px);
   overflow: hidden;
+
+  :root[data-theme="dark"] & {
+    background: var(--paper-surface);
+  }
 `;
 
 const CardHeader = styled.div`
@@ -300,9 +324,11 @@ const CardIconWrap = styled.span`
 `;
 
 const CardTitle = styled.span`
-  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
-  font-size: 18px;
-  font-weight: 500;
+  font-family: var(--sans, 'Lato', sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   color: var(--ink, ${({ theme }) => theme.colors.text});
   flex: 1;
 `;
@@ -325,7 +351,7 @@ const CardBody = styled.div`
 `;
 
 const QuickEntryDashCard = styled(DashCard)`
-  background: #f0e8d8;
+  background: #c8c8c866;
   border-color: #d9cfb8;
   & ${CardHeader} { border-bottom-color: #d9cfb8; }
   & ${CardBody} { padding: 16px 20px; }
@@ -342,14 +368,14 @@ const AddBtn = styled.button`
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border: none;
   background: transparent;
   cursor: pointer;
   color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
-  font-size: 13px;
+  font-size: 14px;
   border-radius: var(--r-sm, 2px);
-  transition: color 120ms ease, background 120ms ease;
-  &:hover { color: var(--ink); background: var(--paper-hover); }
+  transition: color 120ms ease;
+  &:hover { color: var(--ink); }
 `;
 
 const ItemRow = styled.div<{ $done?: boolean }>`
@@ -365,11 +391,11 @@ const PriRow = styled.div<{ $done?: boolean }>`
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  padding: 8px 0;
+  padding: 16px 0;
   border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
   font-size: 14px;
   color: ${({ $done }) => $done ? 'var(--ink-4)' : 'var(--ink-2)'};
-  min-height: 36px;
+  min-height: 44px;
   &:last-child { border-bottom: 0; }
 `;
 
@@ -418,10 +444,14 @@ const QuickEditorWrap = styled.div`
   background: var(--paper-surface, #f7f4ee);
   margin-bottom: 0;
 
+  :root[data-theme="dark"] & {
+    background: transparent;
+  }
+
   > div { min-height: 120px; height: auto; }
 
   .tiptap {
-    padding: 14px 12px;
+    padding: 20px;
     font-family: var(--serif);
     font-style: italic;
     font-size: 16px;
@@ -1361,7 +1391,7 @@ const EvtRow = styled.div`
   display: flex;
   gap: var(--s-4, 16px);
   align-items: center;
-  padding: 12px 20px;
+  padding: 20px 20px;
   border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
   &:last-child { border-bottom: 0; }
 `;
@@ -1381,6 +1411,7 @@ const EvtDayNumVal = styled.span`
   font-size: 22px;
   color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
   line-height: 1;
+  margin: 0 0 7px 0;
 `;
 
 const EvtMonthAbbr = styled.span`
@@ -1399,11 +1430,13 @@ const EvtContent = styled.div`
 
 const EvtTitle = styled.div`
   font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 400;
+  font-style: italic;
   color: var(--ink, ${({ theme }) => theme.colors.text});
-  line-height: 1.3;
-  margin-bottom: 2px;
+  line-height: 1.05;
+  margin-bottom: -1px;
+  padding-top: 3px;
 `;
 
 interface EventEntry { id: number; content: string; metadata: Record<string, unknown>; }
@@ -1428,8 +1461,7 @@ function EventsCard({ accentColor, events, dragAttributes, dragListeners }: { ac
       <CardHeader>
         <CardIconWrap><FontAwesomeIcon icon={faCalendarDay} /></CardIconWrap>
         <CardTitle>Upcoming</CardTitle>
-        <EventMeta>Next 7 days</EventMeta>
-        {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
+        {dragAttributes && <DragGrip style={{ marginLeft: 'auto' }} {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
       </CardHeader>
       <div>
         {events.slice(0, 10).map(ev => {
@@ -2157,9 +2189,8 @@ const AffirmationDisplay = styled.div`
   font-style: italic;
   line-height: 1.6;
   color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
-  padding: 8px 0 12px;
-  border-left: 2px solid var(--accent-stroke, ${({ theme }) => theme.colors.accentStroke});
-  padding-left: 14px;
+  padding: 8px 12px 12px;
+  text-align: center;
 `;
 
 const AffirmationNav = styled.div`
@@ -2331,8 +2362,7 @@ function AffirmationsCard({ accentColor, dragAttributes, dragListeners }: { acce
       <CardHeader>
         <CardIconWrap><FontAwesomeIcon icon={faHeart} /></CardIconWrap>
         <CardTitle>Affirmations</CardTitle>
-        <EventMeta style={{ marginLeft: 'auto' }}>Day {baseIdx}</EventMeta>
-        <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
+        <DragGrip style={{ marginLeft: 'auto' }} {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <FontAwesomeIcon icon={faGripVertical} />
         </DragGrip>
       </CardHeader>
@@ -2554,9 +2584,9 @@ const WSection = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0;
+  padding: 18px 0;
   border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
-  min-height: 44px;
+  min-height: 52px;
   &:last-child { border-bottom: 0; }
 `;
 
@@ -2576,14 +2606,17 @@ const GlassRow = styled.div`
   flex-wrap: wrap;
 `;
 
-const GlassBtn = styled.button<{ $filled: boolean }>`
+const GlassBtn = styled.button<{ $filled: boolean; $tone?: 'accent' | 'cycle' }>`
   background: none;
   border: none;
-  padding: 2px;
+  padding: 6px 4px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
-  color: ${({ $filled }) => $filled ? 'var(--accent)' : 'var(--rule)'};
+  color: ${({ $filled, $tone }) =>
+    $filled
+      ? ($tone === 'cycle' ? '#8c2e35' : 'var(--accent)')
+      : 'var(--rule)'};
   transition: color 120ms ease, transform 100ms ease;
   &:hover { color: var(--ink-3); transform: scale(1.15); }
   &:active { transform: scale(0.88); }
@@ -2606,9 +2639,9 @@ const MoodRow = styled.div`
 const MoodBtn = styled.button<{ $active: boolean }>`
   background: none;
   border: none;
-  padding: 2px;
+  padding: 6px 4px;
   cursor: pointer;
-  font-size: 22px;
+  font-size: 19px;
   line-height: 1;
   color: ${({ $active }) => $active ? 'var(--ink)' : 'var(--ink-4)'};
   transition: color 120ms ease, transform 100ms ease;
@@ -2619,9 +2652,10 @@ const MoodBtn = styled.button<{ $active: boolean }>`
 
 const CyclePredictionLine = styled.div`
   font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-style: italic;
   font-size: 13px;
   color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
-  margin-top: 12px;
+  text-align: right;
 `;
 
 const FLOW_OPTIONS = ['spotting', 'light', 'medium', 'heavy'] as const;
@@ -2713,7 +2747,10 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
     }
     const avgLen = gaps.length > 0 ? Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length) : 28;
     const predicted = new Date(new Date(last + 'T12:00:00').getTime() + avgLen * 86400000);
-    const nextLabel = predicted.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const month = predicted.toLocaleDateString('en-US', { month: 'long' });
+    const day = predicted.getDate();
+    const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th';
+    const nextLabel = `${month} ${day}${suffix}`;
     return { lastLabel, nextLabel, avgLen };
   }, [cycleTrackingEnabled, decryptedEntries]);
 
@@ -2814,7 +2851,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
     <DashCard>
       <CardHeader>
         <CardIconWrap><FontAwesomeIcon icon={faHeart} /></CardIconWrap>
-        <CardTitle>Check-in</CardTitle>
+        <CardTitle>Wellness Check-in</CardTitle>
         <EventMeta style={{ marginLeft: 'auto' }}>Today</EventMeta>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <FontAwesomeIcon icon={faGripVertical} />
@@ -2826,7 +2863,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
           <GlassRow>
             {Array.from({ length: WATER_GOAL }, (_, i) => (
               <GlassBtn key={i} $filled={i < waterGlasses} onClick={() => handleGlass(i)} title={`${i + 1} glass${i !== 0 ? 'es' : ''}`}>
-                <FontAwesomeIcon icon={faGlassWater} />
+                <FontAwesomeIcon icon={faDroplet} />
               </GlassBtn>
             ))}
             <GlassCount>{waterGlasses}/{WATER_GOAL}</GlassCount>
@@ -2849,7 +2886,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
           <GlassRow>
             {Array.from({ length: SLEEP_GOAL }, (_, i) => (
               <GlassBtn key={i} $filled={i < sleepHours} onClick={() => handleSleepHours(i)} title={`${i + 1}h`}>
-                <FontAwesomeIcon icon={faCloudMoon} />
+                <FontAwesomeIcon icon={faMoon} />
               </GlassBtn>
             ))}
             <GlassCount>{sleepHours > 0 ? `${sleepHours}h` : '—'}</GlassCount>
@@ -2857,23 +2894,22 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
         </WSection>
 
         {cycleTrackingEnabled && (
-          <WSection>
-            <WSectionLabel>Cycle</WSectionLabel>
-            <GlassRow>
-              {Array.from({ length: 4 }, (_, i) => (
-                <GlassBtn key={i} $filled={i < FLOW_INDEX[flowIntensity]} onClick={() => handleFlow(FLOW_OPTIONS[i])} title={FLOW_OPTIONS[i]}>
-                  <FontAwesomeIcon icon={faDroplet} />
-                </GlassBtn>
-              ))}
-              <GlassCount>{flowIntensity || '—'}</GlassCount>
-            </GlassRow>
-            <CyclePredictionLine>
-              {`LAST PERIOD: ${cyclePrediction?.lastLabel ?? '—'}`}
-            </CyclePredictionLine>
+          <WSection style={{ flexDirection: 'column', alignItems: 'stretch', gap: 2 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <WSectionLabel>Cycle</WSectionLabel>
+              <GlassRow>
+                {Array.from({ length: 4 }, (_, i) => (
+                  <GlassBtn key={i} $filled={i < FLOW_INDEX[flowIntensity]} $tone="cycle" onClick={() => handleFlow(FLOW_OPTIONS[i])} title={FLOW_OPTIONS[i]}>
+                    <FontAwesomeIcon icon={faDroplet} />
+                  </GlassBtn>
+                ))}
+                <GlassCount>{flowIntensity || '—'}</GlassCount>
+              </GlassRow>
+            </div>
             <CyclePredictionLine>
               {cyclePrediction?.nextLabel
-                ? `NEXT PERIOD: ${cyclePrediction.nextLabel} (${cyclePrediction.avgLen}-day cycle)`
-                : 'NEXT PERIOD: Log more to predict'}
+                ? `Predicted Period - ${cyclePrediction.nextLabel}`
+                : 'Predicted Period - Log more to predict'}
             </CyclePredictionLine>
           </WSection>
         )}
@@ -2891,6 +2927,8 @@ export function DashboardView() {
   const allTopics = useEntriesStore(s => s.allTopics);
   const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
   const displayName = useUIStore(s => s.displayName);
+  const sidebarCollapsed = useUIStore(s => s.sidebarCollapsed);
+  const setSidebarCollapsed = useUIStore(s => s.setSidebarCollapsed);
   const weatherEnabled = useUIStore(s => s.weatherEnabled);
   const cityName = useUIStore(s => s.weatherCity);
 

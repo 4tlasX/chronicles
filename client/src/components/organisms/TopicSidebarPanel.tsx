@@ -10,6 +10,7 @@ import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrate
 import { EmptyState } from '../atoms/EmptyState.js';
 import { TopicEditForm } from '../molecules/TopicEditForm.js';
 import { SortableTopicItem } from './SortableTopicItem.js';
+import { SidebarToggle } from '../atoms/SidebarToggle.js';
 import type { Topic } from '../../types/topics.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
@@ -22,7 +23,7 @@ const Pane = styled.div<{ $hidden?: boolean }>`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--paper-surface);
+  background: ${({ theme }) => theme.colors.surfaceOverlay};
   border-right: 1px solid ${({ theme }) => theme.colors.border};
   @media (max-width: 1024px) {
     width: 100%;
@@ -107,7 +108,7 @@ const ClearBtn = styled.button`
 `;
 
 const ScrollHint = styled.div`
-  padding: 6px 12px;
+  padding: 12px 12px;
   font-family: ${({ theme }) => theme.fontFamily.mono};
   font-size: 9.5px;
   letter-spacing: 0.14em;
@@ -151,7 +152,7 @@ const AllRow = styled.button<{ $active?: boolean; $headerColor?: string }>`
   cursor: pointer;
   text-align: left;
   transition: background 0.12s;
-  &:hover { background: ${({ theme }) => theme.colors.surface}; }
+  &:hover { background: rgba(0, 0, 0, 0.04); }
 `;
 
 const AllName = styled.span`
@@ -348,7 +349,7 @@ export function TopicSidebarPanel({
         {!isFiltering && (
           <AllRow $active={selectedTopicId === null} $headerColor={headerColor} onClick={() => onSelectTopic(null)}>
             <span />
-            <AllName>All Entries</AllName>
+            <AllName>All Topics</AllName>
           </AllRow>
         )}
 

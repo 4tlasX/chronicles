@@ -33,4 +33,5 @@ export interface TaskEntryData {
   priority: string;
   customFields: Record<string, unknown>;
   taxonomyId: number;
+  createdAt: Date;
 }

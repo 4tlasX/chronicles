@@ -40,10 +40,21 @@ const CalendarContainer = styled.div`
 `;
 
 const Header = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr repeat(5, 1fr) 1fr;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+`;
+
+const HeaderNav = styled.div`
+  display: flex;
+  justify-content: center;
+`;
+
+const HeaderCenter = styled.div`
+  grid-column: 2 / span 5;
+  display: flex;
+  justify-content: center;
 `;
 
 const MonthLabel = styled.span`
@@ -96,11 +107,12 @@ const DayButton = styled.button<{
   $isOutside?: boolean;
   $hasEntry?: boolean;
 }>`
-  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px 0 14px;
   font-size: 11px;
+  line-height: 1;
   font-weight: ${({ $isToday }) => $isToday ? 700 : 400};
   color: ${({ $isToday, $isOutside }) =>
     $isToday ? 'var(--ink, #2b2824)' :
@@ -135,7 +147,7 @@ const DayButton = styled.button<{
     &::after {
       content: '';
       position: absolute;
-      bottom: 2px;
+      bottom: 4px;
       width: 4px;
       height: 4px;
       background: var(--accent);
@@ -225,13 +237,19 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates, expanded 
       ) : (
       <CalendarContainer>
           <Header>
-            <NavButton onClick={goToPrevMonth}>
-              <FontAwesomeIcon icon={faChevronLeft} size="xs" />
-            </NavButton>
-            <MonthLabel onClick={() => setCollapsed(true)} style={{ cursor: 'pointer' }}>{monthLabel}</MonthLabel>
-            <NavButton onClick={goToNextMonth}>
-              <FontAwesomeIcon icon={faChevronRight} size="xs" />
-            </NavButton>
+            <HeaderNav>
+              <NavButton onClick={goToPrevMonth}>
+                <FontAwesomeIcon icon={faChevronLeft} size="xs" />
+              </NavButton>
+            </HeaderNav>
+            <HeaderCenter>
+              <MonthLabel onClick={() => setCollapsed(true)} style={{ cursor: 'pointer' }}>{monthLabel}</MonthLabel>
+            </HeaderCenter>
+            <HeaderNav>
+              <NavButton onClick={goToNextMonth}>
+                <FontAwesomeIcon icon={faChevronRight} size="xs" />
+              </NavButton>
+            </HeaderNav>
           </Header>
           <WeekdayRow>
             {WEEKDAYS.map((day, i) => (

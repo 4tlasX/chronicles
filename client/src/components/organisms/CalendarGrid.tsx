@@ -36,6 +36,14 @@ const Header = styled.div`
   justify-content: center;
   gap: 16px;
   padding: 16px;
+  position: relative;
+`;
+
+const HeaderLeft = styled.div`
+  position: absolute;
+  left: 16px;
+  display: flex;
+  align-items: center;
 `;
 
 const NavBtn = styled.button`

@@ -638,7 +638,6 @@ export function SettingsView() {
     <SettingsTemplate title="">
       <HeaderRow>
         <Title>Settings</Title>
-        <BackLink to="/journal"><FontAwesomeIcon icon={faChevronLeft} size="xs" /> Back to Journal</BackLink>
       </HeaderRow>
 
       {/* Account */}

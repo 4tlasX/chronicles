@@ -119,15 +119,13 @@ const TopicHint = styled.span`
   color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
 `;
 
-/* Title — 34px serif italic, the most prominent element */
+/* Title — the most prominent element */
 const EdTitle = styled.div`
-  font-family: var(--serif, 'Playfair Display', Georgia, serif);
-  font-style: italic;
+  font-family: var(--sans, 'Lato', sans-serif);
   font-size: 34px;
   font-weight: 500;
   color: var(--ink, ${({ theme }) => theme.colors.text});
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  line-height: 1.2;
   margin: 0 0 var(--s-3, 12px);
   white-space: nowrap;
   overflow: hidden;
@@ -153,7 +151,7 @@ const DateSep = styled.span`
 /* cf-card: the card that wraps each custom-fields section */
 const CustomFieldsSection = styled.div`
   background: transparent;
-  border: 1px solid var(--accent-stroke, var(--rule, ${({ theme }) => theme.colors.border}));
+  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: var(--r-md, 4px);
   padding: var(--s-5, 20px) var(--s-6, 24px);
   position: relative;
@@ -556,9 +554,6 @@ export function EntryForm({
               topics={topics}
             />
           </EdTopicRow>
-
-          {/* Title — 34px serif italic */}
-          {entryTitle && <EdTitle>{entryTitle}</EdTitle>}
 
           {/* Rich text editor */}
           <EditorArea>

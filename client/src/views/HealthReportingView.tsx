@@ -3,6 +3,7 @@ import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { ViewHeader } from '../components/molecules/ViewHeader.js';
+import { HealthTabBar } from '../components/molecules/HealthTabBar.js';
 import styled from 'styled-components';
 import { DateInput } from '../components/atoms/DateInput.js';
 import { FilterTabs } from '../components/molecules/FilterTabs.js';
@@ -205,6 +206,7 @@ export function HealthReportingView() {
   return (
     <ContentTemplate>
       <ViewHeader title="Health Reporting" titleTo="/health" onBack={() => navigate('/')} />
+      <HealthTabBar />
       <div style={{ padding: '0 20px 8px' }}>
         <FilterTabs options={PERIOD_OPTIONS} active={period} onChange={setPeriod} />
       </div>

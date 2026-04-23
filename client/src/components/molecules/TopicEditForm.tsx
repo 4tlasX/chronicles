@@ -8,9 +8,9 @@ import type { UserFieldDef } from '../../types/userFields.js';
 const Card = styled.div`
   margin: 8px;
   padding: 12px;
-  border: 1px solid var(--accent-stroke, ${({ theme }) => theme.colors.border});
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  background: var(--paper);
+  border: none;
+  border-radius: 0;
+  background: transparent;
   display: flex;
   flex-direction: column;
   gap: 10px;

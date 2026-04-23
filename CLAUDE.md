@@ -14,11 +14,28 @@ Key privacy guarantees:
 
 ## UI Design Rules
 
-- **No circles or pills** — All shapes use rounded square edges (border-radius: 4-8px). No circular badges, no pill-shaped chips.
+The canonical visual spec is `design_handoff/chronicles-design-system.html`. All UI implementation must match its HTML structure and CSS variables exactly.
+
+### Design Philosophy
+- **Paper substrate** — Off-white tinted background (or dark graphite in Midnight mode) with a subtle hand-drawn SVG watermark at ~6% opacity. Content sits on the page, not in heavy boxes.
+- **Ink as primary mark** — Serif italic for display text; color reserved for accent and semantic state only.
+- **Quiet chrome** — 1px hairline rules (`--rule`), small radii (2–8px), elevation used sparingly.
+
+### Two Themes: Paper (light) and Midnight (dark)
+Switched via `data-theme` attribute on `<body>`. CSS variables flip automatically:
+- `--paper`, `--paper-surface`, `--paper-well` — background layers
+- `--ink`, `--ink-2`, `--ink-3`, `--ink-4` — text tones (darkest to lightest)
+- `--rule` — hairline border color
+- `--accent`, `--accent-hover`, `--accent-tint`, `--accent-stroke` — derived from user's header color
+
+### Shape & Icon Rules
+- **No circles or pills** — All shapes use rounded square edges (border-radius: 2–8px, via `--r-sm/md/lg/xl`). No circular badges, no pill-shaped chips.
 - **Icons are plain** — Topic icons are displayed as plain FontAwesome icons. No circle backgrounds, no colored dot indicators.
 - **Icon colors — body text** — Topic icons in entry cards (`EntryCard`, `EditableEntryCard`), topic sidebar (`SortableTopicItem`), and topic selector dropdowns (`TopicSelector`, `TopicSelectorDropdown`) use `theme.colors.text` (body font color). Do not use the header color or a muted color for these icons.
 - **Nav link unselected color (dark header)** — Unselected nav links and icon buttons (`NavLink`, `DropdownTrigger`) on dark-background headers use `rgb(240, 235, 223)`, not semi-transparent white.
 - **Wellness icon unselected color** — Tap-to-fill icons (`GlassBtn`, `MoodBtn`) in both the dashboard widget and `WellnessFields` use `theme.colors.border` when not selected/filled.
+
+### Component-specific Rules
 - **Quick entry card** — `QuickEntryDashCard` has transparent background, no horizontal padding, no `overflow: hidden` (so the topic picker dropdown can escape), and a top border via `CardHeader`.
 - **No `window.confirm`** — Safari on iPad blocks pop-ups by default, silently returning `false`. Use inline state-based confirmation or delete directly. Never use `window.confirm` / `window.alert` / `window.prompt`.
 - **TipTap node views with overlays** — Always portal overlays (`position: fixed`) from TipTap `NodeViewWrapper` to `document.body` via `createPortal`. The node view DOM can create stacking contexts that trap pointer events.
@@ -60,6 +77,10 @@ npm run test             # Vitest
 
 ```
 chronicles-rebuild/
+├── design_handoff/      # Canonical design spec (HTML + screenshots); source of truth for all UI
+│   ├── chronicles-design-system.html  # Full component library with CSS variables
+│   └── screenshots/     # Reference screenshots (desktop/mobile, Paper/Midnight)
+│
 ├── shared/              # Shared code (web + future React Native)
 │   └── src/
 │       ├── crypto/      # Stateless encryption service (AES-256-GCM, PBKDF2)
@@ -89,8 +110,8 @@ chronicles-rebuild/
 ├── client/              # React 19 SPA (Vite)
 │   └── src/
 │       ├── components/
-│       │   ├── atoms/       # Indivisible UI primitives (TextInput, Button, Label, Icon, etc.)
-│       │   ├── molecules/   # Atom combinations (FormField, EntryMeta, RecoveryKeyDisplay)
+│       │   ├── atoms/       # Indivisible UI primitives (TextInput, Button, HeaderBar, SectionDivider, Watermark, etc.)
+│       │   ├── molecules/   # Atom combinations (InlineWeather, FormField, EntryMeta, etc.)
 │       │   ├── organisms/   # Complex sections with store access (Header, Sidebar, Editor, EntryList, LoginForm, etc.)
 │       │   └── templates/   # Layout skeletons (AuthTemplate, AppTemplate)
 │       ├── views/           # Route-level components (LoginView, RegisterView, JournalView, SettingsView)
@@ -249,6 +270,12 @@ Views     → Route logic + top-level data orchestration
   - Wellness widget: tap-to-fill water glasses (8), mood faces (5), sleep hours (10 cloud-moon icons), period toggle, and flow intensity (4 levels); debounced save with optimistic store updates; reactive to journal edits via Zustand; auto-creates "Wellness" topic so entries appear in journal
   - Mini Calendar widget: monthly grid with entry-presence dots; clicking a day sets `viewMode: 'date'` and navigates to journal filtered to that day
 
+**New Design System Atoms/Molecules:**
+- `client/src/components/atoms/HeaderBar.tsx` — Sticky 3-zone header (left/center/right slots); accepts accent background color and dark-mode flag
+- `client/src/components/atoms/SectionDivider.tsx` — Hairline rule or labeled divider (italic label flanked by `--rule` lines); supports dashed variant
+- `client/src/components/atoms/Watermark.tsx` — Fixed full-screen decorative SVG layer at 4–6% opacity behind content (`z-index: 0`, `pointer-events: none`); flips opacity by theme
+- `client/src/components/molecules/InlineWeather.tsx` — Temperature + icon via Open-Meteo; geocodes city; accepts `$light` prop for header use; displayed inline next to date in page header
+
 **Apple Pencil / Drawing:**
 - `client/src/components/atoms/DrawingCanvas.tsx` — Full-screen freehand canvas using `perfect-freehand`; pointer events with pressure sensitivity; palm rejection (`pencilOnly` mode); serializes strokes to SVG on save
 - `client/src/components/tiptap/DrawingNode.tsx` — TipTap block node extension (`type: drawing`, `atom: true`); renders saved SVG inline with hover-to-edit; portals canvas to `document.body` to avoid stacking context issues
@@ -398,20 +425,34 @@ Applied via Express middleware (`server/src/middleware/security.ts`):
 
 ## UI Theme
 
-### Styling: styled-components (CSS-in-JS)
-- All styles co-located with components
-- Theme tokens in `shared/src/theme/tokens.ts` — shared with future React Native
-- `ThemeProvider` at app root supplies tokens to all styled components
+### Styling: styled-components + CSS Variables
+- All styles co-located with components using styled-components
+- Components reference CSS variables first (`var(--ink, ${theme.colors.text})`) so root-level theme switches take effect without re-render
+- Theme tokens in `shared/src/theme/tokens.ts` — shared with future React Native; TypeScript shape declared in `client/src/styles/styled.d.ts`
+- `ThemeProvider` at app root supplies tokens; `App.tsx` injects CSS variables on mount and on theme/accent change
+
+### CSS Variable Injection (App.tsx)
+Three sets of variables are written to `:root`:
+- **Static** (`STATIC_CSS_VARS`): radii (`--r-sm/md/lg/xl`), spacing (`--s-1` … `--s-10`), font families (`--serif/--sans/--mono/--brand/--ui`)
+- **Theme** (`LIGHT_CSS_VARS` / `DARK_CSS_VARS`): color tokens that flip between Paper and Midnight — `--paper`, `--ink` × 4, `--rule`, `--btn-primary`, `--accent-fill`, semantic colors, shadow values
+- **Dynamic accent**: on every header-color change, derives `--accent`, `--accent-hover`, `--accent-tint`, `--accent-stroke`, `--h-active`, `--h-active-ink`, and legacy `--focus`
 
 ### Customizable Colors
-- **18 header colors** (Dark, Navy, Gold, Coral, Teal, Steel Blue, etc.) + transparent
+- **40+ header accent colors** (Dark, Navy, Gold, Coral, Teal, Steel Blue, etc.) + transparent
 - **28 background images** from Unsplash artists
-- Colors derived programmatically: hover (15% darker), light (10% opacity)
+- Colors derived programmatically: hover (15% darker), tint (10% opacity), stroke (desaturated muted variant for borders)
 
 ### Default Colors
 - Default header: `#2d2c2a` (dark)
 - Default accent: `#00b4d8` (cyan)
-- Neutral background: `#f0ebdf`
+- Paper background: `#f0ebdf` (light) / `#1a1917` (Midnight)
+
+### Typography
+- **Serif** (Playfair Display) — display headings, daily quote
+- **Sans** (Lato) — body text
+- **UI** (Montserrat) — labels, navigation
+- **Brand** (Josefin Sans) — wordmark / logo
+- **Mono** (JetBrains Mono) — code, timestamps
 
 ## React Native Readiness
 

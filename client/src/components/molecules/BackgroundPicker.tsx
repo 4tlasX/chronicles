@@ -67,7 +67,7 @@ export function BackgroundPicker({
 }: BackgroundPickerProps) {
   return (
     <Grid>
-      {BACKGROUND_IMAGES.map(bg => (
+      {BACKGROUND_IMAGES.filter(bg => !bg.hidden).map(bg => (
         <div key={bg.value || 'none'}>
           <Thumbnail
             $selected={selected === bg.value}
