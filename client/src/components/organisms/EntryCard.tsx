@@ -165,7 +165,7 @@ export function EntryCard({
   active, onClick, onDelete, onTopicClick, onToggleBookmark,
   isCompleted, isFavorite, previewText,
 }: EntryCardProps) {
-  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
 
   const d = new Date(date);
   const dayNum = d.getDate();

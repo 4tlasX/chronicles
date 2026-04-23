@@ -62,7 +62,7 @@ export function HealthReportingView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
   const navigate = useNavigate();
 
   const [period, setPeriod] = useState<PeriodType>('month');

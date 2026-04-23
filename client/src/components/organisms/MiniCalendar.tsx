@@ -111,7 +111,7 @@ const DayButton = styled.button<{
   align-items: center;
   justify-content: center;
   padding: 8px 0 14px;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1;
   font-weight: ${({ $isToday }) => $isToday ? 700 : 400};
   color: ${({ $isToday, $isOutside }) =>

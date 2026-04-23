@@ -94,7 +94,7 @@ interface Props {
   accentColor?: string;
 }
 
-export function PrioritiesFields({ values, onChange, accentColor = '#6A9B9B' }: Props) {
+export function PrioritiesFields({ values, onChange, accentColor = '#4A5568' }: Props) {
   const { priorities } = values;
 
   const update = (id: string, patch: Partial<PriorityItem>) =>

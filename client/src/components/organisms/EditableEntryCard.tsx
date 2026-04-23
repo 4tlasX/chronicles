@@ -21,7 +21,7 @@ import { useEncryption } from '../../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { entries as entriesApi } from '../../services/api.js';
-import { stripHtml } from '../../utils/stripHtml.js';
+import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 import type { Topic } from '../../types/topics.js';
 
@@ -200,7 +200,15 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   const cf = (meta?._customFields as Record<string, unknown>) || {};
   const taxonomyId = (meta?._taxonomyId as number) || 0;
   const customType = getCustomType(topic?.name);
-  const preview = stripHtml(entry.content).slice(0, 120) || 'Empty entry';
+  const textContent = stripHtml(entry.content).trim();
+  const preview = (() => {
+    if (textContent) return textContent.slice(0, 120);
+    const userFields = (cf._userFields as Record<string, unknown>) ?? {};
+    const fieldDefs = taxonomyId ? (topicCustomFields[taxonomyId] ?? []) : [];
+    const fieldSummary = summarizeUserFields(fieldDefs, userFields);
+    if (fieldSummary) return fieldSummary;
+    return 'Empty entry';
+  })();
   const d = new Date(entry.createdAt);
   const dayNum = d.getDate();
   const monthCode = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();

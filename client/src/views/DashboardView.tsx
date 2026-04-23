@@ -181,7 +181,7 @@ const Greeting = styled.h1`
   font-size: 40px;
   font-weight: 400;
   font-style: italic;
-  line-height: 1;
+  line-height: 1.37;
   color: var(--ink, ${({ theme }) => theme.colors.text});
   margin: 0;
   letter-spacing: -0.005em;
@@ -351,10 +351,11 @@ const CardBody = styled.div`
 `;
 
 const QuickEntryDashCard = styled(DashCard)`
+  overflow: visible;
   background: #c8c8c866;
   border-color: #d9cfb8;
   & ${CardHeader} { border-bottom-color: #d9cfb8; }
-  & ${CardBody} { padding: 16px 20px; }
+  & ${CardBody} { padding: 16px 20px; overflow: visible; }
   :root[data-theme="dark"] & {
     background: var(--paper-surface);
     border-color: var(--rule);
@@ -2925,7 +2926,7 @@ export function DashboardView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
   const displayName = useUIStore(s => s.displayName);
   const sidebarCollapsed = useUIStore(s => s.sidebarCollapsed);
   const setSidebarCollapsed = useUIStore(s => s.setSidebarCollapsed);

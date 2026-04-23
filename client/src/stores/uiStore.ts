@@ -110,9 +110,9 @@ export const useUIStore = create<UIState>((set) => ({
   setPencilOnly: (v) => set({ pencilOnly: v }),
 
   themeMode: 'light',
-  headerColor: '#6A9B9B',
+  headerColor: '#4A5568',
   accentColor: '#00b4d8',
-  backgroundImage: '/backgrounds/chronicles-bg-6.png',
+  backgroundImage: '/backgrounds/madebytin-lemon-8293725.jpg',
   backgroundOpacity: 0.7,
   setThemeMode: (mode) => set({ themeMode: mode }),
   setHeaderColor: (color) => set({ headerColor: color }),

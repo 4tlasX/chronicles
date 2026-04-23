@@ -336,7 +336,7 @@ export function EntryForm({
   dictationControlRef,
 }: EntryFormProps) {
   const isFavorite = !!customFields._isFavorite;
-  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
   const [fieldsExpanded, setFieldsExpanded] = useState(true);
   const [userFieldsExpanded, setUserFieldsExpanded] = useState(true);
   const [toolbarOpen, setToolbarOpen] = useState(false);

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPrint } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faPrint } from '@fortawesome/free-solid-svg-icons';
 import { EmptyState } from '../atoms/EmptyState.js';
 import { EditableEntryCard } from './EditableEntryCard.js';
 import type { DecryptedPost } from '@shared/crypto/types';
@@ -32,6 +32,31 @@ const Head = styled.div`
   align-items: flex-end;
   gap: 16px;
   flex-shrink: 0;
+`;
+
+const MobileBackBtn = styled.button`
+  display: none;
+  align-items: center;
+  align-self: flex-end;
+  margin-bottom: -6px;
+  gap: 6px;
+  padding: 6px 10px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 12px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.surface};
+  }
+
+  @media (max-width: 1024px) {
+    display: flex;
+  }
 `;
 
 const TitleBlock = styled.div``;
@@ -370,6 +395,10 @@ export function TopicEntryList({
             {kicker && <Kicker>{kicker}</Kicker>}
             <TitleText>{title}</TitleText>
           </TitleBlock>
+          <MobileBackBtn onClick={onMobileBack}>
+            <FontAwesomeIcon icon={faChevronLeft} />
+            All Topics
+          </MobileBackBtn>
         </Head>
       )}
 

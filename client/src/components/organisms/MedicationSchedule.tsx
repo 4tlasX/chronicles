@@ -178,7 +178,7 @@ interface MedicationScheduleProps {
 export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
 
   const [viewDate, setViewDate] = useState(() => toDateStr(new Date()));
   const [doseLogs, setDoseLogs] = useState<Record<string, DoseLogRecord>>({});

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBookmark, faXmark, faPlus, faSlidersH, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
@@ -12,6 +12,7 @@ import { PlanningTabBar } from '../components/molecules/PlanningTabBar.js';
 import { GoalCard } from '../components/organisms/GoalCard.js';
 import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
+import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
@@ -316,6 +317,59 @@ const HintIcon = styled.div`
   opacity: 0.3;
 `;
 
+/* ── Add button dropdown ── */
+
+const AddBtnWrap = styled.div`
+  position: relative;
+`;
+
+const AddBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+  &:hover { color: ${({ theme }) => theme.colors.text}; }
+`;
+
+const AddDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 140px;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  box-shadow: ${({ theme }) => theme.shadow.lg};
+  z-index: 50;
+  overflow: hidden;
+`;
+
+const AddDropdownItem = styled.button`
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-size: 14px;
+  text-align: left;
+  color: ${({ theme }) => theme.colors.text};
+  background: none;
+  border: none;
+  cursor: pointer;
+  &:hover { background: rgba(0, 0, 0, 0.04); }
+  &:not(:last-child) { border-bottom: 1px solid ${({ theme }) => theme.colors.borderSoft}; }
+`;
+
 /* ── Data ── */
 
 const ITEM_TYPES = [
@@ -330,6 +384,7 @@ const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
   { value: 'in_progress', label: 'In Progress' },
   { value: 'not_started', label: 'Not Started' },
+  { value: 'not_completed', label: 'Not Completed' },
   { value: 'completed', label: 'Completed' },
 ];
 
@@ -347,7 +402,7 @@ export function PlannerFilterView() {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
-  const headerColor = useUIStore(s => s.headerColor) || '#6A9B9B';
+  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
   const navigate = useNavigate();
   const { encryptPost } = useEncryption();
 
@@ -360,6 +415,23 @@ export function PlannerFilterView() {
   const [saveName, setSaveName] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
+
+  // Add new item state
+  const [addDropdownOpen, setAddDropdownOpen] = useState(false);
+  const [addType, setAddType] = useState<'goal' | 'milestone' | 'task' | null>(null);
+  const addDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close add dropdown on outside click
+  useEffect(() => {
+    if (!addDropdownOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (addDropdownRef.current && !addDropdownRef.current.contains(e.target as Node)) {
+        setAddDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [addDropdownOpen]);
 
   // Load saved filters
   useEffect(() => {
@@ -451,6 +523,7 @@ export function PlannerFilterView() {
     const matchGoalStatus = (status: string) => {
       if (goalStatus === 'all') return true;
       if (goalStatus === 'completed') return status === 'completed';
+      if (goalStatus === 'not_completed') return status !== 'completed';
       if (goalStatus === 'active') return status === 'active' || status === 'not_started' || status === '';
       if (goalStatus === 'not_started') return status === 'not_started' || status === '';
       if (goalStatus === 'in_progress') return status === 'in_progress';
@@ -460,6 +533,7 @@ export function PlannerFilterView() {
     const matchTaskStatus = (completed: boolean, inProgress: boolean) => {
       if (taskStatus === 'all') return true;
       if (taskStatus === 'completed') return completed;
+      if (taskStatus === 'not_completed') return !completed;
       if (taskStatus === 'in_progress') return !completed && inProgress;
       if (taskStatus === 'not_started') return !completed && !inProgress;
       return true;
@@ -613,9 +687,56 @@ export function PlannerFilterView() {
     return (<ContentTemplate><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}><Spinner size={40} /></div></ContentTemplate>);
   }
 
+  const goalTopic = allTopics.find(t => t.name.toLowerCase() === 'goal');
+  const milestoneTopic = allTopics.find(t => t.name.toLowerCase() === 'milestone');
+  const taskTopic = allTopics.find(t => t.name.toLowerCase() === 'task');
+  const activeTopic = addType === 'goal' ? goalTopic : addType === 'milestone' ? milestoneTopic : addType === 'task' ? taskTopic : undefined;
+
   return (
     <ContentTemplate>
-      <ViewHeader title="Planning" titleTo="/goals" onBack={() => navigate('/goals')} />
+      <ViewHeader
+        title="Planning"
+        titleTo="/goals"
+        onBack={() => navigate('/goals')}
+        right={
+          <AddBtnWrap ref={addDropdownRef}>
+            <AddBtn onClick={() => setAddDropdownOpen(o => !o)}>
+              <FontAwesomeIcon icon={faPlus} />
+              Add
+            </AddBtn>
+            {addDropdownOpen && (
+              <AddDropdown>
+                {goalTopic && (
+                  <AddDropdownItem onClick={() => { setAddType('goal'); setAddDropdownOpen(false); }}>
+                    Goal
+                  </AddDropdownItem>
+                )}
+                {milestoneTopic && (
+                  <AddDropdownItem onClick={() => { setAddType('milestone'); setAddDropdownOpen(false); }}>
+                    Milestone
+                  </AddDropdownItem>
+                )}
+                {taskTopic && (
+                  <AddDropdownItem onClick={() => { setAddType('task'); setAddDropdownOpen(false); }}>
+                    Task / Todo
+                  </AddDropdownItem>
+                )}
+              </AddDropdown>
+            )}
+          </AddBtnWrap>
+        }
+      />
+
+      {activeTopic && (
+        <NewEntryCard
+          topic={activeTopic}
+          headerColor={headerColor}
+          onCreated={(id) => { setEditingId(id); setAddType(null); }}
+          hideButton
+          isOpen={addType !== null}
+          onOpenChange={(open) => { if (!open) setAddType(null); }}
+        />
+      )}
 
       <PlanningTabBar />
 

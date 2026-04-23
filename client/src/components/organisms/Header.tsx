@@ -545,7 +545,7 @@ export function Header() {
 
   const isActive = (path: string) => location.pathname === path;
   const themeMode = useUIStore(s => s.themeMode);
-  const bgColor = headerColor || '#6A9B9B';
+  const bgColor = headerColor || '#4A5568';
   const light = isLightColor(bgColor);
   const userInitial = (displayName || 'J')[0].toUpperCase();
 
@@ -588,7 +588,7 @@ export function Header() {
     ff.goalsEnabled && { to: '/goals/milestones', label: 'Milestones', icon: faLayerGroup },
     { to: '/goals/tasks', label: 'Tasks', icon: faCheck },
     { to: '/goals/todos', label: 'Todos', icon: faCircleCheck },
-    { to: '/goals/filter', label: 'Planner Filter', icon: faSlidersH },
+    { to: '/goals/filter', label: 'Filters', icon: faSlidersH },
   ].filter(Boolean) as { to: string; label: string; icon: IconDefinition }[];
 
   const healthDropdownItems = [
@@ -733,7 +733,7 @@ export function Header() {
           {ff.goalsEnabled && mobileNav('/goals/milestones', 'Milestones', faLayerGroup)}
           {mobileNav('/goals/tasks', 'Tasks', faCheck)}
           {mobileNav('/goals/todos', 'Todos', faCircleCheck)}
-          {mobileNav('/goals/filter', 'Planner Filter', faSlidersH)}
+          {mobileNav('/goals/filter', 'Filters', faSlidersH)}
 
           {healthItems.length > 0 && (
             <>
