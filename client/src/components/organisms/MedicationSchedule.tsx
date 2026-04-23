@@ -146,6 +146,7 @@ const DoseInfo = styled.div`
 const DoseName = styled.span<{ $taken: boolean; $color: string }>`
   font-size: 16px;
   font-weight: 500;
+  font-style: italic;
   color: ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.text};
   text-decoration: ${({ $taken }) => $taken ? 'line-through' : 'none'};
 `;

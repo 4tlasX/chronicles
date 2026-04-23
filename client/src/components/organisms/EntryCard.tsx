@@ -67,14 +67,14 @@ const Row = styled.div<{ $active?: boolean }>`
   display: grid;
   grid-template-columns: 44px 1fr;
   gap: 10px;
-  align-items: start;
+  align-items: center;
   background: ${({ $active }) => $active ? 'var(--paper-well, rgba(0,0,0,0.04))' : 'transparent'};
   border-left: 2px solid ${({ $active }) => $active ? 'var(--accent-stroke, #2b2824)' : 'transparent'};
   padding-left: ${({ $active }) => $active ? 'calc(var(--s-4, 16px) - 2px)' : 'var(--s-4, 16px)'};
   transition: background 120ms;
 
   &:hover {
-    background: var(--paper-hover, rgba(0,0,0,0.02));
+    background: var(--paper-well, rgba(0,0,0,0.04));
   }
 `;
 
@@ -140,11 +140,11 @@ const FooterMeta = styled.div`
   color: var(--ink-4, #8a857c);
 `;
 
-const TopicDot = styled.span<{ $color?: string }>`
+const TopicDot = styled.span`
   width: 6px;
   height: 6px;
   border-radius: 1px;
-  background: ${({ $color }) => $color || 'var(--ink-3, #6b645a)'};
+  background: var(--ink-4, #8a857c);
   flex-shrink: 0;
   display: inline-block;
   cursor: pointer;
@@ -191,9 +191,7 @@ export function EntryCard({
         <FooterMeta>
           {topicName && (
             <>
-              <TopicDot
-                onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }}
-              />
+              <TopicDot onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }} />
               <span
                 style={{ cursor: 'pointer' }}
                 onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }}

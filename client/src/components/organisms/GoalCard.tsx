@@ -89,6 +89,7 @@ const Title = styled.div<{ $completed?: boolean }>`
   flex: 1;
   font-family: var(--sans, 'Lato', sans-serif);
   font-size: 15px;
+  font-style: italic;
   color: ${({ $completed }) => $completed ? 'var(--ink-4, #8a857c)' : 'var(--ink, #2b2824)'};
   line-height: 1.4;
   text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
