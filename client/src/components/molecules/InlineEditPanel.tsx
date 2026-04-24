@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { Spinner } from '../atoms/Spinner.js';
 
 function isDark(bg: string): boolean {
@@ -13,20 +16,33 @@ const overlay = (theme: { colors: { background: string } }, alpha: number) =>
     : `rgba(0,0,0,${alpha})`;
 
 const Panel = styled.div`
-  background: transparent;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
   margin: 20px 0;
-  padding: 16px 0 8px;
+  padding: 24px 16px 8px;
   border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: var(--r-md, 4px);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 
   & input, & select, & textarea {
     border-color: ${({ theme }) => theme.colors.border};
   }
 `;
 
+const SectionHeader = styled.div<{ $noTopicPicker?: boolean }>`
+  font-family: var(--sans, 'Lato', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-4, ${({ theme }) => theme.colors.textMuted});
+  margin: ${({ $noTopicPicker }) => $noTopicPicker ? '16px' : '0'} 16px 6px;
+`;
+
 const EditorWrap = styled.div`
   margin: 0 16px 15px;
   overflow: hidden;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
   border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: 4px;
 
@@ -34,35 +50,59 @@ const EditorWrap = styled.div`
   & > div { min-height: unset; }
   && .tiptap {
     min-height: 60px;
-    padding: 10px 40px 10px 10px;
+    padding: 15px 40px 15px 15px;
+    font-family: var(--sans, 'Lato', sans-serif);
+    font-style: italic;
     font-size: 16px;
     line-height: 1.6;
   }
 `;
 
 const FieldsWrap = styled.div`
-  padding: 12px 24px 20px;
-  @media (max-width: 768px) { padding: 12px 16px 18px; }
-  @media (max-width: 480px) { padding: 10px 12px 16px; }
+  padding: 12px 16px 24px;
+  @media (max-width: 768px) { padding: 12px 16px 22px; }
+  @media (max-width: 480px) { padding: 10px 12px 18px; }
 `;
 
-const FieldsSection = styled.div`
+const FieldsSectionWrap = styled.div`
   margin: 10px 16px 0;
+`;
+
+const FieldsToggle = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px 10px 0;
+  font-family: var(--sans, 'Lato', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
   background: transparent;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 120ms;
+`;
+
+const FieldsContent = styled.div<{ $open: boolean }>`
+  display: ${({ $open }) => $open ? 'block' : 'none'};
+  padding: 14px 16px 20px;
+  margin-top: 8px;
+  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
   border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
   border-radius: var(--r-md, 4px);
-  padding: 14px 16px;
 `;
 
 const Actions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 16px 24px 8px;
+  padding: 24px 16px 24px;
   border-radius: 0;
   flex-wrap: wrap;
-  @media (max-width: 768px) { padding: 16px 16px 8px; }
-  @media (max-width: 480px) { padding: 12px 12px 8px; gap: 8px; }
 `;
 
 const ActionBtn = styled.button`
@@ -107,9 +147,7 @@ const EditTitle = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: ${({ theme }) => theme.colors.textMuted};
-  padding: 0 24px 8px;
-  @media (max-width: 768px) { padding: 0 16px 8px; }
-  @media (max-width: 480px) { padding: 0 12px 8px; }
+  padding: 0 16px 8px;
 `;
 
 interface InlineEditPanelProps {
@@ -125,12 +163,23 @@ interface InlineEditPanelProps {
 }
 
 export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title, topicSelector }: InlineEditPanelProps) {
+  const [fieldsOpen, setFieldsOpen] = useState(false);
+
   return (
     <Panel>
       {title && <EditTitle>{title}</EditTitle>}
       {topicSelector && <FieldsWrap>{topicSelector}</FieldsWrap>}
+      <SectionHeader $noTopicPicker={!topicSelector}>Main content</SectionHeader>
       <EditorWrap>{editor}</EditorWrap>
-      {fields && <FieldsSection>{fields}</FieldsSection>}
+      {fields && (
+        <FieldsSectionWrap>
+          <FieldsToggle onClick={() => setFieldsOpen(o => !o)}>
+            <FontAwesomeIcon icon={fieldsOpen ? faChevronDown : faChevronRight} style={{ fontSize: 11 }} />
+            Custom fields
+          </FieldsToggle>
+          <FieldsContent $open={fieldsOpen}>{fields}</FieldsContent>
+        </FieldsSectionWrap>
+      )}
       <Actions>
         <SaveBtn
           onClick={onSave}

@@ -102,7 +102,7 @@ function generateTenantSchemaStatements(schemaName: string): string[] {
       ('Research', 'magnifying-glass', '#10B981'),
       ('Event', 'calendar', '#F59E0B'),
       ('Meeting', 'users', '#EC4899'),
-      ('Food', 'utensils', '#F97316'),
+      ('Meals', 'utensils', '#F97316'),
       ('Exercise', 'dumbbell', '#EF4444'),
       ('Medication', 'pills', '#14B8A6'),
       ('Symptom', 'flask', '#EF4444'),

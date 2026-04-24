@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { useId, useRef, type ReactNode } from 'react';
+import { useId, useRef, useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useFocusTrap } from '../../hooks/useFocusTrap.js';
 
@@ -13,6 +13,8 @@ const Overlay = styled.div`
   background: rgba(43, 40, 36, 0.48);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
+  overscroll-behavior: contain;
+  touch-action: none;
 `;
 
 const Content = styled.div<{ $size: string }>`
@@ -27,6 +29,8 @@ const Content = styled.div<{ $size: string }>`
   border-radius: var(--r-lg, ${({ theme }) => theme.borderRadius.lg}px);
   box-shadow: var(--shadow-3, ${({ theme }) => theme.shadow.lg});
   overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 `;
 
 const Header = styled.div`
@@ -94,6 +98,24 @@ export function Modal({ open, onClose, title, size = 'md', children, footer }: M
   const titleId = useId();
 
   useFocusTrap(contentRef, open, onClose);
+
+  useEffect(() => {
+    if (!open) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [open]);
 
   if (!open) return null;
 

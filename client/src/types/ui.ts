@@ -1,4 +1,4 @@
-export type ViewMode = 'date' | 'all' | 'tasks' | 'favorites' | 'search';
+export type ViewMode = 'date' | 'all' | 'tasks' | 'favorites' | 'search' | 'orphaned';
 
 export interface IconOption {
   name: string;

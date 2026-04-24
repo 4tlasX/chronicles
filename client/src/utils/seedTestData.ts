@@ -141,40 +141,40 @@ export async function seedTestData(deps: SeedDeps): Promise<string> {
 
     // ── Food (multi-day, varied meals) ──
     // Today
-    await createEntry(deps, 'Morning smoothie — banana, spinach, protein powder, almond milk', 'Food', {
+    await createEntry(deps, 'Morning smoothie — banana, spinach, protein powder, almond milk', 'Meals', {
       mealType: 'breakfast', consumedDate: today, consumedTime: '07:30', ingredients: 'banana, spinach, protein powder, almond milk', calories: '350', notes: 'Added extra protein today',
     }); count++;
-    await createEntry(deps, 'Grilled chicken salad with avocado and quinoa', 'Food', {
+    await createEntry(deps, 'Grilled chicken salad with avocado and quinoa', 'Meals', {
       mealType: 'lunch', consumedDate: today, consumedTime: '12:30', ingredients: 'chicken breast, mixed greens, avocado, quinoa, cherry tomatoes, olive oil dressing', calories: '580', notes: 'Great balance of protein and healthy fats',
     }); count++;
-    await createEntry(deps, 'Handful of almonds and a banana', 'Food', {
+    await createEntry(deps, 'Handful of almonds and a banana', 'Meals', {
       mealType: 'snack', consumedDate: today, consumedTime: '15:30', ingredients: 'almonds, banana', calories: '250', notes: '',
     }); count++;
     // Yesterday
-    await createEntry(deps, 'Scrambled eggs on sourdough with avocado', 'Food', {
+    await createEntry(deps, 'Scrambled eggs on sourdough with avocado', 'Meals', {
       mealType: 'breakfast', consumedDate: yesterday, consumedTime: '08:00', ingredients: 'eggs, sourdough bread, avocado, salt, pepper, chili flakes', calories: '450', notes: 'Used farm-fresh eggs',
     }); count++;
-    await createEntry(deps, 'Turkey and hummus wrap with side salad', 'Food', {
+    await createEntry(deps, 'Turkey and hummus wrap with side salad', 'Meals', {
       mealType: 'lunch', consumedDate: yesterday, consumedTime: '12:45', ingredients: 'whole wheat wrap, turkey, hummus, lettuce, tomato, cucumber, side salad', calories: '520', notes: '',
     }); count++;
-    await createEntry(deps, 'Salmon with roasted vegetables and brown rice', 'Food', {
+    await createEntry(deps, 'Salmon with roasted vegetables and brown rice', 'Meals', {
       mealType: 'dinner', consumedDate: yesterday, consumedTime: '19:00', ingredients: 'salmon fillet, broccoli, sweet potato, brown rice, lemon, garlic', calories: '650', notes: 'Pan-seared salmon — came out perfectly',
     }); count++;
-    await createEntry(deps, 'Greek yogurt with honey and walnuts', 'Food', {
+    await createEntry(deps, 'Greek yogurt with honey and walnuts', 'Meals', {
       mealType: 'snack', consumedDate: yesterday, consumedTime: '21:00', ingredients: 'greek yogurt, honey, walnuts', calories: '220', notes: '',
     }); count++;
     // 2 days ago
-    await createEntry(deps, 'Oatmeal with blueberries and chia seeds', 'Food', {
+    await createEntry(deps, 'Oatmeal with blueberries and chia seeds', 'Meals', {
       mealType: 'breakfast', consumedDate: twoDaysAgo, consumedTime: '07:45', ingredients: 'oats, blueberries, chia seeds, almond milk, maple syrup', calories: '380', notes: '',
     }); count++;
-    await createEntry(deps, 'Chicken tikka masala with naan bread', 'Food', {
+    await createEntry(deps, 'Chicken tikka masala with naan bread', 'Meals', {
       mealType: 'dinner', consumedDate: twoDaysAgo, consumedTime: '19:30', ingredients: 'chicken, tikka sauce, basmati rice, naan, raita', calories: '780', notes: 'Homemade — turned out amazing. Save recipe.',
     }); count++;
     // 3 days ago
-    await createEntry(deps, 'Veggie burger with sweet potato fries', 'Food', {
+    await createEntry(deps, 'Veggie burger with sweet potato fries', 'Meals', {
       mealType: 'lunch', consumedDate: threeDaysAgo, consumedTime: '13:00', ingredients: 'black bean patty, brioche bun, lettuce, tomato, pickles, sweet potato fries', calories: '620', notes: 'From that new place downtown',
     }); count++;
-    await createEntry(deps, 'Pasta carbonara with garlic bread', 'Food', {
+    await createEntry(deps, 'Pasta carbonara with garlic bread', 'Meals', {
       mealType: 'dinner', consumedDate: threeDaysAgo, consumedTime: '19:15', ingredients: 'spaghetti, pancetta, eggs, parmesan, garlic bread', calories: '720', notes: 'Went a bit heavy today. Worth it.',
     }); count++;
 

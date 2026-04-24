@@ -1,7 +1,7 @@
 import { useCallback, type KeyboardEvent } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faList, faSun, faCalendar, faMagnifyingGlass, faBookmark } from '@fortawesome/free-solid-svg-icons';
+import { faList, faSun, faCalendar, faMagnifyingGlass, faBookmark, faQuestion } from '@fortawesome/free-solid-svg-icons';
 import { useUIStore } from '../../stores/uiStore.js';
 import type { ViewMode } from '../../types/ui.js';
 
@@ -19,6 +19,7 @@ const tabs: TabEntry[] = [
   { value: 'date',      icon: faCalendar,        label: 'Date',      title: 'Pick a date' },
   { value: 'favorites', icon: faBookmark,        label: 'Bookmarks', title: 'Bookmarked entries' },
   { value: 'search',    icon: faMagnifyingGlass, label: 'Search',    title: 'Search entries' },
+  { value: 'orphaned',  icon: faQuestion,        label: 'Orphaned',  title: 'Entries with missing topics' },
 ];
 
 const Container = styled.div`

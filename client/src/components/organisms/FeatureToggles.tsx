@@ -22,7 +22,7 @@ const ToggleList = styled.div`
 `;
 
 const features = [
-  { key: 'foodEnabled', label: 'Food Tracking' },
+  { key: 'foodEnabled', label: 'Meals Tracking' },
   { key: 'medicationEnabled', label: 'Medication Tracking' },
   { key: 'goalsEnabled', label: 'Goals & Milestones' },
   { key: 'exerciseEnabled', label: 'Exercise Tracking' },

@@ -453,7 +453,7 @@ const QuickEditorWrap = styled.div`
 
   .tiptap {
     padding: 20px;
-    font-family: var(--serif);
+    font-family: var(--sans, 'Lato', sans-serif);
     font-style: italic;
     font-size: 16px;
     line-height: 1.6;
@@ -619,7 +619,7 @@ const PriorityNumber = PriNum;
 
 /* ── Drag & Drop ── */
 
-type StaticCardId = 'priorities' | 'quick-entry' | 'tasks' | 'events' | 'shopping' | 'meds' | 'weather' | 'menu-plan' | 'affirmations' | 'wellness' | 'mini-calendar';
+type StaticCardId = 'priorities' | 'quick-entry' | 'meals-quick' | 'tasks' | 'events' | 'shopping' | 'meds' | 'weather' | 'menu-plan' | 'affirmations' | 'wellness' | 'mini-calendar';
 type CardId = StaticCardId | `topic-${number}`;
 
 function isValidCardId(id: string): id is CardId {
@@ -633,6 +633,7 @@ const LS_KEY = 'dashboard-layout-v2';
 
 const STATIC_LABELS: Record<StaticCardId, string> = {
   'quick-entry': 'Quick Entry',
+  'meals-quick': 'Log Meal',
   'priorities': 'Priorities',
   'mini-calendar': 'Mini Calendar',
   'events': 'Events & Meetings',
@@ -1011,7 +1012,7 @@ interface FieldDef { key: string; label: string; type: FieldType; options?: stri
 const TOPIC_FIELDS: Record<string, FieldDef[]> = {
   'medication':  [],
   'symptom':     [{ key: 'severity', label: 'Severity', type: 'select', options: ['Mild', 'Moderate', 'Severe'] }, { key: 'duration', label: 'Duration', type: 'text' }],
-  'food':        [{ key: 'mealType', label: 'Meal', type: 'select', options: ['Breakfast', 'Lunch', 'Dinner', 'Snack'] }, { key: 'calories', label: 'Calories', type: 'number' }, { key: 'ingredients', label: 'Ingredients', type: 'text' }],
+  'meals':       [{ key: 'mealType', label: 'Meal', type: 'select', options: ['Breakfast', 'Lunch', 'Dinner', 'Snack'] }, { key: 'calories', label: 'Calories', type: 'number' }, { key: 'ingredients', label: 'Ingredients', type: 'text' }],
   'exercise':    [{ key: 'exerciseType', label: 'Type', type: 'text' }, { key: 'duration', label: 'Duration (min)', type: 'number' }, { key: 'intensity', label: 'Intensity', type: 'select', options: ['Low', 'Medium', 'High'] }],
   'allergy':     [{ key: 'allergen', label: 'Allergen', type: 'text' }, { key: 'severity', label: 'Severity', type: 'select', options: ['Mild', 'Moderate', 'Severe'] }, { key: 'reaction', label: 'Reaction', type: 'text' }],
   'task':        [{ key: 'priority', label: 'Priority', type: 'select', options: ['urgent', 'high', 'medium', 'low', 'none'] }],
@@ -1285,6 +1286,159 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
         </SaveRow>
       </CardBody>
     </QuickEntryDashCard>
+  );
+}
+
+/* ── Widget: Meals Quick Entry ── */
+
+const MealTypeRow = styled.div`
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+`;
+
+const MealTypeBtn = styled.button<{ $active?: boolean; $accent: string }>`
+  flex: 1;
+  padding: 8px 4px;
+  font-family: var(--ui, 'Montserrat', sans-serif);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: ${({ $active }) => $active ? 'white' : 'var(--ink-3, #6b645a)'};
+  background: ${({ $active, $accent }) => $active ? $accent : 'var(--paper-well, #e8e3d7)'};
+  border: 1px solid ${({ $active }) => $active ? 'transparent' : 'var(--rule, #d4cfc3)'};
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  &:hover {
+    background: ${({ $active, $accent }) => $active ? $accent : 'var(--paper-surface, #f5f2ea)'};
+  }
+`;
+
+const MealsInput = styled.input`
+  width: 100%;
+  padding: 10px 12px;
+  font-family: var(--sans, 'Lato', sans-serif);
+  font-size: 14px;
+  color: var(--ink, #2b2824);
+  background: var(--paper-well, #e8e3d7);
+  border: 1px solid var(--rule, #d4cfc3);
+  border-radius: 4px;
+  &:focus { outline: none; border-color: var(--accent, #00b4d8); }
+  &::placeholder { color: var(--ink-4, #8a857c); font-style: italic; }
+`;
+
+const MealsRow = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+`;
+
+const CaloriesInput = styled.input`
+  width: 80px;
+  padding: 8px 10px;
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 12px;
+  color: var(--ink, #2b2824);
+  background: var(--paper-well, #e8e3d7);
+  border: 1px solid var(--rule, #d4cfc3);
+  border-radius: 4px;
+  &:focus { outline: none; border-color: var(--accent, #00b4d8); }
+  &::placeholder { color: var(--ink-4, #8a857c); }
+`;
+
+function MealsQuickCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
+  const { encryptPost } = useEncryption();
+  const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
+  const allTopics = useEntriesStore(s => s.allTopics);
+  const [mealType, setMealType] = useState<string>('');
+  const [description, setDescription] = useState('');
+  const [calories, setCalories] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const mealsTopic = useMemo(() => allTopics.find(t => t.name.toLowerCase() === 'meals'), [allTopics]);
+  const canSave = !!mealType && (!!description.trim() || !!calories);
+
+  const handleSave = async () => {
+    if (!canSave || !mealsTopic) return;
+    setSaving(true);
+    try {
+      const content = description.trim() || `${mealType}${calories ? ` — ${calories} cal` : ''}`;
+      const metadata: Record<string, unknown> = {
+        _taxonomyId: mealsTopic.id,
+        _customFields: {
+          mealType,
+          ...(calories ? { calories: Number(calories) } : {}),
+        },
+      };
+      const encrypted = await encryptPost(content, metadata);
+      const result = await entriesApi.create({
+        contentEncrypted: encrypted.contentEncrypted,
+        contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted,
+        metadataIv: encrypted.metadataIv,
+        isEncrypted: true,
+        taxonomyIds: [mealsTopic.id],
+      });
+      addDecryptedEntry({
+        id: result.id as number,
+        content,
+        metadata,
+        isEncrypted: true,
+        createdAt: new Date(result.createdAt as string),
+        updatedAt: new Date(result.createdAt as string),
+      });
+      setMealType('');
+      setDescription('');
+      setCalories('');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!mealsTopic) return null;
+
+  return (
+    <DashCard>
+      <CardHeader>
+        <CardIconWrap><FontAwesomeIcon icon={faUtensils} /></CardIconWrap>
+        <CardTitle>Log Meal</CardTitle>
+        {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
+      </CardHeader>
+      <CardBody>
+        <MealTypeRow>
+          {['Breakfast', 'Lunch', 'Dinner', 'Snack'].map(type => (
+            <MealTypeBtn
+              key={type}
+              $active={mealType === type}
+              $accent={accentColor}
+              onClick={() => setMealType(mealType === type ? '' : type)}
+            >
+              {type}
+            </MealTypeBtn>
+          ))}
+        </MealTypeRow>
+        <MealsInput
+          type="text"
+          placeholder="What did you eat?"
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && canSave) handleSave(); }}
+        />
+        <MealsRow>
+          <CaloriesInput
+            type="number"
+            placeholder="Cal"
+            value={calories}
+            onChange={e => setCalories(e.target.value)}
+          />
+          <SaveBtn $accent={accentColor} $active={canSave} onClick={handleSave} disabled={saving || !canSave} style={{ flex: 1 }}>
+            {saving ? <Spinner size={10} /> : 'Log meal'}
+          </SaveBtn>
+        </MealsRow>
+      </CardBody>
+    </DashCard>
   );
 }
 
@@ -3173,6 +3327,7 @@ export function DashboardView() {
               case 'priorities':  return <PrioritiesCard accentColor={headerColor} {...drag} />;
               case 'tasks':       return <TasksCard accentColor={headerColor} tasks={tasks} taskTopicId={taskTopicId} {...drag} />;
               case 'quick-entry': return <QuickEntryCard accentColor={headerColor} topics={allTopics} {...drag} />;
+              case 'meals-quick': return <MealsQuickCard accentColor={headerColor} {...drag} />;
               case 'events':      return <EventsCard accentColor={headerColor} events={events} {...drag} />;
               case 'shopping':    return <ShoppingCard accentColor={headerColor} listEntry={shoppingListEntry ? { id: shoppingListEntry.id, content: shoppingListEntry.content, metadata: shoppingListEntry.metadata as Record<string, unknown> } : null} {...drag} />;
               case 'meds':        return <MedsCard accentColor={headerColor} {...drag} />;

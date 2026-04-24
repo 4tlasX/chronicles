@@ -106,7 +106,7 @@ export function HealthReportingView() {
     }), [filterByTopic]);
 
   const foods: DecryptedFood[] = useMemo(() =>
-    filterByTopic('food').map(e => {
+    filterByTopic('meals').map(e => {
       const cf = ((e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>) || {};
       const dateStr = (cf.consumedDate as string) || '';
       const timeStr = (cf.consumedTime as string) || '12:00';

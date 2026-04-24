@@ -105,7 +105,7 @@ const TIMEZONES = [
 ];
 
 const FEATURES = [
-  { key: 'foodEnabled', title: 'Food', description: 'Track meals and nutrition' },
+  { key: 'foodEnabled', title: 'Meals', description: 'Track meals and nutrition' },
   { key: 'medicationEnabled', title: 'Medication', description: 'Track medications and health' },
   { key: 'goalsEnabled', title: 'Goal', description: 'Set and track goals' },
   { key: 'milestonesEnabled', title: 'Milestone', description: 'Break goals into milestones' },
@@ -727,12 +727,12 @@ export function SettingsView() {
           <p style={{ marginTop: 16 }}><strong>Getting Started</strong></p>
           <ul style={{ marginTop: 8, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <li>Click <strong>New Entry</strong> in the header or press <strong>Ctrl+N</strong> (Cmd+N) to start writing.</li>
-            <li>Assign a <strong>topic</strong> from the dropdown in the editor to categorize your entry. Topics like Task, Goal, Food, and Medication unlock extra fields.</li>
+            <li>Assign a <strong>topic</strong> from the dropdown in the editor to categorize your entry. Topics like Task, Goal, Meals, and Medication unlock extra fields.</li>
             <li>Use <strong>Ctrl+D</strong> (Cmd+D) to delete the selected entry, and <strong>Enter</strong> to save in compact mode.</li>
           </ul>
 
           <p style={{ marginTop: 16 }}><strong>Topics</strong></p>
-          <p style={{ marginTop: 4 }}>Topics organize your entries with icons and colors. Manage them from the <strong>Topics</strong> page in the navigation. Some topics are special — selecting Task, Goal, Milestone, Food, Medication, Symptom, Exercise, Event, or Meeting will reveal additional fields for tracking details.</p>
+          <p style={{ marginTop: 4 }}>Topics organize your entries with icons and colors. Manage them from the <strong>Topics</strong> page in the navigation. Some topics are special — selecting Task, Goal, Milestone, Meals, Medication, Symptom, Exercise, Event, or Meeting will reveal additional fields for tracking details.</p>
 
           <p style={{ marginTop: 16 }}><strong>Quick Tab Filters</strong></p>
           <ul style={{ marginTop: 8, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -744,7 +744,7 @@ export function SettingsView() {
           </ul>
 
           <p style={{ marginTop: 16 }}><strong>Planning &amp; Health</strong></p>
-          <p style={{ marginTop: 4 }}>Enable features like Goals, Milestones, Medication Tracking, Food Logging, and more from the <strong>Features</strong> section below. Each feature adds a dedicated view accessible from the navigation bar.</p>
+          <p style={{ marginTop: 4 }}>Enable features like Goals, Milestones, Medication Tracking, Meals Logging, and more from the <strong>Features</strong> section below. Each feature adds a dedicated view accessible from the navigation bar.</p>
 
           <p style={{ marginTop: 16 }}><strong>Security</strong></p>
           <p style={{ marginTop: 4 }}>Your master encryption key never leaves your browser. If you forget your password, use your <strong>recovery key</strong> (shown once at registration) to regain access. You can manage active sessions and change your password from the Security section below.</p>

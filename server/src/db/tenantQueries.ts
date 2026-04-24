@@ -133,6 +133,12 @@ export async function updateTaxonomy(
   if (updates.icon !== undefined) { setClauses.push(`icon = $${paramIndex++}`); values.push(updates.icon); }
   if (updates.color !== undefined) { setClauses.push(`color = $${paramIndex++}`); values.push(updates.color); }
 
+  if (setClauses.length === 0) {
+    const current = await getTaxonomy(schemaName, id);
+    if (!current) throw new Error('Taxonomy not found');
+    return current;
+  }
+
   values.push(id);
   const result = await prisma.$queryRawUnsafe<TenantTaxonomy[]>(
     `UPDATE ${s}.taxonomies SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING id, name, icon, color, sort_order`,

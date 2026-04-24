@@ -30,7 +30,7 @@ const DEFAULT_TOPICS = [
   { name: 'Research', icon: 'magnifying-glass', color: '#10B981' },
   { name: 'Event', icon: 'calendar', color: '#F59E0B' },
   { name: 'Meeting', icon: 'users', color: '#EC4899' },
-  { name: 'Food', icon: 'utensils', color: '#F97316' },
+  { name: 'Meals', icon: 'utensils', color: '#F97316' },
   { name: 'Exercise', icon: 'dumbbell', color: '#EF4444' },
   { name: 'Medication', icon: 'pills', color: '#14B8A6' },
   { name: 'Symptom', icon: 'flask', color: '#EF4444' },

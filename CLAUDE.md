@@ -343,7 +343,7 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 **Health Tracking**
 - Medications with dosage, frequency, scheduled times
 - Dose logging with timestamps (`medication_dose_logs` table, JIT migration); real-time sync via `visibilitychange`
-- Food tracking with meal types, ingredients, calories
+- Meals tracking with meal types, ingredients, calories
 - Symptom tracking with severity scale
 - Exercise tracking with type, duration, intensity, distance
 - Allergy tracking

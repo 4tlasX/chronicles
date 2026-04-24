@@ -9,7 +9,7 @@ const StyledTextarea = styled.textarea<{ $error?: boolean }>`
   width: 100%;
   min-height: 96px;
   padding: 10px 12px;
-  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-family: var(--sans, 'Lato', sans-serif);
   font-size: 17px;
   font-style: italic;
   line-height: 1.6;

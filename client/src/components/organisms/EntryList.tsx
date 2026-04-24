@@ -1,15 +1,15 @@
 import styled from 'styled-components';
+import { useMemo, useCallback } from 'react';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { EntryCard } from './EntryCard.js';
 import { getTopicIcon } from '../../utils/topicIcons.js';
 import { entries as entriesApi } from '../../services/api.js';
-import { useMemo, useCallback } from 'react';
 import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 
 const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
-  food: 'food', medication: 'medication', symptom: 'symptom',
+  meals: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
 };
 
@@ -156,6 +156,12 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
       const customFields = meta?._customFields as Record<string, unknown> | undefined;
       const taxId = meta?._taxonomyId as number | undefined;
 
+      // Orphaned mode: show only entries with topic ID that doesn't exist
+      if (viewMode === 'orphaned') {
+        return taxId !== undefined && !enabledTopicIds.has(taxId);
+      }
+
+      // Normal modes: hide orphaned entries
       if (taxId && !enabledTopicIds.has(taxId)) return false;
 
       if (viewMode === 'date') {
@@ -218,7 +224,7 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   }, [filteredEntries]);
 
   if (filteredEntries.length === 0) {
-    return <EmptyState>No entries yet</EmptyState>;
+    return <EmptyState>{viewMode === 'orphaned' ? 'No orphaned entries' : 'No entries yet'}</EmptyState>;
   }
 
   return (

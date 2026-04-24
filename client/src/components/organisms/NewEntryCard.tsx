@@ -22,7 +22,7 @@ import type { Topic } from '../../types/topics.js';
 
 const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
-  food: 'food', medication: 'medication', symptom: 'symptom',
+  meals: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
   wellness: 'wellness',
 };

@@ -29,7 +29,7 @@ import type { Topic } from '../../types/topics.js';
 
 const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
-  food: 'food', medication: 'medication', symptom: 'symptom',
+  meals: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
   wellness: 'wellness', allergy: 'allergy',
 };
@@ -141,11 +141,11 @@ const FooterMeta = styled.div`
   flex-wrap: wrap;
 `;
 
-const TopicDot = styled.span<{ $color?: string }>`
+const TopicDot = styled.span`
   width: 6px;
   height: 6px;
   border-radius: 1px;
-  background: ${({ $color }) => $color || 'var(--ink-3, #6b645a)'};
+  background: var(--ink, ${({ theme }) => theme.colors.text});
   flex-shrink: 0;
   display: inline-block;
 `;
@@ -349,7 +349,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   return (
     <Card $accentColor={headerColor} $flat={hideDate} $bare={hidePreview}>
       {!hidePreview && <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing}>
-      <Row role="button" tabIndex={0} onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }} $centered={!showAsPlain} $active={isEditing} $noDate={hideDate}>
+      <Row role="button" tabIndex={0} onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }} $centered $active={isEditing} $noDate={hideDate}>
         {!hideDate && (
           <DateCol>
             <DayNum>{dayNum}</DayNum>
@@ -364,7 +364,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
           <FooterMeta>
             {topic && customType !== 'task' && customType !== 'medication' && customType !== 'food' && customType !== 'symptom' && customType !== 'exercise' && customType !== 'allergy' && (
               <>
-                <TopicDot $color={topic.color ?? undefined} />
+                <TopicDot />
                 <span>{topic.name}</span>
               </>
             )}

@@ -173,9 +173,9 @@ const CustomFieldsHeader = styled.button`
   text-align: left;
 `;
 
-/* cf-card-title: serif italic heading inside header */
+/* cf-card-title: italic heading inside header */
 const CfCardTitle = styled.span`
-  font-family: var(--serif, 'Playfair Display', Georgia, serif);
+  font-family: var(--sans, 'Lato', sans-serif);
   font-style: italic;
   font-size: 18px;
   color: var(--ink, #2b2824);
@@ -290,7 +290,7 @@ function extractTitle(html: string): string {
 
 const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
-  food: 'food', medication: 'medication', symptom: 'symptom',
+  meals: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
   allergy: 'allergy', 'shopping list': 'shopping_list', recipe: 'recipe',
   priorities: 'priorities', wellness: 'wellness',

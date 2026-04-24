@@ -4,7 +4,7 @@ import type { Topic } from '../types/topics.js';
 
 /** Maps feature flag keys to the topic names they control. */
 const FEATURE_TOPIC_MAP: Record<string, string[]> = {
-  foodEnabled: ['Food'],
+  foodEnabled: ['Meals'],
   medicationEnabled: ['Medication', 'Symptom'],
   goalsEnabled: ['Goal'],
   milestonesEnabled: ['Milestone'],

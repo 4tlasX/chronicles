@@ -11,6 +11,9 @@ export const GlobalStyle = createGlobalStyle`
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   body {
@@ -18,6 +21,18 @@ export const GlobalStyle = createGlobalStyle`
     color: var(--ink, ${({ theme }) => theme.colors.text});
     background-color: var(--paper, ${({ theme }) => theme.colors.background});
     line-height: 1.5;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
+  }
+
+  #root {
+    height: 100%;
+    overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   a {
