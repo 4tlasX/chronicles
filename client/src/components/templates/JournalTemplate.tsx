@@ -3,21 +3,20 @@ import type { ReactNode } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useUIStore } from '../../stores/uiStore.js';
-
 const ContentArea = styled.div`
   display: flex;
   flex: 1;
   min-height: 0;
 `;
 
-const StyledSidePanel = styled.div<{ $hiddenMobile?: boolean; $hasBackground?: boolean }>`
+const StyledSidePanel = styled.div<{ $hiddenMobile?: boolean; $isDark?: boolean }>`
   width: 380px;
   min-width: 380px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  background: ${({ $hasBackground, theme }) => $hasBackground ? theme.colors.surfaceOverlay : 'var(--paper)'};
+  background: ${({ $isDark }) => $isDark ? 'rgba(26, 24, 21, 0.90)' : 'rgba(240, 235, 223, 0.90)'};
   border-right: 1px solid ${({ theme }) => theme.colors.border};
 
   @media (max-width: 1024px) {
@@ -28,12 +27,12 @@ const StyledSidePanel = styled.div<{ $hiddenMobile?: boolean; $hasBackground?: b
   }
 `;
 
-const StyledEditorPanel = styled.div<{ $visibleMobile?: boolean; $hasBackground?: boolean }>`
+const StyledEditorPanel = styled.div<{ $visibleMobile?: boolean; $isDark?: boolean }>`
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: ${({ $hasBackground, theme }) => $hasBackground ? theme.colors.surfaceOverlay : 'var(--paper)'};
+  background: ${({ $isDark }) => $isDark ? 'rgba(26, 24, 21, 0.90)' : 'rgba(240, 235, 223, 0.90)'};
 
   @media (max-width: 1024px) {
     display: ${({ $visibleMobile }) => $visibleMobile ? 'flex' : 'none'};
@@ -71,8 +70,8 @@ interface SidePanelProps {
 }
 
 export function SidePanel({ hiddenMobile, children }: SidePanelProps) {
-  const hasBackground = !!useUIStore(s => s.backgroundImage);
-  return <StyledSidePanel $hiddenMobile={hiddenMobile} $hasBackground={hasBackground}>{children}</StyledSidePanel>;
+  const isDark = useUIStore(s => s.themeMode) === 'dark';
+  return <StyledSidePanel $hiddenMobile={hiddenMobile} $isDark={isDark}>{children}</StyledSidePanel>;
 }
 
 interface EditorPanelProps {
@@ -81,8 +80,8 @@ interface EditorPanelProps {
 }
 
 export function EditorPanel({ visibleMobile, children }: EditorPanelProps) {
-  const hasBackground = !!useUIStore(s => s.backgroundImage);
-  return <StyledEditorPanel $visibleMobile={visibleMobile} $hasBackground={hasBackground}>{children}</StyledEditorPanel>;
+  const isDark = useUIStore(s => s.themeMode) === 'dark';
+  return <StyledEditorPanel $visibleMobile={visibleMobile} $isDark={isDark}>{children}</StyledEditorPanel>;
 }
 
 interface MobileBackButtonProps {

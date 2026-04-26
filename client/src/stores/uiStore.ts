@@ -112,7 +112,7 @@ export const useUIStore = create<UIState>((set) => ({
   themeMode: 'light',
   headerColor: '#4A5568',
   accentColor: '#00b4d8',
-  backgroundImage: '/backgrounds/madebytin-lemon-8293725.jpg',
+  backgroundImage: '/backgrounds/teardrop-geo.jpg',
   backgroundOpacity: 0.7,
   setThemeMode: (mode) => set({ themeMode: mode }),
   setHeaderColor: (color) => set({ headerColor: color }),

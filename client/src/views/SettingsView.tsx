@@ -835,7 +835,7 @@ export function SettingsView() {
           <SelectedColorLabel>Selected: {selectedColorLabel}</SelectedColorLabel>
         </ColorSection>
         <ColorSection style={{ borderBottom: 'none' }}>
-          <ColorSectionTitle>Background Pattern</ColorSectionTitle>
+          <ColorSectionTitle>Wallpaper Pattern</ColorSectionTitle>
           <ColorSectionDesc>Choose a subtle paper texture for the background</ColorSectionDesc>
           <BackgroundPicker
             selected={backgroundImage}

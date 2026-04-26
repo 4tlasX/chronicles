@@ -16,14 +16,15 @@ import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { settings as settingsApi } from '../../services/api.js';
 import type { UserFieldDef } from '../../types/userFields.js';
+import { BACKGROUND_IMAGES } from '@chronicles/shared';
 
-const Pane = styled.div<{ $hidden?: boolean }>`
+const Pane = styled.div<{ $hidden?: boolean; $hasBackground?: boolean; $lightBg?: boolean }>`
   width: 300px;
   min-width: 300px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
+  background: ${({ $hasBackground, $lightBg, theme }) => $hasBackground ? ($lightBg ? theme.colors.surfaceOverlayLight : theme.colors.surfaceOverlay) : 'var(--paper)'};
   border-right: 1px solid ${({ theme }) => theme.colors.border};
   @media (max-width: 1024px) {
     width: 100%;
@@ -271,6 +272,9 @@ export function TopicSidebarPanel({
   const [addName, setAddName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
+  const backgroundImage = useUIStore(s => s.backgroundImage);
+  const isLightBg = BACKGROUND_IMAGES.find(bg => bg.value === backgroundImage)?.light ?? false;
+
   const entries = useEntriesStore(s => s.decryptedEntries);
   const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
   const recentCount = entries.filter(e => new Date(e.createdAt).getTime() >= cutoff).length;
@@ -313,7 +317,7 @@ export function TopicSidebarPanel({
   };
 
   return (
-    <Pane $hidden={hiddenMobile}>
+    <Pane $hidden={hiddenMobile} $hasBackground={!!backgroundImage} $lightBg={isLightBg}>
       <Head>
         <HeadTitle>Your Topics</HeadTitle>
       </Head>

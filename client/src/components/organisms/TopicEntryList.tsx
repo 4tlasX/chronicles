@@ -8,16 +8,17 @@ import type { DecryptedPost } from '@shared/crypto/types';
 import type { Topic } from '../../types/topics.js';
 import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 import { useUIStore } from '../../stores/uiStore.js';
+import { BACKGROUND_IMAGES } from '@chronicles/shared';
 
 type DateFilter = 'all' | 'today' | 'week' | 'month';
 
 /* ── Layout ── */
-const Panel = styled.div<{ $hidden?: boolean }>`
+const Panel = styled.div<{ $hidden?: boolean; $hasBackground?: boolean; $lightBg?: boolean }>`
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: ${({ theme }) => theme.colors.surfaceOverlay};
+  background: ${({ $hasBackground, $lightBg, theme }) => $hasBackground ? ($lightBg ? theme.colors.surfaceOverlayLight : theme.colors.surfaceOverlay) : 'var(--paper)'};
   @media (max-width: 1024px) {
     display: ${({ $hidden }) => $hidden ? 'none' : 'flex'};
   }
@@ -370,6 +371,8 @@ export function TopicEntryList({
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [editingId, setExpandedId] = useState<number | null>(null);
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
+  const backgroundImage = useUIStore(s => s.backgroundImage);
+  const isLightBg = BACKGROUND_IMAGES.find(bg => bg.value === backgroundImage)?.light ?? false;
 
   const filtered = useMemo(() => applyDateFilter(entries, dateFilter), [entries, dateFilter]);
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
@@ -388,7 +391,7 @@ export function TopicEntryList({
   };
 
   return (
-    <Panel $hidden={hiddenMobile}>
+    <Panel $hidden={hiddenMobile} $hasBackground={!!backgroundImage} $lightBg={isLightBg}>
       {!hideTitle && (
         <Head>
           <TitleBlock>
