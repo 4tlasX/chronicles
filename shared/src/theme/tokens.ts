@@ -92,8 +92,8 @@ export const lightTheme = {
     surface: '#f7f4ee',
     surfaceHover: '#f0eeea',
     surfaceOverlay: 'rgba(240, 235, 223, 0.92)',
-    surfaceOverlayLight: 'rgba(240, 235, 223, 0.85)',
-    surfaceOverlayBlur: 'rgba(240, 235, 223, 0.75)',
+    surfaceOverlayLight: 'rgba(240, 235, 223, 0.8)',
+    surfaceOverlayBlur: 'rgba(240, 235, 223, 0.7)',
 
     text: '#2b2824',
     textSecondary: '#453f38',
@@ -133,8 +133,8 @@ export const darkTheme = {
     surface: '#24211d',
     surfaceHover: '#2d2a25',
     surfaceOverlay: 'rgba(26, 24, 21, 0.92)',
-    surfaceOverlayLight: 'rgba(26, 24, 21, 0.70)',
-    surfaceOverlayBlur: 'rgba(26, 24, 21, 0.75)',
+    surfaceOverlayLight: 'rgba(26, 24, 21, 0.8)',
+    surfaceOverlayBlur: 'rgba(26, 24, 21, 0.7)',
 
     text: '#efeadd',
     textSecondary: '#cfc7b6',
