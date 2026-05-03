@@ -80,6 +80,17 @@ router.post('/register', authLimiter, async (req, res) => {
     const { email: rawEmail, username, password, encryptedMasterKey, kekSalt, kekWrapIv, recoveryWrappedMK, recoveryWrapIv, recoveryKeyHash, recoveryKeySalt } = parsed.data;
     const email = rawEmail.toLowerCase();
 
+    // Whitelist check — if REGISTRATION_WHITELIST is set, only allow listed emails
+    const whitelist = process.env.REGISTRATION_WHITELIST;
+    if (whitelist) {
+      const allowed = whitelist.split(',').map(e => e.trim().toLowerCase());
+      if (!allowed.includes(email)) {
+        logSecurityEvent('register_not_whitelisted', { ip: req.ip });
+        res.status(403).json({ error: 'Registration is currently restricted.' });
+        return;
+      }
+    }
+
     // Check for existing account — check email and username separately for clear feedback
     const existingEmail = await prisma.account.findUnique({ where: { email } });
     if (existingEmail) {
