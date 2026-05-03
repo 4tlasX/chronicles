@@ -623,11 +623,11 @@ type StaticCardId = 'priorities' | 'quick-entry' | 'meals-quick' | 'tasks' | 'ev
 type CardId = StaticCardId | `topic-${number}`;
 
 function isValidCardId(id: string): id is CardId {
-  const STATIC: string[] = ['quick-entry', 'priorities', 'events', 'meds', 'tasks', 'shopping', 'weather', 'menu-plan', 'affirmations', 'wellness', 'mini-calendar'];
+  const STATIC: string[] = ['quick-entry', 'priorities', 'events', 'meds', 'tasks', 'shopping', 'weather', 'menu-plan', 'meals-quick', 'affirmations', 'wellness', 'mini-calendar'];
   return STATIC.includes(id) || /^topic-\d+$/.test(id);
 }
 
-const DEFAULT_LEFT: CardId[]  = ['quick-entry', 'priorities', 'events', 'menu-plan'];
+const DEFAULT_LEFT: CardId[]  = ['quick-entry', 'priorities', 'events', 'shopping', 'menu-plan', 'meals-quick'];
 const DEFAULT_RIGHT: CardId[] = ['mini-calendar', 'affirmations', 'wellness', 'meds'];
 const LS_KEY = 'dashboard-layout-v2';
 
@@ -3321,8 +3321,14 @@ export function DashboardView() {
         </PageHeader>
 
         {(() => {
+          const mealsTopicId = allTopics.find(t => t.name.toLowerCase() === 'meals')?.id;
           const renderCard = (id: CardId, drag: DragProps) => {
-            if (id.startsWith('topic-')) return <TopicWidget topicId={parseInt(id.slice(6))} accentColor={headerColor} {...drag} />;
+            if (id.startsWith('topic-')) {
+              const topicId = parseInt(id.slice(6));
+              // Use quick entry widget for Meals topic
+              if (topicId === mealsTopicId) return <MealsQuickCard accentColor={headerColor} {...drag} />;
+              return <TopicWidget topicId={topicId} accentColor={headerColor} {...drag} />;
+            }
             switch (id as StaticCardId) {
               case 'priorities':  return <PrioritiesCard accentColor={headerColor} {...drag} />;
               case 'tasks':       return <TasksCard accentColor={headerColor} tasks={tasks} taskTopicId={taskTopicId} {...drag} />;

@@ -160,10 +160,11 @@ interface InlineEditPanelProps {
   onCancel: () => void;
   title?: string;
   topicSelector?: React.ReactNode;
+  defaultFieldsOpen?: boolean;
 }
 
-export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title, topicSelector }: InlineEditPanelProps) {
-  const [fieldsOpen, setFieldsOpen] = useState(false);
+export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title, topicSelector, defaultFieldsOpen = false }: InlineEditPanelProps) {
+  const [fieldsOpen, setFieldsOpen] = useState(defaultFieldsOpen);
 
   return (
     <Panel>

@@ -14,6 +14,8 @@ import { AllergyFields } from '../molecules/fields/AllergyFields.js';
 import { EventFields } from '../molecules/fields/EventFields.js';
 import { MeetingFields } from '../molecules/fields/MeetingFields.js';
 import { WellnessFields, type WellnessFieldValues } from '../molecules/fields/WellnessFields.js';
+import { ShoppingListFields, type ShoppingListFieldValues } from '../molecules/fields/ShoppingListFields.js';
+import { MenuPlanFields, type MenuPlanFieldValues } from '../molecules/fields/MenuPlanFields.js';
 import { UserFieldsForm } from '../molecules/fields/UserFieldsForm.js';
 import { Badge } from '../atoms/Badge.js';
 import { SwipeActions } from '../molecules/SwipeActions.js';
@@ -31,7 +33,8 @@ const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
   meals: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
-  wellness: 'wellness', allergy: 'allergy',
+  wellness: 'wellness', allergy: 'allergy', 'shopping list': 'shopping_list',
+  'menu plan': 'menu_plan',
 };
 
 function getCustomType(topicName: string | undefined): string | null {
@@ -166,9 +169,11 @@ interface EditableEntryCardProps {
   hidePreview?: boolean;
   compactMargin?: boolean;
   hideDate?: boolean;
+  hideTopic?: boolean;
+  autoExpandFields?: boolean;
 }
 
-export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain, hidePreview, compactMargin, hideDate }: EditableEntryCardProps) {
+export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain, hidePreview, compactMargin, hideDate, hideTopic, autoExpandFields }: EditableEntryCardProps) {
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const removeEntry = useEntriesStore(s => s.removeEntry);
@@ -196,6 +201,14 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
       });
   }, [allEntries, allTopics]);
 
+  const recipeOptions = useMemo(() => {
+    const recipeTopicId = allTopics.find(t => t.name.toLowerCase() === 'recipe')?.id;
+    if (!recipeTopicId) return [];
+    return allEntries
+      .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === recipeTopicId)
+      .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 80) || 'Untitled recipe' }));
+  }, [allEntries, allTopics]);
+
   const meta = entry.metadata as Record<string, unknown>;
   const cf = (meta?._customFields as Record<string, unknown>) || {};
   const taxonomyId = (meta?._taxonomyId as number) || 0;
@@ -203,6 +216,28 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   const textContent = stripHtml(entry.content).trim();
   const preview = (() => {
     if (textContent) return textContent.slice(0, 120);
+    // Shopping list preview
+    if (customType === 'shopping_list' && Array.isArray(cf.items) && cf.items.length > 0) {
+      const items = cf.items as { name: string; checked: boolean }[];
+      const checked = items.filter(i => i.checked).length;
+      const names = items.slice(0, 3).map(i => i.name).filter(Boolean).join(', ');
+      return `${checked}/${items.length} items${names ? ` · ${names}${items.length > 3 ? '…' : ''}` : ''}`;
+    }
+    // Menu plan preview
+    if (customType === 'menu_plan' && cf.days && typeof cf.days === 'object') {
+      const days = cf.days as Record<string, { breakfast?: { mealName?: string }; lunch?: { mealName?: string }; dinner?: { mealName?: string }; snack?: { mealName?: string } }>;
+      const meals: string[] = [];
+      Object.values(days).forEach(day => {
+        ['breakfast', 'lunch', 'dinner', 'snack'].forEach(slot => {
+          const name = (day as Record<string, { mealName?: string }>)[slot]?.mealName;
+          if (name && !meals.includes(name)) meals.push(name);
+        });
+      });
+      if (meals.length > 0) {
+        return `${meals.length} meals · ${meals.slice(0, 3).join(', ')}${meals.length > 3 ? '…' : ''}`;
+      }
+      return 'Empty menu plan';
+    }
     const userFields = (cf._userFields as Record<string, unknown>) ?? {};
     const fieldDefs = taxonomyId ? (topicCustomFields[taxonomyId] ?? []) : [];
     const fieldSummary = summarizeUserFields(fieldDefs, userFields);
@@ -332,6 +367,8 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
         case 'event': return <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
         case 'meeting': return <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
         case 'wellness': return <WellnessFields values={{ date: '', waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0, ...customFields } as WellnessFieldValues} onChange={v => setCustomFields(v as unknown as Record<string, unknown>)} cycleTrackingEnabled={cycleTrackingEnabled} onAutoSave={scheduleWellnessAutoSave} />;
+        case 'shopping_list': return <ShoppingListFields values={{ items: [], notes: '', linkedRecipeIds: [], ...customFields } as ShoppingListFieldValues} onChange={onChange as never} recipeOptions={recipeOptions} />;
+        case 'menu_plan': return <MenuPlanFields values={{ weekStart: '', days: {}, ...customFields } as MenuPlanFieldValues} onChange={onChange as never} recipeOptions={recipeOptions} />;
         default: return null;
       }
     })();
@@ -362,7 +399,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
             <PreviewText>{metaValues.map(m => `${m.label}: ${m.value}`).join(' · ')}</PreviewText>
           )}
           <FooterMeta>
-            {topic && customType !== 'task' && customType !== 'medication' && customType !== 'food' && customType !== 'symptom' && customType !== 'exercise' && customType !== 'allergy' && (
+            {topic && !hideTopic && customType !== 'task' && customType !== 'medication' && customType !== 'food' && customType !== 'symptom' && customType !== 'exercise' && customType !== 'allergy' && (
               <>
                 <TopicDot />
                 <span>{topic.name}</span>
@@ -419,6 +456,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
             status={status}
             onSave={handleSave}
             onCancel={onClose}
+            defaultFieldsOpen={autoExpandFields}
           />
         </EditWrapper>
       )}
