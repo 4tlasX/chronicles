@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome, faBookOpen, faCalendar, faTag, faGear, faPlus,
-  faFlag, faLayerGroup, faCheck, faCircleCheck, faSlidersH,
+  faFlag, faLayerGroup, faCheck, faCircleCheck, faSlidersH, faCartShopping, faCalendarDays,
   faPills, faCalendarCheck, faUtensils, faThermometerHalf, faPersonRunning, faTriangleExclamation, faChartLine,
   faMusic, faBook, faTv, faLightbulb, faQuoteLeft,
   faChevronDown, faChevronRight,
@@ -212,6 +212,8 @@ export function Sidebar() {
         <NavLink to="/goals/tasks" icon={faCheck} label="Tasks" active={at('/goals/tasks')} />
         <NavLink to="/goals/todos" icon={faCircleCheck} label="Todos" active={at('/goals/todos')} />
         <NavLink to="/goals/filter" icon={faSlidersH} label="Filters" active={startsWith('/goals/filter')} />
+        <NavLink to="/menu" icon={faCalendarDays} label="Menu Planner" active={at('/menu')} />
+        <NavLink to="/shopping" icon={faCartShopping} label="Shopping Lists" active={at('/shopping')} />
       </SectionContent>
 
       {/* Health */}

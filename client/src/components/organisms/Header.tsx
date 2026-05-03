@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { faPlus, faArrowRightFromBracket, faBars, faXmark, faHome, faBookOpen, faCalendar, faTag, faGear, faMagnifyingGlass, faFlag, faCheck, faCircleCheck, faLayerGroup, faSlidersH, faPills, faCalendarCheck, faUtensils, faThermometerHalf, faPersonRunning, faTriangleExclamation, faChartLine, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowRightFromBracket, faBars, faXmark, faHome, faBookOpen, faCalendar, faTag, faGear, faMagnifyingGlass, faFlag, faCheck, faCircleCheck, faLayerGroup, faSlidersH, faPills, faCalendarCheck, faUtensils, faThermometerHalf, faPersonRunning, faTriangleExclamation, faChartLine, faChevronDown, faCartShopping, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import { UserCircle } from '@phosphor-icons/react';
 import { faNoteSticky } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -589,6 +589,8 @@ export function Header() {
     { to: '/goals/tasks', label: 'Tasks', icon: faCheck },
     { to: '/goals/todos', label: 'Todos', icon: faCircleCheck },
     { to: '/goals/filter', label: 'Filters', icon: faSlidersH },
+    { to: '/menu', label: 'Menu Planner', icon: faCalendarDays },
+    { to: '/shopping', label: 'Shopping Lists', icon: faCartShopping },
   ].filter(Boolean) as { to: string; label: string; icon: IconDefinition }[];
 
   const healthDropdownItems = [
@@ -734,6 +736,8 @@ export function Header() {
           {mobileNav('/goals/tasks', 'Tasks', faCheck)}
           {mobileNav('/goals/todos', 'Todos', faCircleCheck)}
           {mobileNav('/goals/filter', 'Filters', faSlidersH)}
+          {mobileNav('/menu', 'Menu Planner', faCalendarDays)}
+          {mobileNav('/shopping', 'Shopping Lists', faCartShopping)}
 
           {healthItems.length > 0 && (
             <>
