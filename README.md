@@ -54,8 +54,6 @@ Old Look:
 <img width="1466" height="730" alt="Screenshot 2026-04-19 at 3 46 11 PM" src="https://github.com/user-attachments/assets/34680099-dad7-4e58-b38b-cf0262049750" />
 <img width="1460" height="642" alt="Screenshot 2026-04-19 at 3 46 01 PM" src="https://github.com/user-attachments/assets/a6dc4110-57ed-418a-8487-88e857225fa8" />
 <img width="1461" height="701" alt="Screenshot 2026-04-19 at 1 29 30 AM" src="https://github.com/user-attachments/assets/ddf6d0e1-743b-42f5-993d-ad0201f42ea7" />
-<img width="1450" height="689" alt="Screenshot 2026-04-19 at 1 29 20 AM" src="https://github.com/user-attachments/assets/e28f2b80-c24d-4c17-a732-5fac73981117" />
-<img width="1448" height="694" alt="Screenshot 2026-04-19 at 1 29 10 AM" src="https://github.com/user-attachments/assets/7d216df7-83cd-4266-982b-e647e7f6f03f" />
 
 
 ## Architecture
