@@ -39,12 +39,14 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - Non-extractable CryptoKeys — master key cannot be exported from the browser's crypto subsystem
 - Split-token sessions — database leaks cannot reconstruct valid session tokens
 
-## Screenshots
-<img width="1366" height="691" alt="Screenshot 2026-04-19 at 1 22 46 AM" src="https://github.com/user-attachments/assets/2a9d3ae0-fd41-4d0e-94db-a98fce83a0df" />
-<img width="1438" height="701" alt="Screenshot 2026-04-19 at 1 22 10 AM" src="https://github.com/user-attachments/assets/6ce6b191-d09a-4c67-931c-5ef4379f3567" />
-<img width="1435" height="697" alt="Screenshot 2026-04-19 at 1 21 20 AM" src="https://github.com/user-attachments/assets/e492b48d-2be6-4126-ba3e-6456673168b0" />
-<img width="1455" height="692" alt="Screenshot 2026-04-19 at 1 18 23 AM" src="https://github.com/user-attachments/assets/9f6fbe02-1542-4bf1-b63b-56254c453881" />
-<img width="1450" height="685" alt="Screenshot 2026-04-19 at 1 18 14 AM" src="https://github.com/user-attachments/assets/d8967d70-9269-4f79-9d24-6d8728fc4708" />
+## Screenshots - Chronicles is in a redesign slated for July
+New look planned:
+<img width="1130" height="666" alt="Screenshot 2026-06-17 at 10 39 33 PM" src="https://github.com/user-attachments/assets/fc35be0a-017b-4684-bf69-317f7da623e6" />
+<img width="591" height="682" alt="Screenshot 2026-06-17 at 10 53 40 PM" src="https://github.com/user-attachments/assets/4b814df7-a4c1-4bb3-80e8-0b058460c30f" />
+<img width="717" height="650" alt="Screenshot 2026-06-17 at 10 53 32 PM" src="https://github.com/user-attachments/assets/1f9cfd75-ecb2-436e-a455-b20f1ef2cdb0" />
+
+
+Old Look: 
 <img width="1462" height="694" alt="Screenshot 2026-04-19 at 1 19 03 AM" src="https://github.com/user-attachments/assets/9931f768-3f58-4752-97b0-c51d4774a98e" />
 <img width="1459" height="699" alt="Screenshot 2026-04-19 at 1 20 19 AM" src="https://github.com/user-attachments/assets/0b811b72-94ae-4c06-969e-291e53097b6b" />
 <img width="1455" height="668" alt="Screenshot 2026-04-19 at 1 19 56 AM" src="https://github.com/user-attachments/assets/fc6cdcac-b8f9-4e1e-a40e-f80d9c125038" />
