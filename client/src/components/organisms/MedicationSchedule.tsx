@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../design-system/components/core/Icon';
 import { EmptyState } from '../atoms/EmptyState.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
@@ -38,7 +39,7 @@ const NavButton = styled.button`
 `;
 
 const DateLabel = styled.span`
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 15px;
   font-weight: 600;
   text-transform: uppercase;
@@ -158,7 +159,7 @@ const DoseTakenAt = styled.span<{ $color: string }>`
 `;
 
 const StatusBadge = styled.span`
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -358,8 +359,13 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
                     disabled={isSaving}
                     onClick={() => handleCheckDose(dose, !isTaken)}
                     aria-label={isTaken ? 'Mark as not taken' : 'Mark as taken'}
+                    style={{ color: isTaken ? headerColor : 'var(--text-tertiary)' }}
                   >
-                    {isTaken && <FontAwesomeIcon icon={faCheck} />}
+                    <Icon
+                      name={isTaken ? 'check-circle' : 'circle'}
+                      size={20}
+                      strokeWidth={2}
+                    />
                   </DoseCheckButton>
                   <DoseInfo>
                     <DoseName $taken={isTaken} $color={headerColor}>

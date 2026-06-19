@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import type { ReactNode } from 'react';
+import { Icon } from '../../../design-system/components/core/Icon';
 
 const Wrapper = styled.label`
   display: inline-flex;
@@ -21,22 +22,23 @@ const HiddenInput = styled.input`
   }
 `;
 
-const Box = styled.div<{ $checked: boolean }>`
-  width: 18px;
-  height: 18px;
-  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
-  border: 1px solid ${({ $checked }) =>
-    $checked ? 'var(--ink, #2b2824)' : 'var(--ink-3, #6b645a)'};
-  background: ${({ $checked }) =>
-    $checked ? 'var(--ink, #2b2824)' : 'var(--paper-surface, #f7f4ee)'};
+const Box = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--paper-surface, #f7f4ee);
-  font-size: 12px;
-  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-tertiary);
   flex-shrink: 0;
-  transition: background 120ms ease, border-color 120ms ease;
+  transition: color 120ms ease;
+
+  &:hover {
+    color: var(--text-secondary);
+  }
 `;
 
 const CheckLabel = styled.span`
@@ -60,8 +62,16 @@ export function Checkbox({ checked, onChange, label }: CheckboxProps) {
         checked={checked}
         onChange={e => onChange(e.target.checked)}
       />
-      <Box $checked={checked}>
-        {checked && '✓'}
+      <Box
+        type="button"
+        onClick={() => onChange(!checked)}
+        style={{ color: checked ? 'var(--color-accent)' : 'var(--text-tertiary)' }}
+      >
+        <Icon
+          name={checked ? 'check-circle' : 'circle'}
+          size={18}
+          strokeWidth={2}
+        />
       </Box>
       {label && <CheckLabel>{label}</CheckLabel>}
     </Wrapper>
