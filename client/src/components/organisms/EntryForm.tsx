@@ -34,31 +34,9 @@ const FormWrapper = styled.div`
   overflow: hidden;
 `;
 
-/* Toolbar: encrypted pill left, action buttons right */
-const EdToolbar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px var(--s-6, 24px);
-  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  flex-shrink: 0;
-  gap: 12px;
-`;
-
-const EdMeta = styled.div`
-  font-family: var(--font-label);
-  font-size: 10.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
-  display: flex;
-  align-items: center;
-  gap: 6px;
-`;
-
 const EdActions = styled.div`
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
 `;
 
@@ -68,21 +46,20 @@ const IconBtn = styled.button<{ $active?: boolean; $activeColor?: string; $dange
   justify-content: center;
   width: 32px;
   height: 32px;
-  color: ${({ $active, $activeColor, $danger, theme }) =>
-    $danger ? 'var(--ink-3, #6b645a)' :
-    $active ? ($activeColor || theme.colors.warning) :
-    'var(--ink-2, ' + theme.colors.textSecondary + ')'};
+  color: ${({ $active, $activeColor, $danger }) =>
+    $active ? ($activeColor || 'var(--color-accent)') :
+    $danger ? 'var(--text-tertiary)' :
+    'var(--text-secondary)'};
   background: transparent;
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: var(--r-sm, 2px);
+  border: 1px solid transparent;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 13px;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  font-size: 16px;
+  transition: color 0.15s, background 0.15s;
 
   &:hover {
-    background: var(--paper-hover, rgba(0,0,0,0.04));
-    color: ${({ $danger }) => $danger ? 'var(--danger, #9B4444)' : 'var(--ink, #2b2824)'};
-    border-color: var(--ink-4, #8a857c);
+    background: var(--bg-hover);
+    color: ${({ $danger }) => $danger ? 'var(--color-danger)' : 'var(--text-primary)'};
   }
 `;
 
@@ -130,12 +107,16 @@ const EdDateDow = styled.span`
   padding-bottom: 8px;
 `;
 
-/* Topic selector row */
+/* Topic selector + actions row — pill picker left, action buttons right,
+   flanked by hairline rules top and bottom (DS spec). */
 const EdTopicRow = styled.div`
   display: flex;
   gap: var(--s-3, 12px);
   align-items: center;
-  margin-bottom: var(--s-6, 24px);
+  margin-bottom: 28px;
+  padding: 16px 0 20px;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
   position: relative;
 `;
 
@@ -160,22 +141,6 @@ const EdTitle = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-`;
-
-/* Date metadata strip */
-const EdDatestrip = styled.div`
-  font-family: var(--font-sans);
-  font-size: 10.5px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
-  margin: 0 0 var(--s-5, 20px);
-  display: flex;
-  gap: var(--s-4, 16px);
-`;
-
-const DateSep = styled.span`
-  opacity: 0.5;
 `;
 
 /* cf-card: the card that wraps each custom-fields section */
@@ -479,17 +444,6 @@ export function EntryForm({
   const currentEntry = entryId ? entries.find(e => e.id === entryId) : null;
   const entryCreatedAt = currentEntry ? new Date(currentEntry.createdAt) : null;
 
-  const datestripParts = entryCreatedAt ? (() => {
-    const dow = entryCreatedAt.toLocaleDateString('en-US', { weekday: 'short' });
-    const dayNum = entryCreatedAt.getDate();
-    const month = entryCreatedAt.toLocaleDateString('en-US', { month: 'long' });
-    const time = entryCreatedAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    const words = stripHtml(content).trim().split(/\s+/).filter(Boolean).length;
-    const parts: string[] = [`${dow} ${dayNum} ${month}`, time];
-    if (words > 0) { parts.push(`${words} words`); }
-    return parts;
-  })() : null;
-
   const entryTitle = entryId ? extractTitle(content) : null;
 
   const saveStatusNode = (() => {
@@ -512,65 +466,6 @@ export function EntryForm({
 
   return (
     <FormWrapper>
-      {/* Toolbar: date meta left, action buttons right */}
-      <EdToolbar>
-        <EdMeta>
-          {datestripParts ? datestripParts.map((part, i) => (
-            <span key={i}>{i > 0 && <DateSep>· </DateSep>}{part}</span>
-          )) : null}
-        </EdMeta>
-        <EdActions>
-          <IconBtn
-            type="button"
-            $active={isFavorite}
-            $activeColor={headerColor}
-            aria-label={isFavorite ? 'Remove bookmark' : 'Bookmark entry'}
-            title="Bookmark"
-            onClick={() => entryId && onBookmark?.()}
-            style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
-          >
-            <FontAwesomeIcon icon={faBookmark} />
-          </IconBtn>
-          <IconBtn
-            type="button"
-            aria-label="Share entry"
-            title="Share"
-            onClick={() => entryId && onShare?.()}
-            style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
-          >
-            <FontAwesomeIcon icon={faShareNodes} />
-          </IconBtn>
-          <IconBtn
-            type="button"
-            title="Dictate"
-            aria-label="Toggle dictation"
-            onClick={() => dictationControlRef?.current?.toggle()}
-          >
-            <FontAwesomeIcon icon={faMicrophone} />
-          </IconBtn>
-          <IconBtn
-            type="button"
-            $active={toolbarOpen}
-            aria-label="Toggle drawing toolbar"
-            title="Draw"
-            aria-expanded={toolbarOpen}
-            onClick={() => setToolbarOpen(!toolbarOpen)}
-          >
-            <FontAwesomeIcon icon={faPenNib} />
-          </IconBtn>
-          <IconBtn
-            type="button"
-            $danger
-            aria-label="Delete entry"
-            title="Delete"
-            onClick={() => entryId && onDelete?.()}
-            style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
-          >
-            <FontAwesomeIcon icon={faTrash} />
-          </IconBtn>
-        </EdActions>
-      </EdToolbar>
-
       {/* Scrollable body */}
       <ScrollArea>
         <EdBody>
@@ -582,13 +477,65 @@ export function EntryForm({
             </EdDateBlock>
           )}
 
-          {/* Topic selector row */}
+          {entryTitle && <EdTitle>{entryTitle}</EdTitle>}
+
+          {/* Topic picker + action buttons row, flanked by hairline rules */}
           <EdTopicRow>
             <TopicSelector
               selectedId={topicId}
               onSelect={id => onTopicChange(id)}
               topics={topics}
             />
+            <EdActions style={{ marginLeft: 'auto' }}>
+              <IconBtn
+                type="button"
+                $active={isFavorite}
+                $activeColor={headerColor}
+                aria-label={isFavorite ? 'Remove bookmark' : 'Bookmark entry'}
+                title="Bookmark"
+                onClick={() => entryId && onBookmark?.()}
+                style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
+              >
+                <FontAwesomeIcon icon={faBookmark} />
+              </IconBtn>
+              <IconBtn
+                type="button"
+                aria-label="Share entry"
+                title="Share"
+                onClick={() => entryId && onShare?.()}
+                style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
+              >
+                <FontAwesomeIcon icon={faShareNodes} />
+              </IconBtn>
+              <IconBtn
+                type="button"
+                title="Dictate"
+                aria-label="Toggle dictation"
+                onClick={() => dictationControlRef?.current?.toggle()}
+              >
+                <FontAwesomeIcon icon={faMicrophone} />
+              </IconBtn>
+              <IconBtn
+                type="button"
+                $active={toolbarOpen}
+                aria-label="Toggle drawing toolbar"
+                title="Draw"
+                aria-expanded={toolbarOpen}
+                onClick={() => setToolbarOpen(!toolbarOpen)}
+              >
+                <FontAwesomeIcon icon={faPenNib} />
+              </IconBtn>
+              <IconBtn
+                type="button"
+                $danger
+                aria-label="Delete entry"
+                title="Delete"
+                onClick={() => entryId && onDelete?.()}
+                style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
+              >
+                <FontAwesomeIcon icon={faTrash} />
+              </IconBtn>
+            </EdActions>
           </EdTopicRow>
 
           {/* Rich text editor */}
