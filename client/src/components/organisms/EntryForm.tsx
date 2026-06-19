@@ -46,7 +46,7 @@ const EdToolbar = styled.div`
 `;
 
 const EdMeta = styled.div`
-  font-family: 'Montserrat', var(--sans, 'Lato', sans-serif);
+  font-family: var(--font-label);
   font-size: 10.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -101,6 +101,35 @@ const EdBody = styled.div`
   padding: var(--s-6, 24px) var(--s-5, 20px) var(--s-4, 16px);
 `;
 
+/* DS date block — large thin numeral + weekday, under a 2px accent top rule. */
+const EdDateBlock = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 22px;
+  padding-top: 26px;
+  border-top: 2px solid var(--color-accent);
+`;
+
+const EdDateNum = styled.span`
+  font-family: var(--font-display);
+  font-size: 72px;
+  font-weight: 200;
+  line-height: 0.82;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+`;
+
+const EdDateDow = styled.span`
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding-bottom: 8px;
+`;
+
 /* Topic selector row */
 const EdTopicRow = styled.div`
   display: flex;
@@ -121,11 +150,12 @@ const TopicHint = styled.span`
 
 /* Title — the most prominent element */
 const EdTitle = styled.div`
-  font-family: var(--sans, 'Lato', sans-serif);
-  font-size: 34px;
-  font-weight: 500;
-  color: var(--ink, ${({ theme }) => theme.colors.text});
-  line-height: 1.2;
+  font-family: var(--font-display, sans-serif);
+  font-size: 38px;
+  font-weight: 200;
+  letter-spacing: -0.01em;
+  color: var(--text-primary, ${({ theme }) => theme.colors.text});
+  line-height: 1.1;
   margin: 0 0 var(--s-3, 12px);
   white-space: nowrap;
   overflow: hidden;
@@ -134,7 +164,7 @@ const EdTitle = styled.div`
 
 /* Date metadata strip */
 const EdDatestrip = styled.div`
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-sans);
   font-size: 10.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -223,27 +253,26 @@ const SaveRowActions = styled.div`
 `;
 
 const DiscardBtn = styled.button`
-  padding: 5px 12px;
-  font-family: var(--ui, ${({ theme }) => theme.fontFamily.sans});
+  padding: 7px 16px;
+  font-family: var(--font-label);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink, ${({ theme }) => theme.colors.text});
+  color: var(--text-tertiary);
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--r-sm, 2px);
+  border: none;
+  border-radius: 0;
   cursor: pointer;
-  opacity: 0.45;
-  transition: opacity 150ms;
-  &:hover { opacity: 1; }
+  transition: color 150ms;
+  &:hover { color: var(--text-secondary); }
 `;
 
 const SaveHint = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-sans);
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -251,7 +280,7 @@ const SaveHint = styled.div`
 `;
 
 const StatusText = styled.span`
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-sans);
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -259,20 +288,19 @@ const StatusText = styled.span`
 `;
 
 const SaveButton = styled.button<{ $disabled?: boolean }>`
-  padding: 6px 16px;
-  font-family: var(--ui, ${({ theme }) => theme.fontFamily.sans});
+  padding: 7px 22px;
+  font-family: var(--font-label);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: ${({ $disabled }) => $disabled ? 'var(--ink-4)' : 'var(--paper, #f7f4ef)'};
-  background: ${({ $disabled }) => $disabled ? 'transparent' : 'var(--ink, #2b2824)'};
-  border: 1px solid ${({ $disabled }) => $disabled ? 'var(--rule)' : 'var(--ink, #2b2824)'};
-  border-radius: var(--r-sm, 2px);
+  color: ${({ $disabled }) => $disabled ? 'var(--text-disabled)' : 'var(--color-accent)'};
+  background: transparent;
+  border: 1px solid ${({ $disabled }) => $disabled ? 'var(--border-default)' : 'var(--color-accent)'};
+  border-radius: var(--r-full, 999px);
   cursor: ${({ $disabled }) => $disabled ? 'not-allowed' : 'pointer'};
-  opacity: ${({ $disabled }) => $disabled ? 0.4 : 1};
-  transition: opacity 150ms;
-  &:hover:not(:disabled) { opacity: 0.75; }
+  transition: background 150ms, color 150ms;
+  &:hover:not(:disabled) { background: var(--color-accent-subtle); }
 `;
 
 /* ── Helpers ── */
@@ -546,6 +574,14 @@ export function EntryForm({
       {/* Scrollable body */}
       <ScrollArea>
         <EdBody>
+          {/* DS date block — big numeral + weekday under a 2px accent rule */}
+          {entryCreatedAt && (
+            <EdDateBlock>
+              <EdDateNum>{entryCreatedAt.getDate()}</EdDateNum>
+              <EdDateDow>{entryCreatedAt.toLocaleDateString('en-US', { weekday: 'long' })}</EdDateDow>
+            </EdDateBlock>
+          )}
+
           {/* Topic selector row */}
           <EdTopicRow>
             <TopicSelector

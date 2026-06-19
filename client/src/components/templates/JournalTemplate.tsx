@@ -11,17 +11,14 @@ const ContentArea = styled.div`
 `;
 
 const StyledSidePanel = styled.div<{ $hiddenMobile?: boolean; $isDark?: boolean; $lightBg?: boolean }>`
-  width: 380px;
-  min-width: 380px;
+  width: 312px;
+  min-width: 312px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  background: ${({ $isDark, $lightBg }) =>
-    $isDark
-      ? ($lightBg ? 'rgba(26, 24, 21, 0.85)' : 'rgba(26, 24, 21, 0.95)')
-      : ($lightBg ? 'rgba(240, 235, 223, 0.85)' : 'rgba(240, 235, 223, 0.95)')};
-  border-right: 1px solid ${({ theme }) => theme.colors.border};
+  background: var(--bg-app);
+  border-right: 1px solid var(--border-subtle);
 
   @media (max-width: 1024px) {
     width: 100%;
@@ -36,10 +33,7 @@ const StyledEditorPanel = styled.div<{ $visibleMobile?: boolean; $isDark?: boole
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: ${({ $isDark, $lightBg }) =>
-    $isDark
-      ? ($lightBg ? 'rgba(26, 24, 21, 0.85)' : 'rgba(26, 24, 21, 0.95)')
-      : ($lightBg ? 'rgba(240, 235, 223, 0.85)' : 'rgba(240, 235, 223, 0.95)')};
+  background: var(--bg-app);
 
   @media (max-width: 1024px) {
     display: ${({ $visibleMobile }) => $visibleMobile ? 'flex' : 'none'};

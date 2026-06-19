@@ -13,6 +13,31 @@ const TOPIC_TO_TYPE: Record<string, string> = {
   exercise: 'exercise', event: 'event', meeting: 'meeting',
 };
 
+/* DS entry-type color palette for the left color bar.
+   journal=teal, task=amber, event=blue, goal=lime, quote=purple, meal=rose. */
+const TYPE_COLOR: Record<string, string> = {
+  journal: 'var(--color-accent)',
+  task: '#d97706',
+  event: '#2563eb',
+  meeting: '#2563eb',
+  goal: '#65a30d',
+  milestone: '#65a30d',
+  quote: '#9333ea',
+  meal: '#e11d48',
+  food: '#e11d48',
+  meals: '#e11d48',
+};
+
+/** Resolve the color-bar tint for an entry from its topic name, falling back
+ *  to the topic's own stored color, then the accent. */
+function topicBarColor(topicName: string | undefined, fallback: string | null | undefined): string | undefined {
+  if (topicName) {
+    const key = topicName.toLowerCase();
+    if (TYPE_COLOR[key]) return TYPE_COLOR[key];
+  }
+  return fallback || 'var(--color-accent)';
+}
+
 const ListContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -275,7 +300,7 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
                   content={entry.content}
                   date={entry.createdAt instanceof Date ? entry.createdAt.toISOString() : String(entry.createdAt)}
                   topicName={topic?.name}
-                  topicColor={topic?.color || undefined}
+                  topicColor={topicBarColor(topic?.name, topic?.color)}
                   topicIcon={getTopicIcon(topic?.icon)}
                   topicId={topic?.id}
                   active={selectedEntryId === entry.id}
