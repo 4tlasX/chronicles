@@ -6,9 +6,17 @@ import { Background } from '../organisms/Background.js';
 
 const Layout = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100vh;
   overflow: hidden;
+`;
+
+const MainColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
 `;
 
 const Body = styled.div`
@@ -22,18 +30,18 @@ interface TwoPanelTemplateProps {
   topBar?: ReactNode;
 }
 
-/** Full-height template with Header + optional full-width topBar + two-panel content area (sidebar + main). */
+/** Full-height template: left sidebar + main column (header bar, optional topBar, two-panel content). */
 export function TwoPanelTemplate({ children, topBar }: TwoPanelTemplateProps) {
   return (
     <>
       <Background />
       <Layout>
-        <Header />
-        {topBar}
-        <Body>
-          <div data-print-hide><Sidebar /></div>
-          {children}
-        </Body>
+        <div data-print-hide><Sidebar /></div>
+        <MainColumn>
+          <Header />
+          {topBar}
+          <Body>{children}</Body>
+        </MainColumn>
       </Layout>
     </>
   );

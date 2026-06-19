@@ -30,7 +30,8 @@ const SidebarRoot = styled.aside`
 `;
 
 const LogoBlock = styled.div`
-  padding: 18px 16px 14px;
+  height: 44px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;

@@ -8,14 +8,17 @@ import { BACKGROUND_IMAGES } from '@chronicles/shared';
 
 const Layout = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100vh;
   overflow: hidden;
 `;
 
-const Body = styled.div`
+/* Main column sits to the right of the sidebar: its own header bar + content. */
+const MainColumn = styled.div`
   display: flex;
+  flex-direction: column;
   flex: 1;
+  min-width: 0;
   min-height: 0;
 `;
 
@@ -34,7 +37,7 @@ interface ContentTemplateProps {
   hideSidebar?: boolean;
 }
 
-/** Full-height template with Header + optional left sidebar + scrollable content area. */
+/** Full-height template: left sidebar (full height) + main column (header bar + scrollable content). */
 export function ContentTemplate({ children, hideSidebar }: ContentTemplateProps) {
   const backgroundImage = useUIStore(s => s.backgroundImage);
   const isLightBg = BACKGROUND_IMAGES.find(bg => bg.value === backgroundImage)?.light ?? false;
@@ -42,11 +45,11 @@ export function ContentTemplate({ children, hideSidebar }: ContentTemplateProps)
     <>
       <div data-print-hide><Background /></div>
       <Layout>
-        <div data-print-hide><Header /></div>
-        <Body>
-          {!hideSidebar && <div data-print-hide><Sidebar /></div>}
+        {!hideSidebar && <div data-print-hide><Sidebar /></div>}
+        <MainColumn>
+          <div data-print-hide><Header /></div>
           <Main $lightBg={isLightBg}>{children}</Main>
-        </Body>
+        </MainColumn>
       </Layout>
     </>
   );

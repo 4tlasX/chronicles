@@ -9,14 +9,16 @@ import { BACKGROUND_IMAGES } from '@chronicles/shared';
 
 const Layout = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100vh;
   overflow: hidden;
 `;
 
-const BodyRow = styled.div`
+const MainColumn = styled.div`
   display: flex;
+  flex-direction: column;
   flex: 1;
+  min-width: 0;
   min-height: 0;
 `;
 
@@ -58,9 +60,9 @@ export function SettingsTemplate({ title, children }: SettingsTemplateProps) {
     <>
       <Background />
       <Layout>
-        <Header />
-        <BodyRow>
-          <div data-print-hide><Sidebar /></div>
+        <div data-print-hide><Sidebar /></div>
+        <MainColumn>
+          <Header />
           <Body $hasBackground={!!backgroundImage} $lightBg={isLightBg}>
             <Content>
               {title && (
@@ -72,7 +74,7 @@ export function SettingsTemplate({ title, children }: SettingsTemplateProps) {
               {children}
             </Content>
           </Body>
-        </BodyRow>
+        </MainColumn>
       </Layout>
     </>
   );
