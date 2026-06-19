@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import type { ReactNode } from 'react';
 import { Header } from '../organisms/Header.js';
+import { Sidebar } from '../organisms/Sidebar.js';
 import { Background } from '../organisms/Background.js';
 
 const Layout = styled.div`
@@ -29,7 +30,10 @@ export function TwoPanelTemplate({ children, topBar }: TwoPanelTemplateProps) {
       <Layout>
         <Header />
         {topBar}
-        <Body>{children}</Body>
+        <Body>
+          <div data-print-hide><Sidebar /></div>
+          {children}
+        </Body>
       </Layout>
     </>
   );

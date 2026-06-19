@@ -504,15 +504,15 @@ export function JournalView() {
   }, [encryptPost]);
 
   if (encryptionData?.encryptionEnabled && !isUnlocked) {
-    return (<><AppTemplate hideSidebar><EmptyEditor>Unlock your journal to view entries</EmptyEditor></AppTemplate><UnlockDialog onUnlock={handleUnlock} /></>);
+    return (<><AppTemplate><EmptyEditor>Unlock your journal to view entries</EmptyEditor></AppTemplate><UnlockDialog onUnlock={handleUnlock} /></>);
   }
 
   if (isLoading) {
-    return (<AppTemplate hideSidebar><LoadingCenter><Spinner size={40} /></LoadingCenter></AppTemplate>);
+    return (<AppTemplate><LoadingCenter><Spinner size={40} /></LoadingCenter></AppTemplate>);
   }
 
   return (
-    <AppTemplate hideSidebar transparentContent>
+    <AppTemplate transparentContent>
       <JournalTemplate
         sidePanel={
           <SidePanel hiddenMobile={showMobileEditor}>
