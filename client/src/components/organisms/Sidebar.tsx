@@ -24,7 +24,7 @@ const SidebarRoot = styled.aside`
   flex-shrink: 0;
   overflow: hidden;
 
-  @media (max-width: 1366px) {
+  @media (max-width: 900px) {
     display: none;
   }
 `;

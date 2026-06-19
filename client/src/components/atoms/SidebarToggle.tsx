@@ -17,7 +17,7 @@ const Btn = styled.button`
   transition: color 120ms ease;
   &:hover { color: var(--ink); }
 
-  @media (max-width: 1366px) { display: none; }
+  @media (max-width: 900px) { display: none; }
 `;
 
 export function SidebarToggle() {
