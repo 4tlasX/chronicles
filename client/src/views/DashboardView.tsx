@@ -7,8 +7,11 @@ import {
   faBolt, faCartShopping, faCheck, faPencil, faGripVertical, faPills,
   faSun, faCloud, faCloudRain, faSnowflake, faWind, faXmark, faSlidersH, faChevronDown, faUtensils, faDroplet,
   faHeart, faChevronLeft, faChevronRight, faMicrophone, faPenNib,
-  faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam, faMoon,
+  faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam,
 } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCircle, faCircleCheck, faMoon,
+} from '@fortawesome/free-regular-svg-icons';
 import {
   DndContext, closestCenter,
   KeyboardSensor, PointerSensor,
@@ -132,29 +135,30 @@ function todayKey() {
 /* ── Layout Styled Components ── */
 
 const Page = styled.div`
-  padding: 28px 24px 40px;
+  padding: 24px 32px 60px;
   overflow-y: auto;
   height: 100%;
   box-sizing: border-box;
   @media (max-width: 640px) { padding: 32px 12px 32px; }
 `;
 
+/* DS dashboard header: big date numeral left, weather right, under 2px accent rule. */
 const PageHeader = styled.div`
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--s-8, 48px);
-  align-items: center;
-  margin-bottom: var(--s-8, 48px);
-  padding-bottom: var(--s-5, 20px);
-  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  @media (max-width: 640px) { grid-template-columns: 1fr; gap: var(--s-3); margin-bottom: var(--s-6); }
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: 2px solid var(--color-accent);
+  @media (max-width: 640px) { gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
 `;
 
 const GreetingBlock = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: center;
-  gap: 14px;
+  align-items: flex-end;
+  gap: 16px;
 `;
 
 const SidebarToggleBtn = styled.button`
@@ -176,26 +180,66 @@ const SidebarToggleBtn = styled.button`
   @media (max-width: 1366px) { display: none; }
 `;
 
-const Greeting = styled.h1`
-  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
-  font-size: 40px;
+/* DS big date numeral block. */
+const DateNumeral = styled.div`
+  font-family: var(--font-display);
+  font-size: 88px;
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+`;
+
+const DateInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const DateLabel = styled.p`
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: 0;
+`;
+
+const DailyPrompt = styled.p`
+  font-family: var(--font-display);
+  font-size: 14px;
   font-weight: 400;
   font-style: italic;
-  line-height: 1.37;
-  color: var(--ink, ${({ theme }) => theme.colors.text});
+  color: var(--text-secondary);
   margin: 0;
-  letter-spacing: -0.005em;
+  line-height: 1.4;
+  max-width: 600px;
+`;
+
+const Greeting = styled.h1`
+  font-family: var(--font-display, ${({ theme }) => theme.fontFamily.serif});
+  font-size: 40px;
+  font-weight: 200;
+  font-style: normal;
+  line-height: 1.2;
+  color: var(--text-primary, ${({ theme }) => theme.colors.text});
+  margin: 0;
+  letter-spacing: -0.01em;
   @media (max-width: 640px) { font-size: 28px; }
 `;
 
 const DateLine = styled.p`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
-  font-size: 11px;
-  font-weight: 400;
+  font-family: var(--font-label, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 10px;
+  font-weight: 700;
   font-style: normal;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+  color: var(--text-tertiary, ${({ theme }) => theme.colors.textFaint});
   margin: 6px 0 0;
 `;
 
@@ -207,26 +251,26 @@ const DateLineRow = styled.div`
 
 const InlineWeatherWrap = styled.div`
   display: flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
-  &::before { content: '·'; margin-right: 2px; opacity: 0.5; }
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 `;
 
-const InlineTemp = styled.button`
-  background: none;
-  border: none;
-  padding: 0;
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
-  font-size: 11px;
-  font-weight: 500;
-  font-style: normal;
-  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
-  cursor: pointer;
-  &:hover { opacity: 0.7; }
+const InlineTemp = styled.div`
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 200;
+  line-height: 1;
+  color: var(--text-primary);
+`;
+
+const WeatherCity = styled.div`
+  font-family: var(--font-label);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
 `;
 
 const InlineHiLo = styled.span`
@@ -266,101 +310,95 @@ const QuoteAuthor = styled.cite`
   color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
 `;
 
+/* DS dashboard grid — 2fr / 1fr, generous gap, NO column divider. */
 const Grid = styled.div`
-  display: flex;
-  gap: 0;
-  align-items: flex-start;
-  @media (max-width: 1024px) { flex-direction: column; }
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  align-items: start;
+  @media (max-width: 1024px) { grid-template-columns: 1fr; gap: 0; }
 `;
 
 const LeftColumn = styled.div`
-  flex: 0 0 66.666%;
-  width: 66.666%;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding-right: 20px;
-  border-right: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  @media (max-width: 1024px) { flex: none; width: 100%; border-right: none; padding-right: 0; }
+  gap: 24px;
+  @media (max-width: 1024px) { width: 100%; }
 `;
 
 const RightColumn = styled.div`
-  flex: 0 0 33.333%;
-  width: 33.333%;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding-left: 20px;
-  @media (max-width: 1024px) { flex: none; width: 100%; padding-left: 0; }
+  gap: 24px;
+  @media (max-width: 1024px) { width: 100%; }
 `;
 
+/* DS widget = borderless flat section: 1px top rule + label row + content. */
 const DashCard = styled.div`
   display: flex;
   flex-direction: column;
-  background: rgba(240, 235, 223, 0.45);
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: var(--r-lg, 6px);
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  border-radius: 0;
+  overflow: visible;
+  padding-top: 0;
 
-  :root[data-theme="dark"] & {
-    background: var(--paper-surface);
+  &:first-of-type {
+    border-top: none;
   }
 `;
 
 const CardHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  gap: 6px;
+  padding: 10px 0 8px 0;
+  border-bottom: none;
 `;
 
 const CardIconWrap = styled.span`
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
-  font-size: 13px;
+  color: var(--text-tertiary);
+  font-size: 12px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const CardTitle = styled.span`
-  font-family: var(--sans, 'Lato', sans-serif);
-  font-size: 12px;
+  font-family: var(--font-label);
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--ink, ${({ theme }) => theme.colors.text});
+  letter-spacing: 0.18em;
+  color: var(--text-tertiary);
   flex: 1;
 `;
 
 const CardViewLink = styled(Link)`
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent-stroke, ${({ theme }) => theme.colors.textMuted});
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
+  font-family: var(--font-label, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, ${({ theme }) => theme.colors.textFaint});
+  text-decoration: none;
   white-space: nowrap;
-  &:hover { opacity: 0.75; }
+  &:hover { color: var(--text-secondary); }
 `;
 
 const CardBody = styled.div`
-  padding: 16px 20px;
+  padding: 0;
   flex: 1;
 `;
 
 const QuickEntryDashCard = styled(DashCard)`
   overflow: visible;
-  background: #c8c8c866;
-  border-color: #d9cfb8;
-  & ${CardHeader} { border-bottom-color: #d9cfb8; }
-  & ${CardBody} { padding: 16px 20px; overflow: visible; }
-  :root[data-theme="dark"] & {
-    background: var(--paper-surface);
-    border-color: var(--rule);
-    & ${CardHeader} { border-bottom-color: var(--rule); }
-  }
+  background: transparent;
+  border-top: none;
+  & ${CardHeader} { display: none; }
+  & ${CardBody} { padding: 0; overflow: visible; }
 `;
 
 const AddBtn = styled.button`
@@ -382,9 +420,9 @@ const AddBtn = styled.button`
 const ItemRow = styled.div<{ $done?: boolean }>`
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: 0; }
 `;
 
@@ -392,35 +430,35 @@ const PriRow = styled.div<{ $done?: boolean }>`
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  padding: 16px 0;
-  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
-  font-size: 14px;
-  color: ${({ $done }) => $done ? 'var(--ink-4)' : 'var(--ink-2)'};
-  min-height: 44px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13.5px;
+  color: ${({ $done }) => $done ? 'var(--text-tertiary)' : 'var(--text-primary)'};
   &:last-child { border-bottom: 0; }
 `;
 
 const CheckBtn = styled.button<{ $done?: boolean; $color: string }>`
   width: 18px;
   height: 18px;
-  border: 1px solid ${({ $done }) => $done ? 'var(--ink)' : 'var(--ink-3)'};
-  border-radius: var(--r-sm, 2px);
-  background: ${({ $done }) => $done ? 'var(--ink)' : 'transparent'};
+  border: none;
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--paper-surface);
-  font-size: 11px;
-  transition: background 120ms ease, border-color 120ms ease;
+  color: ${({ $done }) => $done ? 'var(--color-accent)' : 'var(--border-subtle)'};
+  font-size: 10px;
+  transition: color 120ms ease;
   padding: 0;
 `;
 
 const ItemText = styled.span<{ $done?: boolean }>`
-  font-size: 14px;
-  color: ${({ $done }) => $done ? 'var(--ink-4)' : 'var(--ink-2)'};
+  font-size: 13.5px;
+  color: ${({ $done }) => $done ? 'var(--text-tertiary)' : 'var(--text-primary)'};
   text-decoration: ${({ $done }) => $done ? 'line-through' : 'none'};
+  opacity: ${({ $done }) => $done ? 0.6 : 1};
   flex: 1;
   line-height: 1.4;
 `;
@@ -440,29 +478,26 @@ const InlineInput = styled.input`
 `;
 
 const QuickEditorWrap = styled.div`
-  border: 1px solid #d9cfb8;
-  border-radius: var(--r-sm, 2px);
-  background: var(--paper-surface, #f7f4ee);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: var(--bg-sunken);
   margin-bottom: 0;
-
-  :root[data-theme="dark"] & {
-    background: transparent;
-  }
 
   > div { min-height: 120px; height: auto; }
 
   .tiptap {
-    padding: 20px;
-    font-family: var(--sans, 'Lato', sans-serif);
+    padding: 16px 12px;
+    font-family: var(--font-display);
     font-style: italic;
-    font-size: 16px;
-    line-height: 1.6;
-    min-height: 120px;
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 1.5;
+    min-height: 130px;
     height: auto;
+    color: var(--text-primary);
   }
 
-  &:focus-within { border-color: var(--ink-4); box-shadow: var(--focus); }
-  :root[data-theme="dark"] & { background: var(--paper); border-color: var(--rule); }
+  &:focus-within { border-color: var(--border-default); }
 `;
 
 const SaveRow = styled.div`
@@ -487,28 +522,31 @@ const FooterIconBtn = styled.button<{ $active?: boolean }>`
   justify-content: center;
   width: 30px;
   height: 30px;
-  background: ${({ $active }) => $active ? 'var(--ink, #2b2824)' : 'transparent'};
-  border: 1px solid ${({ $active }) => $active ? 'var(--ink, #2b2824)' : 'var(--rule, #d4cfc5)'};
-  border-radius: var(--r-sm, 2px);
-  color: ${({ $active }) => $active ? 'var(--paper, #f0ebdf)' : 'var(--ink-3, #6b645a)'};
-  font-size: 13px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--text-secondary)'};
+  font-size: 17px;
   cursor: pointer;
-  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
-  &:hover { background: ${({ $active }) => $active ? 'var(--ink, #2b2824)' : 'rgba(0,0,0,0.04)'}; color: ${({ $active }) => $active ? 'var(--paper, #f0ebdf)' : 'var(--ink, #2b2824)'}; }
+  transition: color 120ms ease;
+  &:hover { color: var(--text-primary); }
 `;
 
+/* DS "Capture"/Save action — outlined accent pill. */
 const SaveBtn = styled.button<{ $accent: string; $active?: boolean }>`
-  padding: 8px 18px;
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
-  font-size: 14px;
-  font-weight: 700;
-  background: var(--paper-surface);
-  color: ${({ $active }) => $active ? 'var(--ink, #2b2824)' : 'var(--ink-4, #8a857c)'};
-  border: 1px solid var(--rule, #d4cfc5);
-  border-radius: var(--r-md, 4px);
+  padding: 7px 20px;
+  font-family: var(--font-label, ${({ theme }) => theme.fontFamily.sans});
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: transparent;
+  color: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--text-disabled)'};
+  border: 1px solid ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--border-default)'};
+  border-radius: var(--r-full, 999px);
   cursor: ${({ $active }) => $active ? 'pointer' : 'default'};
   transition: background 150ms ease, color 150ms ease;
-  &:hover:not(:disabled) { ${({ $active }) => $active ? 'background: var(--paper-deep);' : ''} }
+  &:hover:not(:disabled) { ${({ $active }) => $active ? 'background: var(--color-accent-subtle);' : ''} }
 `;
 
 const StatusText = styled.span`
@@ -519,11 +557,12 @@ const StatusText = styled.span`
 `;
 
 const EmptyNote = styled.p`
-  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-family: var(--font-sans);
   font-style: italic;
-  font-size: 15px;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
-  margin: 4px 0;
+  font-size: 13.5px;
+  color: var(--text-tertiary);
+  margin: 8px 0;
+  padding: 8px 0;
 `;
 
 
@@ -541,45 +580,44 @@ const FieldCol = styled.div`
 `;
 
 const FieldLabel = styled.label`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
-  font-size: 10.5px;
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
+  color: var(--text-tertiary);
 `;
 
 const FieldInput = styled.input`
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
-  background: #ffffff;
-  font-size: 14px;
-  color: var(--ink, ${({ theme }) => theme.colors.text});
+  border: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: var(--bg-sunken);
+  font-size: 13.5px;
+  color: var(--text-primary);
   padding: 8px 10px;
   outline: none;
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-family: var(--font-sans);
   width: 100%;
   box-sizing: border-box;
-  &::placeholder { color: var(--ink-4); font-style: italic; }
+  &::placeholder { color: var(--text-tertiary); font-style: italic; }
   &[type="date"], &[type="time"] { color-scheme: light dark; }
-  &:focus { border-color: var(--ink-4); box-shadow: var(--focus); }
-  :root[data-theme="dark"] & { background: var(--paper); border-color: var(--rule); }
+  &:focus { border-color: var(--border-default); }
 `;
 
 const FieldSelect = styled.select`
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
-  background: #ffffff;
-  font-size: 14px;
-  color: var(--ink, ${({ theme }) => theme.colors.text});
+  border: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: var(--bg-sunken);
+  font-size: 13.5px;
+  color: var(--text-primary);
   padding: 8px 10px;
   outline: none;
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-family: var(--font-sans);
   width: 100%;
   box-sizing: border-box;
   appearance: none;
   cursor: pointer;
-  &:focus { border-color: var(--ink-4); box-shadow: var(--focus); }
-  :root[data-theme="dark"] & { background: var(--paper); border-color: var(--rule); }
+  &:focus { border-color: var(--border-strong); box-shadow: var(--focus); }
 `;
 
 const CheckRow = styled.div`
@@ -591,10 +629,12 @@ const CheckRow = styled.div`
 
 
 const EventMeta = styled.span`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-family: var(--font-label);
   font-size: 10px;
-  letter-spacing: 0.12em;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
 `;
 
 const PriNum = styled.div`
@@ -628,7 +668,7 @@ function isValidCardId(id: string): id is CardId {
 }
 
 const DEFAULT_LEFT: CardId[]  = ['quick-entry', 'priorities', 'events', 'shopping', 'menu-plan', 'meals-quick'];
-const DEFAULT_RIGHT: CardId[] = ['mini-calendar', 'affirmations', 'wellness', 'meds'];
+const DEFAULT_RIGHT: CardId[] = ['mini-calendar', 'affirmations'];
 const LS_KEY = 'dashboard-layout-v2';
 
 const STATIC_LABELS: Record<StaticCardId, string> = {
@@ -741,17 +781,17 @@ const RemoveBtn = styled.button`
   z-index: 10;
   width: 22px;
   height: 22px;
-  border-radius: 4px;
+  border-radius: var(--r-lg, 2px);
   border: none;
-  background: #9B4444;
+  background: var(--color-danger);
   color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  &:hover { background: #7a3030; }
+  box-shadow: var(--shadow-lg);
+  &:hover { filter: brightness(0.9); }
 `;
 
 
@@ -1281,7 +1321,12 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
             </FooterIconBtn>
           </SaveRowLeft>
           <SaveBtn $accent={accentColor} $active={canSave} onClick={handleSave} disabled={saving || !canSave}>
-            {saving ? <Spinner size={10} /> : 'Save entry'}
+            {saving ? <Spinner size={10} /> : (
+              <>
+                <FontAwesomeIcon icon={faPlus} style={{ fontSize: 12 }} />
+                Capture
+              </>
+            )}
           </SaveBtn>
         </SaveRow>
       </CardBody>
@@ -1523,14 +1568,16 @@ function TasksCard({ accentColor, tasks, taskTopicId, dragAttributes, dragListen
         {incomplete.length === 0 && !adding && <EmptyNote>No pending tasks</EmptyNote>}
         {incomplete.map(t => (
           <ItemRow key={t.id}>
-            <CheckBtn $done={false} $color={accentColor} onClick={() => handleToggle(t)} />
+            <CheckBtn $done={false} $color={accentColor} onClick={() => handleToggle(t)}>
+              <FontAwesomeIcon icon={faCircle} style={{ fontSize: '6px' }} />
+            </CheckBtn>
             <ItemText>{stripHtml(t.content).slice(0, 80)}</ItemText>
           </ItemRow>
         ))}
         {completed.map(t => (
           <ItemRow key={t.id} $done>
             <CheckBtn $done $color={accentColor} onClick={() => handleToggle(t)}>
-              <FontAwesomeIcon icon={faCheck} />
+              <FontAwesomeIcon icon={faCircleCheck} />
             </CheckBtn>
             <ItemText $done>{stripHtml(t.content).slice(0, 80)}</ItemText>
           </ItemRow>
@@ -1543,39 +1590,39 @@ function TasksCard({ accentColor, tasks, taskTopicId, dragAttributes, dragListen
 /* ── Widget: Events & Meetings ── */
 
 const EvtRow = styled.div`
-  display: flex;
-  gap: var(--s-4, 16px);
-  align-items: center;
-  padding: 20px 20px;
-  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px dashed var(--border-subtle);
   &:last-child { border-bottom: 0; }
 `;
 
 const EvtDayNum = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-width: 32px;
-  flex: 0 0 auto;
+  align-items: left;
   line-height: 1;
 `;
 
 const EvtDayNumVal = styled.span`
-  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
-  font-style: italic;
-  font-size: 22px;
-  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--text-primary);
   line-height: 1;
-  margin: 0 0 7px 0;
+  letter-spacing: -0.01em;
 `;
 
 const EvtMonthAbbr = styled.span`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  font-family: var(--font-label);
   font-size: 9px;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
-  margin-top: 2px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
 `;
 
 const EvtContent = styled.div`
@@ -1584,14 +1631,12 @@ const EvtContent = styled.div`
 `;
 
 const EvtTitle = styled.div`
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-size: 15px;
   font-weight: 400;
-  font-style: italic;
-  color: var(--ink, ${({ theme }) => theme.colors.text});
-  line-height: 1.05;
-  margin-bottom: -1px;
-  padding-top: 3px;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin-bottom: 5px;
 `;
 
 interface EventEntry { id: number; content: string; metadata: Record<string, unknown>; }
@@ -1789,27 +1834,29 @@ const MedProgressFill = styled.div<{ $pct: number; $color: string }>`
 const MedRow = styled.div<{ $taken: boolean }>`
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  opacity: ${({ $taken }) => $taken ? 0.45 : 1};
-  & + & { border-top: 1px dashed var(--rule, ${({ theme }) => theme.colors.border}); }
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  opacity: ${({ $taken }) => $taken ? 0.6 : 1};
+  border-bottom: 1px solid var(--border-subtle);
+  &:last-child { border-bottom: 0; }
 `;
 
 const MedCircle = styled.button<{ $taken: boolean; $color: string }>`
-  width: 22px; height: 22px; min-width: 22px;
-  border-radius: var(--r-sm, 4px);
-  border: 1.5px solid ${({ $taken, $color }) => $taken ? $color : 'var(--rule)'};
-  background: ${({ $taken, $color }) => $taken ? $color : 'transparent'};
+  width: 18px; height: 18px; min-width: 18px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0; color: white; font-size: 12px; padding: 0;
+  cursor: pointer; flex-shrink: 0; color: ${({ $taken, $color }) => $taken ? $color : 'var(--border-subtle)'}; font-size: 12px; padding: 0;
   transition: all 0.15s;
   &:disabled { opacity: 0.5; cursor: wait; }
 `;
 
 const MedName = styled.span<{ $taken: boolean }>`
-  font-size: 14px;
-  font-weight: ${({ $taken }) => $taken ? 300 : 400};
-  color: var(--ink, ${({ theme }) => theme.colors.text});
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--text-primary);
   text-decoration: ${({ $taken }) => $taken ? 'line-through' : 'none'};
   flex: 1;
   overflow: hidden;
@@ -1818,11 +1865,14 @@ const MedName = styled.span<{ $taken: boolean }>`
 `;
 
 const MedTimeLabel = styled.span`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
   flex-shrink: 0;
+  white-space: nowrap;
 `;
 
 /* ── Weather (inline header) ── */
@@ -1929,11 +1979,14 @@ function InlineWeather() {
 
   if (!current) return null;
 
+  const condition = wmoIcon(current.code) ? 'Sunny' : 'Cloudy';
   return (
     <InlineWeatherWrap>
-      <FontAwesomeIcon icon={wmoIcon(current.code)} style={{ fontSize: 11 }} />
-      <InlineTemp>{current.temp}°F</InlineTemp>
-      {todayHiLo && <InlineHiLo>H:{todayHiLo.max}° L:{todayHiLo.min}°</InlineHiLo>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <FontAwesomeIcon icon={faSun} style={{ fontSize: 30, color: 'var(--color-accent)' }} />
+        <InlineTemp>{current.temp}°</InlineTemp>
+      </div>
+      <WeatherCity>{cityName && cityName.split(',')[0]}</WeatherCity>
     </InlineWeatherWrap>
   );
 }
@@ -2663,8 +2716,7 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
       </CardHeader>
       <CardBody>
-        <MedProgressBar><MedProgressFill $pct={pct} $color={accentColor} /></MedProgressBar>
-        <EventMeta style={{ display: 'block', marginBottom: 10 }}>{taken} of {scheduledDoses.length} taken today</EventMeta>
+        {/* Progress bar removed to match design spec */}
         {scheduledDoses.map((dose, i) => {
           const isTaken = getStatus(dose) === 'taken';
           const key = `${dose.medicationPostId}-${dose.time.substring(0, 5)}`;
@@ -2739,78 +2791,85 @@ const WSection = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 0;
-  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
-  min-height: 52px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: 0; }
 `;
 
 const WSectionLabel = styled.div`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
-  font-size: 10.5px;
-  letter-spacing: 0.12em;
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
-  flex: 0 0 70px;
+  color: var(--text-tertiary);
 `;
 
 const GlassRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: wrap;
 `;
 
 const GlassBtn = styled.button<{ $filled: boolean; $tone?: 'accent' | 'cycle' }>`
   background: none;
   border: none;
-  padding: 6px 4px;
+  padding: 0;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: ${({ $filled, $tone }) =>
     $filled
-      ? ($tone === 'cycle' ? '#8c2e35' : 'var(--accent)')
-      : 'var(--rule)'};
+      ? ($tone === 'cycle' ? '#e91e63' : 'var(--color-accent)')
+      : 'var(--text-tertiary)'};
   transition: color 120ms ease, transform 100ms ease;
-  &:hover { color: var(--ink-3); transform: scale(1.15); }
+  &:hover { transform: scale(1.15); }
   &:active { transform: scale(0.88); }
 `;
 
 const GlassCount = styled.span`
-  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
-  font-style: italic;
-  font-size: 15px;
-  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
-  margin-left: 4px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-left: 8px;
 `;
 
 const MoodRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 `;
 
 const MoodBtn = styled.button<{ $active: boolean }>`
   background: none;
   border: none;
-  padding: 6px 4px;
+  padding: 0;
   cursor: pointer;
-  font-size: 19px;
+  font-size: 22px;
   line-height: 1;
-  color: ${({ $active }) => $active ? 'var(--ink)' : 'var(--ink-4)'};
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--text-tertiary)'};
   transition: color 120ms ease, transform 100ms ease;
-  &:hover { color: var(--ink-2); transform: scale(1.15); }
+  &:hover { transform: scale(1.15); }
   &:active { transform: scale(0.88); }
 `;
 
 
 const CyclePredictionLine = styled.div`
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-family: var(--font-sans);
   font-style: italic;
-  font-size: 13px;
-  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
-  text-align: right;
+  font-size: 11px;
+  color: var(--text-secondary);
 `;
 
 const FLOW_OPTIONS = ['spotting', 'light', 'medium', 'heavy'] as const;
@@ -3310,14 +3369,13 @@ export function DashboardView() {
       <Page>
         <PageHeader>
           <GreetingBlock>
-            <Greeting>{getGreeting()}{displayName ? `, ${displayName}` : ''}</Greeting>
+            <DateNumeral>{today.getDate()}</DateNumeral>
+            <DateInfo>
+              <DateLabel>{today.toLocaleDateString('en-US', { weekday: 'long', month: 'long' })}</DateLabel>
+              <DailyPrompt>{getDailyQuote().text}</DailyPrompt>
+            </DateInfo>
           </GreetingBlock>
-          {(() => { const q = getDailyQuote(); return (
-            <QuoteBlock>
-              <QuoteText>"{q.text}"</QuoteText>
-              <QuoteAuthor>— {q.author}</QuoteAuthor>
-            </QuoteBlock>
-          ); })()}
+          <InlineWeather />
         </PageHeader>
 
         {(() => {
