@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Icon } from '../../../design-system/components/core/Icon.jsx';
+import type { IconName } from '../../../design-system/components/core/Icon';
 import {
   DndContext, closestCenter,
   KeyboardSensor, PointerSensor,
@@ -1872,14 +1874,14 @@ interface CurrentWeather {
   code: number;
 }
 
-function wmoIcon(code: number) {
-  if (code === 0) return faSun;
-  if (code <= 3) return faCloud;
-  if (code <= 48) return faWind;
-  if (code <= 67) return faCloudRain;
-  if (code <= 77) return faSnowflake;
-  if (code <= 82) return faCloudRain;
-  return faBolt;
+function wmoIcon(code: number): IconName {
+  if (code === 0) return 'sun';
+  if (code <= 3) return 'cloud-sun';
+  if (code <= 48) return 'cloud';
+  if (code <= 67) return 'droplet';
+  if (code <= 77) return 'cloud';
+  if (code <= 82) return 'droplet';
+  return 'cloud';
 }
 
 function wmoLabel(code: number) {
@@ -1969,7 +1971,7 @@ function InlineWeather() {
 
   if (!current) return null;
 
-  const condition = wmoIcon(current.code) ? 'Sunny' : 'Cloudy';
+  const condition = current.code === 0 ? 'Sunny' : 'Cloudy';
   return (
     <InlineWeatherWrap>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -2133,9 +2135,11 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
               return (
                 <WeatherDayRow key={day.date} $today={isToday}>
                   <WeatherDayLabel $today={isToday}>{dayLabel(day.date)}</WeatherDayLabel>
-                  <FontAwesomeIcon
-                    icon={isToday ? wmoIcon(current.code) : wmoIcon(day.code)}
-                    style={{ fontSize: isToday ? 18 : 13, width: 18, flexShrink: 0 }}
+                  <Icon
+                    name={isToday ? wmoIcon(current.code) : wmoIcon(day.code)}
+                    size={isToday ? 18 : 13}
+                    strokeWidth={2.4}
+                    style={{ flexShrink: 0 }}
                   />
                   {isToday ? (
                     <>
@@ -3076,7 +3080,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
         <WSection>
           <WSectionLabel>Mood</WSectionLabel>
           <MoodRow>
-            {['mood-1', 'mood-2', 'mood-3', 'mood-4', 'mood-5'].map((moodName, i) => (
+            {(['mood-1', 'mood-2', 'mood-3', 'mood-4', 'mood-5'] as IconName[]).map((moodName, i) => (
               <MoodBtn key={i} $active={moodScore === i + 1} onClick={() => handleMood(i + 1)} title={['Very sad', 'Sad', 'Neutral', 'Good', 'Great'][i]}>
                 <Icon name={moodName} size={22} strokeWidth={2.2} />
               </MoodBtn>
