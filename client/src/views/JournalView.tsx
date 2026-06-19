@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../design-system/components/core/Icon.jsx';
 import { AppTemplate } from '../components/templates/AppTemplate.js';
 import { JournalTemplate, SidePanel, EditorPanel } from '../components/templates/JournalTemplate.js';
 import { LoadingCenter } from '../components/atoms/LoadingCenter.js';
@@ -65,6 +66,34 @@ const DateFilterClear = styled.button`
   &:hover { background: var(--paper-hover); }
 `;
 
+/* DS rail search — pill-shaped, icon + input, sunken fill. */
+const SearchBlock = styled.div`
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+`;
+
+const SearchPill = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--r-full, 999px);
+  background: var(--bg-sunken);
+`;
+
+const SearchPillInput = styled.input`
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-primary);
+  &::placeholder { color: var(--text-tertiary); }
+`;
+
 export function JournalView() {
   const { encryptionData } = useAuth();
   const { isUnlocked, unlock, decryptPosts, encryptPost } = useEncryption();
@@ -88,6 +117,8 @@ export function JournalView() {
   const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
   const setBackgroundOpacity = useUIStore(s => s.setBackgroundOpacity);
   const setTopicCustomFields = useUIStore(s => s.setTopicCustomFields);
+  const searchKeyword = useUIStore(s => s.searchKeyword);
+  const setSearchKeyword = useUIStore(s => s.setSearchKeyword);
   const filterTopic = topics.find(t => t.id === selectedTopicId);
 
   const entryCounts = useMemo(() => {
@@ -516,6 +547,23 @@ export function JournalView() {
       <JournalTemplate
         sidePanel={
           <SidePanel hiddenMobile={showMobileEditor}>
+            <SearchBlock>
+              <SearchPill>
+                <Icon name="search" size={14} strokeWidth={2} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                <SearchPillInput
+                  placeholder="Search or filter"
+                  value={searchKeyword}
+                  onChange={e => setSearchKeyword(e.target.value)}
+                />
+                {searchKeyword && (
+                  <FontAwesomeIcon
+                    icon={faXmark}
+                    style={{ cursor: 'pointer', color: 'var(--text-tertiary)', fontSize: 12 }}
+                    onClick={() => setSearchKeyword('')}
+                  />
+                )}
+              </SearchPill>
+            </SearchBlock>
             <ViewTabs
               onDateTabClick={() => setCalendarExpanded(prev => !prev)}
               onTodayClick={() => setCalendarExpanded(false)}
