@@ -1307,7 +1307,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
               onClick={() => setToolbarOpen(o => !o)}
               type="button"
             >
-              <FontAwesomeIcon icon={faPenNib} />
+              <Icon name="pencil" size={14} strokeWidth={2} />
             </FooterIconBtn>
           </SaveRowLeft>
           <SaveBtn $accent={accentColor} $active={canSave} onClick={handleSave} disabled={saving || !canSave}>
@@ -1651,7 +1651,7 @@ function EventsCard({ accentColor, events, dragAttributes, dragListeners }: { ac
       <CardHeader>
         <CardIconWrap><Icon name="calendar" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Upcoming</CardTitle>
-        {dragAttributes && <DragGrip style={{ marginLeft: 'auto' }} {...dragAttributes as any} {...dragListeners as any}><FontAwesomeIcon icon={faGripVertical} /></DragGrip>}
+        {dragAttributes && <DragGrip style={{ marginLeft: 'auto' }} {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>}
       </CardHeader>
       <div>
         {events.slice(0, 10).map(ev => {
@@ -1793,7 +1793,7 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
         {checked.slice(0, 3).map(it => (
           <ItemRow key={it.id} $done>
             <CheckBtn $done $color={accentColor} onClick={() => handleToggle(it.id)}>
-              <FontAwesomeIcon icon={faCheck} />
+              <Icon name="check" size={14} strokeWidth={2.5} />
             </CheckBtn>
             <ItemText $done>{it.name}</ItemText>
           </ItemRow>
@@ -1973,7 +1973,7 @@ function InlineWeather() {
   return (
     <InlineWeatherWrap>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <FontAwesomeIcon icon={faSun} style={{ fontSize: 30, color: 'var(--color-accent)' }} />
+        <Icon name="sun" size={30} strokeWidth={2.4} style={{ color: 'var(--color-accent)' }} />
         <InlineTemp>{current.temp}°</InlineTemp>
       </div>
       <WeatherCity>{cityName && cityName.split(',')[0]}</WeatherCity>
@@ -2110,11 +2110,11 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
     <DashCard>
       <CardHeader>
         <CardIconWrap>
-          <FontAwesomeIcon icon={faSun} />
+          <Icon name="sun" size={16} strokeWidth={2.4} />
         </CardIconWrap>
         <CardTitle>Weather</CardTitle>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
-          <FontAwesomeIcon icon={faGripVertical} />
+          <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
       </CardHeader>
       <CardBody>
@@ -2146,7 +2146,7 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
                   ) : (
                     <>
                       <WeatherCondition>{wmoLabel(day.code)}</WeatherCondition>
-                      {day.precip > 20 && <WeatherPrecip><FontAwesomeIcon icon={faDroplet} style={{ marginRight: 3 }} />{day.precip}%</WeatherPrecip>}
+                      {day.precip > 20 && <WeatherPrecip><Icon name="droplet" size={12} strokeWidth={2.4} style={{ marginRight: 3 }} />{day.precip}%</WeatherPrecip>}
                       <WeatherHiLo>H:{day.max}° L:{day.min}°</WeatherHiLo>
                     </>
                   )}
@@ -2222,7 +2222,7 @@ function TopicWidget({ topicId, accentColor, dragAttributes, dragListeners }: { 
         <CardTitle>{topic.name}</CardTitle>
         <CardViewLink to="/journal">View all</CardViewLink>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
-          <FontAwesomeIcon icon={faGripVertical} />
+          <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
       </CardHeader>
       <CardBody>
@@ -2357,7 +2357,7 @@ function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentCo
         <CardTitle>{cardTitle}</CardTitle>
         <CardViewLink to="/menu">View plan</CardViewLink>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
-          <FontAwesomeIcon icon={faGripVertical} />
+          <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
       </CardHeader>
       <CardBody>
@@ -2561,7 +2561,7 @@ function AffirmationsCard({ accentColor, dragAttributes, dragListeners }: { acce
         <CardIconWrap><Icon name="heart" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Affirmations</CardTitle>
         <DragGrip style={{ marginLeft: 'auto' }} {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
-          <FontAwesomeIcon icon={faGripVertical} />
+          <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
       </CardHeader>
       <CardBody>
@@ -2598,11 +2598,11 @@ function AffirmationsCard({ accentColor, dragAttributes, dragListeners }: { acce
             {displayItems.length > 1 && (
               <AffirmationNav>
                 <AffirmationNavBtn onClick={() => setOffset(o => o - 1)}>
-                  <FontAwesomeIcon icon={faChevronLeft} />
+                  <Icon name="chevron-left" size={14} strokeWidth={2} />
                 </AffirmationNavBtn>
                 <AffirmationCount>{currentIdx + 1} / {displayItems.length}</AffirmationCount>
                 <AffirmationNavBtn onClick={() => setOffset(o => o + 1)}>
-                  <FontAwesomeIcon icon={faChevronRight} />
+                  <Icon name="chevron-right" size={14} strokeWidth={2} />
                 </AffirmationNavBtn>
               </AffirmationNav>
             )}
@@ -2756,7 +2756,7 @@ function MiniCalendarCard({ accentColor, dragAttributes, dragListeners }: { acce
         <CardIconWrap><Icon name="calendar" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Calendar</CardTitle>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
-          <FontAwesomeIcon icon={faGripVertical} />
+          <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
       </CardHeader>
       <div style={{ padding: '0 20px 20px' }}>
@@ -3057,7 +3057,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
         <CardTitle>Wellness Check-in</CardTitle>
         <EventMeta style={{ marginLeft: 'auto' }}>Today</EventMeta>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
-          <FontAwesomeIcon icon={faGripVertical} />
+          <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
       </CardHeader>
       <CardBody>
@@ -3397,7 +3397,7 @@ export function DashboardView() {
                 <CardWrapper>
                   {isEditMode && (
                     <RemoveBtn onClick={() => handleRemoveCard(id)} title={`Remove ${cardLabel(id, allTopics)}`}>
-                      <FontAwesomeIcon icon={faXmark} />
+                      <Icon name="x" size={14} strokeWidth={2} />
                     </RemoveBtn>
                   )}
                   {renderCard(id, drag)}
@@ -3416,7 +3416,7 @@ export function DashboardView() {
                     {renderCol(visibleRight)}
                     <EditWidgetsCard>
                       <EditWidgetsBtn onClick={() => setIsEditMode(e => !e)} style={{ width: '100%', justifyContent: 'center' }}>
-                        <FontAwesomeIcon icon={isEditMode ? faXmark : faSlidersH} />
+                        <Icon name={isEditMode ? 'x' : 'filter'} size={16} strokeWidth={2} />
                         {isEditMode ? 'Done editing' : 'Edit widgets'}
                       </EditWidgetsBtn>
                       {isEditMode && (
@@ -3424,7 +3424,7 @@ export function DashboardView() {
                           <WidgetMenuHeader onClick={() => setIsWidgetMenuOpen(o => !o)}>
                             Add widgets
                             <WidgetMenuChevron $open={isWidgetMenuOpen}>
-                              <FontAwesomeIcon icon={faChevronDown} />
+                              <Icon name="chevron-down" size={14} strokeWidth={2} />
                             </WidgetMenuChevron>
                           </WidgetMenuHeader>
                           {isWidgetMenuOpen && (
@@ -3441,7 +3441,7 @@ export function DashboardView() {
                                       <WidgetChips>
                                         {addableStatics.map(id => (
                                           <WidgetChip key={id} onClick={() => handleAddCard(id)}>
-                                            <FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} />
+                                            <Icon name="plus" size={10} strokeWidth={2.5} />
                                             {STATIC_LABELS[id]}
                                           </WidgetChip>
                                         ))}
@@ -3454,7 +3454,7 @@ export function DashboardView() {
                                       <WidgetChips>
                                         {hiddenAddable.map(id => (
                                           <WidgetChip key={id} onClick={() => handleAddCard(id)}>
-                                            <FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} />
+                                            <Icon name="plus" size={10} strokeWidth={2.5} />
                                             {cardLabel(id, allTopics)}
                                           </WidgetChip>
                                         ))}
