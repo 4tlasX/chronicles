@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Icon } from '../../design-system/components/core/Icon.jsx';
+import { Icon } from '../../../design-system/components/core/Icon.jsx';
 import {
   DndContext, closestCenter,
   KeyboardSensor, PointerSensor,
