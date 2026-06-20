@@ -80,7 +80,7 @@ const NavRow = styled.button<{ $active?: boolean }>`
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 13px 14px;
+  padding: 12px;
   border: none;
   cursor: pointer;
   text-align: left;
@@ -88,7 +88,7 @@ const NavRow = styled.button<{ $active?: boolean }>`
   color: ${({ $active }) => $active ? 'white' : 'var(--text-secondary)'};
   font-family: var(--font-sans);
   font-size: 13.5px;
-  font-weight: ${({ $active }) => $active ? 600 : 400};
+  font-weight: 300;
   transition: background 120ms ease, color 120ms ease;
 
   &:hover {
