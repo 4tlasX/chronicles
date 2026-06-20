@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import styled from 'styled-components';
-import { faXmark, faPlus } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Icon } from '../../../../../design-system/components/core/Icon.jsx';
 import { TextInput } from '../../atoms/TextInput.js';
 import { Select } from '../../atoms/Select.js';
 import { Checkbox } from '../../atoms/Checkbox.js';
@@ -239,14 +238,14 @@ export function ShoppingListFields({ values, onChange, recipeOptions = [] }: Sho
                 ))}
               </CategorySelect>
               <RemoveBtn type="button" onClick={() => removeItem(index)} aria-label="Remove item">
-                <FontAwesomeIcon icon={faXmark} />
+                <Icon name="x" size={14} strokeWidth={2} />
               </RemoveBtn>
             </ItemRow>
           ))}
         </Group>
       ))}
       <AddBtn type="button" onClick={addItem}>
-        <FontAwesomeIcon icon={faPlus} size="xs" />
+        <Icon name="plus" size={12} strokeWidth={2} />
         Add Item
       </AddBtn>
       <NotesSection>
@@ -291,7 +290,7 @@ export function ShoppingListFields({ values, onChange, recipeOptions = [] }: Sho
                     onClick={() => onChange({ ...values, linkedRecipeIds: linkedRecipeIds.filter(rid => rid !== id) })}
                     aria-label="Unlink recipe"
                   >
-                    <FontAwesomeIcon icon={faXmark} size="xs" />
+                    <Icon name="x" size={12} strokeWidth={2} />
                   </UnlinkBtn>
                 </LinkedItem>
               );

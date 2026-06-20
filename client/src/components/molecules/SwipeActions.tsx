@@ -1,7 +1,6 @@
 import { useRef, useCallback, useEffect, type ReactNode } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 
 /* ── Constants ── */
 
@@ -257,7 +256,7 @@ export function SwipeActions({
             onClick={e => { e.stopPropagation(); snap(false); onEdit(); }}
             aria-label="Edit"
           >
-            <FontAwesomeIcon icon={faPencil} />
+            <Icon name="pencil" size={18} strokeWidth={2} />
             <SrOnly>Edit</SrOnly>
           </ActionBtn>
         )}
@@ -267,7 +266,7 @@ export function SwipeActions({
           onClick={e => { e.stopPropagation(); snap(false); onDelete(); }}
           aria-label="Delete"
         >
-          <FontAwesomeIcon icon={faTrash} />
+          <Icon name="trash" size={18} strokeWidth={2} />
           <SrOnly>Delete</SrOnly>
         </ActionBtn>
       </ActionBar>

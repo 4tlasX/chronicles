@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import styled from 'styled-components';
+import { Icon } from '../../../../../design-system/components/core/Icon.jsx';
 import { TextInput } from '../../atoms/TextInput.js';
 import { Select } from '../../atoms/Select.js';
 import { Textarea } from '../../atoms/Textarea.js';
 import { Checkbox } from '../../atoms/Checkbox.js';
 import { Button } from '../../atoms/Button.js';
 import { FormField } from '../FormField.js';
-import { faPlus, faXmark } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { MedicationFieldValues } from '../../../types/fields.js';
 export type { MedicationFieldValues } from '../../../types/fields.js';
 
@@ -107,12 +106,12 @@ export function MedicationFields({ values, onChange }: MedicationFieldsProps) {
               onChange={e => updateTime(i, e.target.value)}
             />
             <RemoveBtn onClick={() => removeTime(i)}>
-              <FontAwesomeIcon icon={faXmark} />
+              <Icon name="x" size={14} strokeWidth={2} />
             </RemoveBtn>
           </TimeRow>
         ))}
         <Button variant="ghost" onClick={addTime} style={{ alignSelf: 'flex-start', padding: '4px 8px', fontSize: 12 }}>
-          <FontAwesomeIcon icon={faPlus} /> Add time
+          <Icon name="plus" size={12} strokeWidth={2} /> Add time
         </Button>
       </FormField>
       <div>

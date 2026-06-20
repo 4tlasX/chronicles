@@ -1,6 +1,5 @@
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../../design-system/components/core/Icon.jsx';
 
 export interface PriorityItem { id: string; text: string; done: boolean; }
 export interface PrioritiesFieldValues { priorities: PriorityItem[]; }
@@ -113,7 +112,7 @@ export function PrioritiesFields({ values, onChange, accentColor = '#4A5568' }: 
       {priorities.map((p, i) => (
         <Row key={p.id} $done={p.done}>
           <CheckBtn $done={p.done} $color={accentColor} onClick={() => update(p.id, { done: !p.done })}>
-            {p.done && <FontAwesomeIcon icon={faCheck} />}
+            {p.done && <Icon name="check" size={10} strokeWidth={2} />}
           </CheckBtn>
           <Num>{i + 1}</Num>
           <Input
@@ -122,13 +121,13 @@ export function PrioritiesFields({ values, onChange, accentColor = '#4A5568' }: 
             onChange={e => update(p.id, { text: e.target.value })}
           />
           <RemoveBtn onClick={() => remove(p.id)}>
-            <FontAwesomeIcon icon={faTrash} />
+            <Icon name="trash" size={12} strokeWidth={2} />
           </RemoveBtn>
         </Row>
       ))}
       {priorities.length < 5 && (
         <AddBtn onClick={add}>
-          <FontAwesomeIcon icon={faPlus} /> Add priority
+          <Icon name="plus" size={12} strokeWidth={2} /> Add priority
         </AddBtn>
       )}
     </Wrapper>

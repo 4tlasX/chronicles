@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faXmark, faPlus, faMicrophone } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { getTopicIcon } from '../../utils/topicIcons.js';
 import type { Topic } from '../../types/topics.js';
 
@@ -215,18 +214,18 @@ export function TopicQuickFilter({ topics, selectedTopicId, entryCounts, onSelec
       {onNewEntry && (
         <NewEntryRow>
           <NewEntryBtn onClick={onNewEntry}>
-            <FontAwesomeIcon icon={faPlus} style={{ fontSize: 11 }} /> New entry
+            <Icon name="plus" size={11} strokeWidth={2} /> New entry
           </NewEntryBtn>
           <span className="divider" aria-hidden="true" />
           <MicBtn title="Dictate" aria-label="Dictate" onClick={onDictate ?? onNewEntry}>
-            <FontAwesomeIcon icon={faMicrophone} style={{ fontSize: 13 }} />
+            <Icon name="mic" size={13} strokeWidth={2} />
           </MicBtn>
         </NewEntryRow>
       )}
 
       <SearchBar>
         <SearchIcon>
-          <FontAwesomeIcon icon={faMagnifyingGlass} />
+          <Icon name="search" size={12} strokeWidth={2} />
         </SearchIcon>
         <SearchInput
           ref={inputRef}
@@ -238,12 +237,12 @@ export function TopicQuickFilter({ topics, selectedTopicId, entryCounts, onSelec
         />
         {selectedTopicId !== null && !isOpen && (
           <ClearBtn onClick={() => { handleSelect(null); }}>
-            <FontAwesomeIcon icon={faXmark} />
+            <Icon name="x" size={11} strokeWidth={2} />
           </ClearBtn>
         )}
         {isOpen && query && (
           <ClearBtn onMouseDown={() => { setQuery(''); inputRef.current?.focus(); }}>
-            <FontAwesomeIcon icon={faXmark} />
+            <Icon name="x" size={11} strokeWidth={2} />
           </ClearBtn>
         )}
         {isOpen && (

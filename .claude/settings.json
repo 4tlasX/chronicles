@@ -14,7 +14,8 @@
       "Bash(pkill -f \"vite|tsx\")",
       "Bash(cd /Users/fastandcurious/apps/chronicles/client/src/components/atoms && pwd && ls ../../../../../design-system/components/core/Icon.d.ts 2>&1 | head -1)",
       "Read(//design-system/components/core/**)",
-      "Bash(xargs -I {} basename {} .jsx)"
+      "Bash(xargs -I {} basename {} .jsx)",
+      "Bash(node -e \"console.log\\(require.resolve\\('../../../design-system/components/core/Icon.js'\\)\\)\")"
     ]
   }
 }

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Icon } from '../../../design-system/components/core/Icon.jsx';
-import type { IconName } from '../../../design-system/components/core/Icon';
+import type { IconName } from '../../../design-system/components/core/Icon.d.js';
 import {
   DndContext, closestCenter,
   KeyboardSensor, PointerSensor,

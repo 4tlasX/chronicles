@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { Spinner } from '../atoms/Spinner.js';
 
 function isDark(bg: string): boolean {
@@ -175,7 +174,7 @@ export function InlineEditPanel({ editor, fields, accentColor, saving, status, o
       {fields && (
         <FieldsSectionWrap>
           <FieldsToggle onClick={() => setFieldsOpen(o => !o)}>
-            <FontAwesomeIcon icon={fieldsOpen ? faChevronDown : faChevronRight} style={{ fontSize: 11 }} />
+            <Icon name={fieldsOpen ? 'chevron-down' : 'chevron-right'} size={11} strokeWidth={2} />
             Custom fields
           </FieldsToggle>
           <FieldsContent $open={fieldsOpen}>{fields}</FieldsContent>

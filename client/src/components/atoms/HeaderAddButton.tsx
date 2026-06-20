@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Icon } from '../../../design-system/components/core/Icon.js';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 
 const Btn = styled.button`
   display: flex;
