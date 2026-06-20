@@ -1,6 +1,5 @@
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBookmark } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { SwipeActions } from '../molecules/SwipeActions.js';
 import { useUIStore } from '../../stores/uiStore.js';
@@ -155,7 +154,7 @@ export function EntryCard({
             onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
             title="Remove bookmark"
           >
-            <FontAwesomeIcon icon={faBookmark} />
+            <Icon name="bookmark" size={14} strokeWidth={2} />
           </BookmarkIcon>
         )}
       </TimeStamp>

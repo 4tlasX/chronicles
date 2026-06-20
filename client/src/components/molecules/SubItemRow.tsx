@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 const Row = styled.div`
@@ -70,7 +70,7 @@ export function SubItemRow({ icon, iconColor, title, isCompleted, statusLabel, o
       </StatusBtn>
       <Title $completed={isCompleted}>{title}</Title>
       <UnlinkBtn aria-label="Remove item" onClick={e => { e.stopPropagation(); onUnlink(); }}>
-        <FontAwesomeIcon icon={faXmark} />
+        <Icon name="x" size={14} strokeWidth={2} />
       </UnlinkBtn>
     </Row>
   );

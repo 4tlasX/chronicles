@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { faSearch, faXmark } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 
 const Wrapper = styled.div`
   display: flex;
@@ -78,7 +77,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search...', deboun
 
   return (
     <Wrapper>
-      <SearchIcon aria-hidden="true"><FontAwesomeIcon icon={faSearch} /></SearchIcon>
+      <SearchIcon aria-hidden="true"><Icon name="search" size={13} strokeWidth={2} /></SearchIcon>
       <Input
         type="text"
         value={local}
@@ -88,7 +87,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search...', deboun
       />
       {local && (
         <ClearButton onClick={() => { setLocal(''); onChange(''); }} aria-label="Clear search">
-          <FontAwesomeIcon icon={faXmark} />
+          <Icon name="x" size={12} strokeWidth={2} />
         </ClearButton>
       )}
     </Wrapper>
