@@ -1,6 +1,5 @@
 import { useMemo, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 
 interface MiniCalendarProps {
   selectedDate: Date;
@@ -12,24 +11,6 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-`;
-
-const Header = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 0 4px;
-  font-family: var(--font-label);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-`;
-
-const IconSpan = styled.span`
-  display: flex;
-  align-items: center;
 `;
 
 /* The viewport. Clips horizontally; one week (= 100% width) shows at a time. */
@@ -170,12 +151,6 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
 
   return (
     <Wrapper>
-      <Header>
-        <IconSpan>
-          <Icon name="calendar" size={12} strokeWidth={2} />
-        </IconSpan>
-        MINI CALENDAR
-      </Header>
       <ScrollContainer ref={scrollRef}>
         {weeks.map((weekDays, weekIdx) => (
           <Week key={weekIdx}>
