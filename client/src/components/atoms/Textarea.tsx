@@ -1,41 +1,17 @@
-import styled from 'styled-components';
-import type { TextareaHTMLAttributes } from 'react';
+import React, { type TextareaHTMLAttributes } from 'react';
+import { Textarea as DSTextarea } from '../../../../design-system/components/core/Textarea.jsx';
+import type { TextareaProps as DSTextareaProps } from '../../../../design-system/components/core/Textarea.d';
 
-interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
-  error?: boolean;
+interface TextareaProps extends Omit<DSTextareaProps, 'error'> {
+  /** @deprecated Use error prop as string message */
+  error?: boolean | string;
 }
 
-const StyledTextarea = styled.textarea<{ $error?: boolean }>`
-  width: 100%;
-  min-height: 96px;
-  padding: 10px 12px;
-  font-family: var(--sans, 'Lato', sans-serif);
-  font-size: 17px;
-  font-style: italic;
-  line-height: 1.6;
-  -webkit-appearance: none;
-  border: 1px solid ${({ $error }) => $error ? 'var(--danger)' : 'var(--rule)'};
-  border-radius: var(--r-md, ${({ theme }) => theme.borderRadius.md}px);
-  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
-  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
-  resize: vertical;
-  outline: none;
-  touch-action: auto;
-  user-select: text;
-  -webkit-user-select: text;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
-
-  &:focus {
-    border-color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
-    box-shadow: var(--focus, 0 0 0 2px rgba(78,110,126,0.28));
-  }
-
-  &::placeholder {
-    font-style: italic;
-    color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
-  }
-`;
-
+/**
+ * Multi-line text area wrapping the design-system Textarea component.
+ * Supports optional label, hint, and error message.
+ */
 export function Textarea({ error, ...props }: TextareaProps) {
-  return <StyledTextarea $error={error} {...props} />;
+  const errorMessage = typeof error === 'string' ? error : error ? 'Error' : undefined;
+  return <DSTextarea error={errorMessage} {...props} />;
 }
