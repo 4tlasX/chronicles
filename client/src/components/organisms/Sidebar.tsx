@@ -137,7 +137,7 @@ const NavSectionHeader = styled.button`
   margin-top: 2px;
   cursor: pointer;
   font-family: var(--font-label);
-  font-size: 9.5px;
+  font-size: 11.5px;
   font-weight: 300;
   letter-spacing: 0.2em;
   text-transform: uppercase;
