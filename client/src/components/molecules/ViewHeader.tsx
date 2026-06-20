@@ -20,8 +20,8 @@ const TitleRow = styled.div`
 const Title = styled.h1`
   font-family: ${({ theme }) => theme.fontFamily.serif};
   font-size: 1.375rem;
-  font-weight: 700;
-  font-style: italic;
+  font-weight: 300;
+  font-style: normal;
   color: ${({ theme }) => theme.colors.text};
   @media (max-width: 480px) { font-size: 1.1rem; }
 `;
@@ -29,8 +29,8 @@ const Title = styled.h1`
 const TitleLink = styled(Link)`
   font-family: ${({ theme }) => theme.fontFamily.serif};
   font-size: 1.375rem;
-  font-weight: 700;
-  font-style: italic;
+  font-weight: 300;
+  font-style: normal;
   color: ${({ theme }) => theme.colors.text};
   text-decoration: none;
   &:hover { opacity: 0.65; }
