@@ -7,7 +7,6 @@ import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { getTopicIcon } from '../../utils/topicIcons.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
-import { getTopicIcon } from '../../utils/topicIcons.js';
 
 const SidebarRoot = styled.aside`
   width: 228px;
