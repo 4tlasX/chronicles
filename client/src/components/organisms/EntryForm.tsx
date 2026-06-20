@@ -1,8 +1,7 @@
 import { useState, useEffect, type MutableRefObject } from 'react';
 import styled from 'styled-components';
 import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
-import { faChevronDown, faChevronUp, faBookmark, faShareNodes, faPenNib, faMicrophone, faTrash, faLock } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { Editor, type DictationControls } from './Editor.js';
 import { TopicSelector } from './TopicSelector.js';
 import { Spinner } from '../atoms/Spinner.js';
@@ -451,13 +450,13 @@ export function EntryForm({
     if (isSaving) return <SaveHint>Saving...</SaveHint>;
     if (savedAgoText) return (
       <SaveHint>
-        <FontAwesomeIcon icon={faLock} style={{ fontSize: 7, color: 'var(--success, #5a8a6a)' }} />
+        <Icon name="check-circle" size={8} strokeWidth={1.5} />
         {savedAgoText}
       </SaveHint>
     );
     if (entryId) return (
       <SaveHint>
-        <FontAwesomeIcon icon={faLock} style={{ fontSize: 7, color: 'var(--success, #5a8a6a)' }} />
+        <Icon name="check-circle" size={8} strokeWidth={1.5} />
         Saved
       </SaveHint>
     );
@@ -496,7 +495,7 @@ export function EntryForm({
                 onClick={() => entryId && onBookmark?.()}
                 style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
               >
-                <FontAwesomeIcon icon={faBookmark} />
+                <Icon name="bookmark" size={16} strokeWidth={2} />
               </IconBtn>
               <IconBtn
                 type="button"
@@ -505,7 +504,7 @@ export function EntryForm({
                 onClick={() => entryId && onShare?.()}
                 style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
               >
-                <FontAwesomeIcon icon={faShareNodes} />
+                <Icon name="repeat" size={16} strokeWidth={2} />
               </IconBtn>
               <IconBtn
                 type="button"
@@ -513,7 +512,7 @@ export function EntryForm({
                 aria-label="Toggle dictation"
                 onClick={() => dictationControlRef?.current?.toggle()}
               >
-                <FontAwesomeIcon icon={faMicrophone} />
+                <Icon name="mic" size={16} strokeWidth={2} />
               </IconBtn>
               <IconBtn
                 type="button"
@@ -523,7 +522,7 @@ export function EntryForm({
                 aria-expanded={toolbarOpen}
                 onClick={() => setToolbarOpen(!toolbarOpen)}
               >
-                <FontAwesomeIcon icon={faPenNib} />
+                <Icon name="pencil" size={16} strokeWidth={2} />
               </IconBtn>
               <IconBtn
                 type="button"
@@ -533,7 +532,7 @@ export function EntryForm({
                 onClick={() => entryId && onDelete?.()}
                 style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
               >
-                <FontAwesomeIcon icon={faTrash} />
+                <Icon name="trash" size={16} strokeWidth={2} />
               </IconBtn>
             </EdActions>
           </EdTopicRow>
@@ -557,7 +556,7 @@ export function EntryForm({
             <CustomFieldsSection>
               <CustomFieldsHeader onClick={() => setFieldsExpanded(!fieldsExpanded)}>
                 <CfCardTitle>{customType === 'task' ? 'Task Options' : customType === 'goal' ? 'Goal Type' : customType === 'milestone' ? 'Milestone Status' : customType === 'food' ? 'Meal Type' : customType === 'medication' ? 'Dosage' : customType === 'symptom' ? 'Severity' : customType === 'exercise' ? 'Exercise Type' : customType === 'event' ? 'Event Details' : customType === 'meeting' ? 'Meeting Details' : customType === 'allergy' ? 'Allergy Details' : customType === 'shopping_list' ? 'Shopping List' : customType === 'recipe' ? 'Recipe Details' : customType === 'wellness' ? 'Check-in Details' : 'Settings'}</CfCardTitle>
-                <CfCardBadge><FontAwesomeIcon icon={fieldsExpanded ? faChevronUp : faChevronDown} /></CfCardBadge>
+                <CfCardBadge><Icon name={fieldsExpanded ? 'chevron-up' : 'chevron-down'} size={11} strokeWidth={2} /></CfCardBadge>
               </CustomFieldsHeader>
               {fieldsExpanded && (
                 <CustomFieldsBody>
@@ -585,7 +584,7 @@ export function EntryForm({
             <CustomFieldsSection>
               <CustomFieldsHeader onClick={() => setUserFieldsExpanded(!userFieldsExpanded)}>
                 <CfCardTitle>Custom Fields</CfCardTitle>
-                <CfCardBadge><FontAwesomeIcon icon={userFieldsExpanded ? faChevronUp : faChevronDown} /></CfCardBadge>
+                <CfCardBadge><Icon name={userFieldsExpanded ? 'chevron-up' : 'chevron-down'} size={11} strokeWidth={2} /></CfCardBadge>
               </CustomFieldsHeader>
               {userFieldsExpanded && (
                 <CustomFieldsBody>

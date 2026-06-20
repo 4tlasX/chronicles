@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { IconPicker } from './IconPicker.js';
 import type { UserFieldDef } from '../../types/userFields.js';
 
@@ -239,7 +238,7 @@ export function TopicEditForm({
                 {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </TypeSelect>
               <IconActionBtn onClick={() => handleRemoveField(f.id)} title="Remove field">
-                <FontAwesomeIcon icon={faXmark} />
+                <Icon name="x" size={14} strokeWidth={2} />
               </IconActionBtn>
             </FieldRow>
           ))}
@@ -259,15 +258,15 @@ export function TopicEditForm({
                 {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </TypeSelect>
               <IconActionBtn onClick={handleAddField} title="Add">
-                <FontAwesomeIcon icon={faPlus} />
+                <Icon name="plus" size={14} strokeWidth={2} />
               </IconActionBtn>
               <IconActionBtn onClick={() => { setAdding(false); setNewLabel(''); }} title="Cancel">
-                <FontAwesomeIcon icon={faXmark} />
+                <Icon name="x" size={14} strokeWidth={2} />
               </IconActionBtn>
             </AddFieldRow>
           ) : (
             <AddFieldBtn onClick={() => setAdding(true)}>
-              <FontAwesomeIcon icon={faPlus} style={{ fontSize: 10 }} />
+              <Icon name="plus" size={10} strokeWidth={2} />
               Add field
             </AddFieldBtn>
           )}
