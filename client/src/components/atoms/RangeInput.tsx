@@ -4,7 +4,7 @@ import type { InputHTMLAttributes } from 'react';
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm, 8px);
+  gap: var(--s-2, 8px);
 `;
 
 const HeaderRow = styled.div`

@@ -15,11 +15,11 @@ const Card = styled.div`
 `;
 
 const Header = styled.div`
-  padding: 16px 24px;
+  padding: var(--s-4, 16px) var(--s-6, 24px);
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-3, 12px);
 `;
 
 const AppName = styled.span`
@@ -36,7 +36,7 @@ const SharedBadge = styled.span`
 `;
 
 const Body = styled.div`
-  padding: 28px 32px;
+  padding: calc(var(--s-6, 24px) + 4px) var(--s-7, 32px);
   font-size: 17px;
   line-height: 1.7;
   color: ${({ theme }) => theme.colors.text};
@@ -53,14 +53,14 @@ const Body = styled.div`
   }
   code {
     background: rgba(0,0,0,0.05);
-    padding: 2px 5px;
-    border-radius: 3px;
+    padding: var(--s-1, 4px) var(--s-2, 8px);
+    border-radius: var(--r-md, 1px);
     font-size: 0.9em;
   }
   pre {
     background: rgba(0,0,0,0.05);
-    padding: 12px;
-    border-radius: 6px;
+    padding: var(--s-3, 12px);
+    border-radius: var(--r-lg, 2px);
     code { background: none; padding: 0; }
   }
   p { margin: 0 0 0.75em; }
@@ -68,13 +68,13 @@ const Body = styled.div`
 `;
 
 const Footer = styled.div`
-  padding: 12px 24px;
+  padding: var(--s-3, 12px) var(--s-6, 24px);
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2, 8px);
 `;
 
 const StatusMessage = styled.div<{ $error?: boolean }>`

@@ -4,12 +4,12 @@ import { Label } from '../atoms/Label.js';
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--s-1, 4px);
 `;
 
 const ErrorText = styled.span`
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
-  color: ${({ theme }) => theme.colors.danger};
+  font-size: var(--text-xs, 13px);
+  color: var(--text-danger);
 `;
 
 interface FormFieldProps {

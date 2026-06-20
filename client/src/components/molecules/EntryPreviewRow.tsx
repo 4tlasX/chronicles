@@ -5,23 +5,23 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 const Row = styled.button`
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--s-3, 12px);
   width: 100%;
-  padding: 12px 24px;
+  padding: var(--s-3, 12px) var(--s-6, 24px);
   text-align: left;
   background: none;
   border: none;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
   transition: background 0.1s;
-  &:hover { background: rgba(0, 0, 0, 0.02); }
+  &:hover { background: var(--bg-hover); }
   &:last-child { border-bottom: none; }
 `;
 
 const IconWrap = styled.span<{ $color: string }>`
   color: ${({ $color }) => $color};
   font-size: 16px;
-  margin-top: 2px;
+  margin-top: var(--s-1, 4px);
   flex-shrink: 0;
 `;
 
@@ -33,7 +33,7 @@ const Content = styled.div`
 const Preview = styled.div`
   font-size: 17px;
   line-height: 1.5;
-  color: ${({ theme }) => theme.colors.text};
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -41,10 +41,10 @@ const Preview = styled.div`
 
 const Meta = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin-top: 4px;
+  color: var(--text-secondary);
+  margin-top: var(--s-1, 4px);
   display: flex;
-  gap: 8px;
+  gap: var(--s-2, 8px);
   flex-wrap: wrap;
 `;
 

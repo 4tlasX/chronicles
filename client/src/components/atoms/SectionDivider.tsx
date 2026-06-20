@@ -11,16 +11,16 @@ interface SectionDividerProps {
 const Rule = styled.hr<{ $dashed?: boolean; $spacing?: number }>`
   border: none;
   border-top: 1px ${({ $dashed }) => $dashed ? 'dashed' : 'solid'} var(--rule, ${({ theme }) => theme.colors.border});
-  margin: ${({ $spacing, theme }) =>
-    $spacing !== undefined ? `${$spacing}px` : `${theme.spacing.s6}px`} 0;
+  margin: ${({ $spacing }) =>
+    $spacing !== undefined ? `${$spacing}px` : `var(--s-6, 24px)`} 0;
 `;
 
 const LabeledWrapper = styled.div<{ $spacing?: number }>`
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: ${({ $spacing, theme }) =>
-    $spacing !== undefined ? `${$spacing}px` : `${theme.spacing.s6}px`} 0;
+  gap: var(--s-2, 8px);
+  margin: ${({ $spacing }) =>
+    $spacing !== undefined ? `${$spacing}px` : `var(--s-6, 24px)`} 0;
 `;
 
 const LabeledRule = styled.div`
