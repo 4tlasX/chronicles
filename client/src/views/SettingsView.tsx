@@ -836,6 +836,7 @@ export function SettingsView() {
               { name: 'Amber', color: '#d97706' },
               { name: 'Sage', color: '#65a30d' },
               { name: 'Denim', color: '#2563eb' },
+              { name: 'Purple', color: '#8b5cf6' },
             ].map(a => (
               <button
                 key={a.color}

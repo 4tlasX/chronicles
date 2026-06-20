@@ -104,14 +104,29 @@ const EdDateNum = styled.span`
   color: var(--text-primary);
 `;
 
-const EdDateDow = styled.span`
-  font-family: var(--font-label);
+const EdDateMeta = styled.span`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+`;
+
+const EdDateMonth = styled.span`
+  font-family: var(--font-display);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text-tertiary);
-  padding-bottom: 8px;
+`;
+
+const EdDateDow = styled.span`
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
 `;
 
 /* Topic selector + actions row — pill picker left, action buttons right,
@@ -122,6 +137,7 @@ const EdTopicRow = styled.div`
   align-items: center;
   margin-bottom: 28px;
   padding: 16px 0 20px;
+  border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
   position: relative;
 `;
@@ -143,7 +159,7 @@ const EdTitle = styled.div`
   letter-spacing: -0.01em;
   color: var(--text-primary, ${({ theme }) => theme.colors.text});
   line-height: 1.1;
-  margin: 0 0 var(--s-3, 12px);
+  margin: 15px 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -227,7 +243,7 @@ const DiscardBtn = styled.button`
   padding: 7px 16px;
   font-family: var(--font-label);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-tertiary);
@@ -262,7 +278,7 @@ const SaveButton = styled.button<{ $disabled?: boolean }>`
   padding: 7px 22px;
   font-family: var(--font-label);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: ${({ $disabled }) => $disabled ? 'var(--text-disabled)' : 'var(--color-accent)'};
@@ -480,12 +496,13 @@ export function EntryForm({
             <EdDateBlock>
               <EdDateContent>
                 <EdDateNum>{(entryCreatedAt || new Date()).getDate()}</EdDateNum>
-                <EdDateDow>{(entryCreatedAt || new Date()).toLocaleDateString('en-US', { weekday: 'long' })}</EdDateDow>
+                <EdDateMeta>
+                  <EdDateDow>{(entryCreatedAt || new Date()).toLocaleDateString('en-US', { weekday: 'long' })}</EdDateDow>
+                  <EdDateMonth>{(entryCreatedAt || new Date()).toLocaleDateString('en-US', { month: 'long' })}</EdDateMonth>
+                </EdDateMeta>
               </EdDateContent>
             </EdDateBlock>
           )}
-
-          {entryTitle && <EdTitle>{entryTitle}</EdTitle>}
 
           {/* Topic picker + action buttons row, flanked by hairline rules */}
           <EdTopicRow>

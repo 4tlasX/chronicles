@@ -114,8 +114,8 @@ export const useUIStore = create<UIState>((set) => ({
   pencilOnly: true,
   setPencilOnly: (v) => set({ pencilOnly: v }),
 
-  themeMode: 'light',
-  accentColor: '#5b53d6',
+  themeMode: 'dark',
+  accentColor: '#34a5a2',
   backgroundImage: '',
   backgroundOpacity: 0.7,
   setThemeMode: (mode) => set({ themeMode: mode }),

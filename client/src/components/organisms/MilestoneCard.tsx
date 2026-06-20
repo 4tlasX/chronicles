@@ -19,7 +19,7 @@ const Card = styled.div<{ $editing?: boolean; $dragging?: boolean; $accentColor?
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid var(--rule, #d5d0c5);
   border-left: 3px solid ${({ $accentColor }) => $accentColor || 'var(--accent)'};
-  border-radius: 6px;
+  border-radius: 0;
   margin: 6px var(--s-4, 16px);
   min-width: 0;
   opacity: ${({ $dragging }) => $dragging ? 0.6 : 1};
@@ -74,7 +74,7 @@ const DateCol = styled.div`
 
 const DayNum = styled.span`
   font-family: var(--serif, 'Playfair Display', Georgia, serif);
-  font-style: italic;
+  font-style: normal;
   font-size: 26px;
   color: var(--ink, #2b2824);
   letter-spacing: 0;
@@ -113,7 +113,7 @@ const Title = styled.div<{ $completed?: boolean }>`
   flex: 1;
   font-family: var(--sans, 'Lato', sans-serif);
   font-size: 15px;
-  font-style: italic;
+  font-style: normal;
   color: ${({ $completed }) => $completed ? 'var(--ink-4, #8a857c)' : 'var(--ink, #2b2824)'};
   line-height: 1.4;
   text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};

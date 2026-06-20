@@ -41,6 +41,7 @@ const LogoBlock = styled.div`
   align-items: center;
   gap: var(--s-2, 8px);
   flex-shrink: 0;
+  cursor: pointer;
 
   @media (max-width: 768px) {
     display: none;
@@ -51,7 +52,7 @@ const LogoDiamond = styled.svg`
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  stroke: var(--color-accent);
+  stroke: var(--text-primary);
 `;
 
 const LogoText = styled.span`
@@ -70,17 +71,28 @@ const NavScroll = styled.nav`
   display: flex;
   flex-direction: column;
 
+  /* Firefox: hide the scrollbar until the sidebar is hovered. */
+  scrollbar-width: none;
+
   &::-webkit-scrollbar {
     width: 6px;
   }
   &::-webkit-scrollbar-track {
     background: transparent;
   }
+  /* Hidden by default; reveal the thumb only on hover. */
   &::-webkit-scrollbar-thumb {
-    background: var(--border-subtle);
+    background: transparent;
     border-radius: 3px;
+    transition: background 200ms ease;
   }
-  &::-webkit-scrollbar-thumb:hover {
+  &:hover {
+    scrollbar-width: thin;
+  }
+  &:hover::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+  }
+  &:hover::-webkit-scrollbar-thumb:hover {
     background: var(--border-default);
   }
 `;
@@ -95,7 +107,7 @@ const NavRow = styled.button<{ $active?: boolean }>`
   cursor: pointer;
   text-align: left;
   background: ${({ $active }) => $active ? 'var(--color-accent)' : 'transparent'};
-  color: ${({ $active }) => $active ? 'white' : 'var(--text-secondary)'};
+  color: ${({ $active }) => $active ? 'var(--sidebar-active-ink, white)' : 'var(--text-secondary)'};
   font-family: var(--font-sans);
   font-size: 13.5px;
   font-weight: 300;
@@ -103,7 +115,7 @@ const NavRow = styled.button<{ $active?: boolean }>`
 
   &:hover {
     background: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--bg-hover)'};
-    color: ${({ $active }) => $active ? 'white' : 'var(--text-primary)'};
+    color: ${({ $active }) => $active ? 'var(--sidebar-active-ink, white)' : 'var(--text-primary)'};
   }
 `;
 
@@ -114,7 +126,7 @@ const NavRowIcon = styled.span<{ $active?: boolean }>`
   justify-content: center;
   flex-shrink: 0;
   font-size: 15px;
-  color: ${({ $active }) => $active ? 'white' : 'var(--text-secondary)'};
+  color: ${({ $active }) => $active ? 'var(--sidebar-active-ink, white)' : 'var(--text-secondary)'};
 `;
 
 const NavRowText = styled.span`
@@ -239,6 +251,7 @@ export function Sidebar() {
   const ff = useEntriesStore(s => s.featureFlags);
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const displayName = useUIStore(s => s.displayName);
+  const activeInk = useUIStore(s => s.themeMode) === 'dark' ? 'black' : 'white';
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
   const setViewMode = useUIStore(s => s.setViewMode);
   const mobileNavOpen = useUIStore(s => s.mobileNavOpen);
@@ -292,9 +305,9 @@ export function Sidebar() {
   const userInitial = (displayName || 'J')[0].toUpperCase();
 
   return (
-    <SidebarRoot $mobileOpen={mobileNavOpen}>
+    <SidebarRoot $mobileOpen={mobileNavOpen} style={{ ['--sidebar-active-ink' as string]: activeInk }}>
       {/* Logo block */}
-      <LogoBlock>
+      <LogoBlock onClick={() => navigate('/')}>
         <LogoDiamond xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" strokeLinecap="round" strokeLinejoin="round">
           {/* Petal 1 (top) */}
           <g>
@@ -357,7 +370,7 @@ export function Sidebar() {
             <line transform="rotate(324,50,50)" x1="50" y1="39" x2="50" y2="36"/>
           </g>
           {/* Center dot */}
-          <circle cx="50" cy="50" r="2.5" fill="var(--color-accent, #5b53d6)" stroke="none"/>
+          <circle cx="50" cy="50" r="2.5" fill="var(--text-primary)" stroke="none"/>
         </LogoDiamond>
         <LogoText>Chronicles</LogoText>
       </LogoBlock>

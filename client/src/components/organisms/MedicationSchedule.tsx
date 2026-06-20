@@ -114,7 +114,7 @@ const DoseCard = styled.div<{ $taken: boolean; $accentColor: string }>`
   background: var(--paper-surface, #f7f4ee);
   border: 1px solid var(--rule, #d5d0c5);
   border-left: 3px solid ${({ $accentColor }) => $accentColor};
-  border-radius: 6px;
+  border-radius: 0;
   @media (max-width: 480px) { padding: 12px 14px; gap: 10px; }
 `;
 
@@ -143,7 +143,7 @@ const DoseInfo = styled.div`
 const DoseName = styled.span<{ $taken: boolean; $color: string }>`
   font-size: 16px;
   font-weight: 500;
-  font-style: italic;
+  font-style: normal;
   color: ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.text};
   text-decoration: ${({ $taken }) => $taken ? 'line-through' : 'none'};
 `;

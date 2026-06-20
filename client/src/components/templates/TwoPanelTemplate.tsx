@@ -3,12 +3,17 @@ import type { ReactNode } from 'react';
 import { Header } from '../organisms/Header.js';
 import { Sidebar } from '../organisms/Sidebar.js';
 import { Background } from '../organisms/Background.js';
+import { MobileChrome } from '../organisms/MobileChrome.js';
 
 const Layout = styled.div`
   display: flex;
   flex-direction: row;
   height: 100vh;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    padding-top: 56px;
+  }
 `;
 
 const MainColumn = styled.div`
@@ -35,6 +40,7 @@ export function TwoPanelTemplate({ children, topBar }: TwoPanelTemplateProps) {
   return (
     <>
       <Background />
+      <div data-print-hide><MobileChrome /></div>
       <Layout>
         <div data-print-hide><Sidebar /></div>
         <MainColumn>

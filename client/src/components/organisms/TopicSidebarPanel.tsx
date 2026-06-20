@@ -43,9 +43,9 @@ const Head = styled.div`
 
 const HeadTitle = styled.h2`
   font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-style: italic;
+  font-style: normal;
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
   margin: 0;
 `;

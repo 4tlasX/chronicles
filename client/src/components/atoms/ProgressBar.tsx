@@ -7,10 +7,10 @@ const Outer = styled.div`
   overflow: hidden;
 `;
 
-const Inner = styled.div<{ $percent: number; $accent?: boolean }>`
+const Inner = styled.div<{ $percent: number; $color?: string }>`
   height: 100%;
   width: ${({ $percent }) => $percent}%;
-  background: ${({ $accent }) => $accent ? 'var(--accent)' : 'var(--ink, #2b2824)'};
+  background: ${({ $color }) => $color || 'var(--color-accent, var(--accent))'};
   transition: width 0.3s ease;
 `;
 
@@ -20,11 +20,11 @@ interface ProgressBarProps {
   accent?: boolean;
 }
 
-export function ProgressBar({ percent, accent }: ProgressBarProps) {
+export function ProgressBar({ percent, color }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, percent));
   return (
     <Outer role="progressbar" aria-valuenow={Math.round(clamped)} aria-valuemin={0} aria-valuemax={100}>
-      <Inner $percent={clamped} $accent={accent} />
+      <Inner $percent={clamped} $color={color} />
     </Outer>
   );
 }

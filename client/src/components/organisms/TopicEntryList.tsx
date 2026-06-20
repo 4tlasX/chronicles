@@ -77,8 +77,8 @@ const Kicker = styled.span`
 const TitleText = styled.h1`
   font-family: ${({ theme }) => theme.fontFamily.serif};
   font-size: 24px;
-  font-style: italic;
-  font-weight: 500;
+  font-style: normal;
+  font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
   line-height: 1;
   margin: 0;

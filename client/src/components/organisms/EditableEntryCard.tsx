@@ -52,7 +52,7 @@ const Card = styled.div<{ $accentColor?: string; $flat?: boolean; $bare?: boolea
   background: ${({ theme }) => theme.colors.surface};
   border: ${({ $bare }) => $bare ? 'none' : '1px solid var(--rule, #d5d0c5)'};
   border-left: ${({ $bare, $accentColor }) => $bare ? 'none' : `3px solid ${$accentColor || 'var(--accent)'}`};
-  border-radius: ${({ $bare }) => $bare ? '0' : '6px'};
+  border-radius: 0;
   margin: ${({ $flat, $bare }) => $bare ? '0' : ($flat ? '0 0 8px 0' : '6px var(--s-4, 16px)')};
   min-width: 0;
   ${({ $flat, $bare }) => !$flat && !$bare && `&:first-child { margin-top: 12px; }`}
@@ -94,7 +94,7 @@ const DateCol = styled.div`
 
 const DayNum = styled.span`
   font-family: var(--serif, 'Playfair Display', Georgia, serif);
-  font-style: italic;
+  font-style: normal;
   font-size: 26px;
   color: var(--ink, #2b2824);
   letter-spacing: 0;
@@ -111,7 +111,7 @@ const ContentArea = styled.div`
 
 const TitleText = styled.div<{ $done?: boolean }>`
   font-family: var(--sans, 'Lato', sans-serif);
-  font-style: italic;
+  font-style: normal;
   font-size: 15px;
   color: ${({ $done }) => $done ? 'var(--ink-4, #8a857c)' : 'var(--ink, #2b2824)'};
   line-height: 1.4;

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Header } from '../organisms/Header.js';
 import { Sidebar } from '../organisms/Sidebar.js';
 import { Background } from '../organisms/Background.js';
+import { MobileChrome } from '../organisms/MobileChrome.js';
 import { SidebarToggle } from '../atoms/SidebarToggle.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { BACKGROUND_IMAGES } from '@chronicles/shared';
@@ -12,6 +13,10 @@ const Layout = styled.div`
   flex-direction: row;
   height: 100vh;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    padding-top: 56px;
+  }
 `;
 
 const MainColumn = styled.div`
@@ -44,7 +49,8 @@ const PageTitleRow = styled.div`
 const PageTitle = styled.h1`
   font-family: ${({ theme }) => theme.typography.h1.fontFamily};
   font-size: ${({ theme }) => theme.typography.h1.fontSize};
-  font-weight: ${({ theme }) => theme.typography.h1.fontWeight};
+  font-weight: 300;
+  font-style: normal;
   margin: 0;
 `;
 
@@ -59,6 +65,7 @@ export function SettingsTemplate({ title, children }: SettingsTemplateProps) {
   return (
     <>
       <Background />
+      <div data-print-hide><MobileChrome /></div>
       <Layout>
         <div data-print-hide><Sidebar /></div>
         <MainColumn>

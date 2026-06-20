@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { useUIStore } from '../../stores/uiStore.js';
 
@@ -26,12 +27,13 @@ const LogoContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
 `;
 
 const LogoIcon = styled.svg`
   width: 24px;
   height: 24px;
-  stroke: var(--color-accent);
+  stroke: var(--text-primary);
   flex-shrink: 0;
 `;
 
@@ -79,10 +81,11 @@ const Overlay = styled.div<{ $open: boolean }>`
 export function MobileChrome() {
   const open = useUIStore(s => s.mobileNavOpen);
   const setOpen = useUIStore(s => s.setMobileNavOpen);
+  const navigate = useNavigate();
   return (
     <>
       <MobileNavBar>
-        <LogoContainer>
+        <LogoContainer onClick={() => { setOpen(false); navigate('/'); }}>
           <LogoIcon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" strokeLinecap="round" strokeLinejoin="round">
             {/* Petal 1 (top) */}
             <g>
@@ -145,12 +148,12 @@ export function MobileChrome() {
               <line transform="rotate(324,50,50)" x1="50" y1="39" x2="50" y2="36"/>
             </g>
             {/* Center dot */}
-            <circle cx="50" cy="50" r="2.5" fill="var(--color-accent, #5b53d6)" stroke="none"/>
+            <circle cx="50" cy="50" r="2.5" fill="var(--text-primary)" stroke="none"/>
           </LogoIcon>
           <Logo>Chronicles</Logo>
         </LogoContainer>
-        <MenuButton onClick={() => setOpen(true)} aria-label="Open menu">
-          <Icon name="menu" size={20} strokeWidth={2} />
+        <MenuButton onClick={() => setOpen(!open)} aria-label={open ? 'Close menu' : 'Open menu'}>
+          <Icon name={open ? 'x' : 'menu'} size={20} strokeWidth={2} />
         </MenuButton>
       </MobileNavBar>
       <Overlay $open={open} onClick={() => setOpen(false)} />

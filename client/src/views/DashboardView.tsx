@@ -140,11 +140,11 @@ const PageHeader = styled.div`
   justify-content: space-between;
   align-items: flex-end;
   gap: 16px;
-  margin-bottom: 28px;
+  margin-bottom: 40px;
   padding-bottom: 28px;
   border-bottom: 2px solid var(--color-accent);
   flex-wrap: nowrap;
-  @media (max-width: 640px) { gap: 12px; margin-bottom: 24px; }
+  @media (max-width: 640px) { gap: 12px; margin-bottom: 32px; }
 `;
 
 const GreetingBlock = styled.div`
@@ -206,12 +206,13 @@ const DateLabel = styled.p`
 const DailyPrompt = styled.p`
   font-family: var(--font-display);
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 300;
   font-style: italic;
   color: var(--text-secondary);
   margin: 0;
-  line-height: 1.4;
-  max-width: 600px;
+  line-height: 1.5;
+  max-width: 360px;
+  @media (max-width: 640px) { max-width: 200px; }
 `;
 
 const Greeting = styled.h1`
@@ -423,7 +424,7 @@ const PriRow = styled.div<{ $done?: boolean }>`
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  padding: 6px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border-subtle);
   font-size: 13.5px;
   color: ${({ $done }) => $done ? 'var(--text-tertiary)' : 'var(--text-primary)'};
@@ -766,9 +767,9 @@ function SortableDashCard({ id, children }: { id: CardId; children: (drag: DragP
 
 /* ── Edit-mode UI ── */
 
-const CardWrapper = styled.div`
+const CardWrapper = styled.div<{ $noDivider?: boolean }>`
   position: relative;
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: ${({ $noDivider }) => $noDivider ? 'none' : '1px solid var(--border-default)'};
   padding-bottom: 12px;
   margin-bottom: 12px;
 `;
@@ -934,7 +935,6 @@ function PrioritiesCard({ accentColor, dragAttributes, dragListeners }: { accent
   });
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState('');
   const [entryId, setEntryId] = useState<number | null>(() => findTodayPrioritiesEntry()?.id ?? null);
 
   const handleChange = (id: string, text: string) => {
@@ -1004,6 +1004,15 @@ function PrioritiesCard({ accentColor, dragAttributes, dragListeners }: { accent
     }
   };
 
+  // Auto-save: debounce 800ms after the last edit. Ref avoids stale closure.
+  const saveRef = useRef(handleSave);
+  saveRef.current = handleSave;
+  useEffect(() => {
+    if (!dirty) return;
+    const t = setTimeout(() => { saveRef.current(); }, 800);
+    return () => clearTimeout(t);
+  }, [dirty, priorities]);
+
   const ROMANS = ['i', 'ii', 'iii', 'iv', 'v'];
 
   return (
@@ -1011,8 +1020,8 @@ function PrioritiesCard({ accentColor, dragAttributes, dragListeners }: { accent
       <CardHeader>
         <CardIconWrap><Icon name="flag" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Today's Priorities</CardTitle>
-        {priorities.length < 5 && <AddBtn onClick={handleAdd}><Icon name="plus" size={14} strokeWidth={2.5} /></AddBtn>}
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>}
+        {priorities.length < 5 && <AddBtn onClick={handleAdd} style={{ width: 20, height: 20 }}><Icon name="plus" size={14} strokeWidth={2.5} /></AddBtn>}
       </CardHeader>
       <CardBody>
         {priorities.map((p, i) => (
@@ -1032,12 +1041,6 @@ function PrioritiesCard({ accentColor, dragAttributes, dragListeners }: { accent
             </AddBtn>
           </PriRow>
         ))}
-        <SaveRow>
-          {status && status !== 'Saved' && <StatusText>{status}</StatusText>}
-          <SaveBtn $accent={accentColor} $active={dirty} onClick={handleSave} disabled={saving || !dirty}>
-            {saving ? <Spinner size={10} /> : 'Save'}
-          </SaveBtn>
-        </SaveRow>
       </CardBody>
     </DashCard>
   );
@@ -1362,14 +1365,15 @@ const MealTypeBtn = styled.button<{ $active?: boolean; $accent: string }>`
 
 const MealsInput = styled.input`
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 2px;
   font-family: var(--sans, 'Lato', sans-serif);
   font-size: 14px;
   color: var(--ink, #2b2824);
-  background: var(--paper-well, #e8e3d7);
-  border: 1px solid var(--rule, #d4cfc3);
-  border-radius: 4px;
-  &:focus { outline: none; border-color: var(--accent, #00b4d8); }
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule, #d4cfc3);
+  border-radius: 0;
+  &:focus { outline: none; border-bottom-color: var(--accent, #00b4d8); }
   &::placeholder { color: var(--ink-4, #8a857c); font-style: italic; }
 `;
 
@@ -1381,14 +1385,15 @@ const MealsRow = styled.div`
 
 const CaloriesInput = styled.input`
   width: 80px;
-  padding: 8px 10px;
+  padding: 10px 2px;
   font-family: var(--mono, 'JetBrains Mono', monospace);
   font-size: 12px;
   color: var(--ink, #2b2824);
-  background: var(--paper-well, #e8e3d7);
-  border: 1px solid var(--rule, #d4cfc3);
-  border-radius: 4px;
-  &:focus { outline: none; border-color: var(--accent, #00b4d8); }
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule, #d4cfc3);
+  border-radius: 0;
+  &:focus { outline: none; border-bottom-color: var(--accent, #00b4d8); }
   &::placeholder { color: var(--ink-4, #8a857c); }
 `;
 
@@ -1463,21 +1468,25 @@ function MealsQuickCard({ accentColor, dragAttributes, dragListeners }: { accent
             </MealTypeBtn>
           ))}
         </MealTypeRow>
-        <MealsInput
-          type="text"
-          placeholder="What did you eat?"
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && canSave) handleSave(); }}
-        />
         <MealsRow>
+          <MealsInput
+            type="text"
+            placeholder="What did you eat?"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && canSave) handleSave(); }}
+            style={{ flex: 2 }}
+          />
           <CaloriesInput
             type="number"
             placeholder="Cal"
             value={calories}
             onChange={e => setCalories(e.target.value)}
+            style={{ flex: 1, width: 'auto', minWidth: 0 }}
           />
-          <SaveBtn $accent={accentColor} $active={canSave} onClick={handleSave} disabled={saving || !canSave} style={{ flex: 1 }}>
+        </MealsRow>
+        <MealsRow style={{ justifyContent: 'flex-end' }}>
+          <SaveBtn $accent={accentColor} $active={canSave} onClick={handleSave} disabled={saving || !canSave} style={{ flex: 1, maxWidth: 150 }}>
             {saving ? <Spinner size={10} /> : 'Log meal'}
           </SaveBtn>
         </MealsRow>
@@ -1780,8 +1789,8 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
         <CardIconWrap><Icon name="list" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Shopping List</CardTitle>
         <CardViewLink to="/shopping">View all</CardViewLink>
-        <AddBtn onClick={() => setAdding(a => !a)}><Icon name="plus" size={14} strokeWidth={2.5} /></AddBtn>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>}
+        <AddBtn onClick={() => setAdding(a => !a)} style={{ width: 20, height: 20 }}><Icon name="plus" size={14} strokeWidth={2.5} /></AddBtn>
       </CardHeader>
       <CardBody>
         {adding && (
@@ -2391,9 +2400,9 @@ function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentCo
 /* ── Widget: Affirmations ── */
 
 const AffirmationDisplay = styled.div`
-  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-family: var(--font-display, ${({ theme }) => theme.fontFamily.serif});
   font-size: 18px;
-  font-weight: 400;
+  font-weight: 100;
   font-style: italic;
   line-height: 1.6;
   color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
@@ -3378,7 +3387,7 @@ export function DashboardView() {
           <GreetingBlock>
             <DateNumeral>{today.getDate()}</DateNumeral>
             <DateInfo>
-              <DateLabel>{today.toLocaleDateString('en-US', { weekday: 'long', month: 'long' })}</DateLabel>
+              <DateLabel>{`${today.toLocaleDateString('en-US', { weekday: 'long' })}, ${today.toLocaleDateString('en-US', { month: 'long' })}`}</DateLabel>
               <DailyPrompt>{getDailyQuote().text}</DailyPrompt>
             </DateInfo>
           </GreetingBlock>
@@ -3412,7 +3421,7 @@ export function DashboardView() {
           const renderCol = (ids: CardId[]) => ids.map(id => (
             <SortableDashCard key={id} id={id}>
               {(drag) => (
-                <CardWrapper>
+                <CardWrapper $noDivider={id === 'meals-quick' || id === 'quick-entry'}>
                   {isEditMode && (
                     <RemoveBtn onClick={() => handleRemoveCard(id)} title={`Remove ${cardLabel(id, allTopics)}`}>
                       <Icon name="x" size={14} strokeWidth={2} />
