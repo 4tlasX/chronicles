@@ -25,64 +25,128 @@ import { MenuView } from './views/MenuView.js';
 import { ShoppingListsView } from './views/ShoppingListsView.js';
 import { DashboardView } from './views/DashboardView.js';
 
-/* ── Design token CSS variable sets ─────────────────────────────────────── */
+/* ── Design token CSS variable sets ─────────────────────────────────────────
+   Ported from design-system/tokens/*.css. Light = pure white canvas; dark =
+   deep charcoal (#1b1d26). Borderless tonal panels: surfaces separate by FILL,
+   not outline; shadows are reserved for floating overlays only.
+
+   Legacy aliases (--paper*, --ink*, --rule*, --btn-*, --accent-fill*) are kept
+   pointing at the DS values so the ~147 existing components recolor without
+   per-component edits. New/restructured components should reference the DS
+   names (--bg-*, --text-*, --border-*, --color-accent*) directly.
+   ─────────────────────────────────────────────────────────────────────────── */
 
 const LIGHT_CSS_VARS: Record<string, string> = {
-  '--paper':             'rgb(240, 235, 223)',
-  '--paper-deep':        'rgb(231, 224, 208)',
-  '--paper-surface':     '#f7f4ee',
-  '--paper-hover':       '#f0eeea',
-  '--ink':               '#2b2824',
-  '--ink-2':             '#453f38',
-  '--ink-3':             '#6b645a',
-  '--ink-4':             '#8a857c',
-  '--rule':              '#d4cfc5',
-  '--rule-2':            '#e5dfd2',
-  '--btn-primary':       '#2b2824',
-  '--btn-primary-ink':   '#f0ebdf',
-  '--btn-primary-hover': '#453f38',
-  '--accent-fill':       '#2b2824',
-  '--accent-fill-ink':   '#f0ebdf',
-  '--danger':            '#9B4444',
-  '--success':           '#5A8A6A',
-  '--warning':           '#B8965A',
-  '--info':              '#5C6B8A',
-  '--shadow-1':          '0 1px 2px rgba(0,0,0,0.04)',
-  '--shadow-2':          '0 2px 8px rgba(0,0,0,0.06)',
-  '--shadow-3':          '0 4px 12px rgba(0,0,0,0.08)',
+  /* DS semantic surfaces */
+  '--bg-app':            '#ffffff',
+  '--bg-surface':        '#ffffff',
+  '--bg-elevated':       '#ffffff',
+  '--bg-sunken':         '#f5f6f8',
+  '--bg-hover':          '#f8f9fa',
+  '--bg-active':         '#f0f2f5',
+  '--bg-inverse':        '#1b1d26',
+  /* DS text */
+  '--text-primary':      '#18181c',
+  '--text-secondary':    '#56565f',
+  '--text-tertiary':     '#74747f',
+  '--text-disabled':     '#a0a0aa',
+  '--text-inverse':      '#ffffff',
+  /* DS borders — hairlines only */
+  '--border-subtle':     '#e4e6ec',
+  '--border-default':    '#d8dae2',
+  '--border-strong':     '#c4c7d2',
+  /* Status */
+  '--color-success':     '#2f9e6b',  '--color-success-subtle': '#e2f4eb',
+  '--color-warning':     '#d8941f',  '--color-warning-subtle': '#fbefd7',
+  '--color-danger':      '#d8483f',  '--color-danger-subtle':  '#fae4e2',
+  '--color-info':        '#2f7fd8',  '--color-info-subtle':    '#e1eefb',
+
+  /* ── Legacy aliases → DS values ── */
+  '--paper':             '#ffffff',
+  '--paper-deep':        '#f5f6f8',
+  '--paper-surface':     '#ffffff',
+  '--paper-well':        '#f0f2f5',
+  '--paper-hover':       '#f8f9fa',
+  '--ink':               '#18181c',
+  '--ink-2':             '#56565f',
+  '--ink-3':             '#74747f',
+  '--ink-4':             '#a0a0aa',
+  '--rule':              '#e4e6ec',
+  '--rule-2':            '#e4e6ec',
+  '--btn-primary':       '#18181c',
+  '--btn-primary-ink':   '#ffffff',
+  '--btn-primary-hover': '#28282e',
+  '--accent-fill':       '#18181c',
+  '--accent-fill-ink':   '#ffffff',
+  '--danger':            '#d8483f',
+  '--success':           '#2f9e6b',
+  '--warning':           '#d8941f',
+  '--info':              '#2f7fd8',
+  /* Panels are flat — no resting shadow. Overlays use --shadow-lg/xl below. */
+  '--shadow-1':          'none',
+  '--shadow-2':          '0 1px 2px rgba(20,20,30,0.04)',
+  '--shadow-3':          '0 6px 24px rgba(20,20,30,0.12)',
+  '--shadow-lg':         '0 8px 28px rgba(20,20,30,0.14)',
+  '--shadow-xl':         '0 16px 48px rgba(20,20,30,0.18)',
 };
 
 const DARK_CSS_VARS: Record<string, string> = {
-  '--paper':             '#1a1815',
-  '--paper-deep':        '#120f0c',
-  '--paper-surface':     '#24211d',
-  '--paper-hover':       '#2d2a25',
-  '--ink':               '#efeadd',
-  '--ink-2':             '#cfc7b6',
-  '--ink-3':             '#9a9385',
-  '--ink-4':             '#6f6a5e',
-  '--rule':              '#3a352e',
-  '--rule-2':            '#2c2822',
-  '--btn-primary':       '#efeadd',
-  '--btn-primary-ink':   '#1a1815',
-  '--btn-primary-hover': '#cfc7b6',
-  '--accent-fill':       '#efeadd',
-  '--accent-fill-ink':   '#1a1815',
-  '--danger':            '#C47A7A',
-  '--success':           '#7BAA8A',
-  '--warning':           '#D4B47A',
-  '--info':              '#7B9EB2',
-  '--shadow-1':          '0 1px 2px rgba(0,0,0,0.35)',
-  '--shadow-2':          '0 2px 8px rgba(0,0,0,0.45)',
-  '--shadow-3':          '0 8px 24px rgba(0,0,0,0.55)',
+  '--bg-app':            '#1b1d26',
+  '--bg-surface':        '#22252f',
+  '--bg-elevated':       '#2a2d38',
+  '--bg-sunken':         '#13151e',
+  '--bg-hover':          '#2a2d38',
+  '--bg-active':         '#303545',
+  '--bg-inverse':        '#f5f6f9',
+  '--text-primary':      '#f4f4f6',
+  '--text-secondary':    '#a0a0aa',
+  '--text-tertiary':     '#74747f',
+  '--text-disabled':     '#56565f',
+  '--text-inverse':      '#0d0d10',
+  '--border-subtle':     '#262931',
+  '--border-default':    '#2e3140',
+  '--border-strong':     '#3a3e50',
+  '--color-success':     '#2f9e6b',  '--color-success-subtle': '#1c3a2c',
+  '--color-warning':     '#d8941f',  '--color-warning-subtle': '#3a2f14',
+  '--color-danger':      '#d8483f',  '--color-danger-subtle':  '#3a1e1c',
+  '--color-info':        '#2f7fd8',  '--color-info-subtle':    '#16283a',
+
+  /* ── Legacy aliases → DS values ── */
+  '--paper':             '#1b1d26',
+  '--paper-deep':        '#13151e',
+  '--paper-surface':     '#22252f',
+  '--paper-well':        '#303545',
+  '--paper-hover':       '#2a2d38',
+  '--ink':               '#f4f4f6',
+  '--ink-2':             '#a0a0aa',
+  '--ink-3':             '#74747f',
+  '--ink-4':             '#56565f',
+  '--rule':              '#262931',
+  '--rule-2':            '#262931',
+  '--btn-primary':       '#f4f4f6',
+  '--btn-primary-ink':   '#1b1d26',
+  '--btn-primary-hover': '#e0e0e4',
+  '--accent-fill':       '#f4f4f6',
+  '--accent-fill-ink':   '#1b1d26',
+  '--danger':            '#d8483f',
+  '--success':           '#2f9e6b',
+  '--warning':           '#d8941f',
+  '--info':              '#2f7fd8',
+  '--shadow-1':          'none',
+  '--shadow-2':          '0 1px 2px rgba(0,0,0,0.4)',
+  '--shadow-3':          '0 8px 24px rgba(0,0,0,0.5)',
+  '--shadow-lg':         '0 8px 28px rgba(0,0,0,0.55)',
+  '--shadow-xl':         '0 16px 48px rgba(0,0,0,0.6)',
 };
 
-/* Structural tokens that never change with theme or accent */
+/* Structural tokens that never change with theme or accent.
+   Radii are the DS "sharp/squared" scale; fonts are Work Sans + Open Sans. */
 const STATIC_CSS_VARS: Record<string, string> = {
-  '--r-sm':  '2px',
-  '--r-md':  '4px',
-  '--r-lg':  '6px',
-  '--r-xl':  '8px',
+  '--r-sm':  '0',
+  '--r-md':  '1px',
+  '--r-lg':  '2px',
+  '--r-xl':  '2px',
+  '--r-full':'999px',
   '--s-1':   '4px',
   '--s-2':   '8px',
   '--s-3':   '12px',
@@ -93,11 +157,18 @@ const STATIC_CSS_VARS: Record<string, string> = {
   '--s-8':   '48px',
   '--s-9':   '64px',
   '--s-10':  '96px',
-  '--serif':  "'Playfair Display', Georgia, serif",
-  '--sans':   "'Lato', -apple-system, sans-serif",
-  '--mono':   "'JetBrains Mono', ui-monospace, Menlo, monospace",
-  '--brand':  "'Josefin Sans', 'Inter', sans-serif",
-  '--ui':     "'Lato', -apple-system, sans-serif",
+  /* DS font roles */
+  '--font-display': "'Work Sans', ui-sans-serif, system-ui, -apple-system, sans-serif",
+  '--font-sans':    "'Open Sans', ui-sans-serif, system-ui, -apple-system, sans-serif",
+  '--font-label':   "'Open Sans', ui-sans-serif, system-ui, sans-serif",
+  /* Legacy font aliases → DS faces. --mono points at Open Sans because the DS
+     sets metadata (dates/times/counts) in tracked-uppercase Open Sans, not a
+     mono face; true monospace (code) is rare in this journaling app. */
+  '--serif':  "'Work Sans', ui-sans-serif, system-ui, sans-serif",
+  '--sans':   "'Open Sans', ui-sans-serif, system-ui, sans-serif",
+  '--mono':   "'Open Sans', ui-sans-serif, system-ui, sans-serif",
+  '--brand':  "'Work Sans', ui-sans-serif, system-ui, sans-serif",
+  '--ui':     "'Open Sans', ui-sans-serif, system-ui, sans-serif",
 };
 
 /* Apply structural vars once at module load */
@@ -129,39 +200,78 @@ function deriveDarker(hex: string, factor: number): string {
   return `rgb(${Math.round(r * factor)},${Math.round(g * factor)},${Math.round(b * factor)})`;
 }
 
+/* Mix a hex color toward a target (white #fff or black #000) by `amt` (0..1). */
+function mix(hex: string, target: number, amt: number): string {
+  const [r, g, b] = hexToRgbParts(hex);
+  const m = (c: number) => Math.round(c + (target - c) * amt);
+  return `rgb(${m(r)},${m(g)},${m(b)})`;
+}
+
+/* Build the DS accent scale (--accent-100..800) from a single base hex.
+   Lighter steps mix toward white, darker steps toward black — mirrors the
+   tonal ramps in design-system/tokens/accents.css. */
+function deriveAccentScale(base: string): Record<string, string> {
+  return {
+    '--accent-100': mix(base, 255, 0.86),
+    '--accent-200': mix(base, 255, 0.72),
+    '--accent-300': mix(base, 255, 0.48),
+    '--accent-400': mix(base, 255, 0.22),
+    '--accent-500': base,
+    '--accent-600': mix(base, 0, 0.16),
+    '--accent-700': mix(base, 0, 0.32),
+    '--accent-800': mix(base, 0, 0.46),
+  };
+}
+
 function R({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>;
 }
 
 export function App() {
   const headerColor = useUIStore(s => s.headerColor);
-  // Dark mode disabled until fully styled — force light for everyone
-  const activeTheme = lightTheme;
+  const themeMode = useUIStore(s => s.themeMode);
+  const isDark = themeMode === 'dark';
+  const activeTheme = isDark ? darkTheme : lightTheme;
 
   useEffect(() => {
-    const color = headerColor || '#2d2c2a';
-    const isDark = false;
+    const color = headerColor || '#5b53d6';
     const [r, g, b] = hexToRgbParts(color);
 
-    root.setAttribute('data-theme', 'light');
+    root.setAttribute('data-theme', isDark ? 'dark' : 'light');
 
     /* Theme-based tokens (flip between light and dark) */
-    const themeVars = LIGHT_CSS_VARS;
+    const themeVars = isDark ? DARK_CSS_VARS : LIGHT_CSS_VARS;
     Object.entries(themeVars).forEach(([k, v]) => root.style.setProperty(k, v));
 
-    /* Accent-derived tokens (from user's header color) */
-    root.style.setProperty('--accent', color);
-    root.style.setProperty('--accent-hover', deriveDarker(color, 0.85));
-    root.style.setProperty('--accent-tint', `rgba(${r},${g},${b},0.12)`);
+    /* DS accent scale (--accent-100..800) derived from the chosen hex */
+    Object.entries(deriveAccentScale(color)).forEach(([k, v]) => root.style.setProperty(k, v));
+
+    /* DS interactive accent tokens. In dark, brighten one notch (use the
+       lighter 400/300 steps) for legibility on the charcoal canvas. */
+    const onAccent = isLightHex(color) ? '#18181c' : '#ffffff';
+    root.style.setProperty('--color-accent',        isDark ? mix(color, 255, 0.22) : color);
+    root.style.setProperty('--color-accent-hover',  isDark ? mix(color, 255, 0.40) : deriveDarker(color, 0.85));
+    root.style.setProperty('--color-accent-active', isDark ? mix(color, 255, 0.58) : deriveDarker(color, 0.70));
+    root.style.setProperty('--color-accent-subtle', isDark ? `rgba(${r},${g},${b},0.22)` : `rgba(${r},${g},${b},0.10)`);
+    root.style.setProperty('--color-accent-text',   isDark ? mix(color, 255, 0.40) : deriveDarker(color, 0.78));
+    root.style.setProperty('--on-accent', onAccent);
+
+    /* Legacy accent tokens (existing components still read these) */
+    root.style.setProperty('--accent', isDark ? mix(color, 255, 0.22) : color);
+    root.style.setProperty('--accent-hover', isDark ? mix(color, 255, 0.40) : deriveDarker(color, 0.85));
+    root.style.setProperty('--accent-tint', isDark ? `rgba(${r},${g},${b},0.22)` : `rgba(${r},${g},${b},0.12)`);
     root.style.setProperty('--accent-stroke', deriveAccentStroke(color));
-    root.style.setProperty('--h-active', color);
-    root.style.setProperty('--h-active-ink', isLightHex(color) ? 'rgba(0,0,0,0.85)' : '#f0ebdf');
-    root.style.setProperty('--focus', `0 0 0 2px rgba(${r},${g},${b},0.28)`);
+    root.style.setProperty('--accent-fill', isDark ? mix(color, 255, 0.22) : color);
+    root.style.setProperty('--accent-fill-ink', onAccent);
+    root.style.setProperty('--h-active', isDark ? mix(color, 255, 0.22) : color);
+    root.style.setProperty('--h-active-ink', onAccent);
+    root.style.setProperty('--focus', `0 0 0 3px rgba(${r},${g},${b},0.28)`);
+    root.style.setProperty('--ring', `rgba(${r},${g},${b},0.55)`);
 
     /* Legacy vars for existing components that depend on them */
     root.style.setProperty('--focus-color', color);
     root.style.setProperty('--focus-color-rgb', `${r},${g},${b}`);
-  }, [headerColor]);
+  }, [headerColor, isDark]);
 
   return (
     <ThemeProvider theme={activeTheme}>

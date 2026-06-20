@@ -65,7 +65,7 @@ const NavRow = styled.div`
 `;
 
 const WeekLabel = styled.span`
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 15px;
   font-weight: 600;
   min-width: 180px;
@@ -97,7 +97,7 @@ const ActionRow = styled.div`
 
 const ActionBtn = styled.button<{ $primary?: boolean }>`
   padding: 7px 14px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
@@ -142,7 +142,7 @@ const HeaderCell = styled.div`
 `;
 
 const DayName = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
@@ -160,7 +160,7 @@ const MealLabelCell = styled.div`
   display: flex;
   align-items: flex-start;
   padding-top: 12px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -238,7 +238,7 @@ const DayCardHeader = styled.div`
 `;
 
 const DayCardName = styled.span`
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
@@ -260,7 +260,7 @@ const MobileSlotRow = styled.div`
 `;
 
 const MobileSlotLabel = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;

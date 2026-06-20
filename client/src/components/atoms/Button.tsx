@@ -17,29 +17,30 @@ const sizeStyles = {
 
 const variantStyles = {
   primary: css`
-    background: var(--btn-primary, ${({ theme }) => theme.colors.text});
-    color: var(--btn-primary-ink, ${({ theme }) => theme.colors.textInverse});
-    border: 1px solid var(--btn-primary, ${({ theme }) => theme.colors.text});
+    background: var(--color-accent, ${({ theme }) => theme.colors.accent});
+    color: var(--on-accent, ${({ theme }) => theme.colors.textInverse});
+    border: 1px solid var(--color-accent, ${({ theme }) => theme.colors.accent});
     &:hover:not(:disabled) {
-      background: var(--btn-primary-hover, ${({ theme }) => theme.colors.textSecondary});
-      border-color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
+      background: var(--color-accent-hover, ${({ theme }) => theme.colors.accentHover});
+      border-color: var(--color-accent-hover, ${({ theme }) => theme.colors.accentHover});
     }
   `,
   secondary: css`
-    background: var(--paper-hover, ${({ theme }) => theme.colors.surfaceHover});
-    color: var(--ink, ${({ theme }) => theme.colors.text});
-    border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+    background: var(--bg-sunken, ${({ theme }) => theme.colors.surfaceHover});
+    color: var(--text-primary, ${({ theme }) => theme.colors.text});
+    border: 1px solid var(--border-default, ${({ theme }) => theme.colors.border});
     &:hover:not(:disabled) {
-      background: var(--paper-deep, ${({ theme }) => theme.colors.surfaceDeep});
+      background: var(--bg-hover, ${({ theme }) => theme.colors.surfaceDeep});
+      border-color: var(--border-strong, ${({ theme }) => theme.colors.border});
     }
   `,
   ghost: css`
     background: transparent;
-    color: var(--ink, ${({ theme }) => theme.colors.text});
-    border: 1px solid var(--ink, ${({ theme }) => theme.colors.text});
+    color: var(--text-primary, ${({ theme }) => theme.colors.text});
+    border: 1px solid var(--border-default, ${({ theme }) => theme.colors.border});
     &:hover:not(:disabled) {
-      background: var(--ink, ${({ theme }) => theme.colors.text});
-      color: var(--paper, ${({ theme }) => theme.colors.background});
+      background: var(--bg-hover, ${({ theme }) => theme.colors.surfaceHover});
+      border-color: var(--border-strong, ${({ theme }) => theme.colors.border});
     }
   `,
   danger: css`

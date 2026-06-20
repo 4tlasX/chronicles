@@ -33,7 +33,7 @@ const EditBtn = styled.button`
   right: 8px;
   padding: 4px 10px;
   font-size: 13px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;

@@ -24,7 +24,7 @@ const Header = styled.div`
 `;
 
 const Title = styled.h3`
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;

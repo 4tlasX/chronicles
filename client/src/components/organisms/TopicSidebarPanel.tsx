@@ -51,7 +51,7 @@ const HeadTitle = styled.h2`
 `;
 
 const HeadSub = styled.span`
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   color: ${({ theme }) => theme.colors.textFaint};
 `;

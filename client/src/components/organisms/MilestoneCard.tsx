@@ -205,7 +205,7 @@ const AddTaskInput = styled.input`
 
 const AddTaskBtn = styled.button<{ $color: string }>`
   padding: 4px 10px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;

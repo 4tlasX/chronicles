@@ -85,7 +85,7 @@ const TitleText = styled.h1`
 `;
 
 const MetaText = styled.span`
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.16em;
@@ -250,7 +250,7 @@ const DayGroup = styled.div`
 `;
 
 const DayLabel = styled.div`
-  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 300;
   color: #453f38;
@@ -261,7 +261,7 @@ const DayLabel = styled.div`
 
 const DayDate = styled.span`
   display: block;
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-sans);
   font-style: normal;
   font-size: 11px;
   letter-spacing: 0.16em;

@@ -19,9 +19,9 @@ const Track = styled.div<{ $checked: boolean }>`
   height: 22px;
   border-radius: 11px;
   background: ${({ $checked }) =>
-    $checked ? 'var(--ink, #2b2824)' : 'var(--rule, #d4cfc5)'};
+    $checked ? 'var(--color-accent)' : 'var(--bg-active)'};
   border: 1px solid ${({ $checked }) =>
-    $checked ? 'var(--ink, #2b2824)' : 'var(--ink-4, #8a857c)'};
+    $checked ? 'var(--color-accent)' : 'var(--border-default)'};
   position: relative;
   transition: background 150ms ease, border-color 150ms ease;
   flex-shrink: 0;
@@ -34,15 +34,15 @@ const Thumb = styled.div<{ $checked: boolean }>`
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--paper-surface, #f7f4ee);
-  box-shadow: var(--shadow-1, 0 1px 2px rgba(0,0,0,0.04));
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
   transition: left 150ms ease;
 `;
 
 const ToggleLabel = styled.span`
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-family: var(--font-sans, ${({ theme }) => theme.fontFamily.sans});
   font-size: 14px;
-  color: var(--ink, ${({ theme }) => theme.colors.text});
+  color: var(--text-primary, ${({ theme }) => theme.colors.text});
 `;
 
 interface ToggleProps {

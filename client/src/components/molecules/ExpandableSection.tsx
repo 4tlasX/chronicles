@@ -1,10 +1,9 @@
 import { useState, useId } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../design-system/components/core/Icon.js';
 
 const Section = styled.div`
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  border-top: 1px solid var(--border-subtle);
 `;
 
 const Header = styled.button`
@@ -15,11 +14,11 @@ const Header = styled.button`
   padding: 8px 14px;
   font-size: 14px;
   font-weight: 500;
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
-  &:hover { background: rgba(0,0,0,0.02); }
+  &:hover { background: var(--bg-hover); }
 `;
 
 const Body = styled.div`
@@ -43,7 +42,7 @@ export function ExpandableSection({ label, defaultExpanded = false, children }: 
     <Section>
       <Header onClick={() => setExpanded(!expanded)} aria-expanded={expanded} aria-controls={bodyId}>
         <span>{label}</span>
-        <FontAwesomeIcon icon={expanded ? faChevronUp : faChevronDown} size="xs" />
+        <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={14} strokeWidth={2} />
       </Header>
       {expanded && <Body id={bodyId}>{children}</Body>}
     </Section>

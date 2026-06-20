@@ -107,7 +107,7 @@ const Actions = styled.div`
 
 const ActionBtn = styled.button`
   padding: 6px 16px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
@@ -124,7 +124,7 @@ const ActionBtn = styled.button`
 
 const SaveBtn = styled.button<{ $error?: boolean }>`
   padding: 6px 16px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
@@ -141,7 +141,7 @@ const SaveBtn = styled.button<{ $error?: boolean }>`
 `;
 
 const EditTitle = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;

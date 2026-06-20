@@ -20,7 +20,7 @@ const Trigger = styled.button<{ $filled?: boolean }>`
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: ${({ theme }) => theme.fontWeight.medium};
   text-transform: capitalize;

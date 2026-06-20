@@ -23,7 +23,7 @@ const Row = styled.div`
 `;
 
 const SectionLabel = styled.div`
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -72,7 +72,7 @@ const AddBtn = styled.button`
   gap: 6px;
   margin-top: 8px;
   padding: 6px 12px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-label);
   font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textSecondary};

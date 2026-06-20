@@ -1,24 +1,23 @@
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../design-system/components/core/Icon.js';
 
 const Btn = styled.button`
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 4px 0;
-  font-family: ${({ theme }) => theme.fontFamily.ui};
+  font-family: var(--font-label);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: ${({ theme }) => theme.colors.textMuted};
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
   transition: color 0.15s;
 
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
+  &:hover { color: var(--text-primary); }
 `;
 
 interface HeaderAddButtonProps {
@@ -29,7 +28,7 @@ interface HeaderAddButtonProps {
 export function HeaderAddButton({ label, onClick }: HeaderAddButtonProps) {
   return (
     <Btn onClick={onClick} aria-label={label} data-print-hide>
-      <FontAwesomeIcon icon={faPlus} />
+      <Icon name="plus" size={14} strokeWidth={2} />
       {label}
     </Btn>
   );

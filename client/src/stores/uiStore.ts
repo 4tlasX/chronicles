@@ -110,9 +110,9 @@ export const useUIStore = create<UIState>((set) => ({
   setPencilOnly: (v) => set({ pencilOnly: v }),
 
   themeMode: 'light',
-  headerColor: '#4A5568',
-  accentColor: '#00b4d8',
-  backgroundImage: '/backgrounds/teardrop-geo.jpg',
+  headerColor: '#5b53d6',
+  accentColor: '#5b53d6',
+  backgroundImage: '',
   backgroundOpacity: 0.7,
   setThemeMode: (mode) => set({ themeMode: mode }),
   setHeaderColor: (color) => set({ headerColor: color }),

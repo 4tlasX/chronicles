@@ -2,13 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faHome, faBookOpen, faCalendar, faTag, faGear, faPlus,
-  faFlag, faLayerGroup, faCheck, faCircleCheck, faSlidersH, faCartShopping, faCalendarDays,
-  faPills, faCalendarCheck, faUtensils, faThermometerHalf, faPersonRunning, faTriangleExclamation, faChartLine,
-  faMusic, faBook, faTv, faLightbulb, faQuoteLeft, faMagnifyingGlass, faChevronDown, faChevronRight,
-} from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { Icon } from '../../../design-system/components/core/Icon.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { getTopicIcon } from '../../utils/topicIcons.js';
@@ -323,7 +318,7 @@ export function Sidebar() {
       <SearchBlock>
         <SearchInput>
           <SearchIcon>
-            <FontAwesomeIcon icon={faMagnifyingGlass} />
+            <Icon name="search" size={13} strokeWidth={2} />
           </SearchIcon>
           <SearchText>Search ⌘K</SearchText>
         </SearchInput>
@@ -364,7 +359,7 @@ export function Sidebar() {
         <NavSection>
           <NavSectionHeader onClick={() => toggleSection('planning')}>
             <SectionChevron>
-              <FontAwesomeIcon icon={openSections.planning ? faChevronDown : faChevronRight} size="xs" />
+              <Icon name={openSections.planning ? 'chevron-down' : 'chevron-right'} size={13} strokeWidth={2} />
             </SectionChevron>
             Planning
           </NavSectionHeader>
@@ -423,7 +418,7 @@ export function Sidebar() {
           <NavSection>
             <NavSectionHeader onClick={() => toggleSection('health')}>
               <SectionChevron>
-                <FontAwesomeIcon icon={openSections.health ? faChevronDown : faChevronRight} size="xs" />
+                <Icon name={openSections.health ? 'chevron-down' : 'chevron-right'} size={13} strokeWidth={2} />
               </SectionChevron>
               Health
             </NavSectionHeader>
@@ -489,7 +484,7 @@ export function Sidebar() {
           <NavSection>
             <NavSectionHeader onClick={() => toggleSection('inspiration')}>
               <SectionChevron>
-                <FontAwesomeIcon icon={openSections.inspiration ? faChevronDown : faChevronRight} size="xs" />
+                <Icon name={openSections.inspiration ? 'chevron-down' : 'chevron-right'} size={13} strokeWidth={2} />
               </SectionChevron>
               Inspiration
             </NavSectionHeader>
@@ -543,7 +538,7 @@ export function Sidebar() {
           <NavSection>
             <NavSectionHeader onClick={() => toggleSection('topics')}>
               <SectionChevron>
-                <FontAwesomeIcon icon={openSections.topics ? faChevronDown : faChevronRight} size="xs" />
+                <Icon name={openSections.topics ? 'chevron-down' : 'chevron-right'} size={13} strokeWidth={2} />
               </SectionChevron>
               Your Topics
             </NavSectionHeader>
@@ -563,7 +558,7 @@ export function Sidebar() {
               })}
               <NavRow onClick={() => navigate('/topics')}>
                 <NavRowIcon>
-                  <FontAwesomeIcon icon={faPlus} strokeWidth={1.8} />
+                  <Icon name="plus" size={15} strokeWidth={2} />
                 </NavRowIcon>
                 <NavRowText>Add topic…</NavRowText>
               </NavRow>
@@ -575,7 +570,7 @@ export function Sidebar() {
         <NavSection>
           <NavSectionHeader onClick={() => toggleSection('settings')}>
             <SectionChevron>
-              <FontAwesomeIcon icon={openSections.settings ? faChevronDown : faChevronRight} size="xs" />
+              <Icon name={openSections.settings ? 'chevron-down' : 'chevron-right'} size={13} strokeWidth={2} />
             </SectionChevron>
             Settings
           </NavSectionHeader>

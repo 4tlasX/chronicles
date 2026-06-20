@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /Users/fastandcurious/apps/chronicles/client && grep -n \"isLightColor\\\\|noUnusedLocals\" src/components/organisms/Header.tsx tsconfig*.json 2>/dev/null | head; echo \"===\"; grep -n \"noUnusedLocals\" tsconfig*.json ../tsconfig*.json 2>/dev/null)",
+      "Read(//Users/fastandcurious/apps/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5174/)",
+      "Bash(pkill -f \"vite\\\\|tsx watch\")",
+      "Bash(curl -s http://localhost:5174/)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|jsx|js\\)$\")",
+      "Bash(curl -s \"http://localhost:5173/src/views/JournalView.tsx\")",
+      "Bash(curl -s \"http://localhost:5173/design-system/components/core/Icon.jsx\")",
+      "Bash(grep -iE \"\\\\.\\(jsx|js|tsx|ts\\)$\")",
+      "Bash(pkill -f \"vite|tsx\")",
+      "Bash(cd /Users/fastandcurious/apps/chronicles/client/src/components/atoms && pwd && ls ../../../../../design-system/components/core/Icon.d.ts 2>&1 | head -1)",
+      "Read(//design-system/components/core/**)",
+      "Bash(xargs -I {} basename {} .jsx)"
+    ]
+  }
+}

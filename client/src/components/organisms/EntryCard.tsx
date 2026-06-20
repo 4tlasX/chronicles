@@ -52,107 +52,75 @@ function extractPreview(html: string): string {
   return stripHtml(remainder).trim();
 }
 
-function countWords(text: string): number {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-function readTimeLabel(words: number): string {
-  return Math.max(1, Math.round(words / 200)) + ' min read';
-}
-
-const Row = styled.div<{ $active?: boolean }>`
-  padding: 14px var(--s-4, 16px);
-  border-bottom: 1px solid var(--rule-2, #e5dfd2);
-  cursor: pointer;
+/* DS entry-list row: [accent bar][title + subtitle][time]. Borderless except a
+   hairline bottom rule; selected row gets a topic-colored left bar + faint fill. */
+const Row = styled.div<{ $active?: boolean; $accent?: string }>`
   display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: 10px;
-  align-items: center;
-  background: ${({ $active }) => $active ? 'var(--paper-well, rgba(0,0,0,0.04))' : 'transparent'};
-  border-left: 2px solid ${({ $active }) => $active ? 'var(--accent-stroke, #2b2824)' : 'transparent'};
-  padding-left: ${({ $active }) => $active ? 'calc(var(--s-4, 16px) - 2px)' : 'var(--s-4, 16px)'};
+  grid-template-columns: 3px 1fr auto;
+  gap: 12px;
+  align-items: start;
+  cursor: pointer;
+  padding: 13px 18px 13px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  background: ${({ $active }) => $active ? 'var(--bg-active)' : 'transparent'};
   transition: background 120ms;
 
-  &:hover {
-    background: var(--paper-well, rgba(0,0,0,0.04));
+  &::before {
+    content: '';
+    grid-column: 1;
+    align-self: stretch;
+    background: ${({ $active, $accent }) => $active ? ($accent || 'var(--color-accent)') : 'transparent'};
   }
-`;
 
-const DateStamp = styled.div`
-  font-family: var(--mono, 'JetBrains Mono', monospace);
-  font-size: 10px;
-  color: var(--ink-4, #8a857c);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-align: right;
-  line-height: 1.3;
-  padding-right: 7px;
-`;
-
-const DayNum = styled.span`
-  font-family: var(--sans);
-  font-weight: 400;
-  font-size: 18px;
-  color: var(--ink, #2b2824);
-  letter-spacing: 0;
-  display: block;
-  line-height: 1;
-  margin-top: 4px;
-  margin-bottom: 0;
-  padding-bottom: 5px;
-  font-style: italic;
+  &:hover {
+    background: var(--bg-hover);
+  }
 `;
 
 const ContentArea = styled.div`
   min-width: 0;
+  grid-column: 2;
 `;
 
 const TitleText = styled.div<{ $completed?: boolean }>`
-  font-family: var(--sans, 'Lato', sans-serif);
-  font-style: italic;
-  font-size: 15px;
-  color: var(--ink, #2b2824);
-  line-height: 1.4;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
-  margin: 0 0 3px;
+  margin: 0;
 `;
 
 const PreviewText = styled.div`
-  font-family: var(--sans, 'Lato', sans-serif);
-  font-size: 12.5px;
-  color: var(--ink-3, #6b645a);
-  line-height: 1.45;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  margin-top: 3px;
+  white-space: nowrap;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
 `;
 
-const FooterMeta = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  font-family: var(--mono, 'JetBrains Mono', monospace);
+const TimeStamp = styled.div<{ $active?: boolean; $accent?: string }>`
+  grid-column: 3;
+  font-family: var(--font-label);
   font-size: 9.5px;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ink-4, #8a857c);
-`;
-
-const TopicDot = styled.span`
-  width: 6px;
-  height: 6px;
-  border-radius: 1px;
-  background: var(--ink-4, #8a857c);
-  flex-shrink: 0;
-  display: inline-block;
-  cursor: pointer;
+  white-space: nowrap;
+  padding-top: 1px;
+  color: ${({ $active, $accent }) => $active ? ($accent || 'var(--color-accent)') : 'var(--text-tertiary)'};
 `;
 
 const BookmarkIcon = styled.span`
-  margin-left: auto;
-  color: var(--accent-stroke, #2b2824);
+  margin-left: 6px;
+  color: var(--color-accent);
   font-size: 11px;
   line-height: 1;
   flex-shrink: 0;
@@ -168,46 +136,29 @@ export function EntryCard({
   const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
 
   const d = new Date(date);
-  const dayNum = d.getDate();
-  const monthCode = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
   const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   const title = extractTitle(content, previewText);
   const preview = extractPreview(content);
-  const plainText = stripHtml(content);
-  const wordCount = countWords(plainText);
-  const readTime = wordCount >= 50 ? readTimeLabel(wordCount) : null;
+  const subtitle = preview || (topicName ?? '');
 
   const inner = (
-    <Row $active={active} onClick={onClick}>
-      <DateStamp>
-        <DayNum>{dayNum}</DayNum>
-        {monthCode}<br />{timeStr}
-      </DateStamp>
-
+    <Row $active={active} $accent={topicColor} onClick={onClick}>
       <ContentArea>
         <TitleText $completed={isCompleted}>{title}</TitleText>
-        {preview && <PreviewText>{preview}</PreviewText>}
-        <FooterMeta>
-          {topicName && (
-            <>
-              <TopicDot onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }} />
-              <span
-                style={{ cursor: 'pointer' }}
-                onClick={e => { e.stopPropagation(); if (topicId && onTopicClick) onTopicClick(topicId); }}
-              >{topicName}</span>
-            </>
-          )}
-          {isFavorite && (
-            <BookmarkIcon
-              onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
-              title="Remove bookmark"
-            >
-              <FontAwesomeIcon icon={faBookmark} />
-            </BookmarkIcon>
-          )}
-        </FooterMeta>
+        {subtitle && <PreviewText>{subtitle}</PreviewText>}
       </ContentArea>
+      <TimeStamp $active={active} $accent={topicColor}>
+        {timeStr}
+        {isFavorite && (
+          <BookmarkIcon
+            onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
+            title="Remove bookmark"
+          >
+            <FontAwesomeIcon icon={faBookmark} />
+          </BookmarkIcon>
+        )}
+      </TimeStamp>
     </Row>
   );
 

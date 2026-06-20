@@ -14,29 +14,59 @@ Key privacy guarantees:
 
 ## UI Design Rules
 
-The canonical visual spec is `design_handoff/chronicles-design-system.html`. All UI implementation must match its HTML structure and CSS variables exactly.
+The canonical visual spec is the **`design-system/`** folder — specifically the runnable
+mini-app at `design-system/Chronicles Desktop App/` (`app.jsx` + `index.html`), the binding
+rules in `design-system/CLAUDE.md`, and the token source `design-system/tokens/*.css`. All UI
+implementation must match this. (The old `design_handoff/chronicles-design-system.html`
+paper/serif spec is retired.)
 
 ### Design Philosophy
-- **Paper substrate** — Off-white tinted background (or dark graphite in Midnight mode) with a subtle hand-drawn SVG watermark at ~6% opacity. Content sits on the page, not in heavy boxes.
-- **Ink as primary mark** — Serif italic for display text; color reserved for accent and semantic state only.
-- **Quiet chrome** — 1px hairline rules (`--rule`), small radii (2–8px), elevation used sparingly.
+- **Borderless tonal panels** — Pure-white canvas (light) / deep-charcoal `#1b1d26` (dark).
+  Cards and inputs separate from the canvas by **fill tone**, not outline. Visible borders are
+  hairline dividers only. **Inputs are filled** (`--bg-sunken`), not outlined.
+- **Dashboard widgets are borderless flat sections** (per the `app.jsx` mini-app, which is
+  canonical): a 1px `--border-subtle` *top rule* + a tracked-uppercase label row, with content
+  sitting directly on the canvas — NOT bordered/filled tiles. The grid is `2fr / 1fr` with a
+  24px gap and **no vertical divider** between columns.
+- **Sharp, squared corners** — Cards/tiles ~2px (`--r-lg`), inputs/buttons ~1px (`--r-md`).
+  Only avatars, switches, dots, and the active-nav nothing-else go round (`--r-full`).
+- **Flat elevation** — Depth is tonal layering, **never shadow** on resting panels. Shadows
+  (`--shadow-lg/xl`) are reserved for floating overlays: dropdown menus, dialogs, toasts.
+- **One confident accent** — A single user-selectable accent marks exactly one active/selected
+  thing (a solid accent block, or a 2px accent left-bar + faint accent tint). Never decorative.
+  A 3px accent stripe pins the very top of the app chrome.
+- **Type** — **Work Sans** for display/headings, set **thin (Light/200–300)** for an airy feel;
+  **Open Sans** for UI, body, and metadata (uppercase + `~0.14em` tracking). Sentence case in UI.
 
-### Two Themes: Paper (light) and Midnight (dark)
-Switched via `data-theme` attribute on `<body>`. CSS variables flip automatically:
-- `--paper`, `--paper-surface`, `--paper-well` — background layers
-- `--ink`, `--ink-2`, `--ink-3`, `--ink-4` — text tones (darkest to lightest)
-- `--rule` — hairline border color
-- `--accent`, `--accent-hover`, `--accent-tint`, `--accent-stroke` — derived from user's header color
+### Two Themes: Light (white) and Dark (charcoal)
+Switched via `data-theme="dark"` on `<html>` (driven by `uiStore.themeMode`). The token layer
+is injected in `client/src/App.tsx`. DS semantic tokens (use these for new work):
+- `--bg-app`, `--bg-surface`, `--bg-sunken`, `--bg-hover`, `--bg-active` — surface layers
+- `--text-primary`, `--text-secondary`, `--text-tertiary`, `--text-disabled` — text tones
+- `--border-subtle`, `--border-default`, `--border-strong` — hairline borders
+- `--color-accent`, `--color-accent-hover`, `--color-accent-subtle`, `--on-accent`,
+  `--accent-100..800` — accent scale derived programmatically from the user's hex
+- `--font-display` (Work Sans), `--font-sans` / `--font-label` (Open Sans)
+
+**Legacy aliases** (`--paper*`, `--ink*`, `--rule*`, `--btn-primary*`, `--accent-fill*`, `--mono`)
+still resolve, remapped to DS values in `App.tsx`, so existing components recolor automatically.
+Prefer the DS-named tokens in new/edited code.
+
+### Accent customization
+Settings → Appearance offers **7 named DS presets** (Ink, Sage, Clay, Amber, Teal, Rose, Slate)
+as quick chips, plus the full 45-color hex grid as "custom". Any hex feeds `--color-accent` and
+`deriveAccentScale()` builds the `--accent-100..800` ramp (brightened one notch in dark).
 
 ### Shape & Icon Rules
-- **No circles or pills** — All shapes use rounded square edges (border-radius: 2–8px, via `--r-sm/md/lg/xl`). No circular badges, no pill-shaped chips.
-- **Icons are plain** — Topic icons are displayed as plain FontAwesome icons. No circle backgrounds, no colored dot indicators.
-- **Icon colors — body text** — Topic icons in entry cards (`EntryCard`, `EditableEntryCard`), topic sidebar (`SortableTopicItem`), and topic selector dropdowns (`TopicSelector`, `TopicSelectorDropdown`) use `theme.colors.text` (body font color). Do not use the header color or a muted color for these icons.
-- **Nav link unselected color (dark header)** — Unselected nav links and icon buttons (`NavLink`, `DropdownTrigger`) on dark-background headers use `rgb(240, 235, 223)`, not semi-transparent white.
-- **Wellness icon unselected color** — Tap-to-fill icons (`GlassBtn`, `MoodBtn`) in both the dashboard widget and `WellnessFields` use `theme.colors.border` when not selected/filled.
+- **Icons are plain** — Topic icons are plain FontAwesome/Lucide-weight stroke icons. No circle
+  backgrounds, no colored dot indicators.
+- **Icon colors — body text** — Topic icons in entry cards, topic sidebar, and topic selector
+  dropdowns use `--text-primary` (body font color), not the accent or a muted color.
+- **Active nav = solid accent block** with `--on-accent` (white) text/icon.
+- **Wellness icon unselected color** — Tap-to-fill icons use `--border-strong`/`--text-tertiary`
+  when not selected; the accent when filled.
 
 ### Component-specific Rules
-- **Quick entry card** — `QuickEntryDashCard` has transparent background, no horizontal padding, no `overflow: hidden` (so the topic picker dropdown can escape), and a top border via `CardHeader`.
 - **No `window.confirm`** — Safari on iPad blocks pop-ups by default, silently returning `false`. Use inline state-based confirmation or delete directly. Never use `window.confirm` / `window.alert` / `window.prompt`.
 - **TipTap node views with overlays** — Always portal overlays (`position: fixed`) from TipTap `NodeViewWrapper` to `document.body` via `createPortal`. The node view DOM can create stacking contexts that trap pointer events.
 
