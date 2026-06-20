@@ -54,14 +54,14 @@ const Day = styled.button<{ $isToday?: boolean }>`
   align-items: center;
   gap: 8px;
   padding: 6px 0 10px;
-  border: none;
-  background: ${({ $isToday }) => $isToday ? 'var(--color-accent)' : 'transparent'};
+  background: transparent;
+  border: ${({ $isToday }) => $isToday ? '1px solid var(--color-accent)' : '1px solid transparent'};
   border-radius: var(--r-md, 2px);
   cursor: pointer;
   position: relative;
 
   &:hover {
-    background: ${({ $isToday }) => $isToday ? 'var(--color-accent)' : 'var(--bg-hover)'};
+    background: ${({ $isToday }) => $isToday ? 'transparent' : 'var(--bg-hover)'};
   }
 `;
 
@@ -70,17 +70,17 @@ const DowLabel = styled.span<{ $isToday?: boolean }>`
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  color: ${({ $isToday }) => $isToday ? 'var(--on-accent, #fff)' : 'var(--text-tertiary)'};
+  color: ${({ $isToday }) => $isToday ? 'var(--color-accent)' : 'var(--text-tertiary)'};
 `;
 
 const DayNum = styled.span<{ $isToday?: boolean }>`
   font-size: 14px;
   font-weight: 500;
   line-height: 1;
-  color: ${({ $isToday }) => $isToday ? 'var(--on-accent, #fff)' : 'var(--text-primary)'};
+  color: ${({ $isToday }) => $isToday ? 'var(--color-accent)' : 'var(--text-primary)'};
 `;
 
-const EntryDot = styled.span<{ $isToday?: boolean }>`
+const EntryDot = styled.span`
   position: absolute;
   bottom: 4px;
   left: 50%;
@@ -88,7 +88,7 @@ const EntryDot = styled.span<{ $isToday?: boolean }>`
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: ${({ $isToday }) => $isToday ? 'var(--on-accent, #fff)' : 'var(--color-accent)'};
+  background: var(--color-accent);
 `;
 
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -166,7 +166,7 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
                 >
                   <DowLabel $isToday={isToday}>{DOW[i]}</DowLabel>
                   <DayNum $isToday={isToday}>{date.getDate()}</DayNum>
-                  {hasEntry && <EntryDot $isToday={isToday} />}
+                  {hasEntry && <EntryDot />}
                 </Day>
               );
             })}
