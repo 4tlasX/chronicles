@@ -5,8 +5,7 @@ import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import styled, { keyframes, css } from 'styled-components';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenNib, faPencil, faMicrophone } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { useDictation } from '../../hooks/useDictation.js';
 import { DrawingNode } from '../tiptap/DrawingNode.js';
 import { DrawingCanvas } from '../atoms/DrawingCanvas.js';
@@ -381,11 +380,11 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
                 aria-label="Insert drawing"
                 title="Insert drawing (Apple Pencil)"
                 onClick={() => setDrawingOpen(true)}
-              ><FontAwesomeIcon icon={faPencil} /></ToolbarButton>
+              ><Icon name="pencil" size={16} strokeWidth={2} /></ToolbarButton>
             </Toolbar>
           )}
           {!hideToolbarToggle && <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)} aria-label="Toggle formatting toolbar" aria-expanded={toolbarOpen}>
-            <FontAwesomeIcon icon={faPenNib} />
+            <Icon name="pencil" size={16} strokeWidth={2} />
           </ToolbarToggle>}
           {!hideToolbarToggle && dictationSupported && (
             <MicButton
@@ -395,7 +394,7 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
               title={isListening ? 'Stop dictation' : 'Dictate'}
               type="button"
             >
-              <FontAwesomeIcon icon={faMicrophone} />
+              <Icon name="mic" size={16} strokeWidth={2} />
             </MicButton>
           )}
         </ToolbarRow>

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DragHandle } from '../atoms/DragHandle.js';
@@ -320,7 +319,7 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
                   />
                   <MilestoneTitle $completed={m.isCompleted}>{m.title}</MilestoneTitle>
                   <RemoveBtn title="Remove from goal" onClick={() => onUnlinkMilestone(m)}>
-                    <FontAwesomeIcon icon={faTrash} />
+                    <Icon name="trash" size={14} strokeWidth={2} />
                   </RemoveBtn>
                 </MilestoneRow>
               ))}

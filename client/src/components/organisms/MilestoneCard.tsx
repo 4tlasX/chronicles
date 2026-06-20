@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faGripVertical } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { ProgressBar } from '../atoms/ProgressBar.js';
 import { Badge } from '../atoms/Badge.js';
 import { Checkbox } from '../atoms/Checkbox.js';
@@ -309,9 +308,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
         <ContentWrap>
           <TitleRow>
             <Title $completed={milestone.isCompleted}>{milestone.title}</Title>
-            <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} title="Drag to reorder">
-              <FontAwesomeIcon icon={faGripVertical} />
-            </DragHandle>
+            <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
           </TitleRow>
           {linkedTasks.length > 0 && <div style={{ marginTop: 6 }}><ProgressBar percent={progress} color={headerColor} /></div>}
           <FooterMeta>
@@ -343,7 +340,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
                   />
                   <TaskTitle $completed={t.isCompleted}>{t.title}</TaskTitle>
                   <RemoveBtn title="Remove from milestone" onClick={() => onUnlinkTask(t)}>
-                    <FontAwesomeIcon icon={faTrash} />
+                    <Icon name="trash" size={14} strokeWidth={2} />
                   </RemoveBtn>
                 </TaskRow>
               ))}

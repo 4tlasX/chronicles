@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { getTopicIcon } from '../../utils/topicIcons.js';
@@ -138,7 +137,7 @@ export function QuickEntry({ onCreateEntry }: QuickEntryProps) {
           ) : (
             <PlaceholderText>No topic</PlaceholderText>
           )}
-          <ChevronIcon><FontAwesomeIcon icon={faChevronDown} /></ChevronIcon>
+          <ChevronIcon><Icon name="chevron-down" size={14} strokeWidth={2} /></ChevronIcon>
         </TopicTrigger>
         <TopicSelectorDropdown
           isOpen={dropdownOpen}

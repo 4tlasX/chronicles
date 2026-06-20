@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { InlineEditPanel } from '../molecules/InlineEditPanel.js';
 import { Editor } from './Editor.js';
 import { TaskFields } from '../molecules/fields/TaskFields.js';
@@ -182,7 +181,7 @@ export function NewEntryCard({ topic, headerColor, onCreated, hideButton, isOpen
     return (
       <Card $accentColor={headerColor}>
         <AddButton $color={headerColor} onClick={() => setIsOpen(true)}>
-          <FontAwesomeIcon icon={faPlus} /> New {topic.name} Entry
+          <Icon name="plus" size={14} strokeWidth={2} /> New {topic.name} Entry
         </AddButton>
       </Card>
     );

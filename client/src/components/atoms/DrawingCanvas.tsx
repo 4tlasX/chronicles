@@ -1,8 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { getStroke } from 'perfect-freehand';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRotateLeft, faTrash, faCheck, faXmark, faHandPointer, faPencil } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { useUIStore } from '../../stores/uiStore.js';
 
 /* ── SVG helpers ── */
@@ -294,22 +293,22 @@ export function DrawingCanvas({ initialSvg, onSave, onCancel }: DrawingCanvasPro
         <Divider />
         {/* Palm rejection toggle */}
         <TBtn $active={pencilOnly} onClick={() => setPencilOnly(!pencilOnly)} title={pencilOnly ? 'Pencil only (tap to allow finger)' : 'Finger + pencil'}>
-          <FontAwesomeIcon icon={pencilOnly ? faPencil : faHandPointer} />
+          <Icon name={pencilOnly ? 'pencil' : 'command'} size={14} strokeWidth={2} />
           {pencilOnly ? 'Pencil' : 'Finger'}
         </TBtn>
         <Divider />
         <TBtn onClick={handleUndo} disabled={strokes.length === 0} title="Undo">
-          <FontAwesomeIcon icon={faRotateLeft} />
+          <Icon name="repeat" size={14} strokeWidth={2} />
         </TBtn>
         <TBtn onClick={handleClear} $danger disabled={strokes.length === 0} title="Clear">
-          <FontAwesomeIcon icon={faTrash} />
+          <Icon name="trash" size={14} strokeWidth={2} />
         </TBtn>
         <Spacer />
         <TBtn onClick={onCancel} title="Cancel">
-          <FontAwesomeIcon icon={faXmark} /> Cancel
+          <Icon name="x" size={14} strokeWidth={2} /> Cancel
         </TBtn>
         <TBtn $active onClick={handleSave} title="Save drawing">
-          <FontAwesomeIcon icon={faCheck} /> Save
+          <Icon name="check" size={14} strokeWidth={2} /> Save
         </TBtn>
       </TopBar>
       <CanvasArea ref={areaRef}>
