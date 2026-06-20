@@ -2766,7 +2766,7 @@ function MiniCalendarCard({ accentColor, dragAttributes, dragListeners }: { acce
           <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
       </CardHeader>
-      <div style={{ padding: '0 20px 20px', minWidth: 0, overflow: 'hidden' }}>
+      <div style={{ padding: 0, minWidth: 0, overflow: 'hidden' }}>
         <MiniCalendar
           selectedDate={selectedDate}
           onSelectDate={handleSelectDate}
