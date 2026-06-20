@@ -149,7 +149,8 @@ export function EntryCard({
 
   const d = new Date(date);
   const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-  const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
+  const monthAbbr = d.toLocaleDateString('en-US', { month: 'short' });
+  const dateStr = `${monthAbbr} ${String(d.getDate()).padStart(2, '0')}`;
 
   const title = extractTitle(content, previewText);
   const preview = extractPreview(content);
