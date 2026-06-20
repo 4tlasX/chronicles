@@ -33,6 +33,36 @@ const IconSpan = styled.span`
   align-items: center;
 `;
 
+const ScrollContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 0 0 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) transparent;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 2px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--border-default);
+  }
+`;
+
+const Week = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+`;
+
 const WeekdayRow = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -46,13 +76,14 @@ const WeekdayLabel = styled.div`
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-tertiary);
-  margin-bottom: 6px;
+  margin-bottom: 2px;
+  width: 32px;
 `;
 
 const DaysGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 2px;
 `;
 
 const DayButton = styled.button<{
@@ -98,20 +129,33 @@ function toISODateString(d: Date): string {
 export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCalendarProps) {
   const today = useMemo(() => new Date(), []);
 
-  // Get the week containing today (Sunday to Saturday)
-  const weekDays = useMemo(() => {
-    const days: Date[] = [];
+  // Generate weeks: 52 weeks back + 52 weeks forward = 104 weeks total
+  const weeks = useMemo(() => {
+    const weeksArray: Date[][] = [];
     const todayDate = new Date();
     const dayOfWeek = todayDate.getDay();
-    const firstDayOfWeek = new Date(todayDate);
-    firstDayOfWeek.setDate(todayDate.getDate() - dayOfWeek);
 
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(firstDayOfWeek);
-      day.setDate(firstDayOfWeek.getDate() + i);
-      days.push(day);
+    // Start from beginning of today's week
+    const startOfWeek = new Date(todayDate);
+    startOfWeek.setDate(todayDate.getDate() - dayOfWeek);
+
+    // Go back 52 weeks
+    const startDate = new Date(startOfWeek);
+    startDate.setDate(startDate.getDate() - 52 * 7);
+
+    let currentDate = new Date(startDate);
+
+    // Generate 104 weeks
+    for (let w = 0; w < 104; w++) {
+      const week: Date[] = [];
+      for (let d = 0; d < 7; d++) {
+        week.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      weeksArray.push(week);
     }
-    return days;
+
+    return weeksArray;
   }, []);
 
   return (
@@ -122,25 +166,31 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
         </IconSpan>
         MINI CALENDAR
       </Header>
-      <WeekdayRow>
-        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-          <WeekdayLabel key={i}>{day}</WeekdayLabel>
+      <ScrollContainer>
+        {weeks.map((weekDays, weekIdx) => (
+          <Week key={weekIdx}>
+            <WeekdayRow>
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                <WeekdayLabel key={i}>{day}</WeekdayLabel>
+              ))}
+            </WeekdayRow>
+            <DaysGrid>
+              {weekDays.map((date, i) => {
+                const isToday = isSameDay(date, today);
+                return (
+                  <DayButton
+                    key={i}
+                    $isToday={isToday}
+                    onClick={() => onSelectDate(date)}
+                  >
+                    {date.getDate()}
+                  </DayButton>
+                );
+              })}
+            </DaysGrid>
+          </Week>
         ))}
-      </WeekdayRow>
-      <DaysGrid>
-        {weekDays.map((date, i) => {
-          const isToday = isSameDay(date, today);
-          return (
-            <DayButton
-              key={i}
-              $isToday={isToday}
-              onClick={() => onSelectDate(date)}
-            >
-              {date.getDate()}
-            </DayButton>
-          );
-        })}
-      </DaysGrid>
+      </ScrollContainer>
     </Wrapper>
   );
 }
