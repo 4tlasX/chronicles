@@ -19,6 +19,7 @@ export function useInitializeData() {
     isInitialized, setLoading, isLoading,
   } = useEntriesStore();
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
+  const setAccentColor = useUIStore(s => s.setAccentColor);
   const setThemeMode = useUIStore(s => s.setThemeMode);
   const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
   const setBackgroundOpacity = useUIStore(s => s.setBackgroundOpacity);
@@ -49,6 +50,10 @@ export function useInitializeData() {
         const settingsMap: Record<string, unknown> = {};
         for (const s of settingsData) settingsMap[s.key] = s.value;
         if (typeof settingsMap.headerColor === 'string') setHeaderColor(settingsMap.headerColor);
+        if (typeof settingsMap.accentColor === 'string') {
+          setAccentColor(settingsMap.accentColor);
+          document.documentElement.style.setProperty('--color-accent', settingsMap.accentColor);
+        }
         if (settingsMap.themeMode === 'light' || settingsMap.themeMode === 'dark') setThemeMode(settingsMap.themeMode);
         if (typeof settingsMap.backgroundImage === 'string') setBackgroundImage(settingsMap.backgroundImage);
         if (typeof settingsMap.backgroundOpacity === 'string') setBackgroundOpacity(parseFloat(settingsMap.backgroundOpacity));

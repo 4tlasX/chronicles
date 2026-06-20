@@ -129,6 +129,8 @@ export function SettingsView() {
   const setFeatureFlags = useEntriesStore(s => s.setFeatureFlags);
   const headerColor = useUIStore(s => s.headerColor);
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
+  const accentColor = useUIStore(s => s.accentColor);
+  const setAccentColor = useUIStore(s => s.setAccentColor);
   const themeMode = useUIStore(s => s.themeMode);
   const setThemeMode = useUIStore(s => s.setThemeMode);
   const backgroundImage = useUIStore(s => s.backgroundImage);
@@ -300,6 +302,12 @@ export function SettingsView() {
   const handleThemeModeChange = async (mode: 'light' | 'dark') => {
     setThemeMode(mode);
     await settingsApi.upsert('themeMode', mode).catch(() => {});
+  };
+
+  const handleAccentColorChange = async (color: string) => {
+    setAccentColor(color);
+    document.documentElement.style.setProperty('--color-accent', color);
+    await settingsApi.upsert('accentColor', color).catch(() => {});
   };
 
   const handleImageChange = async (image: string) => {
@@ -833,6 +841,36 @@ export function SettingsView() {
           <ColorSectionDesc>Choose a color for the header bar and accents</ColorSectionDesc>
           <ColorPicker colors={HEADER_COLORS} selected={headerColor} onChange={handleHeaderColorChange} />
           <SelectedColorLabel>Selected: {selectedColorLabel}</SelectedColorLabel>
+        </ColorSection>
+        <ColorSection>
+          <ColorSectionTitle>Accent Color</ColorSectionTitle>
+          <ColorSectionDesc>Choose an accent color for highlights and interactive elements</ColorSectionDesc>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {[
+              { name: 'Teal', color: '#34a5a2' },
+              { name: 'Ink', color: '#1f2937' },
+              { name: 'Rose', color: '#e11d48' },
+              { name: 'Amber', color: '#d97706' },
+              { name: 'Sage', color: '#65a30d' },
+              { name: 'Denim', color: '#2563eb' },
+            ].map(a => (
+              <button
+                key={a.color}
+                onClick={() => handleAccentColorChange(a.color)}
+                title={a.name}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 999,
+                  border: accentColor === a.color ? `2px solid ${a.color}` : '1px solid var(--border-subtle)',
+                  background: a.color,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: accentColor === a.color ? `0 0 0 2px var(--bg-app)` : 'none',
+                }}
+              />
+            ))}
+          </div>
         </ColorSection>
         <ColorSection style={{ borderBottom: 'none' }}>
           <ColorSectionTitle>Wallpaper Pattern</ColorSectionTitle>
