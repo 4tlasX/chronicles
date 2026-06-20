@@ -56,47 +56,9 @@ const EmptyState = styled.div`
   font-size: var(--text-sm, 15px);
 `;
 
-const DateGroupHeader = styled.div`
-  padding: var(--s-4, 16px) var(--s-4, 16px) var(--s-4, 16px);
-  font-family: var(--sans, 'Lato', sans-serif);
-  font-style: italic;
-  font-size: 16px;
-  color: var(--ink-3, #6b645a);
-  border-bottom: 1px solid var(--rule-2, #e5dfd2);
-  background: transparent;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-`;
-
-const DgLabel = styled.span`
-  white-space: nowrap;
-  line-height: 1;
-`;
-
-const DgCount = styled.span`
-  font-family: var(--mono, 'JetBrains Mono', monospace);
-  font-style: normal;
-  font-size: 9.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-4, #8a857c);
-`;
-
 const CHECKABLE_TYPES = new Set(['task', 'goal', 'milestone']);
 
 // ── Helpers ────────────────────────────────────────────────────────
-
-function ordinalSuffix(n: number): 'st' | 'nd' | 'rd' | 'th' {
-  const v = n % 100;
-  if (v >= 11 && v <= 13) return 'th';
-  switch (v % 10) {
-    case 1: return 'st';
-    case 2: return 'nd';
-    case 3: return 'rd';
-    default: return 'th';
-  }
-}
 
 /** YYYY-MM-DD string in local time */
 function toLocalDateKey(date: Date): string {
@@ -255,19 +217,8 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   return (
     <ListContainer>
       {groups.map(([dateKey, groupEntries]) => {
-        const groupDate = new Date(dateKey + 'T00:00:00');
-        const day = groupDate.getDate();
-        const suffix = ordinalSuffix(day);
-        const monthName = groupDate.toLocaleDateString('en-US', { month: 'long' });
-        const dowLabel = groupDate.toLocaleDateString('en-US', { weekday: 'long' });
-
         return (
           <div key={dateKey}>
-            <DateGroupHeader>
-              <DgLabel>{dowLabel}, {monthName} {day}<sup style={{ fontSize: '0.7em' }}>{suffix}</sup></DgLabel>
-              <DgCount>{groupEntries.length} {groupEntries.length === 1 ? 'entry' : 'entries'}</DgCount>
-            </DateGroupHeader>
-
             {groupEntries.map(entry => {
               const meta = entry.metadata as Record<string, unknown>;
               const customFields = meta?._customFields as Record<string, unknown> | undefined;
