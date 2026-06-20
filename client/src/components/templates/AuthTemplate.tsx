@@ -34,6 +34,12 @@ const LogoMark = styled.div`
   margin-bottom: 10px;
 `;
 
+const LogoSvg = styled.svg`
+  width: 56px;
+  height: 56px;
+  stroke: var(--color-accent, #5b53d6);
+`;
+
 const LogoText = styled.div`
   display: flex;
   align-items: center;
@@ -82,11 +88,71 @@ export function AuthTemplate({ title, children, footer, brand }: AuthTemplatePro
     <Wrapper>
       <Card>
         <LogoMark>
+          <LogoSvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            {/* Petal 1 (top) */}
+            <g>
+              <path strokeWidth="1.1" d="M44,47 C34,42 24,28 28,13 C32,4 48,4 50,8 C52,4 68,4 72,13 C76,28 66,42 56,47 Z"/>
+              <path strokeWidth="0.7" d="M50,46 C50,36 50,22 50,10"/>
+              <path strokeWidth="0.7" d="M50,36 C48,30 44,24 40,18"/>
+              <path strokeWidth="0.7" d="M50,36 C52,30 56,24 60,18"/>
+              <path strokeWidth="0.7" d="M50,28 C49,24 47,20 45,16"/>
+              <path strokeWidth="0.7" d="M50,28 C51,24 53,20 55,16"/>
+            </g>
+            {/* Petal 2 */}
+            <g transform="rotate(72,50,50)">
+              <path strokeWidth="1.1" d="M44,47 C34,42 24,28 28,13 C32,4 48,4 50,8 C52,4 68,4 72,13 C76,28 66,42 56,47 Z"/>
+              <path strokeWidth="0.7" d="M50,46 C50,36 50,22 50,10"/>
+              <path strokeWidth="0.7" d="M50,36 C48,30 44,24 40,18"/>
+              <path strokeWidth="0.7" d="M50,36 C52,30 56,24 60,18"/>
+              <path strokeWidth="0.7" d="M50,28 C49,24 47,20 45,16"/>
+              <path strokeWidth="0.7" d="M50,28 C51,24 53,20 55,16"/>
+            </g>
+            {/* Petal 3 */}
+            <g transform="rotate(144,50,50)">
+              <path strokeWidth="1.1" d="M44,47 C34,42 24,28 28,13 C32,4 48,4 50,8 C52,4 68,4 72,13 C76,28 66,42 56,47 Z"/>
+              <path strokeWidth="0.7" d="M50,46 C50,36 50,22 50,10"/>
+              <path strokeWidth="0.7" d="M50,36 C48,30 44,24 40,18"/>
+              <path strokeWidth="0.7" d="M50,36 C52,30 56,24 60,18"/>
+              <path strokeWidth="0.7" d="M50,28 C49,24 47,20 45,16"/>
+              <path strokeWidth="0.7" d="M50,28 C51,24 53,20 55,16"/>
+            </g>
+            {/* Petal 4 */}
+            <g transform="rotate(216,50,50)">
+              <path strokeWidth="1.1" d="M44,47 C34,42 24,28 28,13 C32,4 48,4 50,8 C52,4 68,4 72,13 C76,28 66,42 56,47 Z"/>
+              <path strokeWidth="0.7" d="M50,46 C50,36 50,22 50,10"/>
+              <path strokeWidth="0.7" d="M50,36 C48,30 44,24 40,18"/>
+              <path strokeWidth="0.7" d="M50,36 C52,30 56,24 60,18"/>
+              <path strokeWidth="0.7" d="M50,28 C49,24 47,20 45,16"/>
+              <path strokeWidth="0.7" d="M50,28 C51,24 53,20 55,16"/>
+            </g>
+            {/* Petal 5 */}
+            <g transform="rotate(288,50,50)">
+              <path strokeWidth="1.1" d="M44,47 C34,42 24,28 28,13 C32,4 48,4 50,8 C52,4 68,4 72,13 C76,28 66,42 56,47 Z"/>
+              <path strokeWidth="0.7" d="M50,46 C50,36 50,22 50,10"/>
+              <path strokeWidth="0.7" d="M50,36 C48,30 44,24 40,18"/>
+              <path strokeWidth="0.7" d="M50,36 C52,30 56,24 60,18"/>
+              <path strokeWidth="0.7" d="M50,28 C49,24 47,20 45,16"/>
+              <path strokeWidth="0.7" d="M50,28 C51,24 53,20 55,16"/>
+            </g>
+            {/* Seed pod center */}
+            <circle cx="50" cy="50" r="9" strokeWidth="1.1"/>
+            {/* Stamen ring */}
+            <g strokeWidth="1">
+              <line x1="50" y1="39" x2="50" y2="36"/>
+              <line transform="rotate(36,50,50)"  x1="50" y1="39" x2="50" y2="36"/>
+              <line transform="rotate(72,50,50)"  x1="50" y1="39" x2="50" y2="36"/>
+              <line transform="rotate(108,50,50)" x1="50" y1="39" x2="50" y2="36"/>
+              <line transform="rotate(144,50,50)" x1="50" y1="39" x2="50" y2="36"/>
+              <line transform="rotate(180,50,50)" x1="50" y1="39" x2="50" y2="36"/>
+              <line transform="rotate(216,50,50)" x1="50" y1="39" x2="50" y2="36"/>
+              <line transform="rotate(252,50,50)" x1="50" y1="39" x2="50" y2="36"/>
+              <line transform="rotate(288,50,50)" x1="50" y1="39" x2="50" y2="36"/>
+              <line transform="rotate(324,50,50)" x1="50" y1="39" x2="50" y2="36"/>
+            </g>
+            {/* Center dot */}
+            <circle cx="50" cy="50" r="2.5" fill="var(--color-accent, #5b53d6)" stroke="none"/>
+          </LogoSvg>
           <LogoText>
-            <svg width="22" height="22" viewBox="0 0 32 32" fill="none" style={{ color: 'var(--color-accent)' }} aria-hidden>
-              <path d="M16 6L26 16L16 26L6 16Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
-              <circle cx="16" cy="16" r="3.6" fill="currentColor" />
-            </svg>
             Chronicles
           </LogoText>
         </LogoMark>
