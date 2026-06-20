@@ -130,7 +130,7 @@ const NavSectionHeader = styled.button`
   align-items: center;
   gap: 6px;
   width: 100%;
-  padding: 7px 14px 5px;
+  padding: 15px;
   border: none;
   background: transparent;
   border-top: 1px solid var(--border-subtle);
@@ -138,7 +138,7 @@ const NavSectionHeader = styled.button`
   cursor: pointer;
   font-family: var(--font-label);
   font-size: 9.5px;
-  font-weight: 700;
+  font-weight: 300;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text-tertiary);
