@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import type { ReactNode } from 'react';
-import { Icon } from '../../../design-system/components/core/Icon';
+import { Icon } from '../../../../design-system/components/core/Icon';
 
 const Wrapper = styled.label`
   display: inline-flex;
