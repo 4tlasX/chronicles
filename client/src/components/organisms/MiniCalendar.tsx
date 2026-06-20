@@ -34,10 +34,12 @@ const IconSpan = styled.span`
 `;
 
 const ScrollContainer = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
   display: flex;
   gap: 12px;
-  overflow-x: auto;
-  padding: 0 0 8px 0;
+  padding: 0;
   scrollbar-width: thin;
   scrollbar-color: var(--border-subtle) transparent;
 
