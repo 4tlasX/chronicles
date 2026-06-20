@@ -100,7 +100,7 @@ export function ThemeSettings() {
   const themeMode = useUIStore(s => s.themeMode);
   const setThemeMode = useUIStore(s => s.setThemeMode);
   const accentColor = useUIStore(s => s.accentColor);
-  const setHeaderColor = useUIStore(s => s.setHeaderColor);
+  const setAccentColor = useUIStore(s => s.setAccentColor);
   const backgroundImage = useUIStore(s => s.backgroundImage);
   const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
   const backgroundOpacity = useUIStore(s => s.backgroundOpacity);
@@ -112,7 +112,7 @@ export function ThemeSettings() {
   };
 
   const handleColorChange = async (color: string) => {
-    setHeaderColor(color);
+    setAccentColor(color);
     await settingsApi.upsert('accentColor', color).catch(() => {});
   };
 
