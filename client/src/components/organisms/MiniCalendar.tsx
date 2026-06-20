@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 
@@ -58,12 +58,13 @@ const ScrollContainer = styled.div`
 
 const WeeksContainer = styled.div`
   display: flex;
+  width: max-content;
 `;
 
-/* Each week fills the full container width so only one is visible at a time. */
-const Week = styled.div`
-  flex: 0 0 100%;
-  width: 100%;
+/* Each week is exactly the width of the scroll viewport, so one shows at a time. */
+const Week = styled.div<{ $vw: number }>`
+  width: ${({ $vw }) => $vw}px;
+  flex: 0 0 ${({ $vw }) => $vw}px;
   scroll-snap-align: start;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -131,6 +132,7 @@ function toISODateString(d: Date): string {
 export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCalendarProps) {
   const today = useMemo(() => new Date(), []);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [vw, setVw] = useState(0);
 
   // 52 weeks back + 52 weeks forward, Monday-start weeks.
   const weeks = useMemo(() => {
@@ -157,12 +159,23 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
     return weeksArray;
   }, []);
 
-  // Open on the current week (each week is exactly one container width).
+  // Measure the viewport width (responsive) so each week is sized to it.
   useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollLeft = 52 * scrollContainerRef.current.offsetWidth;
-    }
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const measure = () => setVw(el.clientWidth);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
+
+  // Once the width is known, jump to the current week (index 52).
+  useEffect(() => {
+    if (scrollContainerRef.current && vw > 0) {
+      scrollContainerRef.current.scrollLeft = 52 * vw;
+    }
+  }, [vw]);
 
   return (
     <Wrapper>
@@ -174,8 +187,8 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
       </Header>
       <ScrollContainer ref={scrollContainerRef}>
         <WeeksContainer>
-          {weeks.map((weekDays, weekIdx) => (
-            <Week key={weekIdx}>
+          {vw > 0 && weeks.map((weekDays, weekIdx) => (
+            <Week key={weekIdx} $vw={vw}>
               {weekDays.map((date, i) => {
                 const isToday = isSameDay(date, today);
                 const hasEntry = entryDates?.has(toISODateString(date)) ?? false;
