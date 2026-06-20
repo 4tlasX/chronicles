@@ -33,8 +33,10 @@ const IconSpan = styled.span`
 `;
 
 const ScrollContainer = styled.div`
+  width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  scroll-snap-type: x mandatory;
   scrollbar-width: thin;
   scrollbar-color: var(--border-subtle) transparent;
 
@@ -55,16 +57,16 @@ const ScrollContainer = styled.div`
 
 const WeeksContainer = styled.div`
   display: flex;
-  gap: 24px;
-  padding: 8px 0;
 `;
 
+/* Each week fills the full width of the container, so only one shows at a time. */
 const Week = styled.div`
+  flex: 0 0 100%;
+  width: 100%;
+  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex-shrink: 0;
-  align-items: center;
 `;
 
 const WeekdayRow = styled.div`
@@ -80,8 +82,6 @@ const WeekdayLabel = styled.div`
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-tertiary);
-  width: 28px;
-  height: 16px;
 `;
 
 const DaysGrid = styled.div`
@@ -96,9 +96,8 @@ const DayButton = styled.button<{
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  font-size: 12px;
+  height: 32px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1;
   border: none;
@@ -153,13 +152,11 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
     return weeksArray;
   }, []);
 
-  // Scroll to today's week on mount
+  // Scroll to today's week on mount (each week is exactly one container-width)
   useEffect(() => {
     if (scrollContainerRef.current) {
       const todayWeekIndex = 52;
-      const weekWidth = 28 * 7 + 4 * 6 + 24; // 7 buttons + gaps + week gap
-      const scrollLeft = todayWeekIndex * weekWidth - 200;
-      scrollContainerRef.current.scrollLeft = scrollLeft;
+      scrollContainerRef.current.scrollLeft = todayWeekIndex * scrollContainerRef.current.offsetWidth;
     }
   }, []);
 
@@ -176,7 +173,7 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
           {weeks.map((weekDays, weekIdx) => (
             <Week key={weekIdx}>
               <WeekdayRow>
-                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
                   <WeekdayLabel key={i}>{day}</WeekdayLabel>
                 ))}
               </WeekdayRow>
