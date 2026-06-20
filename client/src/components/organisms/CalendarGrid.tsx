@@ -1,6 +1,5 @@
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { stripHtml } from '../../utils/stripHtml.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 
@@ -208,9 +207,9 @@ export function CalendarGrid({
   return (
     <>
       <Header>
-        <NavBtn onClick={onPrevMonth}><FontAwesomeIcon icon={faChevronLeft} /></NavBtn>
+        <NavBtn onClick={onPrevMonth}><Icon name="chevron-left" size={16} strokeWidth={2} /></NavBtn>
         <MonthLabel>{monthLabel}</MonthLabel>
-        <NavBtn onClick={onNextMonth}><FontAwesomeIcon icon={faChevronRight} /></NavBtn>
+        <NavBtn onClick={onNextMonth}><Icon name="chevron-right" size={16} strokeWidth={2} /></NavBtn>
       </Header>
 
       <GridWrapper>

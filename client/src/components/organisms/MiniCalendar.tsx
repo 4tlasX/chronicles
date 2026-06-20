@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 
 interface MiniCalendarProps {
   selectedDate: Date;
@@ -231,7 +230,7 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates, expanded 
     <Wrapper>
       {collapsed ? (
         <ToggleBar onClick={() => setCollapsed(false)}>
-          <FontAwesomeIcon icon={faChevronDown} size="xs" />
+          <Icon name="chevron-down" size={11} strokeWidth={2} />
           <span>{monthLabel}</span>
         </ToggleBar>
       ) : (
@@ -239,7 +238,7 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates, expanded 
           <Header>
             <HeaderNav>
               <NavButton onClick={goToPrevMonth}>
-                <FontAwesomeIcon icon={faChevronLeft} size="xs" />
+                <Icon name="chevron-left" size={11} strokeWidth={2} />
               </NavButton>
             </HeaderNav>
             <HeaderCenter>
@@ -247,7 +246,7 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates, expanded 
             </HeaderCenter>
             <HeaderNav>
               <NavButton onClick={goToNextMonth}>
-                <FontAwesomeIcon icon={faChevronRight} size="xs" />
+                <Icon name="chevron-right" size={11} strokeWidth={2} />
               </NavButton>
             </HeaderNav>
           </Header>

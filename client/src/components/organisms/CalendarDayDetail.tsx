@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { EmptyState } from '../atoms/EmptyState.js';
 import { EditableEntryCard } from './EditableEntryCard.js';
 import type { DecryptedPost } from '@shared/crypto/types';
@@ -96,7 +95,7 @@ export function CalendarDayDetail({ dateStr, entries, allTopics, accentColor, ev
           <Count>{entries.length} {entries.length === 1 ? 'Entry' : 'Entries'}</Count>
         </div>
         <CloseBtn onClick={onClose}>
-          <FontAwesomeIcon icon={faXmark} />
+          <Icon name="x" size={16} strokeWidth={2} />
         </CloseBtn>
       </Header>
 

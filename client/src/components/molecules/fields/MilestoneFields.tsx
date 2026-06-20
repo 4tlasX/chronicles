@@ -1,6 +1,4 @@
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Select } from '../../atoms/Select.js';
 import { DateInput } from '../../atoms/DateInput.js';
 import { Checkbox } from '../../atoms/Checkbox.js';

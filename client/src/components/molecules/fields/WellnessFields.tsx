@@ -1,15 +1,11 @@
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faGlassWater, faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam,
-  faCloudMoon, faDroplet,
-} from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../../design-system/components/core/Icon.jsx';
 import type { WellnessFieldValues } from '../../../types/fields.js';
 export type { WellnessFieldValues } from '../../../types/fields.js';
 
 const WATER_GOAL = 8;
 const SLEEP_GOAL = 10;
-const MOOD_ICONS = [faFaceSadCry, faFaceFrown, faFaceMeh, faFaceSmile, faFaceGrinBeam] as const;
+const MOOD_ICONS: Array<'mood-1' | 'mood-2' | 'mood-3' | 'mood-4' | 'mood-5'> = ['mood-1', 'mood-2', 'mood-3', 'mood-4', 'mood-5'];
 const MOOD_LABELS = ['Very sad', 'Sad', 'Neutral', 'Good', 'Great'] as const;
 const FLOW_OPTIONS = ['spotting', 'light', 'medium', 'heavy'] as const;
 const FLOW_INDEX: Record<string, number> = { '': 0, spotting: 1, light: 2, medium: 3, heavy: 4 };
@@ -128,7 +124,7 @@ export function WellnessFields({ values, onChange, cycleTrackingEnabled, onAutoS
         <GlassRow>
           {Array.from({ length: goal }, (_, i) => (
             <GlassBtn key={i} $filled={i < water} onClick={() => handleGlass(i)} title={`${i + 1} glass${i !== 0 ? 'es' : ''}`} type="button">
-              <FontAwesomeIcon icon={faGlassWater} />
+              <Icon name="droplet" size={20} strokeWidth={2} />
             </GlassBtn>
           ))}
           <GlassCount>{water}/{goal}</GlassCount>
@@ -138,9 +134,9 @@ export function WellnessFields({ values, onChange, cycleTrackingEnabled, onAutoS
       <WSection>
         <WSectionLabel>Mood</WSectionLabel>
         <MoodRow>
-          {MOOD_ICONS.map((icon, i) => (
+          {MOOD_ICONS.map((iconName, i) => (
             <MoodBtn key={i} $active={mood === i + 1} onClick={() => handleMood(i + 1)} title={MOOD_LABELS[i]} type="button">
-              <FontAwesomeIcon icon={icon} />
+              <Icon name={iconName} size={25} strokeWidth={2} />
             </MoodBtn>
           ))}
         </MoodRow>
@@ -151,7 +147,7 @@ export function WellnessFields({ values, onChange, cycleTrackingEnabled, onAutoS
         <GlassRow>
           {Array.from({ length: SLEEP_GOAL }, (_, i) => (
             <GlassBtn key={i} $filled={i < sleep} onClick={() => handleSleep(i)} title={`${i + 1}h`} type="button">
-              <FontAwesomeIcon icon={faCloudMoon} />
+              <Icon name="cloud" size={20} strokeWidth={2} />
             </GlassBtn>
           ))}
           <GlassCount>{sleep > 0 ? `${sleep}h` : '—'}</GlassCount>
@@ -164,7 +160,7 @@ export function WellnessFields({ values, onChange, cycleTrackingEnabled, onAutoS
           <GlassRow>
             {Array.from({ length: 4 }, (_, i) => (
               <GlassBtn key={i} $filled={i < FLOW_INDEX[flow]} onClick={() => handleFlow(FLOW_OPTIONS[i])} title={FLOW_OPTIONS[i]} type="button">
-                <FontAwesomeIcon icon={faDroplet} />
+                <Icon name="droplet" size={20} strokeWidth={2} />
               </GlassBtn>
             ))}
             <GlassCount>{flow || '—'}</GlassCount>
