@@ -26,11 +26,11 @@ const SidebarRoot = styled.aside`
 
 const LogoBlock = styled.div`
   height: 44px;
-  padding: 0 16px;
+  padding: 0 var(--s-4, 16px);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--s-2, 8px);
   flex-shrink: 0;
 `;
 
@@ -54,7 +54,7 @@ const LogoText = styled.span`
 `;
 
 const SearchBlock = styled.div`
-  padding: 10px 12px;
+  padding: var(--s-2, 10px) var(--s-3, 12px);
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
 `;
@@ -62,9 +62,9 @@ const SearchBlock = styled.div`
 const SearchInput = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2, 8px);
   border: 1px solid var(--border-subtle);
-  padding: 5px 10px;
+  padding: var(--s-1, 5px) var(--s-3, 10px);
   background: var(--bg-sunken);
   border-radius: 0;
 `;
