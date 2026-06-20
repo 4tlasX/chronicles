@@ -11,8 +11,8 @@ const Header = styled.button`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 8px 14px;
-  font-size: 14px;
+  padding: var(--s-2, 8px) var(--s-3, 12px);
+  font-size: var(--text-sm, 15px);
   font-weight: 500;
   color: var(--text-secondary);
   background: none;
@@ -22,10 +22,10 @@ const Header = styled.button`
 `;
 
 const Body = styled.div`
-  padding: 0 14px 10px;
+  padding: 0 var(--s-3, 12px) var(--s-2, 8px);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--s-1, 4px);
 `;
 
 interface ExpandableSectionProps {

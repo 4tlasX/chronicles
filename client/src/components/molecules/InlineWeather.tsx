@@ -55,8 +55,8 @@ function geocodeCity(cityName: string): Promise<{ latitude: number; longitude: n
 const Wrap = styled.div<{ $light?: boolean }>`
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
+  gap: var(--s-1, 4px);
+  font-family: var(--font-label, ${({ theme }) => theme.fontFamily.mono});
   font-size: 11px;
   letter-spacing: 0.1em;
   color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
@@ -64,14 +64,14 @@ const Wrap = styled.div<{ $light?: boolean }>`
 `;
 
 const Temp = styled.span<{ $light?: boolean }>`
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-family: var(--font-sans, ${({ theme }) => theme.fontFamily.sans});
   font-size: 11px;
   font-weight: 500;
   color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
 `;
 
 const HiLo = styled.span<{ $light?: boolean }>`
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
+  font-family: var(--font-sans, ${({ theme }) => theme.fontFamily.sans});
   font-size: 10px;
   color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
   opacity: 0.7;

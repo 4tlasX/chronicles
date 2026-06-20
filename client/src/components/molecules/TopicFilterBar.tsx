@@ -7,12 +7,12 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 const Bar = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 8px 16px 4px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
+  gap: var(--s-2, 8px);
+  margin: var(--s-2, 8px) var(--s-4, 16px) var(--s-1, 4px);
+  padding: var(--s-2, 8px) var(--s-3, 12px);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md, 1px);
 `;
 
 const IconWrap = styled.span<{ $color: string }>`
@@ -21,29 +21,29 @@ const IconWrap = styled.span<{ $color: string }>`
 `;
 
 const Text = styled.span`
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  color: ${({ theme }) => theme.colors.text};
+  font-size: var(--text-sm, 15px);
+  color: var(--text-primary);
 `;
 
 const Bold = styled.strong`
-  font-weight: ${({ theme }) => theme.fontWeight.semibold};
+  font-weight: 600;
 `;
 
 const ClearBtn = styled.button`
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
-  color: ${({ theme }) => theme.colors.text};
+  gap: var(--s-1, 4px);
+  padding: var(--s-1, 4px) var(--s-3, 12px);
+  font-size: var(--text-xs, 13px);
+  color: var(--text-primary);
   background: transparent;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md, 1px);
   cursor: pointer;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--bg-hover);
   }
 `;
 
