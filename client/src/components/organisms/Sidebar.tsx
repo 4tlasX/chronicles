@@ -53,34 +53,6 @@ const LogoText = styled.span`
   color: var(--text-primary);
 `;
 
-const SearchBlock = styled.div`
-  padding: var(--s-2, 10px) var(--s-3, 12px);
-  border-bottom: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-`;
-
-const SearchInput = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--s-2, 8px);
-  border: 1px solid var(--border-subtle);
-  padding: var(--s-1, 5px) var(--s-3, 10px);
-  background: var(--bg-sunken);
-  border-radius: 0;
-`;
-
-const SearchIcon = styled.span`
-  font-size: 13px;
-  color: var(--text-tertiary);
-  flex-shrink: 0;
-`;
-
-const SearchText = styled.span`
-  font-size: 12.5px;
-  color: var(--text-tertiary);
-  font-family: var(--font-sans);
-`;
-
 const NavScroll = styled.nav`
   flex: 1;
   overflow-y: auto;
@@ -313,16 +285,6 @@ export function Sidebar() {
         </LogoDiamond>
         <LogoText>Chronicles</LogoText>
       </LogoBlock>
-
-      {/* Search block */}
-      <SearchBlock>
-        <SearchInput>
-          <SearchIcon>
-            <Icon name="search" size={13} strokeWidth={2} />
-          </SearchIcon>
-          <SearchText>Search ⌘K</SearchText>
-        </SearchInput>
-      </SearchBlock>
 
       {/* Nav scroll */}
       <NavScroll>
