@@ -107,6 +107,10 @@ const PreviewText = styled.div`
 
 const TimeStamp = styled.div<{ $active?: boolean; $accent?: string }>`
   grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
   font-family: var(--font-label);
   font-size: 9.5px;
   font-weight: 700;
@@ -115,6 +119,15 @@ const TimeStamp = styled.div<{ $active?: boolean; $accent?: string }>`
   white-space: nowrap;
   padding-top: var(--s-1, 4px);
   color: ${({ $active, $accent }) => $active ? ($accent || 'var(--color-accent)') : 'var(--text-tertiary)'};
+`;
+
+const DateLabel = styled.div`
+  font-size: 8px;
+  line-height: 1;
+`;
+
+const TimeLabel = styled.div`
+  line-height: 1;
 `;
 
 const BookmarkIcon = styled.span`
@@ -136,6 +149,7 @@ export function EntryCard({
 
   const d = new Date(date);
   const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
 
   const title = extractTitle(content, previewText);
   const preview = extractPreview(content);
@@ -148,7 +162,8 @@ export function EntryCard({
         {subtitle && <PreviewText>{subtitle}</PreviewText>}
       </ContentArea>
       <TimeStamp $active={active} $accent={topicColor}>
-        {timeStr}
+        <DateLabel>{dateStr}</DateLabel>
+        <TimeLabel>{timeStr}</TimeLabel>
         {isFavorite && (
           <BookmarkIcon
             onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
