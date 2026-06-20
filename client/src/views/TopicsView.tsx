@@ -19,7 +19,7 @@ export function TopicsView() {
   const topics = useEntriesStore(s => s.topics);
   const entries = useEntriesStore(s => s.decryptedEntries);
   const setTopics = useEntriesStore(s => s.setTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [mobileShowEntries, setMobileShowEntries] = useState(false);
@@ -108,7 +108,7 @@ export function TopicsView() {
         selectedTopicId={selectedTopicId}
         totalEntryCount={entries.length}
         entryCounts={entryCounts}
-        headerColor={headerColor}
+        accentColor={accentColor}
         hiddenMobile={mobileShowEntries}
         editingId={editingId}
         editName={editName}
@@ -128,7 +128,7 @@ export function TopicsView() {
         title={selectedTopic ? selectedTopic.name : 'All Topics'}
         entries={filteredEntries}
         allTopics={allTopics}
-        headerColor={headerColor}
+        accentColor={accentColor}
         hiddenMobile={!mobileShowEntries}
         onMobileBack={() => setMobileShowEntries(false)}
         onBackToJournal={() => { setSelectedTopicId(null); setMobileShowEntries(false); }}

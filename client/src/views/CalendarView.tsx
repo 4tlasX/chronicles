@@ -17,7 +17,7 @@ export function CalendarView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
@@ -100,7 +100,7 @@ export function CalendarView() {
           currentMonth={currentMonth}
           selectedDate={selectedDate}
           entriesByDate={entriesByDate}
-          accentColor={headerColor}
+          accentColor={accentColor}
           eventTopicIds={eventTopicIds}
           onPrevMonth={goToPrev}
           onNextMonth={goToNext}
@@ -115,7 +115,7 @@ export function CalendarView() {
           dateStr={selectedDate}
           entries={selectedEntries}
           allTopics={allTopics}
-          accentColor={headerColor}
+          accentColor={accentColor}
           eventTopicIds={eventTopicIds}
           onClose={() => setSelectedDate(null)}
         />

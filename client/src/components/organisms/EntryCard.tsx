@@ -132,7 +132,7 @@ export function EntryCard({
   active, onClick, onDelete, onTopicClick, onToggleBookmark,
   isCompleted, isFavorite, previewText,
 }: EntryCardProps) {
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const d = new Date(date);
   const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -162,7 +162,7 @@ export function EntryCard({
   );
 
   return onDelete ? (
-    <SwipeActions onDelete={onDelete} accentColor={headerColor}>
+    <SwipeActions onDelete={onDelete} accentColor={accentColor}>
       {inner}
     </SwipeActions>
   ) : inner;

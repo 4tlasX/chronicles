@@ -49,7 +49,7 @@ export function useInitializeData() {
         // Apply theme settings
         const settingsMap: Record<string, unknown> = {};
         for (const s of settingsData) settingsMap[s.key] = s.value;
-        if (typeof settingsMap.headerColor === 'string') setHeaderColor(settingsMap.headerColor);
+        if (typeof settingsMap.accentColor === 'string') setHeaderColor(settingsMap.accentColor);
         if (typeof settingsMap.accentColor === 'string') {
           setAccentColor(settingsMap.accentColor);
           document.documentElement.style.setProperty('--color-accent', settingsMap.accentColor);

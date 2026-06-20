@@ -158,7 +158,7 @@ const TopicDot = styled.span`
 interface EditableEntryCardProps {
   entry: DecryptedPost;
   topic?: Topic;
-  headerColor: string;
+  accentColor: string;
   isEditing: boolean;
   onSelect: () => void;
   onClose: () => void;
@@ -173,7 +173,7 @@ interface EditableEntryCardProps {
   autoExpandFields?: boolean;
 }
 
-export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain, hidePreview, compactMargin, hideDate, hideTopic, autoExpandFields }: EditableEntryCardProps) {
+export function EditableEntryCard({ entry, topic, accentColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain, hidePreview, compactMargin, hideDate, hideTopic, autoExpandFields }: EditableEntryCardProps) {
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const removeEntry = useEntriesStore(s => s.removeEntry);
@@ -384,8 +384,8 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
   };
 
   return (
-    <Card $accentColor={headerColor} $flat={hideDate} $bare={hidePreview}>
-      {!hidePreview && <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing}>
+    <Card $accentColor={accentColor} $flat={hideDate} $bare={hidePreview}>
+      {!hidePreview && <SwipeActions onDelete={handleDelete} accentColor={accentColor} disabled={isEditing}>
       <Row role="button" tabIndex={0} onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }} $centered $active={isEditing} $noDate={hideDate}>
         {!hideDate && (
           <DateCol>
@@ -451,7 +451,7 @@ export function EditableEntryCard({ entry, topic, headerColor, isEditing, onSele
             }
             editor={<Editor content={editContent} onChange={setEditContent} placeholder="Edit entry..." />}
             fields={renderFields()}
-            accentColor={headerColor}
+            accentColor={accentColor}
             saving={saving}
             status={status}
             onSave={handleSave}

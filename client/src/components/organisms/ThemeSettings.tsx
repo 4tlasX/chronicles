@@ -99,7 +99,7 @@ const SubLabel = styled.p`
 export function ThemeSettings() {
   const themeMode = useUIStore(s => s.themeMode);
   const setThemeMode = useUIStore(s => s.setThemeMode);
-  const headerColor = useUIStore(s => s.headerColor);
+  const accentColor = useUIStore(s => s.accentColor);
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
   const backgroundImage = useUIStore(s => s.backgroundImage);
   const setBackgroundImage = useUIStore(s => s.setBackgroundImage);
@@ -113,7 +113,7 @@ export function ThemeSettings() {
 
   const handleColorChange = async (color: string) => {
     setHeaderColor(color);
-    await settingsApi.upsert('headerColor', color).catch(() => {});
+    await settingsApi.upsert('accentColor', color).catch(() => {});
   };
 
   const handleImageChange = async (image: string) => {
@@ -126,7 +126,7 @@ export function ThemeSettings() {
     await settingsApi.upsert('backgroundOpacity', String(opacity)).catch(() => {});
   };
 
-  const presetActive = ACCENT_PRESETS.some(p => p.value.toLowerCase() === headerColor.toLowerCase());
+  const presetActive = ACCENT_PRESETS.some(p => p.value.toLowerCase() === accentColor.toLowerCase());
 
   return (
     <>
@@ -149,7 +149,7 @@ export function ThemeSettings() {
           {ACCENT_PRESETS.map(p => (
             <PresetChip
               key={p.value}
-              $active={headerColor.toLowerCase() === p.value.toLowerCase()}
+              $active={accentColor.toLowerCase() === p.value.toLowerCase()}
               $color={p.value}
               onClick={() => handleColorChange(p.value)}
               title={p.label}
@@ -163,7 +163,7 @@ export function ThemeSettings() {
         <SubLabel>{presetActive ? 'Custom' : 'Custom (selected)'}</SubLabel>
         <ColorPicker
           colors={HEADER_COLORS}
-          selected={headerColor}
+          selected={accentColor}
           onChange={handleColorChange}
         />
       </Section>

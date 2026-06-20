@@ -146,7 +146,7 @@ const MicBtn = styled(NewEntryBtn)``;
 interface TopicQuickFilterProps {
   topics: Topic[];
   selectedTopicId: number | null;
-  headerColor: string;
+  accentColor: string;
   entryCounts: Map<number, number>;
   onSelect: (topicId: number | null) => void;
   totalCount?: number;

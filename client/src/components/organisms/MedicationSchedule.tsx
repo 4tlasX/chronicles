@@ -179,7 +179,7 @@ interface MedicationScheduleProps {
 export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const [viewDate, setViewDate] = useState(() => toDateStr(new Date()));
   const [doseLogs, setDoseLogs] = useState<Record<string, DoseLogRecord>>({});
@@ -325,10 +325,10 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
             <span>{completedDoses} of {totalDoses} doses taken ({progressPercent}%)</span>
           </ProgressStats>
           <ProgressTrack>
-            <ProgressFill $percent={progressPercent} $color={headerColor} />
+            <ProgressFill $percent={progressPercent} $color={accentColor} />
           </ProgressTrack>
           {progressPercent === 100 && (
-            <AllDoneMsg $color={headerColor}>All medications taken for today!</AllDoneMsg>
+            <AllDoneMsg $color={accentColor}>All medications taken for today!</AllDoneMsg>
           )}
         </ProgressWrapper>
       )}
@@ -352,14 +352,14 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
               const isSaving = savingDose === key;
 
               return (
-                <DoseCard key={`${dose.medicationPostId}-${time}-${i}`} $taken={isTaken} $accentColor={headerColor}>
+                <DoseCard key={`${dose.medicationPostId}-${time}-${i}`} $taken={isTaken} $accentColor={accentColor}>
                   <DoseCheckButton
                     $taken={isTaken}
-                    $color={headerColor}
+                    $color={accentColor}
                     disabled={isSaving}
                     onClick={() => handleCheckDose(dose, !isTaken)}
                     aria-label={isTaken ? 'Mark as not taken' : 'Mark as taken'}
-                    style={{ color: isTaken ? headerColor : 'var(--text-tertiary)' }}
+                    style={{ color: isTaken ? accentColor : 'var(--text-tertiary)' }}
                   >
                     <Icon
                       name={isTaken ? 'check-circle' : 'circle'}
@@ -368,11 +368,11 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
                     />
                   </DoseCheckButton>
                   <DoseInfo>
-                    <DoseName $taken={isTaken} $color={headerColor}>
+                    <DoseName $taken={isTaken} $color={accentColor}>
                       {dose.medicationName} {dose.dosage}
                     </DoseName>
                     {isTaken && log?.takenAt && (
-                      <DoseTakenAt $color={headerColor}>(taken at {log.takenAt})</DoseTakenAt>
+                      <DoseTakenAt $color={accentColor}>(taken at {log.takenAt})</DoseTakenAt>
                     )}
                   </DoseInfo>
                   <StatusBadge>

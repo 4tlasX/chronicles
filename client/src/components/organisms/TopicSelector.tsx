@@ -125,7 +125,7 @@ export function TopicSelector({ selectedId, onSelect, topics, filled }: TopicSel
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const selected = topics.find(t => t.id === selectedId);
 
@@ -151,7 +151,7 @@ export function TopicSelector({ selectedId, onSelect, topics, filled }: TopicSel
       <Trigger $filled={filled ?? selectedId !== null} onClick={() => setOpen(!open)}>
         {selected ? (
           <>
-            <TopicIcon $color={headerColor}><FontAwesomeIcon icon={getTopicIcon(selected.icon)} /></TopicIcon>
+            <TopicIcon $color={accentColor}><FontAwesomeIcon icon={getTopicIcon(selected.icon)} /></TopicIcon>
             {selected.name}
           </>
         ) : (
@@ -188,7 +188,7 @@ export function TopicSelector({ selectedId, onSelect, topics, filled }: TopicSel
                   $active={selectedId === t.id}
                   onClick={() => { onSelect(t.id); setOpen(false); setSearch(''); }}
                 >
-                  <TopicIcon $color={headerColor}><FontAwesomeIcon icon={getTopicIcon(t.icon)} /></TopicIcon>
+                  <TopicIcon $color={accentColor}><FontAwesomeIcon icon={getTopicIcon(t.icon)} /></TopicIcon>
                   {t.name}
                 </Item>
               ))

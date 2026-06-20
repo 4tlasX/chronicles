@@ -110,7 +110,7 @@ export function JournalView() {
   const setViewMode = useUIStore(s => s.setViewMode);
   const selectedTopicId = useUIStore(s => s.selectedTopicId);
   const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
   const setHeaderColor = useUIStore(s => s.setHeaderColor);
   const setThemeMode = useUIStore(s => s.setThemeMode);
@@ -265,7 +265,7 @@ export function JournalView() {
         // Apply saved theme settings
         const settingsMap: Record<string, unknown> = {};
         for (const s of settingsData) settingsMap[s.key] = s.value;
-        if (typeof settingsMap.headerColor === 'string') setHeaderColor(settingsMap.headerColor);
+        if (typeof settingsMap.accentColor === 'string') setHeaderColor(settingsMap.accentColor);
         if (settingsMap.themeMode === 'light' || settingsMap.themeMode === 'dark') setThemeMode(settingsMap.themeMode);
         if (typeof settingsMap.backgroundImage === 'string') setBackgroundImage(settingsMap.backgroundImage);
         if (typeof settingsMap.backgroundOpacity === 'string') setBackgroundOpacity(parseFloat(settingsMap.backgroundOpacity as string));
@@ -571,7 +571,7 @@ export function JournalView() {
             <TopicQuickFilter
               topics={topics}
               selectedTopicId={selectedTopicId}
-              headerColor={headerColor}
+              accentColor={accentColor}
               entryCounts={entryCounts}
               onSelect={setSelectedTopicId}
               totalCount={decryptedEntries.length}

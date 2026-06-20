@@ -122,7 +122,7 @@ export function TopicSelectorDropdown({
 }: TopicSelectorDropdownProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState('');
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   useEffect(() => {
     if (!isOpen) {
@@ -174,7 +174,7 @@ export function TopicSelectorDropdown({
               onClose();
             }}
           >
-            <TopicIcon $color={headerColor}>
+            <TopicIcon $color={accentColor}>
               <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
             </TopicIcon>
             {topic.name}

@@ -137,7 +137,7 @@ const SortToggle = styled.button`
   &:hover { color: ${({ theme }) => theme.colors.text}; }
 `;
 
-const AllRow = styled.button<{ $active?: boolean; $headerColor?: string }>`
+const AllRow = styled.button<{ $active?: boolean; $accentColor?: string }>`
   display: grid;
   grid-template-columns: 14px 22px 1fr auto;
   gap: 10px;
@@ -221,7 +221,7 @@ const AddIconBtn = styled.button`
   &:hover { background: ${({ theme }) => theme.colors.surface}; }
 `;
 
-const AddSubmitBtn = styled.button<{ $headerColor?: string }>`
+const AddSubmitBtn = styled.button<{ $accentColor?: string }>`
   padding: 6px 14px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   font-size: 12px;
@@ -229,7 +229,7 @@ const AddSubmitBtn = styled.button<{ $headerColor?: string }>`
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #fff;
-  background: ${({ $headerColor }) => $headerColor || '#4E6E7E'};
+  background: ${({ $accentColor }) => $accentColor || '#4E6E7E'};
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius.sm}px;
   cursor: pointer;
@@ -244,7 +244,7 @@ interface TopicSidebarPanelProps {
   selectedTopicId: number | null;
   totalEntryCount: number;
   entryCounts: Map<number, number>;
-  headerColor: string;
+  accentColor: string;
   hiddenMobile?: boolean;
   // Edit form state
   editingId: number | null;
@@ -263,7 +263,7 @@ interface TopicSidebarPanelProps {
 }
 
 export function TopicSidebarPanel({
-  topics, selectedTopicId, totalEntryCount, entryCounts, headerColor, hiddenMobile,
+  topics, selectedTopicId, totalEntryCount, entryCounts, accentColor, hiddenMobile,
   editingId, editName, editIcon, onEditNameChange, onEditIconChange, onEditSave, onEditCancel,
   onSelectTopic, onStartEdit, onDelete, onDragEnd, onAdd,
 }: TopicSidebarPanelProps) {
@@ -351,7 +351,7 @@ export function TopicSidebarPanel({
 
       <List>
         {!isFiltering && (
-          <AllRow $active={selectedTopicId === null} $headerColor={headerColor} onClick={() => onSelectTopic(null)}>
+          <AllRow $active={selectedTopicId === null} $accentColor={accentColor} onClick={() => onSelectTopic(null)}>
             <span />
             <AllName>All Topics</AllName>
           </AllRow>
@@ -365,7 +365,7 @@ export function TopicSidebarPanel({
                   topic={topic}
                   isActive={selectedTopicId === topic.id}
                   count={entryCounts.get(topic.id) || 0}
-                  headerColor={headerColor}
+                  accentColor={accentColor}
                   filterText={filter}
                   onSelect={() => onSelectTopic(topic.id)}
                   onEdit={() => onStartEdit(topic)}
@@ -375,7 +375,7 @@ export function TopicSidebarPanel({
                   <TopicEditForm
                     name={editName}
                     icon={editIcon}
-                    accentColor={headerColor}
+                    accentColor={accentColor}
                     cancelLabel="Close"
                     onNameChange={onEditNameChange}
                     onIconChange={onEditIconChange}
@@ -401,7 +401,7 @@ export function TopicSidebarPanel({
                     topic={topic}
                     isActive={selectedTopicId === topic.id}
                     count={entryCounts.get(topic.id) || 0}
-                    headerColor={headerColor}
+                    accentColor={accentColor}
                     onSelect={() => onSelectTopic(topic.id)}
                     onEdit={() => onStartEdit(topic)}
                     onDelete={() => onDelete(topic.id)}
@@ -410,7 +410,7 @@ export function TopicSidebarPanel({
                     <TopicEditForm
                       name={editName}
                       icon={editIcon}
-                      accentColor={headerColor}
+                      accentColor={accentColor}
                       cancelLabel="Close"
                       onNameChange={onEditNameChange}
                       onIconChange={onEditIconChange}
@@ -442,7 +442,7 @@ export function TopicSidebarPanel({
         <AddIconBtn title="Choose icon">
           <FontAwesomeIcon icon={faPlus} />
         </AddIconBtn>
-        <AddSubmitBtn $headerColor={headerColor} onClick={handleAdd} disabled={!addName.trim() || isAdding}>
+        <AddSubmitBtn $accentColor={accentColor} onClick={handleAdd} disabled={!addName.trim() || isAdding}>
           {isAdding ? 'Adding…' : 'Add'}
         </AddSubmitBtn>
       </AddBar>

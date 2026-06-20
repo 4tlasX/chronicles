@@ -213,7 +213,7 @@ const EditWrapper = styled.div`
 interface GoalCardProps {
   goal: GoalEntry;
   milestones: MilestoneEntryData[];
-  headerColor: string;
+  accentColor: string;
   isEditing: boolean;
   onSelect: () => void;
   onClose: () => void;
@@ -224,7 +224,7 @@ interface GoalCardProps {
   onCreateMilestone: (goalId: number, title: string) => Promise<void>;
 }
 
-export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, onClose, onSaved, onToggleMilestone, onUnlinkMilestone, onLinkMilestone, onCreateMilestone }: GoalCardProps) {
+export function GoalCard({ goal, milestones, accentColor, isEditing, onSelect, onClose, onSaved, onToggleMilestone, onUnlinkMilestone, onLinkMilestone, onCreateMilestone }: GoalCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: goal.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -285,15 +285,15 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
   };
 
   return (
-    <Card ref={setNodeRef} style={style} $isDragging={isDragging} $editing={isEditing} $accentColor={headerColor}>
-      <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing || isDragging}>
+    <Card ref={setNodeRef} style={style} $isDragging={isDragging} $editing={isEditing} $accentColor={accentColor}>
+      <SwipeActions onDelete={handleDelete} accentColor={accentColor} disabled={isEditing || isDragging}>
       <CardHeader onClick={onSelect} $active={isEditing}>
         <ContentWrap>
           <TitleRow>
             <Title $completed={goal.goalStatus === 'completed'}>{goal.title}</Title>
             <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
           </TitleRow>
-          {linkedMilestones.length > 0 && <div style={{ marginTop: 6 }}><ProgressBar percent={progress} color={headerColor} /></div>}
+          {linkedMilestones.length > 0 && <div style={{ marginTop: 6 }}><ProgressBar percent={progress} color={accentColor} /></div>}
           {linkedMilestones.length > 0 && (
             <FooterMeta>
               <span>{completedCount}/{linkedMilestones.length} milestones</span>
@@ -360,13 +360,13 @@ export function GoalCard({ goal, milestones, headerColor, isEditing, onSelect, o
                   placeholder="Or create new milestone..."
                   disabled={creatingMilestone}
                 />
-                <AddBtn $color={headerColor} type="submit" disabled={!newMilestoneTitle.trim() || creatingMilestone}>
+                <AddBtn $color={accentColor} type="submit" disabled={!newMilestoneTitle.trim() || creatingMilestone}>
                   {creatingMilestone ? '...' : 'Add'}
                 </AddBtn>
               </AddRow>
             </>
           }
-          accentColor={headerColor}
+          accentColor={accentColor}
           saving={saving}
           status={status}
           onSave={handleSave}

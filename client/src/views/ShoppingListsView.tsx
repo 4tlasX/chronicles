@@ -45,7 +45,7 @@ export function ShoppingListsView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries   = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const [tab, setTab] = useState<Tab>('current');
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -113,7 +113,7 @@ export function ShoppingListsView() {
               key={entry.id}
               entry={entry}
               topic={shoppingListTopic}
-              headerColor={headerColor}
+              accentColor={accentColor}
               isEditing={editingId === entry.id}
               onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
               onClose={() => setEditingId(null)}

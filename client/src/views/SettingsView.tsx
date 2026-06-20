@@ -222,6 +222,7 @@ export function SettingsView() {
       for (const s of settings) map[s.key] = s.value;
       if (typeof map.timezone === 'string') setTimezone(map.timezone);
       if (map.themeMode === 'light' || map.themeMode === 'dark') setThemeMode(map.themeMode);
+      if (typeof map.accentColor === 'string') setAccentColor(map.accentColor);
       if (typeof map.backgroundImage === 'string') setBackgroundImage(map.backgroundImage);
       if (typeof map.backgroundOpacity === 'string') setBackgroundOpacity(parseFloat(map.backgroundOpacity as string));
       const f: Record<string, boolean> = {};

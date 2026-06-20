@@ -228,7 +228,7 @@ interface MilestoneCardProps {
   tasks: TaskEntryData[];
   goalTitle: string | null;
   goalOptions: { id: number; title: string }[];
-  headerColor: string;
+  accentColor: string;
   isEditing: boolean;
   onSelect: () => void;
   onClose: () => void;
@@ -239,7 +239,7 @@ interface MilestoneCardProps {
   onLinkTask?: (milestoneId: number, taskId: number) => void;
 }
 
-export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, headerColor, isEditing, onSelect, onClose, onSaved, onToggleTask, onUnlinkTask, onCreateTask, onLinkTask }: MilestoneCardProps) {
+export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, accentColor, isEditing, onSelect, onClose, onSaved, onToggleTask, onUnlinkTask, onCreateTask, onLinkTask }: MilestoneCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: milestone.id });
   const dragStyle = { transform: CSS.Transform.toString(transform), transition };
 
@@ -302,15 +302,15 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
   };
 
   return (
-    <Card ref={setNodeRef} style={dragStyle} $editing={isEditing} $dragging={isDragging} $accentColor={headerColor}>
-      <SwipeActions onDelete={handleDelete} accentColor={headerColor} disabled={isEditing || isDragging}>
+    <Card ref={setNodeRef} style={dragStyle} $editing={isEditing} $dragging={isDragging} $accentColor={accentColor}>
+      <SwipeActions onDelete={handleDelete} accentColor={accentColor} disabled={isEditing || isDragging}>
       <CardHeader onClick={onSelect} $active={isEditing}>
         <ContentWrap>
           <TitleRow>
             <Title $completed={milestone.isCompleted}>{milestone.title}</Title>
             <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
           </TitleRow>
-          {linkedTasks.length > 0 && <div style={{ marginTop: 6 }}><ProgressBar percent={progress} color={headerColor} /></div>}
+          {linkedTasks.length > 0 && <div style={{ marginTop: 6 }}><ProgressBar percent={progress} color={accentColor} /></div>}
           <FooterMeta>
             {goalTitle && <><span>Goal: {goalTitle}</span><span>·</span></>}
             <span>{milestone.isCompleted ? 'Completed' : milestone.milestoneStatus === 'in_progress' ? 'In Progress' : 'Not Started'}</span>
@@ -375,13 +375,13 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, header
                   placeholder="Or create new task..."
                   disabled={creatingTask}
                 />
-                <AddTaskBtn $color={headerColor} type="submit" disabled={!newTaskTitle.trim() || creatingTask}>
+                <AddTaskBtn $color={accentColor} type="submit" disabled={!newTaskTitle.trim() || creatingTask}>
                   {creatingTask ? '...' : 'Add'}
                 </AddTaskBtn>
               </AddTaskRow>
             </>
           }
-          accentColor={headerColor}
+          accentColor={accentColor}
           saving={saving}
           status={status}
           onSave={handleSave}

@@ -108,7 +108,7 @@ const SubmitButton = styled.button<{ $disabled?: boolean }>`
 
 export function QuickEntry({ onCreateEntry }: QuickEntryProps) {
   const topics = useEntriesStore((s) => s.topics);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const [content, setContent] = useState('');
   const [quickTopicId, setQuickTopicId] = useState<number | null>(null);

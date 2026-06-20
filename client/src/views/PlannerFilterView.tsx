@@ -402,7 +402,7 @@ export function PlannerFilterView() {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const navigate = useNavigate();
   const { encryptPost } = useEncryption();
 
@@ -730,7 +730,7 @@ export function PlannerFilterView() {
       {activeTopic && (
         <NewEntryCard
           topic={activeTopic}
-          headerColor={headerColor}
+          accentColor={accentColor}
           onCreated={(id) => { setEditingId(id); setAddType(null); }}
           hideButton
           isOpen={addType !== null}
@@ -762,7 +762,7 @@ export function PlannerFilterView() {
                 <FieldLabel>Filter</FieldLabel>
                 <SavedDropdown
                   $active={activeSavedId !== null}
-                  $color={headerColor}
+                  $color={accentColor}
                   value={activeSavedId ?? ''}
                   onChange={e => {
                     const sf = savedFilters.find(f => f.id === e.target.value);
@@ -796,7 +796,7 @@ export function PlannerFilterView() {
             <Row>
               <FieldLabel>Show</FieldLabel>
               {ITEM_TYPES.map(({ value, label }) => (
-                <TypeChip key={value} $active={pending.itemTypes.includes(value)} $color={headerColor} onClick={() => toggleType(value)}>
+                <TypeChip key={value} $active={pending.itemTypes.includes(value)} $color={accentColor} onClick={() => toggleType(value)}>
                   {label}
                 </TypeChip>
               ))}
@@ -846,7 +846,7 @@ export function PlannerFilterView() {
                     if (e.key === 'Escape') { setShowSaveInput(false); setSaveName(''); }
                   }}
                 />
-                <SaveBtn $color={headerColor} onClick={handleSave}>Save</SaveBtn>
+                <SaveBtn $color={accentColor} onClick={handleSave}>Save</SaveBtn>
                 <GhostBtn onClick={() => { setShowSaveInput(false); setSaveName(''); }}>Cancel</GhostBtn>
               </SaveRow>
             ) : (
@@ -857,7 +857,7 @@ export function PlannerFilterView() {
                   </GhostBtn>
                 </ActionLeft>
                 <ApplyBtn
-                  $color={headerColor}
+                  $color={accentColor}
                   $pending={hasPendingChanges || (!isApplied && !isFilterEmpty(pending))}
                   onClick={handleApply}
                   disabled={isFilterEmpty(pending)}
@@ -884,7 +884,7 @@ export function PlannerFilterView() {
           <>
             {results && results.goalResults.length > 0 && (
               <>
-                <SectionHeader $color={headerColor}>
+                <SectionHeader $color={accentColor}>
                   Goals <ResultCount>({results.goalResults.length})</ResultCount>
                 </SectionHeader>
                 <DayGroupedList
@@ -892,7 +892,7 @@ export function PlannerFilterView() {
                   getDate={g => g.createdAt}
                   getKey={g => g.id}
                   renderItem={g => (
-                    <GoalCard goal={g} milestones={milestones} headerColor={headerColor}
+                    <GoalCard goal={g} milestones={milestones} accentColor={accentColor}
                       isEditing={editingId === g.id} onSelect={() => setEditingId(prev => prev === g.id ? null : g.id)}
                       onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
                       onToggleMilestone={handleToggleMilestone} onUnlinkMilestone={async () => {}}
@@ -904,7 +904,7 @@ export function PlannerFilterView() {
 
             {results && results.milestoneResults.length > 0 && (
               <>
-                <SectionHeader $color={headerColor}>
+                <SectionHeader $color={accentColor}>
                   Milestones <ResultCount>({results.milestoneResults.length})</ResultCount>
                 </SectionHeader>
                 <DayGroupedList
@@ -914,7 +914,7 @@ export function PlannerFilterView() {
                   renderItem={m => (
                     <MilestoneCard milestone={m} tasks={tasks}
                       goalTitle={m.parentGoalId ? (goalTitles.get(m.parentGoalId) || null) : null}
-                      goalOptions={goalOptions} headerColor={headerColor}
+                      goalOptions={goalOptions} accentColor={accentColor}
                       isEditing={editingId === m.id} onSelect={() => setEditingId(prev => prev === m.id ? null : m.id)}
                       onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
                       onToggleTask={handleToggleTask} onUnlinkTask={async () => {}}
@@ -926,7 +926,7 @@ export function PlannerFilterView() {
 
             {results && results.taskResults.length > 0 && (
               <>
-                <SectionHeader $color={headerColor}>
+                <SectionHeader $color={accentColor}>
                   Tasks <ResultCount>({results.taskResults.length})</ResultCount>
                 </SectionHeader>
                 <DayGroupedList
@@ -938,7 +938,7 @@ export function PlannerFilterView() {
                     if (!entry) return null;
                     const topic = allTopics.find(tp => tp.id === t.taxonomyId);
                     return (
-                      <EditableEntryCard entry={entry} topic={topic} headerColor={headerColor}
+                      <EditableEntryCard entry={entry} topic={topic} accentColor={accentColor}
                         isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
                         onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
                         metaFields={[]} hideDate />
@@ -950,7 +950,7 @@ export function PlannerFilterView() {
 
             {results && results.todoResults.length > 0 && (
               <>
-                <SectionHeader $color={headerColor}>
+                <SectionHeader $color={accentColor}>
                   Todos <ResultCount>({results.todoResults.length})</ResultCount>
                 </SectionHeader>
                 <DayGroupedList
@@ -962,7 +962,7 @@ export function PlannerFilterView() {
                     if (!entry) return null;
                     const topic = allTopics.find(tp => tp.id === t.taxonomyId);
                     return (
-                      <EditableEntryCard entry={entry} topic={topic} headerColor={headerColor}
+                      <EditableEntryCard entry={entry} topic={topic} accentColor={accentColor}
                         isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
                         onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
                         metaFields={[]} hideDate />

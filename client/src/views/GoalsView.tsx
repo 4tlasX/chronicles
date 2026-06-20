@@ -32,7 +32,7 @@ export function GoalsView() {
   const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const navigate = useNavigate();
   const location = useLocation();
   const { encryptPost } = useEncryption();
@@ -335,7 +335,7 @@ export function GoalsView() {
         {activeAddTopic && (
           <NewEntryCard
             topic={activeAddTopic}
-            headerColor={headerColor}
+            accentColor={accentColor}
             onCreated={(id) => setEditingId(id)}
             hideButton
             isOpen={isAddOpen}
@@ -348,7 +348,7 @@ export function GoalsView() {
           : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleGoalDragEnd}>
               <SortableContext items={orderedGoals.map(g => g.id)} strategy={verticalListSortingStrategy}>
                 {orderedGoals.map(g => (
-                  <GoalCard key={g.id} goal={g} milestones={milestones} headerColor={headerColor}
+                  <GoalCard key={g.id} goal={g} milestones={milestones} accentColor={accentColor}
                     isEditing={editingId === g.id} onSelect={() => handleSelect(g.id)}
                     onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
                     onToggleMilestone={handleToggleMilestone} onUnlinkMilestone={handleUnlinkMilestone}
@@ -366,7 +366,7 @@ export function GoalsView() {
                 {orderedMilestones.map(m => (
                   <MilestoneCard key={m.id} milestone={m} tasks={tasks}
                     goalTitle={m.parentGoalId ? (goalTitles.get(m.parentGoalId) || null) : null}
-                    goalOptions={goalOptions} headerColor={headerColor}
+                    goalOptions={goalOptions} accentColor={accentColor}
                     isEditing={editingId === m.id} onSelect={() => handleSelect(m.id)}
                     onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
                     onToggleTask={handleToggleTask} onUnlinkTask={handleUnlinkTask}
@@ -391,7 +391,7 @@ export function GoalsView() {
                     <EditableEntryCard
                       entry={entry}
                       topic={topic}
-                      headerColor={headerColor}
+                      accentColor={accentColor}
                       isEditing={editingId === t.id}
                       onSelect={() => handleSelect(t.id)}
                       onClose={() => setEditingId(null)}
@@ -418,7 +418,7 @@ export function GoalsView() {
                     <EditableEntryCard
                       entry={entry}
                       topic={topic}
-                      headerColor={headerColor}
+                      accentColor={accentColor}
                       isEditing={editingId === t.id}
                       onSelect={() => handleSelect(t.id)}
                       onClose={() => setEditingId(null)}

@@ -44,12 +44,10 @@ interface UIState {
 
   // Theme (runtime overrides from settings)
   themeMode: 'light' | 'dark';
-  headerColor: string;
   accentColor: string;
   backgroundImage: string;
   backgroundOpacity: number;
   setThemeMode: (mode: 'light' | 'dark') => void;
-  setHeaderColor: (color: string) => void;
   setAccentColor: (color: string) => void;
   setBackgroundImage: (image: string) => void;
   setBackgroundOpacity: (opacity: number) => void;
@@ -110,12 +108,10 @@ export const useUIStore = create<UIState>((set) => ({
   setPencilOnly: (v) => set({ pencilOnly: v }),
 
   themeMode: 'light',
-  headerColor: '#5b53d6',
   accentColor: '#5b53d6',
   backgroundImage: '',
   backgroundOpacity: 0.7,
   setThemeMode: (mode) => set({ themeMode: mode }),
-  setHeaderColor: (color) => set({ headerColor: color }),
   setAccentColor: (color) => set({ accentColor: color }),
   setBackgroundImage: (image) => set({ backgroundImage: image }),
   setBackgroundOpacity: (opacity) => set({ backgroundOpacity: opacity }),

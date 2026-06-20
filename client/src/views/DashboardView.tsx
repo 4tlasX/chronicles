@@ -3132,7 +3132,7 @@ export function DashboardView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const displayName = useUIStore(s => s.displayName);
   const sidebarCollapsed = useUIStore(s => s.sidebarCollapsed);
   const setSidebarCollapsed = useUIStore(s => s.setSidebarCollapsed);
@@ -3377,22 +3377,22 @@ export function DashboardView() {
             if (id.startsWith('topic-')) {
               const topicId = parseInt(id.slice(6));
               // Use quick entry widget for Meals topic
-              if (topicId === mealsTopicId) return <MealsQuickCard accentColor={headerColor} {...drag} />;
-              return <TopicWidget topicId={topicId} accentColor={headerColor} {...drag} />;
+              if (topicId === mealsTopicId) return <MealsQuickCard accentColor={accentColor} {...drag} />;
+              return <TopicWidget topicId={topicId} accentColor={accentColor} {...drag} />;
             }
             switch (id as StaticCardId) {
-              case 'priorities':  return <PrioritiesCard accentColor={headerColor} {...drag} />;
-              case 'tasks':       return <TasksCard accentColor={headerColor} tasks={tasks} taskTopicId={taskTopicId} {...drag} />;
-              case 'quick-entry': return <QuickEntryCard accentColor={headerColor} topics={allTopics} {...drag} />;
-              case 'meals-quick': return <MealsQuickCard accentColor={headerColor} {...drag} />;
-              case 'events':      return <EventsCard accentColor={headerColor} events={events} {...drag} />;
-              case 'shopping':    return <ShoppingCard accentColor={headerColor} listEntry={shoppingListEntry ? { id: shoppingListEntry.id, content: shoppingListEntry.content, metadata: shoppingListEntry.metadata as Record<string, unknown> } : null} {...drag} />;
-              case 'meds':        return <MedsCard accentColor={headerColor} {...drag} />;
-              case 'weather':       return <WeatherCard accentColor={headerColor} {...drag} />;
-              case 'menu-plan':     return <MenuPlanCard accentColor={headerColor} {...drag} />;
-              case 'affirmations':  return <AffirmationsCard accentColor={headerColor} {...drag} />;
-              case 'wellness':      return <WellnessCheckInCard accentColor={headerColor} {...drag} />;
-              case 'mini-calendar': return <MiniCalendarCard accentColor={headerColor} {...drag} />;
+              case 'priorities':  return <PrioritiesCard accentColor={accentColor} {...drag} />;
+              case 'tasks':       return <TasksCard accentColor={accentColor} tasks={tasks} taskTopicId={taskTopicId} {...drag} />;
+              case 'quick-entry': return <QuickEntryCard accentColor={accentColor} topics={allTopics} {...drag} />;
+              case 'meals-quick': return <MealsQuickCard accentColor={accentColor} {...drag} />;
+              case 'events':      return <EventsCard accentColor={accentColor} events={events} {...drag} />;
+              case 'shopping':    return <ShoppingCard accentColor={accentColor} listEntry={shoppingListEntry ? { id: shoppingListEntry.id, content: shoppingListEntry.content, metadata: shoppingListEntry.metadata as Record<string, unknown> } : null} {...drag} />;
+              case 'meds':        return <MedsCard accentColor={accentColor} {...drag} />;
+              case 'weather':       return <WeatherCard accentColor={accentColor} {...drag} />;
+              case 'menu-plan':     return <MenuPlanCard accentColor={accentColor} {...drag} />;
+              case 'affirmations':  return <AffirmationsCard accentColor={accentColor} {...drag} />;
+              case 'wellness':      return <WellnessCheckInCard accentColor={accentColor} {...drag} />;
+              case 'mini-calendar': return <MiniCalendarCard accentColor={accentColor} {...drag} />;
             }
           };
           const renderCol = (ids: CardId[]) => ids.map(id => (

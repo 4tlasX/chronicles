@@ -328,7 +328,7 @@ export function EntryForm({
   dictationControlRef,
 }: EntryFormProps) {
   const isFavorite = !!customFields._isFavorite;
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const [fieldsExpanded, setFieldsExpanded] = useState(true);
   const [userFieldsExpanded, setUserFieldsExpanded] = useState(true);
   const [toolbarOpen, setToolbarOpen] = useState(false);
@@ -489,7 +489,7 @@ export function EntryForm({
               <IconBtn
                 type="button"
                 $active={isFavorite}
-                $activeColor={headerColor}
+                $activeColor={accentColor}
                 aria-label={isFavorite ? 'Remove bookmark' : 'Bookmark entry'}
                 title="Bookmark"
                 onClick={() => entryId && onBookmark?.()}

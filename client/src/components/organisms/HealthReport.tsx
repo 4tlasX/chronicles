@@ -374,12 +374,12 @@ interface HealthReportProps {
   exercises: DecryptedExercise[];
   wellness: DecryptedWellness[];
   period: PeriodType;
-  headerColor: string;
+  accentColor: string;
 }
 
 /* ── Component ── */
 
-export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, period, headerColor }: HealthReportProps) {
+export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, period, accentColor }: HealthReportProps) {
   const today = new Date();
   const correlations = useMemo(() => {
     if (symptoms.length === 0) return [];
@@ -466,20 +466,20 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
       {/* Summary stats */}
       <StatsGrid>
         <StatCard>
-          <StatValue $color={headerColor}>{symptoms.length}</StatValue>
+          <StatValue $color={accentColor}>{symptoms.length}</StatValue>
           <StatLabel>Symptoms</StatLabel>
         </StatCard>
         <StatCard>
-          <StatValue $color={headerColor}>{foods.length}</StatValue>
+          <StatValue $color={accentColor}>{foods.length}</StatValue>
           <StatLabel>Food Entries</StatLabel>
           {calorieSummary && <StatSub>{calorieSummary.total.toLocaleString()} cal total</StatSub>}
         </StatCard>
         <StatCard>
-          <StatValue $color={headerColor}>{medLogs.length}</StatValue>
+          <StatValue $color={accentColor}>{medLogs.length}</StatValue>
           <StatLabel>Doses Taken</StatLabel>
         </StatCard>
         <StatCard>
-          <StatValue $color={headerColor}>{exercises.length}</StatValue>
+          <StatValue $color={accentColor}>{exercises.length}</StatValue>
           <StatLabel>Workouts</StatLabel>
           {totalExerciseMin > 0 && <StatSub>{totalExerciseMin} min total</StatSub>}
         </StatCard>
@@ -489,17 +489,17 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
       {wellnessSummary && (
         <WellnessGrid>
           <StatCard>
-            <StatValue $color={headerColor}>{wellnessSummary.avgWater.toFixed(1)}</StatValue>
+            <StatValue $color={accentColor}>{wellnessSummary.avgWater.toFixed(1)}</StatValue>
             <StatLabel>Avg Water</StatLabel>
             <StatSub>/ 8 glasses · {wellnessSummary.days} days</StatSub>
           </StatCard>
           <StatCard>
-            <StatValue $color={headerColor}>{wellnessSummary.avgMood > 0 ? wellnessSummary.avgMood.toFixed(1) : '—'}</StatValue>
+            <StatValue $color={accentColor}>{wellnessSummary.avgMood > 0 ? wellnessSummary.avgMood.toFixed(1) : '—'}</StatValue>
             <StatLabel>Avg Mood</StatLabel>
             <StatSub>/ 5</StatSub>
           </StatCard>
           <StatCard>
-            <StatValue $color={headerColor}>{wellnessSummary.avgSleep > 0 ? `${wellnessSummary.avgSleep.toFixed(1)}h` : '—'}</StatValue>
+            <StatValue $color={accentColor}>{wellnessSummary.avgSleep > 0 ? `${wellnessSummary.avgSleep.toFixed(1)}h` : '—'}</StatValue>
             <StatLabel>Avg Sleep</StatLabel>
             {wellnessSummary.avgSleepQ > 0 && <StatSub>Quality {wellnessSummary.avgSleepQ.toFixed(1)}/5</StatSub>}
           </StatCard>
@@ -511,7 +511,7 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
         <SectionCard>
           <SectionTitle>Wellness Trends</SectionTitle>
           <TrendChartLegend>
-            <TrendLegendItem><TrendLegendDot $color={headerColor} /><span>Water (glasses)</span></TrendLegendItem>
+            <TrendLegendItem><TrendLegendDot $color={accentColor} /><span>Water (glasses)</span></TrendLegendItem>
             <TrendLegendItem><TrendLegendDot $color="#5A8A6A" /><span>Mood (×2)</span></TrendLegendItem>
             <TrendLegendItem><TrendLegendDot $color="#B8965A" /><span>Sleep (hours ÷ 2)</span></TrendLegendItem>
           </TrendChartLegend>
@@ -526,7 +526,7 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
               return (
                 <WellnessTrendCol key={i} title={`${pt.date}: ${pt.waterGlasses} water, mood ${pt.moodScore}/5, ${pt.sleepHours}h sleep`}>
                   <div style={{ display: 'flex', alignItems: 'flex-end', gap: 1, flex: 1, justifyContent: 'center' }}>
-                    <WellnessTrendBar $height={waterH} $color={headerColor} style={{ width: 5 }} />
+                    <WellnessTrendBar $height={waterH} $color={accentColor} style={{ width: 5 }} />
                     {moodH > 0  && <WellnessTrendBar $height={moodH}  $color="#5A8A6A" style={{ width: 5 }} />}
                     {sleepH > 0 && <WellnessTrendBar $height={sleepH} $color="#B8965A" style={{ width: 5 }} />}
                   </div>
@@ -589,7 +589,7 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
       )}
 
       {/* Symptom frequency */}
-      <FrequencyChart data={symptomFrequency} title="Symptom Frequency" color={headerColor} />
+      <FrequencyChart data={symptomFrequency} title="Symptom Frequency" color={accentColor} />
 
       {/* Severity trend */}
       <SeverityTrendChart data={severityTrend} title="Severity Trend Over Time" />
@@ -619,9 +619,9 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
         <SectionCard>
           <SectionTitle>Calorie Summary</SectionTitle>
           <CalorieGrid>
-            <CalorieStat><CalorieValue $color={headerColor}>{calorieSummary.total.toLocaleString()}</CalorieValue><CalorieLabel>Total Calories</CalorieLabel></CalorieStat>
-            <CalorieStat><CalorieValue $color={headerColor}>{calorieSummary.avgDaily.toLocaleString()}</CalorieValue><CalorieLabel>Avg Daily</CalorieLabel></CalorieStat>
-            <CalorieStat><CalorieValue $color={headerColor}>{calorieSummary.avgPerMeal.toLocaleString()}</CalorieValue><CalorieLabel>Avg per Meal</CalorieLabel></CalorieStat>
+            <CalorieStat><CalorieValue $color={accentColor}>{calorieSummary.total.toLocaleString()}</CalorieValue><CalorieLabel>Total Calories</CalorieLabel></CalorieStat>
+            <CalorieStat><CalorieValue $color={accentColor}>{calorieSummary.avgDaily.toLocaleString()}</CalorieValue><CalorieLabel>Avg Daily</CalorieLabel></CalorieStat>
+            <CalorieStat><CalorieValue $color={accentColor}>{calorieSummary.avgPerMeal.toLocaleString()}</CalorieValue><CalorieLabel>Avg per Meal</CalorieLabel></CalorieStat>
           </CalorieGrid>
           {Object.keys(calorieSummary.byMeal).length > 0 && (
             <HDivider>
@@ -658,7 +658,7 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
             return (
               <ExFreqRow key={data.period}>
                 <ExFreqLabel>{data.period}</ExFreqLabel>
-                <ExFreqBar><ExFreqFill $width={maxCount > 0 ? (data.count / maxCount) * 100 : 0} $color={headerColor} /></ExFreqBar>
+                <ExFreqBar><ExFreqFill $width={maxCount > 0 ? (data.count / maxCount) * 100 : 0} $color={accentColor} /></ExFreqBar>
                 <ExFreqValue>{data.count} ({data.totalDuration} min)</ExFreqValue>
               </ExFreqRow>
             );

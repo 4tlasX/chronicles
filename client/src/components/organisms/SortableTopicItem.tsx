@@ -10,7 +10,7 @@ const Wrapper = styled.div<{ $isDragging?: boolean }>`
   opacity: ${({ $isDragging }) => $isDragging ? 0.5 : 1};
 `;
 
-const Row = styled.div<{ $active?: boolean; $headerColor?: string }>`
+const Row = styled.div<{ $active?: boolean; $accentColor?: string }>`
   display: grid;
   grid-template-columns: 14px 22px 1fr auto auto;
   gap: 10px;
@@ -66,8 +66,8 @@ const Name = styled.span`
   min-width: 0;
 `;
 
-const MatchMark = styled.mark<{ $headerColor?: string }>`
-  background: ${({ $headerColor }) => $headerColor ? `${$headerColor}26` : 'rgba(78,110,126,0.15)'};
+const MatchMark = styled.mark<{ $accentColor?: string }>`
+  background: ${({ $accentColor }) => $accentColor ? `${$accentColor}26` : 'rgba(78,110,126,0.15)'};
   color: inherit;
   padding: 0 2px;
   border-radius: 2px;
@@ -113,33 +113,33 @@ interface SortableTopicItemProps {
   topic: { id: number; name: string; icon: string | null; color: string | null };
   isActive: boolean;
   count: number;
-  headerColor: string;
+  accentColor: string;
   filterText?: string;
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-function highlightMatch(name: string, filter: string, headerColor: string) {
+function highlightMatch(name: string, filter: string, accentColor: string) {
   if (!filter) return <>{name}</>;
   const idx = name.toLowerCase().indexOf(filter.toLowerCase());
   if (idx === -1) return <>{name}</>;
   return (
     <>
       {name.slice(0, idx)}
-      <MatchMark $headerColor={headerColor}>{name.slice(idx, idx + filter.length)}</MatchMark>
+      <MatchMark $accentColor={accentColor}>{name.slice(idx, idx + filter.length)}</MatchMark>
       {name.slice(idx + filter.length)}
     </>
   );
 }
 
-export function SortableTopicItem({ topic, isActive, count, headerColor, filterText = '', onSelect, onEdit, onDelete }: SortableTopicItemProps) {
+export function SortableTopicItem({ topic, isActive, count, accentColor, filterText = '', onSelect, onEdit, onDelete }: SortableTopicItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: topic.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
     <Wrapper ref={setNodeRef} style={style} $isDragging={isDragging}>
-      <Row $active={isActive} $headerColor={headerColor} onClick={onSelect}>
+      <Row $active={isActive} $accentColor={accentColor} onClick={onSelect}>
         <DragHandleBtn {...attributes} {...listeners} onClick={e => e.stopPropagation()}>
           <Icon name="grip" size={14} strokeWidth={2} />
         </DragHandleBtn>
@@ -148,7 +148,7 @@ export function SortableTopicItem({ topic, isActive, count, headerColor, filterT
           <FontAwesomeIcon icon={ICON_MAP[topic.icon || ''] || getTopicIcon(topic.icon)} />
         </TopicIcon>
 
-        <Name>{highlightMatch(topic.name, filterText, headerColor)}</Name>
+        <Name>{highlightMatch(topic.name, filterText, accentColor)}</Name>
 
 <Actions className="tp-actions">
           <ActionBtn title="Edit" onClick={e => { e.stopPropagation(); onEdit(); }}>

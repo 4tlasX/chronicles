@@ -354,7 +354,7 @@ interface TopicEntryListProps {
   kicker?: string;
   entries: DecryptedPost[];
   allTopics: Topic[];
-  headerColor: string;
+  accentColor: string;
   hiddenMobile?: boolean;
   onMobileBack: () => void;
   onBackToJournal: () => void;
@@ -365,7 +365,7 @@ interface TopicEntryListProps {
 }
 
 export function TopicEntryList({
-  title, kicker, entries, allTopics, headerColor, hiddenMobile,
+  title, kicker, entries, allTopics, accentColor, hiddenMobile,
   onMobileBack, onBackToJournal, backLabel = 'Back', selectedTopic, entryCount, hideTitle,
 }: TopicEntryListProps) {
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
@@ -487,7 +487,7 @@ export function TopicEntryList({
                         <EditableEntryCard
                           entry={entry}
                           topic={getTopicForEntry(entry)}
-                          headerColor={headerColor}
+                          accentColor={accentColor}
                           isEditing
                           hidePreview
                           onSelect={() => setExpandedId(null)}

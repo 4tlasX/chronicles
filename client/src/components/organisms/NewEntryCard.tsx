@@ -68,7 +68,7 @@ const EditWrapper = styled.div`
 interface NewEntryCardProps {
   /** Topic to pre-tag the new entry with */
   topic: Topic;
-  headerColor: string;
+  accentColor: string;
   onCreated?: (id: number) => void;
   /** Hide the built-in trigger button — caller provides their own */
   hideButton?: boolean;
@@ -77,7 +77,7 @@ interface NewEntryCardProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export function NewEntryCard({ topic, headerColor, onCreated, hideButton, isOpen: isOpenProp, onOpenChange }: NewEntryCardProps) {
+export function NewEntryCard({ topic, accentColor, onCreated, hideButton, isOpen: isOpenProp, onOpenChange }: NewEntryCardProps) {
   const { encryptPost } = useEncryption();
   const cycleTrackingEnabled = useUIStore(s => s.cycleTrackingEnabled);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
@@ -179,8 +179,8 @@ export function NewEntryCard({ topic, headerColor, onCreated, hideButton, isOpen
   if (!isOpen) {
     if (hideButton) return null;
     return (
-      <Card $accentColor={headerColor}>
-        <AddButton $color={headerColor} onClick={() => setIsOpen(true)}>
+      <Card $accentColor={accentColor}>
+        <AddButton $color={accentColor} onClick={() => setIsOpen(true)}>
           <Icon name="plus" size={14} strokeWidth={2} /> New {topic.name} Entry
         </AddButton>
       </Card>
@@ -188,12 +188,12 @@ export function NewEntryCard({ topic, headerColor, onCreated, hideButton, isOpen
   }
 
   return (
-    <Card $accentColor={headerColor}>
+    <Card $accentColor={accentColor}>
       <EditWrapper>
         <InlineEditPanel
           editor={<Editor content={content} onChange={setContent} placeholder={`Write a new ${topic.name.toLowerCase()} entry...`} />}
           fields={renderFields()}
-          accentColor={headerColor}
+          accentColor={accentColor}
           saving={saving}
           status={status}
           onSave={handleSave}

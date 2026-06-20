@@ -281,13 +281,13 @@ function R({ children }: { children: React.ReactNode }) {
 }
 
 export function App() {
-  const headerColor = useUIStore(s => s.headerColor);
+  const accentColor = useUIStore(s => s.accentColor);
   const themeMode = useUIStore(s => s.themeMode);
   const isDark = themeMode === 'dark';
   const activeTheme = isDark ? darkTheme : lightTheme;
 
   useEffect(() => {
-    const color = headerColor || '#5b53d6';
+    const color = accentColor || '#5b53d6';
     const [r, g, b] = hexToRgbParts(color);
 
     root.setAttribute('data-theme', isDark ? 'dark' : 'light');
@@ -324,7 +324,7 @@ export function App() {
     /* Legacy vars for existing components that depend on them */
     root.style.setProperty('--focus-color', color);
     root.style.setProperty('--focus-color-rgb', `${r},${g},${b}`);
-  }, [headerColor, isDark]);
+  }, [accentColor, isDark]);
 
   return (
     <ThemeProvider theme={activeTheme}>

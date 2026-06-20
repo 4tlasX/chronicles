@@ -108,7 +108,7 @@ export function CalendarDayDetail({ dateStr, entries, allTopics, accentColor, ev
               key={entry.id}
               entry={entry}
               topic={getTopicForEntry(entry)}
-              headerColor={accentColor}
+              accentColor={accentColor}
               isEditing={editingId === entry.id}
               onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
               onClose={() => setEditingId(null)}

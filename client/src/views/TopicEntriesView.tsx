@@ -81,7 +81,7 @@ export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], 
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const headerColor = useUIStore(s => s.headerColor) || '#4A5568';
+  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -176,7 +176,7 @@ export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], 
           <div data-print-hide>
             <NewEntryCard
               topic={addTopic}
-              headerColor={headerColor}
+              accentColor={accentColor}
               hideButton
               isOpen={isAddOpen}
               onOpenChange={setIsAddOpen}
@@ -194,7 +194,7 @@ export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], 
               <EditableEntryCard
                 entry={entry}
                 topic={getTopicForEntry(entry)}
-                headerColor={headerColor}
+                accentColor={accentColor}
                 isEditing={editingId === entry.id}
                 onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
                 onClose={() => setEditingId(null)}
