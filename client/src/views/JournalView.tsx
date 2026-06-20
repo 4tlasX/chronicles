@@ -28,6 +28,7 @@ import { useUIStore } from '../stores/uiStore.js';
 import { entries as entriesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
 import { getOrCreateJournalTopic } from '../utils/getOrCreateJournalTopic.js';
 import { stripHtml, summarizeUserFields } from '../utils/stripHtml.js';
+import { toDateStr } from '../utils/dateUtils.js';
 import type { EncryptedPost } from '@shared/crypto/types';
 
 const DateFilterBar = styled.div`
@@ -128,6 +129,15 @@ export function JournalView() {
       if (taxId) counts.set(taxId, (counts.get(taxId) || 0) + 1);
     }
     return counts;
+  }, [decryptedEntries]);
+
+  const entryDates = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of decryptedEntries) {
+      const d = e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt as unknown as string);
+      set.add(toDateStr(d));
+    }
+    return set;
   }, [decryptedEntries]);
 
   const selectedDate = useUIStore(s => s.selectedDate);
@@ -593,7 +603,7 @@ export function JournalView() {
               <MiniCalendar
                 selectedDate={selectedDate}
                 onSelectDate={(date) => { setSelectedDate(date); setCalendarExpanded(false); }}
-                expanded={true}
+                entryDates={entryDates}
               />
             )}
             {viewMode === 'search' && <SearchPanel />}

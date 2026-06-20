@@ -101,7 +101,9 @@ const DayNum = styled.span<{ $isToday?: boolean }>`
 
 const EntryDot = styled.span<{ $isToday?: boolean }>`
   position: absolute;
-  bottom: 3px;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 4px;
   height: 4px;
   border-radius: 50%;
