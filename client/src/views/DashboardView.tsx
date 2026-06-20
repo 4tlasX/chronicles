@@ -143,7 +143,8 @@ const PageHeader = styled.div`
   margin-bottom: 28px;
   padding-bottom: 28px;
   border-bottom: 2px solid var(--color-accent);
-  @media (max-width: 640px) { gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  flex-wrap: nowrap;
+  @media (max-width: 640px) { gap: 12px; margin-bottom: 24px; }
 `;
 
 const GreetingBlock = styled.div`
@@ -151,6 +152,7 @@ const GreetingBlock = styled.div`
   flex-direction: row;
   align-items: flex-end;
   gap: 16px;
+  min-width: 0;
 `;
 
 const SidebarToggleBtn = styled.button`
@@ -246,6 +248,7 @@ const InlineWeatherWrap = styled.div`
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
+  flex-shrink: 0;
 `;
 
 const InlineTemp = styled.div`
