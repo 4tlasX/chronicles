@@ -61,6 +61,10 @@ const LIGHT_CSS_VARS: Record<string, string> = {
   '--color-danger':      '#d8483f',  '--color-danger-subtle':  '#fae4e2',
   '--color-info':        '#2f7fd8',  '--color-info-subtle':    '#e1eefb',
 
+  /* DS neutral grays for light theme */
+  '--neutral-300': '#e4e6ec',
+  '--neutral-700': '#a0a0aa',
+
   /* ── Legacy aliases → DS values ── */
   '--paper':             '#ffffff',
   '--paper-deep':        '#f5f6f8',
@@ -111,6 +115,10 @@ const DARK_CSS_VARS: Record<string, string> = {
   '--color-danger':      '#d8483f',  '--color-danger-subtle':  '#3a1e1c',
   '--color-info':        '#2f7fd8',  '--color-info-subtle':    '#16283a',
 
+  /* DS neutral grays for dark theme */
+  '--neutral-300': '#3a3e50',
+  '--neutral-700': '#74747f',
+
   /* ── Legacy aliases → DS values ── */
   '--paper':             '#1b1d26',
   '--paper-deep':        '#13151e',
@@ -142,6 +150,7 @@ const DARK_CSS_VARS: Record<string, string> = {
 /* Structural tokens that never change with theme or accent.
    Radii are the DS "sharp/squared" scale; fonts are Work Sans + Open Sans. */
 const STATIC_CSS_VARS: Record<string, string> = {
+  /* Legacy spacing tokens (--s-*) */
   '--r-sm':  '0',
   '--r-md':  '1px',
   '--r-lg':  '2px',
@@ -157,6 +166,50 @@ const STATIC_CSS_VARS: Record<string, string> = {
   '--s-8':   '48px',
   '--s-9':   '64px',
   '--s-10':  '96px',
+
+  /* Design system spacing tokens (--space-*) */
+  '--space-1': '4px',
+  '--space-2': '8px',
+  '--space-3': '12px',
+  '--space-4': '16px',
+  '--space-5': '20px',
+  '--space-8': '48px',
+
+  /* Design system radius tokens (--radius-*) */
+  '--radius-sm':   '0px',
+  '--radius-md':   '1px',
+  '--radius-lg':   '2px',
+  '--radius-full': '999px',
+
+  /* Design system text tokens (--text-*) */
+  '--text-xs':     '13px',
+  '--text-sm':     '14px',
+  '--text-base':   '16px',
+  '--text-md':     '17px',
+
+  /* Design system font weight tokens */
+  '--weight-medium':    '500',
+  '--weight-semibold':  '600',
+
+  /* Design system transition tokens */
+  '--transition-colors': 'color 200ms ease-out, background-color 200ms ease-out, border-color 200ms ease-out',
+  '--duration-instant':  '0ms',
+  '--duration-fast':     '150ms',
+  '--duration-base':     '200ms',
+  '--ease-out':          'cubic-bezier(0.33, 0.66, 0.66, 1)',
+
+  /* Design system shadow tokens */
+  '--shadow-sm':    '0 1px 2px rgba(20, 20, 30, 0.04)',
+  '--shadow-ring':  '0 0 0 3px var(--color-accent, #00b4d8), 0 1px 2px rgba(20, 20, 30, 0.08)',
+
+  /* Design system tracking (letter-spacing) */
+  '--tracking-tight': '-0.01em',
+  '--leading-normal': '1.5',
+
+  /* Design system color reference (neutral grays - these are overridden per theme below) */
+  '--neutral-300': '#e4e6ec',
+  '--neutral-700': '#2e3140',
+
   /* DS font roles */
   '--font-display': "'Work Sans', ui-sans-serif, system-ui, -apple-system, sans-serif",
   '--font-sans':    "'Open Sans', ui-sans-serif, system-ui, -apple-system, sans-serif",

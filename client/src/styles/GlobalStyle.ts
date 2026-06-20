@@ -1,5 +1,8 @@
 import { createGlobalStyle } from 'styled-components';
 
+/* Import design-system component styles */
+import '../../../design-system/components/core.css';
+
 export const GlobalStyle = createGlobalStyle`
   *, *::before, *::after {
     box-sizing: border-box;
