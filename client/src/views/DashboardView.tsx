@@ -333,15 +333,10 @@ const DashCard = styled.div`
   flex-direction: column;
   background: transparent;
   border: none;
-  border-top: 1px solid var(--border-subtle);
   border-radius: 0;
   overflow: visible;
   padding-top: 0;
   min-width: 0;
-
-  &:first-of-type {
-    border-top: none;
-  }
 `;
 
 const CardHeader = styled.div`
@@ -473,9 +468,8 @@ const InlineInput = styled.input`
 `;
 
 const QuickEditorWrap = styled.div`
-  border: 1px solid var(--border-subtle);
-  border-radius: 0;
-  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
   margin-bottom: 0;
 
   > div { min-height: 120px; height: auto; }
@@ -490,9 +484,13 @@ const QuickEditorWrap = styled.div`
     min-height: 130px;
     height: auto;
     color: var(--text-primary);
+    outline: none;
   }
 
-  &:focus-within { border-color: var(--border-default); }
+  &:focus-within {
+    border-bottom-color: var(--border-default);
+    background: transparent;
+  }
 `;
 
 const SaveRow = styled.div`
@@ -536,12 +534,12 @@ const SaveBtn = styled.button<{ $accent: string; $active?: boolean }>`
   letter-spacing: 0.14em;
   text-transform: uppercase;
   background: transparent;
-  color: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--text-disabled)'};
-  border: 1px solid ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--border-default)'};
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
   border-radius: var(--r-full, 999px);
-  cursor: ${({ $active }) => $active ? 'pointer' : 'default'};
+  cursor: ${({ $active }) => $active ? 'pointer' : 'not-allowed'};
   transition: background 150ms ease, color 150ms ease;
-  &:hover:not(:disabled) { ${({ $active }) => $active ? 'background: var(--color-accent-subtle);' : ''} }
+  &:hover:not(:disabled) { background: var(--color-accent-subtle); }
 `;
 
 const StatusText = styled.span`
@@ -767,6 +765,9 @@ function SortableDashCard({ id, children }: { id: CardId; children: (drag: DragP
 
 const CardWrapper = styled.div`
   position: relative;
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
 `;
 
 const RemoveBtn = styled.button`
@@ -1572,7 +1573,10 @@ function TasksCard({ accentColor, tasks, taskTopicId, dragAttributes, dragListen
         {completed.map(t => (
           <ItemRow key={t.id} $done>
             <CheckBtn $done $color={accentColor} onClick={() => handleToggle(t)}>
-              <Icon name="check-circle" size={18} strokeWidth={2} />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <path d="M22 4 12 14.01l-3-3" />
+              </svg>
             </CheckBtn>
             <ItemText $done>{stripHtml(t.content).slice(0, 80)}</ItemText>
           </ItemRow>
@@ -1830,30 +1834,26 @@ const MedRow = styled.div<{ $taken: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 6px 0;
+  gap: 12px;
+  padding: 8px 0;
   opacity: ${({ $taken }) => $taken ? 0.6 : 1};
   border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: 0; }
 `;
 
 const MedCircle = styled.button<{ $taken: boolean; $color: string }>`
-  width: 18px; height: 18px; min-width: 18px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0; color: ${({ $taken, $color }) => $taken ? $color : 'var(--border-subtle)'}; font-size: 12px; padding: 0;
+  border: none; background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 12px; padding: 0; color: ${({ $color }) => $color};
   transition: all 0.15s;
   &:disabled { opacity: 0.5; cursor: wait; }
 `;
 
 const MedName = styled.span<{ $taken: boolean }>`
-  font-size: 13.5px;
-  font-weight: 400;
-  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink, var(--text-primary));
   text-decoration: ${({ $taken }) => $taken ? 'line-through' : 'none'};
-  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1978,7 +1978,7 @@ function InlineWeather() {
   return (
     <InlineWeatherWrap>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Icon name="sun" size={30} strokeWidth={2.4} style={{ color: 'var(--color-accent)' }} />
+        <Icon name="sun" size={30} strokeWidth={1.3} style={{ color: 'var(--color-accent)' }} />
         <InlineTemp>{current.temp}°</InlineTemp>
       </div>
       <WeatherCity>{cityName && cityName.split(',')[0]}</WeatherCity>
@@ -2115,7 +2115,7 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
     <DashCard>
       <CardHeader>
         <CardIconWrap>
-          <Icon name="sun" size={16} strokeWidth={2.4} />
+          <Icon name="sun" size={16} strokeWidth={1.3} />
         </CardIconWrap>
         <CardTitle>Weather</CardTitle>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
@@ -2141,7 +2141,7 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
                   <Icon
                     name={isToday ? wmoIcon(current.code) : wmoIcon(day.code)}
                     size={isToday ? 18 : 13}
-                    strokeWidth={2.4}
+                    strokeWidth={1.3}
                     style={{ flexShrink: 0 }}
                   />
                   {isToday ? (
@@ -2153,7 +2153,7 @@ function WeatherCard({ accentColor, dragAttributes, dragListeners }: { accentCol
                   ) : (
                     <>
                       <WeatherCondition>{wmoLabel(day.code)}</WeatherCondition>
-                      {day.precip > 20 && <WeatherPrecip><Icon name="droplet" size={12} strokeWidth={2.4} style={{ marginRight: 3 }} />{day.precip}%</WeatherPrecip>}
+                      {day.precip > 20 && <WeatherPrecip><Icon name="droplet" size={12} strokeWidth={1.3} style={{ marginRight: 3 }} />{day.precip}%</WeatherPrecip>}
                       <WeatherHiLo>H:{day.max}° L:{day.min}°</WeatherHiLo>
                     </>
                   )}
@@ -2719,11 +2719,20 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
           const key = `${dose.medicationPostId}-${dose.time.substring(0, 5)}`;
           return (
             <MedRow key={`${key}-${i}`} $taken={isTaken}>
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                <MedName $taken={isTaken}>{dose.medicationName}</MedName>
+                <MedTimeLabel style={{ marginTop: 2 }}>{formatTime12h(dose.time)}{dose.dosage ? ` · ${dose.dosage}` : ''}</MedTimeLabel>
+              </div>
               <MedCircle $taken={isTaken} $color={accentColor} disabled={saving === key} onClick={() => handleToggle(dose)}>
-                <Icon name={isTaken ? "check-circle" : "circle"} size={18} strokeWidth={2} />
+                {isTaken ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <path d="M22 4 12 14.01l-3-3" />
+                  </svg>
+                ) : (
+                  <Icon name="circle" size={18} strokeWidth={2} />
+                )}
               </MedCircle>
-              <MedName $taken={isTaken}>{dose.medicationName}{dose.dosage ? ` · ${dose.dosage}` : ''}</MedName>
-              <MedTimeLabel>{formatTime12h(dose.time)}</MedTimeLabel>
             </MedRow>
           );
         })}
@@ -2784,8 +2793,9 @@ const SLEEP_GOAL = 10;
 
 const WSection = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
   padding: 8px 0;
   border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: 0; }
@@ -3061,7 +3071,6 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
       <CardHeader>
         <CardIconWrap><Icon name="heart" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Wellness Check-in</CardTitle>
-        <EventMeta style={{ marginLeft: 'auto' }}>Today</EventMeta>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
@@ -3072,7 +3081,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
           <GlassRow>
             {Array.from({ length: WATER_GOAL }, (_, i) => (
               <GlassBtn key={i} $filled={i < waterGlasses} onClick={() => handleGlass(i)} title={`${i + 1} glass${i !== 0 ? 'es' : ''}`}>
-                <Icon name="droplet" size={14} strokeWidth={2.4} />
+                <Icon name="droplet" size={14} strokeWidth={1.3} />
               </GlassBtn>
             ))}
             <GlassCount>{waterGlasses}/{WATER_GOAL}</GlassCount>
@@ -3084,7 +3093,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
           <MoodRow>
             {(['mood-1', 'mood-2', 'mood-3', 'mood-4', 'mood-5'] as IconName[]).map((moodName, i) => (
               <MoodBtn key={i} $active={moodScore === i + 1} onClick={() => handleMood(i + 1)} title={['Very sad', 'Sad', 'Neutral', 'Good', 'Great'][i]}>
-                <Icon name={moodName} size={22} strokeWidth={2.2} />
+                <Icon name={moodName} size={22} strokeWidth={1.8} />
               </MoodBtn>
             ))}
           </MoodRow>
@@ -3095,7 +3104,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
           <GlassRow>
             {Array.from({ length: SLEEP_GOAL }, (_, i) => (
               <GlassBtn key={i} $filled={i < sleepHours} onClick={() => handleSleepHours(i)} title={`${i + 1}h`}>
-                <Icon name="moon" size={14} strokeWidth={2.4} />
+                <Icon name="moon" size={14} strokeWidth={1.3} />
               </GlassBtn>
             ))}
             <GlassCount>{sleepHours > 0 ? `${sleepHours}h` : '—'}</GlassCount>
@@ -3103,17 +3112,17 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
         </WSection>
 
         {cycleTrackingEnabled && (
-          <WSection style={{ flexDirection: 'column', alignItems: 'stretch', gap: 2 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <WSectionLabel>Cycle</WSectionLabel>
+          <WSection>
+            <WSectionLabel>Cycle</WSectionLabel>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <GlassRow>
                 {Array.from({ length: 4 }, (_, i) => (
                   <GlassBtn key={i} $filled={i < FLOW_INDEX[flowIntensity]} $tone="cycle" onClick={() => handleFlow(FLOW_OPTIONS[i])} title={FLOW_OPTIONS[i]}>
-                    <Icon name="droplet" size={14} strokeWidth={2.4} />
+                    <Icon name="droplet" size={14} strokeWidth={1.3} />
                   </GlassBtn>
                 ))}
-                <GlassCount>{flowIntensity || '—'}</GlassCount>
               </GlassRow>
+              <GlassCount>{flowIntensity || '—'}</GlassCount>
             </div>
             <CyclePredictionLine>
               {cyclePrediction?.nextLabel

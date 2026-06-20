@@ -116,14 +116,14 @@
 .ch-check { display: inline-flex; align-items: center; gap: var(--space-3); cursor: pointer; user-select: none; }
 .ch-check input { position: absolute; opacity: 0; width: 0; height: 0; }
 .ch-check__box {
-  width: 18px; height: 18px; flex: none; border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border-strong); background: var(--bg-surface);
+  width: 18px; height: 18px; flex: none; border-radius: 50%;
+  border: 1.5px solid var(--color-accent); background: transparent;
   display: inline-flex; align-items: center; justify-content: center;
   color: var(--on-accent);
   transition: var(--transition-colors), box-shadow var(--duration-fast) var(--ease-out);
 }
-.ch-check__box svg { width: 13px; height: 13px; opacity: 0; transform: scale(0.6); transition: opacity var(--duration-fast), transform var(--duration-fast) var(--ease-out); }
-.ch-check input:checked + .ch-check__box { background: var(--color-accent); border-color: var(--color-accent); }
+.ch-check__box svg { width: 18px; height: 18px; opacity: 0; transform: scale(0.6); transition: opacity var(--duration-fast), transform var(--duration-fast) var(--ease-out); color: var(--color-accent); }
+.ch-check input:checked + .ch-check__box { background: transparent; border: none; }
 .ch-check input:checked + .ch-check__box svg { opacity: 1; transform: scale(1); }
 .ch-check input:focus-visible + .ch-check__box { box-shadow: var(--shadow-ring); }
 .ch-check input:disabled + .ch-check__box { opacity: 0.45; }

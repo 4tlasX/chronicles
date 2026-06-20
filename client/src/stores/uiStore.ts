@@ -8,6 +8,10 @@ interface UIState {
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (v: boolean) => void;
 
+  // Mobile nav drawer
+  mobileNavOpen: boolean;
+  setMobileNavOpen: (v: boolean) => void;
+
   // Search
   searchKeyword: string;
   searchDateFrom: string;
@@ -79,6 +83,9 @@ export const useUIStore = create<UIState>((set) => ({
   toggleSidebar: () => set(s => ({ isSidebarOpen: !s.isSidebarOpen })),
   sidebarCollapsed: true,
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
+
+  mobileNavOpen: false,
+  setMobileNavOpen: (v) => set({ mobileNavOpen: v }),
 
   searchKeyword: '',
   searchDateFrom: '',

@@ -55,7 +55,7 @@ const Day = styled.button<{ $isToday?: boolean }>`
   gap: 8px;
   padding: 6px 0 10px;
   background: transparent;
-  border: ${({ $isToday }) => $isToday ? '1px solid var(--color-accent)' : '1px solid transparent'};
+  border: none;
   border-radius: var(--r-md, 2px);
   cursor: pointer;
   position: relative;

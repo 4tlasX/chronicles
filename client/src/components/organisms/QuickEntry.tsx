@@ -14,7 +14,6 @@ interface QuickEntryProps {
 
 const Container = styled.div`
   padding: 16px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   background: transparent;
 `;
 

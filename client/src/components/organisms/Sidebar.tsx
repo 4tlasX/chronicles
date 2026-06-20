@@ -41,6 +41,10 @@ const LogoBlock = styled.div`
   align-items: center;
   gap: var(--s-2, 8px);
   flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const LogoDiamond = styled.svg`

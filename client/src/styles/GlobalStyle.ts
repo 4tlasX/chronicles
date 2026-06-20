@@ -56,6 +56,12 @@ export const GlobalStyle = createGlobalStyle`
     color: inherit;
   }
 
+  textarea {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-subtle, ${({ theme }) => theme.colors.border});
+  }
+
   /* Global focus-visible outline — uses user's header color */
   a:focus-visible,
   button:focus-visible,

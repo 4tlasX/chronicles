@@ -553,7 +553,7 @@ export function JournalView() {
   }
 
   return (
-    <AppTemplate transparentContent>
+    <AppTemplate transparentContent hideAccentStripe>
       <JournalTemplate
         sidePanel={
           <SidePanel hiddenMobile={showMobileEditor}>

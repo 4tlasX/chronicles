@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Header } from '../organisms/Header.js';
 import { Sidebar } from '../organisms/Sidebar.js';
 import { Background } from '../organisms/Background.js';
+import { MobileChrome } from '../organisms/MobileChrome.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { BACKGROUND_IMAGES } from '@chronicles/shared';
 
@@ -32,7 +33,7 @@ const SkipLink = styled.a`
 `;
 
 /* 3px accent stripe pinned to the very top of the app chrome (DS signature). */
-const AccentStripe = styled.div`
+const AccentStripe = styled.div<{ $hidden?: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -41,14 +42,19 @@ const AccentStripe = styled.div`
   background: var(--color-accent, ${({ theme }) => theme.colors.accent});
   z-index: 1000;
   pointer-events: none;
+  display: ${({ $hidden }) => $hidden ? 'none' : 'block'};
 `;
 
-const Layout = styled.div`
+const Layout = styled.div<{ $hideAccentStripe?: boolean }>`
   display: flex;
   flex-direction: row;
   height: 100vh;
   overflow: hidden;
-  padding-top: 3px;
+  padding-top: ${({ $hideAccentStripe }) => $hideAccentStripe ? '0' : '3px'};
+
+  @media (max-width: 768px) {
+    padding-top: 56px;
+  }
 `;
 
 /* Main column: header bar + content, to the right of the sidebar. */
@@ -75,16 +81,19 @@ interface AppTemplateProps {
   children: ReactNode;
   hideSidebar?: boolean;
   transparentContent?: boolean;
+  hideAccentStripe?: boolean;
 }
 
-export function AppTemplate({ children, hideSidebar, transparentContent }: AppTemplateProps) {
+export function AppTemplate({ children, hideSidebar, transparentContent, hideAccentStripe }: AppTemplateProps) {
   const backgroundImage = useUIStore(s => s.backgroundImage);
   const isLightBg = BACKGROUND_IMAGES.find(bg => bg.value === backgroundImage)?.light ?? false;
+
   return (
     <>
-      <AccentStripe />
+      <AccentStripe $hidden={hideAccentStripe} />
       <Background />
-      <Layout>
+      {!hideSidebar && <MobileChrome />}
+      <Layout $hideAccentStripe={hideAccentStripe}>
         <SkipLink href="#main-content">Skip to content</SkipLink>
         {!hideSidebar && <Sidebar />}
         <MainColumn>

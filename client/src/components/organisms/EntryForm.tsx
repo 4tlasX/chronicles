@@ -77,14 +77,22 @@ const EdBody = styled.div`
   padding: var(--s-6, 24px) var(--s-5, 20px) var(--s-4, 16px);
 `;
 
-/* DS date block — large thin numeral + weekday, under a 2px accent top rule. */
+/* DS date block — large thin numeral + weekday, under a 2px accent bottom rule. */
 const EdDateBlock = styled.div`
   display: flex;
   align-items: flex-end;
   gap: 16px;
-  margin-bottom: 22px;
+  justify-content: space-between;
+  margin-bottom: 0;
   padding-top: 26px;
-  border-top: 2px solid var(--color-accent);
+  padding-bottom: 22px;
+  border-bottom: 2px solid var(--color-accent);
+`;
+
+const EdDateContent = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
 `;
 
 const EdDateNum = styled.span`
@@ -107,14 +115,13 @@ const EdDateDow = styled.span`
 `;
 
 /* Topic selector + actions row — pill picker left, action buttons right,
-   flanked by hairline rules top and bottom (DS spec). */
+   flanked by hairline rule bottom (DS spec). */
 const EdTopicRow = styled.div`
   display: flex;
   gap: var(--s-3, 12px);
   align-items: center;
   margin-bottom: 28px;
   padding: 16px 0 20px;
-  border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
   position: relative;
 `;
@@ -471,8 +478,10 @@ export function EntryForm({
           {/* DS date block — big numeral + weekday under a 2px accent rule */}
           {(entryCreatedAt || !entryId) && (
             <EdDateBlock>
-              <EdDateNum>{(entryCreatedAt || new Date()).getDate()}</EdDateNum>
-              <EdDateDow>{(entryCreatedAt || new Date()).toLocaleDateString('en-US', { weekday: 'long' })}</EdDateDow>
+              <EdDateContent>
+                <EdDateNum>{(entryCreatedAt || new Date()).getDate()}</EdDateNum>
+                <EdDateDow>{(entryCreatedAt || new Date()).toLocaleDateString('en-US', { weekday: 'long' })}</EdDateDow>
+              </EdDateContent>
             </EdDateBlock>
           )}
 

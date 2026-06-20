@@ -119,22 +119,18 @@ const DoseCard = styled.div<{ $taken: boolean; $accentColor: string }>`
 `;
 
 const DoseCheckButton = styled.button<{ $taken: boolean; $color: string }>`
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  border-radius: 4px;
-  border: 1.5px solid ${({ $taken, $color, theme }) => $taken ? $color : theme.colors.border};
-  background: ${({ $taken, $color }) => $taken ? $color : 'transparent'};
+  border: none;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.15s;
-  color: white;
   font-size: 12px;
   line-height: 1;
   padding: 0;
+  color: ${({ $taken, $color }) => $taken ? $color : 'var(--text-tertiary)'};
   &:disabled { opacity: 0.5; cursor: wait; }
   &:hover:not(:disabled) { opacity: 0.8; }
 `;
@@ -361,11 +357,18 @@ export function MedicationSchedule({ isReady }: MedicationScheduleProps) {
                     aria-label={isTaken ? 'Mark as not taken' : 'Mark as taken'}
                     style={{ color: isTaken ? accentColor : 'var(--text-tertiary)' }}
                   >
-                    <Icon
-                      name={isTaken ? 'check-circle' : 'circle'}
-                      size={20}
-                      strokeWidth={2}
-                    />
+                    {isTaken ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <path d="M22 4 12 14.01l-3-3" />
+                      </svg>
+                    ) : (
+                      <Icon
+                        name='circle'
+                        size={20}
+                        strokeWidth={2}
+                      />
+                    )}
                   </DoseCheckButton>
                   <DoseInfo>
                     <DoseName $taken={isTaken} $color={accentColor}>
