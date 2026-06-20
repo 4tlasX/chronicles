@@ -1,67 +1,51 @@
 import { useState, type InputHTMLAttributes } from 'react';
 import styled from 'styled-components';
+import { Input as DSInput } from '../../../../design-system/components/core/Input.jsx';
 
 interface PasswordInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  error?: boolean;
+  error?: boolean | string;
+  label?: string;
+  hint?: string;
 }
+
+const ToggleButton = styled.button`
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover { color: var(--text-primary); }
+`;
 
 const Wrapper = styled.div`
   position: relative;
   width: 100%;
-`;
 
-const StyledInput = styled.input<{ $error?: boolean }>`
-  width: 100%;
-  padding: 8px 12px;
-  padding-right: 56px;
-  font-size: 16px;
-  border: 1px solid ${({ theme, $error }) => $error ? theme.colors.danger : theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
-  background: transparent;
-  color: ${({ theme }) => theme.colors.text};
-  outline: none;
-  transition: border-color 0.15s;
-
-  &:focus {
-    border-color: var(--focus-color, ${({ theme }) => theme.colors.text});
-  }
-
-  &::placeholder {
-    color: ${({ theme }) => theme.colors.textMuted};
-  }
-
-  &:-webkit-autofill,
-  &:-webkit-autofill:hover,
-  &:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 1000px var(--paper-surface, #f7f4ee) inset;
-    -webkit-text-fill-color: ${({ theme }) => theme.colors.text};
-    transition: background-color 5000s ease-in-out 0s;
+  input {
+    padding-right: 48px;
   }
 `;
 
-const ToggleButton = styled.button`
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 4px 8px;
-  font-size: ${({ theme }) => theme.fontSize.xs}px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  background: none;
-  border: none;
-  cursor: pointer;
-
-  &:hover { color: ${({ theme }) => theme.colors.text}; }
-`;
-
-export function PasswordInput({ error, ...props }: PasswordInputProps) {
+export function PasswordInput({ error, label, hint, ...props }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
+  const errorMessage = typeof error === 'string' ? error : error ? 'Error' : undefined;
 
   return (
     <Wrapper>
-      <StyledInput
+      <DSInput
         type={visible ? 'text' : 'password'}
-        $error={error}
+        label={label}
+        hint={hint}
+        error={errorMessage}
         {...props}
       />
       <ToggleButton type="button" onClick={() => setVisible(!visible)}>

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
+import { getTopicIcon } from '../../utils/topicIcons.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { getTopicIcon } from '../../utils/topicIcons.js';
@@ -329,28 +330,28 @@ export function Sidebar() {
         {/* Core nav */}
         <NavRow $active={at('/')} onClick={() => navigate('/')}>
           <NavRowIcon $active={at('/')}>
-            <FontAwesomeIcon icon={faHome} strokeWidth={1.8} />
+            <Icon name="layout-grid" size={16} strokeWidth={1.8} />
           </NavRowIcon>
           <NavRowText>Dashboard</NavRowText>
         </NavRow>
 
         <NavRow $active={at('/journal')} onClick={() => navigate('/journal')}>
           <NavRowIcon $active={at('/journal')}>
-            <FontAwesomeIcon icon={faBookOpen} strokeWidth={1.8} />
+            <Icon name="book" size={16} strokeWidth={1.8} />
           </NavRowIcon>
           <NavRowText>Journal</NavRowText>
         </NavRow>
 
         <NavRow $active={at('/calendar')} onClick={() => navigate('/calendar')}>
           <NavRowIcon $active={at('/calendar')}>
-            <FontAwesomeIcon icon={faCalendar} strokeWidth={1.8} />
+            <Icon name="calendar" size={16} strokeWidth={1.8} />
           </NavRowIcon>
           <NavRowText>Calendar</NavRowText>
         </NavRow>
 
         <NavRow $active={at('/topics')} onClick={() => navigate('/topics')}>
           <NavRowIcon $active={at('/topics')}>
-            <FontAwesomeIcon icon={faTag} strokeWidth={1.8} />
+            <Icon name="tag" size={16} strokeWidth={1.8} />
           </NavRowIcon>
           <NavRowText>Topics</NavRowText>
         </NavRow>
@@ -367,7 +368,7 @@ export function Sidebar() {
             {ff.goalsEnabled && (
               <NavRow $active={at('/goals')} onClick={() => navigate('/goals')}>
                 <NavRowIcon $active={at('/goals')}>
-                  <FontAwesomeIcon icon={faFlag} strokeWidth={1.8} />
+                  <Icon name="flag" size={16} strokeWidth={1.8} />
                 </NavRowIcon>
                 <NavRowText>Goals</NavRowText>
               </NavRow>
@@ -375,38 +376,38 @@ export function Sidebar() {
             {ff.goalsEnabled && (
               <NavRow $active={at('/goals/milestones')} onClick={() => navigate('/goals/milestones')}>
                 <NavRowIcon $active={at('/goals/milestones')}>
-                  <FontAwesomeIcon icon={faLayerGroup} strokeWidth={1.8} />
+                  <Icon name="target" size={16} strokeWidth={1.8} />
                 </NavRowIcon>
                 <NavRowText>Milestones</NavRowText>
               </NavRow>
             )}
             <NavRow $active={at('/goals/tasks')} onClick={() => navigate('/goals/tasks')}>
               <NavRowIcon $active={at('/goals/tasks')}>
-                <FontAwesomeIcon icon={faCheck} strokeWidth={1.8} />
+                <Icon name="check" size={16} strokeWidth={1.8} />
               </NavRowIcon>
               <NavRowText>Tasks</NavRowText>
             </NavRow>
             <NavRow $active={at('/goals/todos')} onClick={() => navigate('/goals/todos')}>
               <NavRowIcon $active={at('/goals/todos')}>
-                <FontAwesomeIcon icon={faCircleCheck} strokeWidth={1.8} />
+                <Icon name="check-circle" size={16} strokeWidth={1.8} />
               </NavRowIcon>
               <NavRowText>Todos</NavRowText>
             </NavRow>
             <NavRow $active={startsWith('/goals/filter')} onClick={() => navigate('/goals/filter')}>
               <NavRowIcon $active={startsWith('/goals/filter')}>
-                <FontAwesomeIcon icon={faSlidersH} strokeWidth={1.8} />
+                <Icon name="filter" size={16} strokeWidth={1.8} />
               </NavRowIcon>
               <NavRowText>Filters</NavRowText>
             </NavRow>
             <NavRow $active={at('/menu')} onClick={() => navigate('/menu')}>
               <NavRowIcon $active={at('/menu')}>
-                <FontAwesomeIcon icon={faCalendarDays} strokeWidth={1.8} />
+                <Icon name="utensils" size={16} strokeWidth={1.8} />
               </NavRowIcon>
               <NavRowText>Menu Planner</NavRowText>
             </NavRow>
             <NavRow $active={at('/shopping')} onClick={() => navigate('/shopping')}>
               <NavRowIcon $active={at('/shopping')}>
-                <FontAwesomeIcon icon={faCartShopping} strokeWidth={1.8} />
+                <Icon name="shopping-bag" size={16} strokeWidth={1.8} />
               </NavRowIcon>
               <NavRowText>Shopping Lists</NavRowText>
             </NavRow>
@@ -426,7 +427,7 @@ export function Sidebar() {
               {ff.medicationEnabled && (
                 <NavRow $active={at('/health/schedule')} onClick={() => navigate('/health/schedule')}>
                   <NavRowIcon $active={at('/health/schedule')}>
-                    <FontAwesomeIcon icon={faCalendarCheck} strokeWidth={1.8} />
+                    <Icon name="calendar" size={16} strokeWidth={1.8} />
                   </NavRowIcon>
                   <NavRowText>Schedule</NavRowText>
                 </NavRow>
@@ -434,7 +435,7 @@ export function Sidebar() {
               {ff.medicationEnabled && (
                 <NavRow $active={startsWith('/health/meds')} onClick={() => navigate('/health/meds')}>
                   <NavRowIcon $active={startsWith('/health/meds')}>
-                    <FontAwesomeIcon icon={faPills} strokeWidth={1.8} />
+                    <Icon name="pill" size={16} strokeWidth={1.8} />
                   </NavRowIcon>
                   <NavRowText>Medications</NavRowText>
                 </NavRow>
@@ -442,21 +443,21 @@ export function Sidebar() {
               {ff.foodEnabled && (
                 <NavRow $active={at('/health/food')} onClick={() => navigate('/health/food')}>
                   <NavRowIcon $active={at('/health/food')}>
-                    <FontAwesomeIcon icon={faUtensils} strokeWidth={1.8} />
+                    <Icon name="utensils" size={16} strokeWidth={1.8} />
                   </NavRowIcon>
                   <NavRowText>Meals</NavRowText>
                 </NavRow>
               )}
               <NavRow $active={at('/health/symptoms')} onClick={() => navigate('/health/symptoms')}>
                 <NavRowIcon $active={at('/health/symptoms')}>
-                  <FontAwesomeIcon icon={faThermometerHalf} strokeWidth={1.8} />
+                  <Icon name="activity" size={16} strokeWidth={1.8} />
                 </NavRowIcon>
                 <NavRowText>Symptoms</NavRowText>
               </NavRow>
               {ff.exerciseEnabled && (
                 <NavRow $active={at('/health/exercise')} onClick={() => navigate('/health/exercise')}>
                   <NavRowIcon $active={at('/health/exercise')}>
-                    <FontAwesomeIcon icon={faPersonRunning} strokeWidth={1.8} />
+                    <Icon name="activity" size={16} strokeWidth={1.8} />
                   </NavRowIcon>
                   <NavRowText>Exercise</NavRowText>
                 </NavRow>
@@ -464,14 +465,14 @@ export function Sidebar() {
               {ff.allergiesEnabled && (
                 <NavRow $active={at('/health/allergies')} onClick={() => navigate('/health/allergies')}>
                   <NavRowIcon $active={at('/health/allergies')}>
-                    <FontAwesomeIcon icon={faTriangleExclamation} strokeWidth={1.8} />
+                    <Icon name="alert-circle" size={16} strokeWidth={1.8} />
                   </NavRowIcon>
                   <NavRowText>Allergies</NavRowText>
                 </NavRow>
               )}
               <NavRow $active={at('/health/reporting')} onClick={() => navigate('/health/reporting')}>
                 <NavRowIcon $active={at('/health/reporting')}>
-                  <FontAwesomeIcon icon={faChartLine} strokeWidth={1.8} />
+                  <Icon name="activity" size={16} strokeWidth={1.8} />
                 </NavRowIcon>
                 <NavRowText>Reports</NavRowText>
               </NavRow>
@@ -492,7 +493,7 @@ export function Sidebar() {
               {ff.inspirationEnabled && (
                 <NavRow $active={at('/inspiration/quotes')} onClick={() => navigate('/inspiration/quotes')}>
                   <NavRowIcon $active={at('/inspiration/quotes')}>
-                    <FontAwesomeIcon icon={faQuoteLeft} strokeWidth={1.8} />
+                    <Icon name="quote" size={16} strokeWidth={1.8} />
                   </NavRowIcon>
                   <NavRowText>Quotes</NavRowText>
                 </NavRow>
@@ -500,7 +501,7 @@ export function Sidebar() {
               {ff.inspirationEnabled && (
                 <NavRow $active={at('/inspiration/ideas')} onClick={() => navigate('/inspiration/ideas')}>
                   <NavRowIcon $active={at('/inspiration/ideas')}>
-                    <FontAwesomeIcon icon={faLightbulb} strokeWidth={1.8} />
+                    <Icon name="sparkles" size={16} strokeWidth={1.8} />
                   </NavRowIcon>
                   <NavRowText>Ideas</NavRowText>
                 </NavRow>
@@ -508,7 +509,7 @@ export function Sidebar() {
               {ff.entertainmentEnabled && (
                 <NavRow $active={at('/entertainment/music')} onClick={() => navigate('/entertainment/music')}>
                   <NavRowIcon $active={at('/entertainment/music')}>
-                    <FontAwesomeIcon icon={faMusic} strokeWidth={1.8} />
+                    <Icon name="music" size={16} strokeWidth={1.8} />
                   </NavRowIcon>
                   <NavRowText>Music</NavRowText>
                 </NavRow>
@@ -516,7 +517,7 @@ export function Sidebar() {
               {ff.entertainmentEnabled && (
                 <NavRow $active={at('/entertainment/books')} onClick={() => navigate('/entertainment/books')}>
                   <NavRowIcon $active={at('/entertainment/books')}>
-                    <FontAwesomeIcon icon={faBook} strokeWidth={1.8} />
+                    <Icon name="book" size={16} strokeWidth={1.8} />
                   </NavRowIcon>
                   <NavRowText>Books</NavRowText>
                 </NavRow>
@@ -524,7 +525,7 @@ export function Sidebar() {
               {ff.entertainmentEnabled && (
                 <NavRow $active={at('/entertainment/tv')} onClick={() => navigate('/entertainment/tv')}>
                   <NavRowIcon $active={at('/entertainment/tv')}>
-                    <FontAwesomeIcon icon={faTv} strokeWidth={1.8} />
+                    <Icon name="tv" size={16} strokeWidth={1.8} />
                   </NavRowIcon>
                   <NavRowText>TV / Movies</NavRowText>
                 </NavRow>
@@ -577,7 +578,7 @@ export function Sidebar() {
           <SectionContent $open={openSections.settings}>
             <NavRow $active={at('/settings')} onClick={() => navigate('/settings')}>
               <NavRowIcon $active={at('/settings')}>
-                <FontAwesomeIcon icon={faGear} strokeWidth={1.8} />
+                <Icon name="settings" size={16} strokeWidth={1.8} />
               </NavRowIcon>
               <NavRowText>Preferences</NavRowText>
             </NavRow>
