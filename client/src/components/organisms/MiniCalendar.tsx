@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, useState } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 
@@ -32,8 +32,9 @@ const IconSpan = styled.span`
   align-items: center;
 `;
 
-/* Clips to its own width; each week inside is exactly this wide, so one shows at a time. */
+/* The viewport. Clips horizontally; one week (= 100% width) shows at a time. */
 const ScrollContainer = styled.div`
+  display: flex;
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
@@ -56,15 +57,10 @@ const ScrollContainer = styled.div`
   }
 `;
 
-const WeeksContainer = styled.div`
-  display: flex;
-  width: max-content;
-`;
-
-/* Each week is exactly the width of the scroll viewport, so one shows at a time. */
-const Week = styled.div<{ $vw: number }>`
-  width: ${({ $vw }) => $vw}px;
-  flex: 0 0 ${({ $vw }) => $vw}px;
+/* Each week is a flex item that takes the full viewport width and never shrinks,
+   so exactly one is visible; the rest sit off-screen and are reached by scrolling. */
+const Week = styled.div`
+  flex: 0 0 100%;
   scroll-snap-align: start;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -129,23 +125,24 @@ function toISODateString(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+// Index of the current week within the generated range.
+const CURRENT_WEEK_INDEX = 52;
+
 export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCalendarProps) {
   const today = useMemo(() => new Date(), []);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [vw, setVw] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // 52 weeks back + 52 weeks forward, Monday-start weeks.
   const weeks = useMemo(() => {
     const weeksArray: Date[][] = [];
     const todayDate = new Date();
-    // Days since Monday (Mon=0 … Sun=6)
-    const mondayOffset = (todayDate.getDay() + 6) % 7;
+    const mondayOffset = (todayDate.getDay() + 6) % 7; // days since Monday
 
     const startOfWeek = new Date(todayDate);
     startOfWeek.setDate(todayDate.getDate() - mondayOffset);
 
     const startDate = new Date(startOfWeek);
-    startDate.setDate(startDate.getDate() - 52 * 7);
+    startDate.setDate(startDate.getDate() - CURRENT_WEEK_INDEX * 7);
 
     const currentDate = new Date(startDate);
     for (let w = 0; w < 104; w++) {
@@ -159,23 +156,15 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
     return weeksArray;
   }, []);
 
-  // Measure the viewport width (responsive) so each week is sized to it.
+  // Jump to the current week after layout. Each week is exactly the viewport width.
   useEffect(() => {
-    const el = scrollContainerRef.current;
+    const el = scrollRef.current;
     if (!el) return;
-    const measure = () => setVw(el.clientWidth);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
+    const jump = () => { el.scrollLeft = CURRENT_WEEK_INDEX * el.clientWidth; };
+    // Run after paint so clientWidth is final.
+    const raf = requestAnimationFrame(jump);
+    return () => cancelAnimationFrame(raf);
   }, []);
-
-  // Once the width is known, jump to the current week (index 52).
-  useEffect(() => {
-    if (scrollContainerRef.current && vw > 0) {
-      scrollContainerRef.current.scrollLeft = 52 * vw;
-    }
-  }, [vw]);
 
   return (
     <Wrapper>
@@ -185,29 +174,27 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
         </IconSpan>
         MINI CALENDAR
       </Header>
-      <ScrollContainer ref={scrollContainerRef}>
-        <WeeksContainer>
-          {vw > 0 && weeks.map((weekDays, weekIdx) => (
-            <Week key={weekIdx} $vw={vw}>
-              {weekDays.map((date, i) => {
-                const isToday = isSameDay(date, today);
-                const hasEntry = entryDates?.has(toISODateString(date)) ?? false;
-                return (
-                  <Day
-                    key={i}
-                    $isToday={isToday}
-                    onClick={() => onSelectDate(date)}
-                    title={date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                  >
-                    <DowLabel $isToday={isToday}>{DOW[i]}</DowLabel>
-                    <DayNum $isToday={isToday}>{date.getDate()}</DayNum>
-                    {hasEntry && <EntryDot $isToday={isToday} />}
-                  </Day>
-                );
-              })}
-            </Week>
-          ))}
-        </WeeksContainer>
+      <ScrollContainer ref={scrollRef}>
+        {weeks.map((weekDays, weekIdx) => (
+          <Week key={weekIdx}>
+            {weekDays.map((date, i) => {
+              const isToday = isSameDay(date, today);
+              const hasEntry = entryDates?.has(toISODateString(date)) ?? false;
+              return (
+                <Day
+                  key={i}
+                  $isToday={isToday}
+                  onClick={() => onSelectDate(date)}
+                  title={date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                >
+                  <DowLabel $isToday={isToday}>{DOW[i]}</DowLabel>
+                  <DayNum $isToday={isToday}>{date.getDate()}</DayNum>
+                  {hasEntry && <EntryDot $isToday={isToday} />}
+                </Day>
+              );
+            })}
+          </Week>
+        ))}
       </ScrollContainer>
     </Wrapper>
   );
