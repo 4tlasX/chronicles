@@ -56,10 +56,10 @@ function extractPreview(html: string): string {
 const Row = styled.div<{ $active?: boolean; $accent?: string }>`
   display: grid;
   grid-template-columns: 3px 1fr auto;
-  gap: 12px;
+  gap: var(--s-3, 12px);
   align-items: start;
   cursor: pointer;
-  padding: 13px 18px 13px 0;
+  padding: 13px var(--s-4, 18px) 13px 0;
   border-bottom: 1px solid var(--border-subtle);
   background: ${({ $active }) => $active ? 'var(--bg-active)' : 'transparent'};
   transition: background 120ms;
@@ -99,7 +99,7 @@ const PreviewText = styled.div`
   font-size: 11.5px;
   color: var(--text-tertiary);
   line-height: 1.4;
-  margin-top: 3px;
+  margin-top: var(--s-1, 4px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -113,12 +113,12 @@ const TimeStamp = styled.div<{ $active?: boolean; $accent?: string }>`
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
-  padding-top: 1px;
+  padding-top: var(--s-1, 4px);
   color: ${({ $active, $accent }) => $active ? ($accent || 'var(--color-accent)') : 'var(--text-tertiary)'};
 `;
 
 const BookmarkIcon = styled.span`
-  margin-left: 6px;
+  margin-left: var(--s-2, 8px);
   color: var(--color-accent);
   font-size: 11px;
   line-height: 1;
