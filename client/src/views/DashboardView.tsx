@@ -315,6 +315,7 @@ const LeftColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0;
   @media (max-width: 1024px) { width: 100%; }
 `;
 
@@ -322,6 +323,7 @@ const RightColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0;
   @media (max-width: 1024px) { width: 100%; }
 `;
 
@@ -335,6 +337,7 @@ const DashCard = styled.div`
   border-radius: 0;
   overflow: visible;
   padding-top: 0;
+  min-width: 0;
 
   &:first-of-type {
     border-top: none;
@@ -2763,12 +2766,11 @@ function MiniCalendarCard({ accentColor, dragAttributes, dragListeners }: { acce
           <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
       </CardHeader>
-      <div style={{ padding: '0 20px 20px' }}>
+      <div style={{ padding: '0 20px 20px', minWidth: 0, overflow: 'hidden' }}>
         <MiniCalendar
           selectedDate={selectedDate}
           onSelectDate={handleSelectDate}
           entryDates={entryDates}
-          expanded
         />
       </div>
     </DashCard>
