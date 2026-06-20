@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil, faTrash, faGripVertical } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ICON_MAP } from '../molecules/IconPicker.js';
@@ -141,7 +141,7 @@ export function SortableTopicItem({ topic, isActive, count, headerColor, filterT
     <Wrapper ref={setNodeRef} style={style} $isDragging={isDragging}>
       <Row $active={isActive} $headerColor={headerColor} onClick={onSelect}>
         <DragHandleBtn {...attributes} {...listeners} onClick={e => e.stopPropagation()}>
-          <FontAwesomeIcon icon={faGripVertical} />
+          <Icon name="grip" size={14} strokeWidth={2} />
         </DragHandleBtn>
 
         <TopicIcon>
@@ -152,10 +152,10 @@ export function SortableTopicItem({ topic, isActive, count, headerColor, filterT
 
 <Actions className="tp-actions">
           <ActionBtn title="Edit" onClick={e => { e.stopPropagation(); onEdit(); }}>
-            <FontAwesomeIcon icon={faPencil} />
+            <Icon name="pencil" size={14} strokeWidth={2} />
           </ActionBtn>
           <ActionBtn title="Delete" onClick={e => { e.stopPropagation(); onDelete(); }}>
-            <FontAwesomeIcon icon={faTrash} />
+            <Icon name="trash" size={14} strokeWidth={2} />
           </ActionBtn>
         </Actions>
       </Row>

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCopy, faCheck, faXmark, faTrash, faShareNodes, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { Modal } from '../atoms/Modal.js';
 import { shares as sharesApi, type ShareRecord } from '../../services/api.js';
 
@@ -243,7 +244,7 @@ export function ShareModal({ entryContent, onClose }: ShareModalProps) {
         <UrlRow>
           <UrlInput readOnly value={shareUrl} onClick={e => (e.target as HTMLInputElement).select()} />
           <CopyBtn $copied={copied} onClick={handleCopy} aria-label={copied ? 'Link copied' : 'Copy share link'}>
-            <FontAwesomeIcon icon={copied ? faCheck : faCopy} />
+            <Icon name={copied ? 'check' : 'repeat'} size={14} strokeWidth={2} />
             {copied ? 'Copied!' : 'Copy'}
           </CopyBtn>
         </UrlRow>
@@ -251,7 +252,7 @@ export function ShareModal({ entryContent, onClose }: ShareModalProps) {
         <CreateBtn onClick={handleCreate} disabled={isCreating}>
           {isCreating
             ? <><FontAwesomeIcon icon={faSpinner} spin /> Generating link…</>
-            : <><FontAwesomeIcon icon={faShareNodes} /> Create share link</>}
+            : <><Icon name="repeat" size={14} strokeWidth={2} /> Create share link</>}
         </CreateBtn>
       )}
 
@@ -265,13 +266,13 @@ export function ShareModal({ entryContent, onClose }: ShareModalProps) {
           <SharesList>
             {existingShares.map(s => (
               <ShareItem key={s.token}>
-                <FontAwesomeIcon icon={faShareNodes} style={{ color: '#6b7280', fontSize: 11 }} />
+                <Icon name="repeat" size={11} strokeWidth={2} />
                 <ShareMeta>
                   Created {new Date(s.createdAt).toLocaleDateString()}
                   {s.expiresAt && ` · Expires ${new Date(s.expiresAt).toLocaleDateString()}`}
                 </ShareMeta>
                 <RevokeBtn onClick={() => handleRevoke(s.token)} aria-label="Revoke share link">
-                  <FontAwesomeIcon icon={faTrash} />
+                  <Icon name="trash" size={14} strokeWidth={2} />
                 </RevokeBtn>
               </ShareItem>
             ))}
