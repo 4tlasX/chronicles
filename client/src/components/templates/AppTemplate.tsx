@@ -14,18 +14,18 @@ const SkipLink = styled.a`
   height: 1px;
   overflow: hidden;
   z-index: 9999;
-  padding: 8px 16px;
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
+  padding: var(--s-2, 8px) var(--s-4, 16px);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: var(--text-sm, 15px);
   text-decoration: none;
-  border: 2px solid ${({ theme }) => theme.colors.borderFocus};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  border: 2px solid var(--border-default);
+  border-radius: var(--r-md, 1px);
 
   &:focus {
     position: fixed;
-    left: 8px;
-    top: 8px;
+    left: var(--s-2, 8px);
+    top: var(--s-2, 8px);
     width: auto;
     height: auto;
   }

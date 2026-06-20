@@ -37,15 +37,15 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  padding: var(--s-4, 16px) var(--s-5, 20px);
+  border-bottom: 1px solid var(--border-subtle);
 `;
 
 const Title = styled.h3`
-  font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 500;
-  color: var(--ink, ${({ theme }) => theme.colors.text});
+  color: var(--text-primary);
   margin: 0;
 `;
 
@@ -56,21 +56,21 @@ const CloseButton = styled.button`
   width: 32px;
   height: 32px;
   font-size: 18px;
-  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
+  color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
-  border-radius: var(--r-sm, ${({ theme }) => theme.borderRadius.sm}px);
+  border-radius: var(--r-md, 1px);
   transition: background 120ms ease;
   &:hover {
-    background: var(--paper-hover, ${({ theme }) => theme.colors.surfaceHover});
-    color: var(--ink, ${({ theme }) => theme.colors.text});
+    background: var(--bg-hover);
+    color: var(--text-primary);
   }
 `;
 
 const Body = styled.div`
-  padding: 20px;
-  color: var(--ink-2, ${({ theme }) => theme.colors.textSecondary});
+  padding: var(--s-5, 20px);
+  color: var(--text-secondary);
   font-size: 14.5px;
   line-height: 1.55;
 `;
@@ -78,10 +78,10 @@ const Body = styled.div`
 const Footer = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  background: var(--paper, ${({ theme }) => theme.colors.background});
+  gap: var(--s-2, 10px);
+  padding: var(--s-4, 16px) var(--s-5, 20px);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-app);
 `;
 
 interface ModalProps {
