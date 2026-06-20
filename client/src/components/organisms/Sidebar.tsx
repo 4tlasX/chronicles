@@ -80,7 +80,7 @@ const NavRow = styled.button<{ $active?: boolean }>`
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 8px 14px;
+  padding: 13px 14px;
   border: none;
   cursor: pointer;
   text-align: left;
