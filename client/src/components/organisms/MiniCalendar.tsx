@@ -1,11 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 
 interface MiniCalendarProps {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
-  /** Set of ISO date strings (YYYY-MM-DD) that have entries */
   entryDates?: Set<string>;
 }
 
@@ -34,12 +33,8 @@ const IconSpan = styled.span`
 `;
 
 const ScrollContainer = styled.div`
-  width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  display: flex;
-  gap: 12px;
-  padding: 0;
   scrollbar-width: thin;
   scrollbar-color: var(--border-subtle) transparent;
 
@@ -58,11 +53,18 @@ const ScrollContainer = styled.div`
   }
 `;
 
+const WeeksContainer = styled.div`
+  display: flex;
+  gap: 24px;
+  padding: 8px 0;
+`;
+
 const Week = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   flex-shrink: 0;
+  align-items: center;
 `;
 
 const WeekdayRow = styled.div`
@@ -78,26 +80,25 @@ const WeekdayLabel = styled.div`
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-tertiary);
-  margin-bottom: 2px;
-  width: 32px;
+  width: 28px;
+  height: 16px;
 `;
 
 const DaysGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: 4px;
 `;
 
 const DayButton = styled.button<{
   $isToday?: boolean;
-  $isSelected?: boolean;
 }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  font-size: 13px;
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1;
   border: none;
@@ -111,8 +112,6 @@ const DayButton = styled.button<{
   }
 `;
 
-const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
 function isSameDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -121,17 +120,11 @@ function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-function toISODateString(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
 export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCalendarProps) {
   const today = useMemo(() => new Date(), []);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Generate weeks: 52 weeks back + 52 weeks forward = 104 weeks total
+  // Generate 52 weeks before and 52 weeks after today
   const weeks = useMemo(() => {
     const weeksArray: Date[][] = [];
     const todayDate = new Date();
@@ -160,6 +153,16 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
     return weeksArray;
   }, []);
 
+  // Scroll to today's week on mount
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const todayWeekIndex = 52;
+      const weekWidth = 28 * 7 + 4 * 6 + 24; // 7 buttons + gaps + week gap
+      const scrollLeft = todayWeekIndex * weekWidth - 200;
+      scrollContainerRef.current.scrollLeft = scrollLeft;
+    }
+  }, []);
+
   return (
     <Wrapper>
       <Header>
@@ -168,30 +171,33 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
         </IconSpan>
         MINI CALENDAR
       </Header>
-      <ScrollContainer>
-        {weeks.map((weekDays, weekIdx) => (
-          <Week key={weekIdx}>
-            <WeekdayRow>
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                <WeekdayLabel key={i}>{day}</WeekdayLabel>
-              ))}
-            </WeekdayRow>
-            <DaysGrid>
-              {weekDays.map((date, i) => {
-                const isToday = isSameDay(date, today);
-                return (
-                  <DayButton
-                    key={i}
-                    $isToday={isToday}
-                    onClick={() => onSelectDate(date)}
-                  >
-                    {date.getDate()}
-                  </DayButton>
-                );
-              })}
-            </DaysGrid>
-          </Week>
-        ))}
+      <ScrollContainer ref={scrollContainerRef}>
+        <WeeksContainer>
+          {weeks.map((weekDays, weekIdx) => (
+            <Week key={weekIdx}>
+              <WeekdayRow>
+                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
+                  <WeekdayLabel key={i}>{day}</WeekdayLabel>
+                ))}
+              </WeekdayRow>
+              <DaysGrid>
+                {weekDays.map((date, i) => {
+                  const isToday = isSameDay(date, today);
+                  return (
+                    <DayButton
+                      key={i}
+                      $isToday={isToday}
+                      onClick={() => onSelectDate(date)}
+                      title={date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    >
+                      {date.getDate()}
+                    </DayButton>
+                  );
+                })}
+              </DaysGrid>
+            </Week>
+          ))}
+        </WeeksContainer>
       </ScrollContainer>
     </Wrapper>
   );
