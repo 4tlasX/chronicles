@@ -1,7 +1,6 @@
 import styled from 'styled-components';
 import DOMPurify from 'dompurify';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '../atoms/Icon.js';
 import { Spinner } from '../atoms/Spinner.js';
 
 const Card = styled.div`
@@ -113,7 +112,7 @@ export function SharedEntryCard({ status, errorMsg, content, createdAt }: Shared
 
       {status === 'error' && (
         <StatusMessage $error>
-          <FontAwesomeIcon icon={faTriangleExclamation} />
+          <Icon name="alert-circle" size={32} strokeWidth={2} />
           {errorMsg}
         </StatusMessage>
       )}
