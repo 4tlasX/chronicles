@@ -9,7 +9,7 @@ import {
   PrivacyCard, DangerCard, PasswordForm, SessionsList, SessionItem,
   ColorSection, ColorSectionTitle, ColorSectionDesc,
 } from '../components/molecules/SettingsSection.js';
-import { ActionButton, SignOutButton, SelectedColorLabel, BackLink } from '../components/atoms/SettingsAtoms.js';
+import { ActionButton, SignOutButton, BackLink } from '../components/atoms/SettingsAtoms.js';
 import { Toggle } from '../components/atoms/Toggle.js';
 import { Select } from '../components/atoms/Select.js';
 import { PasswordInput } from '../components/atoms/PasswordInput.js';
@@ -17,7 +17,6 @@ import { TextInput } from '../components/atoms/TextInput.js';
 import { Button } from '../components/atoms/Button.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { FormField } from '../components/molecules/FormField.js';
-import { ColorPicker } from '../components/molecules/ColorPicker.js';
 import { BackgroundPicker } from '../components/molecules/BackgroundPicker.js';
 import { SessionRow } from '../components/molecules/SessionRow.js';
 import { RecoveryKeyDisplay } from '../components/molecules/RecoveryKeyDisplay.js';
@@ -28,7 +27,6 @@ import { useEntriesStore } from '../stores/entriesStore.js';
 import { useNavigate } from 'react-router-dom';
 import { auth as authApi, settings as settingsApi, sessions as sessionsApi, topics as topicsApi, entries as entriesApi, ApiError } from '../services/api.js';
 import { seedTestData } from '../utils/seedTestData.js';
-import { HEADER_COLORS } from '@shared/theme/accentColors';
 import { stripHtml } from '../utils/stripHtml.js';
 
 function parseCsvRow(line: string): string[] {
@@ -127,8 +125,6 @@ export function SettingsView() {
   const setTopics = useEntriesStore(s => s.setTopics);
   const seedTopics = useEntriesStore(s => s.topics);
   const setFeatureFlags = useEntriesStore(s => s.setFeatureFlags);
-  const headerColor = useUIStore(s => s.headerColor);
-  const setHeaderColor = useUIStore(s => s.setHeaderColor);
   const accentColor = useUIStore(s => s.accentColor);
   const setAccentColor = useUIStore(s => s.setAccentColor);
   const themeMode = useUIStore(s => s.themeMode);
@@ -225,7 +221,6 @@ export function SettingsView() {
       const map: Record<string, unknown> = {};
       for (const s of settings) map[s.key] = s.value;
       if (typeof map.timezone === 'string') setTimezone(map.timezone);
-      if (typeof map.headerColor === 'string') setHeaderColor(map.headerColor);
       if (map.themeMode === 'light' || map.themeMode === 'dark') setThemeMode(map.themeMode);
       if (typeof map.backgroundImage === 'string') setBackgroundImage(map.backgroundImage);
       if (typeof map.backgroundOpacity === 'string') setBackgroundOpacity(parseFloat(map.backgroundOpacity as string));
@@ -292,11 +287,6 @@ export function SettingsView() {
     } catch { /* ignore */ } finally {
       setWeatherCitySaving(false);
     }
-  };
-
-  const handleHeaderColorChange = async (color: string) => {
-    setHeaderColor(color);
-    await settingsApi.upsert('headerColor', color).catch(() => {});
   };
 
   const handleThemeModeChange = async (mode: 'light' | 'dark') => {
@@ -640,8 +630,6 @@ export function SettingsView() {
     lock(); clearAll(); await logout(); navigate('/login');
   };
 
-  const selectedColorLabel = HEADER_COLORS.find(c => c.value === headerColor)?.label || 'Custom';
-
   return (
     <SettingsTemplate title="">
       <HeaderRow>
@@ -835,12 +823,6 @@ export function SettingsView() {
               Dark
             </Button>
           </div>
-        </ColorSection>
-        <ColorSection>
-          <ColorSectionTitle>Header and Accent Color</ColorSectionTitle>
-          <ColorSectionDesc>Choose a color for the header bar and accents</ColorSectionDesc>
-          <ColorPicker colors={HEADER_COLORS} selected={headerColor} onChange={handleHeaderColorChange} />
-          <SelectedColorLabel>Selected: {selectedColorLabel}</SelectedColorLabel>
         </ColorSection>
         <ColorSection>
           <ColorSectionTitle>Accent Color</ColorSectionTitle>
