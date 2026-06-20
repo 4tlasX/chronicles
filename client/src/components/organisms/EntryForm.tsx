@@ -469,10 +469,10 @@ export function EntryForm({
       <ScrollArea>
         <EdBody>
           {/* DS date block — big numeral + weekday under a 2px accent rule */}
-          {entryCreatedAt && (
+          {(entryCreatedAt || !entryId) && (
             <EdDateBlock>
-              <EdDateNum>{entryCreatedAt.getDate()}</EdDateNum>
-              <EdDateDow>{entryCreatedAt.toLocaleDateString('en-US', { weekday: 'long' })}</EdDateDow>
+              <EdDateNum>{(entryCreatedAt || new Date()).getDate()}</EdDateNum>
+              <EdDateDow>{(entryCreatedAt || new Date()).toLocaleDateString('en-US', { weekday: 'long' })}</EdDateDow>
             </EdDateBlock>
           )}
 
