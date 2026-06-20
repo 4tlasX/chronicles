@@ -33,37 +33,55 @@ const IconSpan = styled.span`
   align-items: center;
 `;
 
-const WeekdayRow = styled.div`
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+const ScrollContainer = styled.div`
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) transparent;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 2px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--border-default);
+  }
+`;
+
+const WeekColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 `;
 
 const WeekdayLabel = styled.div`
   text-align: center;
   font-family: var(--font-label);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-tertiary);
-  margin-bottom: 6px;
-`;
-
-const DaysGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  width: 36px;
 `;
 
 const DayButton = styled.button<{
   $isToday?: boolean;
-  $isSelected?: boolean;
 }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   font-size: 13px;
   font-weight: 500;
   line-height: 1;
@@ -72,6 +90,7 @@ const DayButton = styled.button<{
   cursor: pointer;
   background: ${({ $isToday }) => $isToday ? 'var(--color-accent)' : 'transparent'};
   color: ${({ $isToday }) => $isToday ? 'white' : 'var(--text-primary)'};
+  flex-shrink: 0;
 
   &:hover {
     background: ${({ $isToday }) => $isToday ? 'var(--color-accent)' : 'var(--bg-hover)'};
@@ -98,21 +117,33 @@ function toISODateString(d: Date): string {
 export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCalendarProps) {
   const today = useMemo(() => new Date(), []);
 
-  // Get the week containing today (Sunday to Saturday)
-  const weekDays = useMemo(() => {
-    const days: Date[] = [];
-    const todayDate = new Date();
-    const dayOfWeek = todayDate.getDay();
-    const firstDayOfWeek = new Date(todayDate);
-    firstDayOfWeek.setDate(todayDate.getDate() - dayOfWeek);
+  // Generate weeks covering a 6-month range (3 months before and after today)
+  const weeks = useMemo(() => {
+    const weeksArray: Date[][] = [];
+    const startDate = new Date(today);
+    startDate.setMonth(today.getMonth() - 3);
+    startDate.setDate(1);
 
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(firstDayOfWeek);
-      day.setDate(firstDayOfWeek.getDate() + i);
-      days.push(day);
+    // Align to start of week (Sunday)
+    const dayOfWeek = startDate.getDay();
+    startDate.setDate(startDate.getDate() - dayOfWeek);
+
+    const endDate = new Date(today);
+    endDate.setMonth(today.getMonth() + 3);
+    endDate.setDate(0); // Last day of month
+
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const week: Date[] = [];
+      for (let i = 0; i < 7; i++) {
+        week.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      weeksArray.push(week);
     }
-    return days;
-  }, []);
+
+    return weeksArray;
+  }, [today]);
 
   return (
     <Wrapper>
@@ -122,25 +153,28 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
         </IconSpan>
         MINI CALENDAR
       </Header>
-      <WeekdayRow>
-        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-          <WeekdayLabel key={i}>{day}</WeekdayLabel>
+      <ScrollContainer>
+        {weeks.map((week, weekIdx) => (
+          <WeekColumn key={weekIdx}>
+            {/* Day of week header */}
+            <WeekdayLabel>{['S', 'M', 'T', 'W', 'T', 'F', 'S'][week[0].getDay()]}</WeekdayLabel>
+            {/* Days in week */}
+            {week.map((date, dayIdx) => {
+              const isToday = isSameDay(date, today);
+              return (
+                <DayButton
+                  key={`${weekIdx}-${dayIdx}`}
+                  $isToday={isToday}
+                  onClick={() => onSelectDate(date)}
+                  title={date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                >
+                  {date.getDate()}
+                </DayButton>
+              );
+            })}
+          </WeekColumn>
         ))}
-      </WeekdayRow>
-      <DaysGrid>
-        {weekDays.map((date, i) => {
-          const isToday = isSameDay(date, today);
-          return (
-            <DayButton
-              key={i}
-              $isToday={isToday}
-              onClick={() => onSelectDate(date)}
-            >
-              {date.getDate()}
-            </DayButton>
-          );
-        })}
-      </DaysGrid>
+      </ScrollContainer>
     </Wrapper>
   );
 }
