@@ -57,13 +57,23 @@ const Layout = styled.div<{ $hideAccentStripe?: boolean }>`
   }
 `;
 
-/* Main column: header bar + content, to the right of the sidebar. */
-const MainColumn = styled.div`
+/* Main column: header bar + content, to the right of the sidebar.
+   On mobile it slides right to reveal the sidebar bar underneath. */
+const MainColumn = styled.div<{ $navOpen?: boolean }>`
   display: flex;
   flex-direction: column;
   flex: 1;
   min-width: 0;
   min-height: 0;
+
+  @media (max-width: 768px) {
+    position: relative;
+    z-index: 2;
+    background: var(--bg-app);
+    transform: translateX(${({ $navOpen }) => ($navOpen ? '240px' : '0')});
+    transition: transform 220ms ease-out;
+    box-shadow: ${({ $navOpen }) => ($navOpen ? '-2px 0 20px rgba(0,0,0,0.25)' : 'none')};
+  }
 `;
 
 const MainContent = styled.main<{ $transparent?: boolean; $hasBackground?: boolean; $lightBg?: boolean }>`
@@ -87,6 +97,7 @@ interface AppTemplateProps {
 export function AppTemplate({ children, hideSidebar, transparentContent, hideAccentStripe }: AppTemplateProps) {
   const backgroundImage = useUIStore(s => s.backgroundImage);
   const isLightBg = BACKGROUND_IMAGES.find(bg => bg.value === backgroundImage)?.light ?? false;
+  const navOpen = useUIStore(s => s.mobileNavOpen);
 
   return (
     <>
@@ -96,7 +107,7 @@ export function AppTemplate({ children, hideSidebar, transparentContent, hideAcc
       <Layout $hideAccentStripe={hideAccentStripe}>
         <SkipLink href="#main-content">Skip to content</SkipLink>
         {!hideSidebar && <Sidebar />}
-        <MainColumn>
+        <MainColumn $navOpen={!hideSidebar && navOpen}>
           <Header />
           <MainContent id="main-content" $transparent={transparentContent} $hasBackground={!!backgroundImage} $lightBg={isLightBg}>{children}</MainContent>
         </MainColumn>

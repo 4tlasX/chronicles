@@ -8,7 +8,6 @@ const Bar = styled.nav`
   flex-wrap: wrap;
   padding: 8px 0;
   border-top: 1px solid var(--border-subtle);
-  border-bottom: 1px solid var(--border-subtle);
 `;
 
 const TabBtn = styled.button<{ $active?: boolean }>`

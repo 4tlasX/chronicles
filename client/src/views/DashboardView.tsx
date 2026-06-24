@@ -126,18 +126,18 @@ function todayKey() {
 /* ── Layout Styled Components ── */
 
 const Page = styled.div`
-  padding: 24px 32px 60px;
+  padding: 44px 56px 72px;
   overflow-y: auto;
   height: 100%;
   box-sizing: border-box;
-  @media (max-width: 640px) { padding: 32px 12px 32px; }
+  @media (max-width: 640px) { padding: 44px 56px 72px; }
 `;
 
 /* DS dashboard header: big date numeral left, weather right, under 2px accent rule. */
 const PageHeader = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 16px;
   margin-bottom: 40px;
   padding-bottom: 28px;
@@ -149,7 +149,7 @@ const PageHeader = styled.div`
 const GreetingBlock = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 16px;
   min-width: 0;
 `;
@@ -190,6 +190,9 @@ const DateInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  /* Nudge the text block down so its first line aligns with the visible top
+     of the big numeral (which has font ascent space above the digit). */
+  padding-top: 12px;
 `;
 
 const DateLabel = styled.p`
@@ -209,7 +212,7 @@ const DailyPrompt = styled.p`
   font-style: italic;
   color: var(--text-secondary);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
   max-width: 360px;
   @media (max-width: 640px) { max-width: 200px; }
 `;
@@ -248,6 +251,12 @@ const InlineWeatherWrap = styled.div`
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
+  flex-shrink: 0;
+`;
+
+/* Keep the weather vertically centered while the date block top-aligns. */
+const WeatherSlot = styled.div`
+  align-self: center;
   flex-shrink: 0;
 `;
 
@@ -3390,7 +3399,7 @@ export function DashboardView() {
               <DailyPrompt>{getDailyQuote().text}</DailyPrompt>
             </DateInfo>
           </GreetingBlock>
-          <InlineWeather />
+          <WeatherSlot><InlineWeather /></WeatherSlot>
         </PageHeader>
 
         {(() => {

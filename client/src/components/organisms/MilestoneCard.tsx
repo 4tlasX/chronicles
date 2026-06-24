@@ -50,14 +50,12 @@ const CardHeader = styled.div<{ $active?: boolean }>`
   grid-template-columns: 1fr;
   gap: 10px;
   align-items: start;
-  padding: 14px var(--s-4, 16px);
+  padding: 16px 4px;
   cursor: pointer;
-  background: ${({ $active }) => $active ? 'var(--paper-well, rgba(0,0,0,0.03))' : 'transparent'};
+  background: ${({ $active }) => $active ? 'var(--bg-hover, rgba(0,0,0,0.03))' : 'transparent'};
   transition: background 120ms;
-  border-radius: var(--r-sm, 2px);
-  &:hover { background: var(--paper-well, rgba(0,0,0,0.03)); }
-  @media (max-width: 768px) { padding: 12px 16px; }
-  @media (max-width: 480px) { padding: 10px 12px; gap: 8px; }
+  &:hover { background: var(--bg-hover, rgba(0,0,0,0.03)); }
+  @media (max-width: 480px) { gap: 8px; }
 `;
 
 const DateCol = styled.div`

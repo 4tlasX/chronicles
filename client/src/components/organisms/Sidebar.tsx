@@ -3,6 +3,9 @@ import styled from 'styled-components';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 
+/* Reveal width: how far the main view slides right to expose the mobile bar. */
+const MOBILE_REVEAL_WIDTH = 240;
+
 const SidebarRoot = styled.aside<{ $mobileOpen?: boolean }>`
   width: 92px;
   min-width: 92px;
@@ -14,17 +17,16 @@ const SidebarRoot = styled.aside<{ $mobileOpen?: boolean }>`
   flex-shrink: 0;
   overflow: hidden;
 
+  /* Mobile = reveal pattern: the bar is pinned under the content at the far
+     left; the main view slides right to expose it. Wider + scrollable. */
   @media (max-width: 768px) {
     position: fixed;
     left: 0;
     top: 56px;
     bottom: 0;
-    width: 72px;
-    min-width: 72px;
-    z-index: 51;
-    transform: translateX(${({ $mobileOpen }) => ($mobileOpen ? '0' : '-100%')});
-    transition: transform 200ms ease-out;
-    box-shadow: ${({ $mobileOpen }) => ($mobileOpen ? '2px 0 16px rgba(0,0,0,0.25)' : 'none')};
+    width: ${MOBILE_REVEAL_WIDTH}px;
+    min-width: ${MOBILE_REVEAL_WIDTH}px;
+    z-index: 1;
   }
 `;
 
@@ -63,7 +65,9 @@ const LogoMark = styled.svg`
 
 const NavScroll = styled.nav`
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -92,6 +96,14 @@ const NavScroll = styled.nav`
   &:hover::-webkit-scrollbar-thumb:hover {
     background: var(--border-default);
   }
+
+  /* Mobile reveal bar: pack items at the top and let the bar scroll. The
+     bottom padding (plus safe-area inset) keeps the last item reachable above
+     the browser chrome / home indicator. */
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
 `;
 
 /* Icon-only nav button — active item gets a solid accent block (per design).
@@ -118,6 +130,13 @@ const NavIconBtn = styled.button<{ $active?: boolean }>`
   &:hover {
     background: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--bg-hover)'};
     color: ${({ $active }) => $active ? 'var(--sidebar-active-ink, white)' : 'var(--text-primary)'};
+  }
+
+  /* On the mobile reveal bar, keep natural height so the list can scroll
+     instead of stretching items to fill the viewport. */
+  @media (max-width: 768px) {
+    flex: 0 0 auto;
+    min-height: 64px;
   }
 `;
 

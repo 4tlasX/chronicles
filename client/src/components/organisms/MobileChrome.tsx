@@ -59,15 +59,20 @@ const MenuButton = styled.button`
   margin-right: -8px;
 `;
 
+/* Tap-catcher over the slid-right main content (sits above it, beside the
+   revealed bar) so tapping the content closes the menu. */
 const Overlay = styled.div<{ $open: boolean }>`
   display: none;
 
   @media (max-width: 768px) {
     display: ${({ $open }) => ($open ? 'block' : 'none')};
     position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 50;
+    top: 56px;
+    right: 0;
+    bottom: 0;
+    left: 240px;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 3;
   }
 `;
 
