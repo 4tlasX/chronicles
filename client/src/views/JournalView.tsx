@@ -9,7 +9,6 @@ import { LoadingCenter } from '../components/atoms/LoadingCenter.js';
 import { EmptyEditor } from '../components/atoms/EmptyEditor.js';
 import { SidePadding } from '../components/atoms/SidePadding.js';
 import { QuickEntryCard } from '../components/atoms/QuickEntryCard.js';
-import { TopicQuickFilter } from '../components/molecules/TopicQuickFilter.js';
 import { ViewTabs } from '../components/organisms/ViewTabs.js';
 import { QuickEntry } from '../components/organisms/QuickEntry.js';
 import { EntryList } from '../components/organisms/EntryList.js';
@@ -109,9 +108,6 @@ export function JournalView() {
   const setShowMobileEditor = useUIStore(s => s.setShowMobileEditor);
   const viewMode = useUIStore(s => s.viewMode);
   const setViewMode = useUIStore(s => s.setViewMode);
-  const selectedTopicId = useUIStore(s => s.selectedTopicId);
-  const setSelectedTopicId = useUIStore(s => s.setSelectedTopicId);
-  const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
   const setAccentColor = useUIStore(s => s.setAccentColor);
   const setThemeMode = useUIStore(s => s.setThemeMode);
@@ -120,16 +116,6 @@ export function JournalView() {
   const setTopicCustomFields = useUIStore(s => s.setTopicCustomFields);
   const searchKeyword = useUIStore(s => s.searchKeyword);
   const setSearchKeyword = useUIStore(s => s.setSearchKeyword);
-  const filterTopic = topics.find(t => t.id === selectedTopicId);
-
-  const entryCounts = useMemo(() => {
-    const counts = new Map<number, number>();
-    for (const entry of decryptedEntries) {
-      const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
-      if (taxId) counts.set(taxId, (counts.get(taxId) || 0) + 1);
-    }
-    return counts;
-  }, [decryptedEntries]);
 
   const entryDates = useMemo(() => {
     const set = new Set<string>();
@@ -427,18 +413,6 @@ export function JournalView() {
     setShowMobileEditor(false);
   };
 
-  const handleDictate = useCallback(() => {
-    setSelectedEntryId(null);
-    setEditorContent('');
-    setEditorTopicId(null);
-    setCustomFields({});
-    setWidgetType(null);
-    setLastSavedAt(null);
-    if (!showMobileEditor) setShowMobileEditor(true);
-    // Give the editor a tick to mount/focus before toggling dictation
-    setTimeout(() => dictationControlRef.current?.toggle(), 80);
-  }, [showMobileEditor, setSelectedEntryId, setShowMobileEditor]);
-
   // Keep a fresh ref to handleSave so the global keydown listener never captures a stale version
   const handleSaveRef = useRef(handleSave);
   handleSaveRef.current = handleSave;
@@ -577,19 +551,10 @@ export function JournalView() {
             <ViewTabs
               onDateTabClick={() => setCalendarExpanded(prev => !prev)}
               onTodayClick={() => setCalendarExpanded(false)}
-            />
-            <TopicQuickFilter
-              topics={topics}
-              selectedTopicId={selectedTopicId}
-              accentColor={accentColor}
-              entryCounts={entryCounts}
-              onSelect={setSelectedTopicId}
-              totalCount={decryptedEntries.length}
               onNewEntry={() => {
                 setSelectedEntryId(null);
-                if (!showMobileEditor) setShowMobileEditor(true);
+                setShowMobileEditor(true);
               }}
-              onDictate={handleDictate}
             />
             {viewMode === 'date' && (
               <DateFilterBar>

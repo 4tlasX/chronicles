@@ -22,6 +22,9 @@ import { initSharesTable } from './db/shareQueries.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+// Bind to loopback only outside production so the dev server is never reachable
+// from the network. In production (Render etc.) the platform needs 0.0.0.0.
+const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
 
 // CLIENT_URL is optional when serving client statically from the same server
 
@@ -96,8 +99,8 @@ setInterval(() => {
   cleanupSessions().catch(() => {});
 }, 6 * 60 * 60 * 1000);
 
-app.listen(PORT, () => {
-  console.log(`Chronicles running on port ${PORT}`);
+app.listen(typeof PORT === 'string' ? parseInt(PORT, 10) : PORT, HOST, () => {
+  console.log(`Chronicles running on ${HOST}:${PORT}`);
 });
 
 export default app;

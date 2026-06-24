@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { SettingsTemplate } from '../components/templates/SettingsTemplate.js';
@@ -1079,16 +1079,14 @@ export function SettingsView() {
       <SectionDescription>Enable optional topics for specialized tracking</SectionDescription>
       <SettingsCard>
         {FEATURES.map(feat => (
-          <>
+          <Fragment key={feat.key}>
             <SettingsRow
-              key={feat.key}
               title={feat.title}
               description={feat.description}
               action={<Toggle checked={features[feat.key] ?? false} onChange={v => handleFeatureToggle(feat.key, v)} activeColor={themeMode === 'dark' ? '#2D2C2A' : '#ecebe7'} />}
             />
             {feat.key === 'allergiesEnabled' && (
               <SettingsRow
-                key="cycleTracking"
                 title="Cycle Tracking"
                 description="Add period and flow tracking to the daily wellness check-in"
                 action={
@@ -1100,7 +1098,7 @@ export function SettingsView() {
                 }
               />
             )}
-          </>
+          </Fragment>
         ))}
       </SettingsCard>
 

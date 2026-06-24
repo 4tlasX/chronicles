@@ -530,7 +530,7 @@ export function EntryForm({
                 onClick={() => entryId && onShare?.()}
                 style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
               >
-                <Icon name="repeat" size={16} strokeWidth={2} />
+                <Icon name="share" size={16} strokeWidth={2} />
               </IconBtn>
               <IconBtn
                 type="button"

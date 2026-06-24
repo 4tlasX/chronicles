@@ -4,6 +4,7 @@ import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { ViewHeader } from '../components/molecules/ViewHeader.js';
+import { MealsTabBar } from '../components/molecules/MealsTabBar.js';
 import { FilterTabs } from '../components/molecules/FilterTabs.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
@@ -95,7 +96,8 @@ export function ShoppingListsView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Shopping Lists" titleTo="/goals" />
+      <ViewHeader title="Meals" titleTo="/menu" />
+      <MealsTabBar />
 
       <TabsRow>
         <FilterTabs options={TABS} active={tab} onChange={v => setTab(v as Tab)} />

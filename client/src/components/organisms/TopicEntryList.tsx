@@ -4,11 +4,35 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faPrint } from '@fortawesome/free-solid-svg-icons';
 import { EmptyState } from '../atoms/EmptyState.js';
 import { EditableEntryCard } from './EditableEntryCard.js';
+import { EntryCard } from './EntryCard.js';
+import { getTopicIcon } from '../../utils/topicIcons.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 import type { Topic } from '../../types/topics.js';
 import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { BACKGROUND_IMAGES } from '@chronicles/shared';
+
+/* DS entry-type color palette for the left color bar — mirrors EntryList. */
+const TYPE_COLOR: Record<string, string> = {
+  journal: 'var(--color-accent)',
+  task: '#d97706',
+  event: '#2563eb',
+  meeting: '#2563eb',
+  goal: '#65a30d',
+  milestone: '#65a30d',
+  quote: '#9333ea',
+  meal: '#e11d48',
+  food: '#e11d48',
+  meals: '#e11d48',
+};
+
+function topicBarColor(topicName: string | undefined, fallback: string | null | undefined): string | undefined {
+  if (topicName) {
+    const key = topicName.toLowerCase();
+    if (TYPE_COLOR[key]) return TYPE_COLOR[key];
+  }
+  return fallback || 'var(--color-accent)';
+}
 
 type DateFilter = 'all' | 'today' | 'week' | 'month';
 
@@ -191,90 +215,24 @@ const SumUnit = styled.span`
 const ListArea = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 20px 24px 32px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-`;
-
-/* ── Entry card ── */
-const Card = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-left: 3px solid var(--accent, ${({ theme }) => theme.colors.accent});
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  padding: 12px 16px;
-  cursor: pointer;
+  gap: 0;
+  padding: 0;
 `;
 
 const EditorWrap = styled.div`
-  margin: 4px 0 8px;
-`;
-
-const CardTitle = styled.div`
-  font-family: ${({ theme }) => theme.fontFamily.sans};
-  font-style: italic;
-  font-size: 16px;
-  color: ${({ theme }) => theme.colors.text};
-  margin: 0 0 6px;
-`;
-
-const CardBody = styled.div`
-  font-family: ${({ theme }) => theme.fontFamily.sans};
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  line-height: 1.55;
-  margin: 0 0 10px;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-`;
-
-const CardMeta = styled.div`
-  font-family: ${({ theme }) => theme.fontFamily.mono};
-  font-size: 9.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: ${({ theme }) => theme.colors.textFaint};
-  display: flex;
-  gap: 16px;
+  border-bottom: 1px solid var(--border-subtle);
 `;
 
 /* ── Day groups ── */
 const DayGroup = styled.div`
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 20px;
-  align-items: start;
-`;
-
-const DayLabel = styled.div`
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 300;
-  color: #453f38;
-  text-align: right;
-  padding-top: 10px;
-  letter-spacing: 0.05rem;
-`;
-
-const DayDate = styled.span`
   display: block;
-  font-family: var(--font-sans);
-  font-style: normal;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: ${({ theme }) => theme.colors.textFaint};
-  text-transform: uppercase;
-  margin-top: 3px;
 `;
 
 const DayEntries = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
 `;
 
 /* ── Helpers ── */
@@ -282,19 +240,6 @@ function startOfDay(d: Date) {
   const r = new Date(d);
   r.setHours(0, 0, 0, 0);
   return r;
-}
-
-function relativeDay(date: Date): string {
-  const today = startOfDay(new Date());
-  const d = startOfDay(date);
-  const diff = Math.round((today.getTime() - d.getTime()) / 86400000);
-  if (diff === 0) return 'Today';
-  if (diff === 1) return 'Yesterday';
-  return d.toLocaleDateString('en-US', { weekday: 'long' });
-}
-
-function monoDate(date: Date): string {
-  return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 function applyDateFilter(entries: DecryptedPost[], filter: DateFilter): DecryptedPost[] {
@@ -309,25 +254,12 @@ function applyDateFilter(entries: DecryptedPost[], filter: DateFilter): Decrypte
   });
 }
 
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-}
-
-function countFields(metadata: Record<string, unknown>): number {
-  const cf = metadata._customFields as Record<string, unknown> | undefined;
-  if (!cf) return 0;
-  const uf = cf._userFields as Record<string, unknown> | undefined;
-  const builtIn = Object.keys(cf).filter(k => k !== '_userFields' && cf[k] !== null && cf[k] !== undefined && cf[k] !== '').length;
-  const user = uf ? Object.values(uf).filter(v => v !== null && v !== undefined && v !== '').length : 0;
-  return builtIn + user;
-}
-
 function groupByDay(entries: DecryptedPost[]) {
-  const map = new Map<string, { label: string; mono: string; entries: DecryptedPost[] }>();
+  const map = new Map<string, { entries: DecryptedPost[] }>();
   for (const e of entries) {
     const d = new Date(e.createdAt);
     const key = startOfDay(d).toISOString();
-    if (!map.has(key)) map.set(key, { label: relativeDay(d), mono: monoDate(d), entries: [] });
+    if (!map.has(key)) map.set(key, { entries: [] });
     map.get(key)!.entries.push(e);
   }
   return Array.from(map.entries()).map(([dayKey, v]) => ({ dayKey, ...v }));
@@ -443,16 +375,12 @@ export function TopicEntryList({
 
         {groups.map(group => (
           <DayGroup key={group.dayKey}>
-            <DayLabel>
-              {group.label}
-              <DayDate>{group.mono}</DayDate>
-            </DayLabel>
             <DayEntries>
               {group.entries.map(entry => {
                 const bodyText = stripHtml(entry.content).trim();
-                const titleText = entry.metadata._title as string | undefined;
                 const meta = entry.metadata as Record<string, unknown>;
                 const cf = meta._customFields as Record<string, unknown> | undefined;
+                const topic = getTopicForEntry(entry);
                 let fieldPreview: string | undefined;
                 if (!bodyText && cf) {
                   if ((meta._widgetType as string) === 'wellness-checkin') {
@@ -469,19 +397,20 @@ export function TopicEntryList({
                     fieldPreview = summarizeUserFields(defs, uf) || undefined;
                   }
                 }
-                const cardTitle = titleText || bodyText.slice(0, 80) || fieldPreview || 'Untitled';
-                const cardBody = titleText ? bodyText : '';
-                const fieldCount = countFields(entry.metadata);
                 return (
                   <div key={entry.id}>
-                    <Card onClick={() => setExpandedId(editingId === entry.id ? null : entry.id)}>
-                      <CardTitle>{cardTitle}</CardTitle>
-                      {cardBody && <CardBody>{cardBody}</CardBody>}
-                      <CardMeta>
-                        {getTopicForEntry(entry) && <span>{getTopicForEntry(entry)!.name}</span>}
-                        {fieldCount > 0 && <span>{fieldCount} field{fieldCount !== 1 ? 's' : ''}</span>}
-                      </CardMeta>
-                    </Card>
+                    <EntryCard
+                      id={entry.id}
+                      content={entry.content}
+                      date={entry.createdAt instanceof Date ? entry.createdAt.toISOString() : String(entry.createdAt)}
+                      topicName={topic?.name}
+                      topicColor={topicBarColor(topic?.name, topic?.color)}
+                      topicIcon={getTopicIcon(topic?.icon)}
+                      topicId={topic?.id}
+                      active={editingId === entry.id}
+                      onClick={() => setExpandedId(editingId === entry.id ? null : entry.id)}
+                      previewText={fieldPreview}
+                    />
                     {editingId === entry.id && (
                       <EditorWrap>
                         <EditableEntryCard

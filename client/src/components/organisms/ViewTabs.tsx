@@ -1,25 +1,25 @@
 import { useCallback, type KeyboardEvent } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faList, faSun, faCalendar, faMagnifyingGlass, faBookmark, faQuestion } from '@fortawesome/free-solid-svg-icons';
 import { useUIStore } from '../../stores/uiStore.js';
-import type { ViewMode } from '../../types/ui.js';
+
+type TabValue = Parameters<ReturnType<typeof useUIStore.getState>['setViewMode']>[0];
 
 type TabEntry = {
-  value: ViewMode;
-  icon: typeof faList;
+  value: TabValue;
+  icon: string;
   label: string;
   title: string;
   isToday?: boolean;
+  isNewEntry?: boolean;
 };
 
 const tabs: TabEntry[] = [
-  { value: 'all',       icon: faList,            label: 'All',       title: 'All entries' },
-  { value: 'date',      icon: faSun,             label: 'Today',     title: 'Today',        isToday: true },
-  { value: 'date',      icon: faCalendar,        label: 'Date',      title: 'Pick a date' },
-  { value: 'favorites', icon: faBookmark,        label: 'Bookmarks', title: 'Bookmarked entries' },
-  { value: 'search',    icon: faMagnifyingGlass, label: 'Search',    title: 'Search entries' },
-  { value: 'orphaned',  icon: faQuestion,        label: 'Orphaned',  title: 'Entries with missing topics' },
+  { value: 'all',       icon: 'list',            label: 'All',       title: 'All entries' },
+  { value: 'date',      icon: 'wb_sunny',        label: 'Today',     title: 'Today',        isToday: true },
+  { value: 'date',      icon: 'calendar_month',  label: 'Date',      title: 'Pick a date' },
+  { value: 'favorites', icon: 'bookmark',        label: 'Bookmarks', title: 'Bookmarked entries' },
+  { value: 'search',    icon: 'search',          label: 'Search',    title: 'Search entries' },
+  { value: 'all',       icon: 'stylus_fountain_pen', label: 'New',    title: 'New entry', isNewEntry: true },
 ];
 
 const Container = styled.div`
@@ -57,9 +57,19 @@ const TabButton = styled.button<{ $active?: boolean }>`
 `;
 
 const TabIcon = styled.span`
-  font-size: 14px;
-  flex-shrink: 0;
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
   line-height: 1;
+  flex-shrink: 0;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
 `;
 
 const TabLabel = styled.span<{ $visible: boolean }>`
@@ -75,21 +85,27 @@ function isSameDay(a: Date, b: Date) {
 interface ViewTabsProps {
   onDateTabClick?: () => void;
   onTodayClick?: () => void;
+  onNewEntry?: () => void;
 }
 
-export function ViewTabs({ onDateTabClick, onTodayClick }: ViewTabsProps = {}) {
+export function ViewTabs({ onDateTabClick, onTodayClick, onNewEntry }: ViewTabsProps = {}) {
   const viewMode = useUIStore(s => s.viewMode);
   const setViewMode = useUIStore(s => s.setViewMode);
   const selectedDate = useUIStore(s => s.selectedDate);
   const setSelectedDate = useUIStore(s => s.setSelectedDate);
 
   const isTabActive = useCallback((tab: TabEntry) => {
+    if (tab.isNewEntry) return false;
     if (tab.isToday) return viewMode === 'date' && isSameDay(selectedDate, new Date());
     if (tab.label === 'Date') return viewMode === 'date' && !isSameDay(selectedDate, new Date());
     return viewMode === tab.value;
   }, [viewMode, selectedDate]);
 
   const handleTabClick = useCallback((tab: TabEntry) => {
+    if (tab.isNewEntry) {
+      onNewEntry?.();
+      return;
+    }
     if (tab.isToday) {
       setSelectedDate(new Date());
       setViewMode('date');
@@ -110,7 +126,7 @@ export function ViewTabs({ onDateTabClick, onTodayClick }: ViewTabsProps = {}) {
     } else {
       setViewMode(tab.value);
     }
-  }, [viewMode, setViewMode, setSelectedDate, onDateTabClick, onTodayClick]);
+  }, [viewMode, setViewMode, setSelectedDate, onDateTabClick, onTodayClick, onNewEntry]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLButtonElement>, index: number) => {
     let nextIndex: number | null = null;
@@ -136,7 +152,7 @@ export function ViewTabs({ onDateTabClick, onTodayClick }: ViewTabsProps = {}) {
             onClick={() => handleTabClick(tab)}
             onKeyDown={e => handleKeyDown(e, i)}
           >
-            <TabIcon><FontAwesomeIcon icon={tab.icon} /></TabIcon>
+            <TabIcon aria-hidden="true">{tab.icon}</TabIcon>
           </TabButton>
         );
       })}

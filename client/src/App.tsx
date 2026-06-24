@@ -370,7 +370,6 @@ export function App() {
 
               {/* Inspiration */}
               <Route path="/inspiration/research" element={<R><TopicEntriesView title="Research" topicNames={['Research']} showDateFilter={false} /></R>} />
-              <Route path="/inspiration/ideas" element={<R><TopicEntriesView title="Ideas" topicNames={['Idea']} showDateFilter={false} /></R>} />
               <Route path="/inspiration/quotes" element={<R><TopicEntriesView title="Quotes" topicNames={['Quote']} showDateFilter={false} /></R>} />
             </Routes>
           </BrowserRouter>

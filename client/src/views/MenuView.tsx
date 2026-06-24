@@ -6,6 +6,7 @@ import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { ViewHeader } from '../components/molecules/ViewHeader.js';
+import { MealsTabBar } from '../components/molecules/MealsTabBar.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
@@ -523,7 +524,8 @@ export function MenuView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Menu Planner" titleTo="/goals" onBack={() => navigate('/')} />
+      <ViewHeader title="Meals" titleTo="/menu" onBack={() => navigate('/')} />
+      <MealsTabBar />
 
       {/* Week navigation */}
       <NavRow>

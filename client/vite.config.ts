@@ -39,12 +39,20 @@ export default defineConfig({
     },
   },
   server: {
+    // Loopback only — the dev server must never be exposed to the network.
+    host: '127.0.0.1',
     port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
     },
+  },
+  preview: {
+    host: '127.0.0.1',
+    port: 4173,
+    strictPort: true,
   },
 });

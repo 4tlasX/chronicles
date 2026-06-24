@@ -54,20 +54,27 @@ function extractPreview(html: string): string {
 /* DS entry-list row: [accent bar][title + subtitle][time]. Borderless except a
    hairline bottom rule; selected row gets a topic-colored left bar + faint fill. */
 const Row = styled.div<{ $active?: boolean; $accent?: string }>`
+  position: relative;
   display: grid;
   grid-template-columns: 3px 1fr auto;
   gap: var(--s-3, 12px);
-  align-items: start;
+  align-items: center;
+  height: 70px;
+  box-sizing: border-box;
   cursor: pointer;
-  padding: 13px var(--s-4, 18px) 13px 0;
+  padding: 0 var(--s-4, 18px) 0 0;
   border-bottom: 1px solid var(--border-subtle);
+  overflow: hidden;
   background: ${({ $active }) => $active ? 'var(--bg-active)' : 'transparent'};
   transition: background 120ms;
 
   &::before {
     content: '';
-    grid-column: 1;
-    align-self: stretch;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
     background: ${({ $active, $accent }) => $active ? ($accent || 'var(--color-accent)') : 'transparent'};
   }
 
@@ -84,7 +91,7 @@ const ContentArea = styled.div`
 const TitleText = styled.div<{ $completed?: boolean }>`
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 13.5px;
+  font-size: 15px;
   color: var(--text-primary);
   line-height: 1.3;
   white-space: nowrap;
@@ -117,16 +124,12 @@ const TimeStamp = styled.div<{ $active?: boolean; $accent?: string }>`
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
-  padding-top: var(--s-1, 4px);
   color: ${({ $active, $accent }) => $active ? ($accent || 'var(--color-accent)') : 'var(--text-tertiary)'};
 `;
 
 const DateLabel = styled.div`
-  font-size: 8px;
-  line-height: 1;
-`;
-
-const TimeLabel = styled.div`
+  font-size: 10px;
+  font-weight: 600;
   line-height: 1;
 `;
 
@@ -141,20 +144,18 @@ const BookmarkIcon = styled.span`
 `;
 
 export function EntryCard({
-  id, content, date, topicName, topicColor, topicId,
-  active, onClick, onDelete, onTopicClick, onToggleBookmark,
+  id, content, date, topicColor,
+  active, onClick, onDelete, onToggleBookmark,
   isCompleted, isFavorite, previewText,
 }: EntryCardProps) {
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const d = new Date(date);
-  const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   const monthAbbr = d.toLocaleDateString('en-US', { month: 'short' });
   const dateStr = `${monthAbbr} ${String(d.getDate()).padStart(2, '0')}`;
 
   const title = extractTitle(content, previewText);
-  const preview = extractPreview(content);
-  const subtitle = preview || (topicName ?? '');
+  const subtitle = extractPreview(content);
 
   const inner = (
     <Row $active={active} $accent={topicColor} onClick={onClick}>
@@ -164,7 +165,6 @@ export function EntryCard({
       </ContentArea>
       <TimeStamp $active={active} $accent={topicColor}>
         <DateLabel>{dateStr}</DateLabel>
-        <TimeLabel>{timeStr}</TimeLabel>
         {isFavorite && (
           <BookmarkIcon
             onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
