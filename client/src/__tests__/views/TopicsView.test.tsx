@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { TopicsView } from '@/views/TopicsView';
 import { renderWithTheme } from '../testUtils';
 import { useInitializeData } from '@/hooks/useInitializeData';
@@ -30,24 +30,30 @@ vi.mock('@/stores/entriesStore', () => ({
         { id: 1, name: 'Journal', icon: 'book', color: null },
         { id: 2, name: 'Goal', icon: 'bullseye', color: null },
       ],
-      decryptedEntries: [],
+      decryptedEntries: [
+        { id: 10, metadata: { _taxonomyId: 1 } },
+        { id: 11, metadata: { _taxonomyId: 1 } },
+      ],
       setTopics: vi.fn(),
     })
   ),
 }));
 
-vi.mock('@/stores/uiStore', () => ({
-  useUIStore: vi.fn((selector: (s: any) => any) =>
-    selector({ headerColor: '#4A5568' })
-  ),
-}));
+vi.mock('@/stores/uiStore', () => {
+  const fn: any = vi.fn((selector: (s: any) => any) =>
+    selector({
+      accentColor: '#4A5568',
+      topicCustomFields: {},
+      updateTopicFields: vi.fn(),
+    })
+  );
+  fn.getState = () => ({ topicCustomFields: {} });
+  return { useUIStore: fn };
+});
 
 vi.mock('@/services/api', () => ({
   topics: { create: vi.fn(), update: vi.fn(), delete: vi.fn(), reorder: vi.fn() },
-}));
-
-vi.mock('@/components/templates/TwoPanelTemplate', () => ({
-  TwoPanelTemplate: ({ children }: any) => <div data-testid="two-panel-template">{children}</div>,
+  settings: { upsert: vi.fn(() => Promise.resolve()) },
 }));
 
 vi.mock('@/components/templates/ContentTemplate', () => ({
@@ -62,12 +68,8 @@ vi.mock('@/components/atoms/Spinner', () => ({
   Spinner: () => <span data-testid="spinner">Loading...</span>,
 }));
 
-vi.mock('@/components/organisms/TopicSidebarPanel', () => ({
-  TopicSidebarPanel: () => <div data-testid="topic-sidebar-panel">Topics Sidebar</div>,
-}));
-
-vi.mock('@/components/organisms/TopicEntryList', () => ({
-  TopicEntryList: ({ title }: any) => <div data-testid="topic-entry-list">{title}</div>,
+vi.mock('@/components/molecules/TopicEditForm', () => ({
+  TopicEditForm: () => <div data-testid="topic-edit-form" />,
 }));
 
 vi.mock('@/components/organisms/UnlockDialog', () => ({
@@ -75,19 +77,37 @@ vi.mock('@/components/organisms/UnlockDialog', () => ({
 }));
 
 describe('TopicsView', () => {
-  it('renders without crashing', () => {
-    renderWithTheme(<TopicsView />);
-    expect(screen.getByTestId('two-panel-template')).toBeInTheDocument();
+  beforeEach(() => {
+    mockNavigate.mockClear();
+    vi.mocked(useInitializeData).mockReturnValue({
+      isReady: true,
+      isLoading: false,
+      needsUnlock: false,
+      handleUnlock: vi.fn(),
+    });
   });
 
-  it('renders the topic sidebar panel', () => {
+  it('renders the Topics title', () => {
     renderWithTheme(<TopicsView />);
-    expect(screen.getByTestId('topic-sidebar-panel')).toBeInTheDocument();
+    expect(screen.getByText('Topics')).toBeInTheDocument();
   });
 
-  it('renders the topic entry list with default title', () => {
+  it('lists each topic with its entry count', () => {
     renderWithTheme(<TopicsView />);
-    expect(screen.getByTestId('topic-entry-list')).toHaveTextContent('All Entries');
+    expect(screen.getByText('Journal')).toBeInTheDocument();
+    expect(screen.getByText('Goal')).toBeInTheDocument();
+    expect(screen.getByText(/2 entries/)).toBeInTheDocument();
+  });
+
+  it('navigates to the topic page when a row is clicked', () => {
+    renderWithTheme(<TopicsView />);
+    fireEvent.click(screen.getByText('Journal'));
+    expect(mockNavigate).toHaveBeenCalledWith('/topics/1');
+  });
+
+  it('shows an add-new-topic row', () => {
+    renderWithTheme(<TopicsView />);
+    expect(screen.getByText('Add new topic…')).toBeInTheDocument();
   });
 });
 

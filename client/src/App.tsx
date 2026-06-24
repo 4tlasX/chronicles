@@ -14,6 +14,7 @@ import { JournalView } from './views/JournalView.js';
 import { SettingsView } from './views/SettingsView.js';
 import { SharedEntryView } from './views/SharedEntryView.js';
 import { TopicsView } from './views/TopicsView.js';
+import { TopicDetailView } from './views/TopicDetailView.js';
 import { CalendarView } from './views/CalendarView.js';
 import { GoalsView } from './views/GoalsView.js';
 import { PlannerFilterView } from './views/PlannerFilterView.js';
@@ -344,6 +345,7 @@ export function App() {
               <Route path="/journal" element={<R><JournalView /></R>} />
               <Route path="/settings" element={<R><SettingsView /></R>} />
               <Route path="/topics" element={<R><TopicsView /></R>} />
+              <Route path="/topics/:topicId" element={<R><TopicDetailView /></R>} />
               <Route path="/calendar" element={<R><CalendarView /></R>} />
               <Route path="/goals" element={<R><GoalsView /></R>} />
               <Route path="/goals/milestones" element={<R><GoalsView /></R>} />
