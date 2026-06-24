@@ -4,10 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBookmark, faXmark, faPlus, faSlidersH, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
-import { ScrollList } from '../components/atoms/ScrollList.js';
 import { Spinner } from '../components/atoms/Spinner.js';
-import { ViewHeader } from '../components/molecules/ViewHeader.js';
-import { DayGroupedList } from '../components/molecules/DayGroupedList.js';
 import { PlanningTabBar } from '../components/molecules/PlanningTabBar.js';
 import { GoalCard } from '../components/organisms/GoalCard.js';
 import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
@@ -20,12 +17,53 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 import { entries as entriesApi, settings as settingsApi } from '../services/api.js';
 import { stripHtml } from '../utils/stripHtml.js';
-import { useNavigate } from 'react-router-dom';
 import type { MilestoneEntryData, TaskEntryData } from '../types/goals.js';
 import type { PlannerFilterConfig, SavedPlannerFilter } from '../types/planner.js';
 import { EMPTY_PLANNER_FILTER, isFilterEmpty, filtersEqual } from '../types/planner.js';
 
 /* ── Styled components ── */
+
+/* Unified Planning shell (mirrors GoalsView). */
+const Page = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+`;
+
+const Inner = styled.div`
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+  @media (max-width: 768px) { padding: 0 16px 48px; }
+`;
+
+const Head = styled.div`
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 53px 0 16px;
+`;
+
+const Title = styled.h1`
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 200;
+  line-height: 1;
+  color: var(--text-primary);
+  margin: 0;
+  @media (max-width: 480px) { font-size: 34px; }
+`;
+
+const TabsRow = styled.div`
+  margin: 0;
+`;
+
+const Body = styled.div`
+  padding-top: 8px;
+`;
 
 const FilterPanel = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
@@ -36,7 +74,7 @@ const FilterToggleRow = styled.button`
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 10px 16px;
+  padding: 10px 0;
   background: none;
   border: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
@@ -65,7 +103,7 @@ const FilterSummary = styled.span`
 `;
 
 const FilterBody = styled.div`
-  padding: 12px 16px;
+  padding: 12px 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -283,7 +321,7 @@ const SaveBtn = styled.button<{ $color: string }>`
 /* ── Results section header ── */
 
 const SectionHeader = styled.div<{ $color: string }>`
-  padding: 16px 16px 12px;
+  padding: 16px 0 12px;
   font-family: ${({ theme }) => theme.fontFamily.ui};
   font-size: 13px;
   font-weight: 600;
@@ -403,7 +441,6 @@ export function PlannerFilterView() {
   const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
-  const navigate = useNavigate();
   const { encryptPost } = useEncryption();
 
   // pending = what the user is editing; applied = what actually drives results
@@ -694,39 +731,40 @@ export function PlannerFilterView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader
-        title="Planning"
-        titleTo="/goals"
-        onBack={() => navigate('/goals')}
-        right={
-          <AddBtnWrap ref={addDropdownRef}>
-            <AddBtn onClick={() => setAddDropdownOpen(o => !o)}>
-              <FontAwesomeIcon icon={faPlus} />
-              Add
-            </AddBtn>
-            {addDropdownOpen && (
-              <AddDropdown>
-                {goalTopic && (
-                  <AddDropdownItem onClick={() => { setAddType('goal'); setAddDropdownOpen(false); }}>
-                    Goal
-                  </AddDropdownItem>
-                )}
-                {milestoneTopic && (
-                  <AddDropdownItem onClick={() => { setAddType('milestone'); setAddDropdownOpen(false); }}>
-                    Milestone
-                  </AddDropdownItem>
-                )}
-                {taskTopic && (
-                  <AddDropdownItem onClick={() => { setAddType('task'); setAddDropdownOpen(false); }}>
-                    Task / Todo
-                  </AddDropdownItem>
-                )}
-              </AddDropdown>
-            )}
-          </AddBtnWrap>
-        }
-      />
+      <Page>
+        <Inner>
+          <Head>
+            <Title>Planning</Title>
+            <AddBtnWrap ref={addDropdownRef}>
+              <AddBtn onClick={() => setAddDropdownOpen(o => !o)}>
+                <FontAwesomeIcon icon={faPlus} />
+                Add
+              </AddBtn>
+              {addDropdownOpen && (
+                <AddDropdown>
+                  {goalTopic && (
+                    <AddDropdownItem onClick={() => { setAddType('goal'); setAddDropdownOpen(false); }}>
+                      Goal
+                    </AddDropdownItem>
+                  )}
+                  {milestoneTopic && (
+                    <AddDropdownItem onClick={() => { setAddType('milestone'); setAddDropdownOpen(false); }}>
+                      Milestone
+                    </AddDropdownItem>
+                  )}
+                  {taskTopic && (
+                    <AddDropdownItem onClick={() => { setAddType('task'); setAddDropdownOpen(false); }}>
+                      Task / Todo
+                    </AddDropdownItem>
+                  )}
+                </AddDropdown>
+              )}
+            </AddBtnWrap>
+          </Head>
 
+          <TabsRow><PlanningTabBar /></TabsRow>
+
+          <Body>
       {activeTopic && (
         <NewEntryCard
           topic={activeTopic}
@@ -737,8 +775,6 @@ export function PlannerFilterView() {
           onOpenChange={(open) => { if (!open) setAddType(null); }}
         />
       )}
-
-      <PlanningTabBar />
 
       {/* Filter panel */}
       <FilterPanel>
@@ -871,7 +907,7 @@ export function PlannerFilterView() {
       </FilterPanel>
 
       {/* Results */}
-      <ScrollList $padding="0" $gap="0">
+      <div>
         {isFilterEmpty(filter) ? (
           <EmptyHint>
             <HintIcon><FontAwesomeIcon icon={faSlidersH} /></HintIcon>
@@ -887,18 +923,13 @@ export function PlannerFilterView() {
                 <SectionHeader $color={accentColor}>
                   Goals <ResultCount>({results.goalResults.length})</ResultCount>
                 </SectionHeader>
-                <DayGroupedList
-                  items={results.goalResults}
-                  getDate={g => g.createdAt}
-                  getKey={g => g.id}
-                  renderItem={g => (
-                    <GoalCard goal={g} milestones={milestones} accentColor={accentColor}
-                      isEditing={editingId === g.id} onSelect={() => setEditingId(prev => prev === g.id ? null : g.id)}
-                      onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
-                      onToggleMilestone={handleToggleMilestone} onUnlinkMilestone={async () => {}}
-                      onLinkMilestone={async () => {}} onCreateMilestone={async () => {}} />
-                  )}
-                />
+                {results.goalResults.map(g => (
+                  <GoalCard key={g.id} goal={g} milestones={milestones} accentColor={accentColor}
+                    isEditing={editingId === g.id} onSelect={() => setEditingId(prev => prev === g.id ? null : g.id)}
+                    onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
+                    onToggleMilestone={handleToggleMilestone} onUnlinkMilestone={async () => {}}
+                    onLinkMilestone={async () => {}} onCreateMilestone={async () => {}} />
+                ))}
               </>
             )}
 
@@ -907,20 +938,15 @@ export function PlannerFilterView() {
                 <SectionHeader $color={accentColor}>
                   Milestones <ResultCount>({results.milestoneResults.length})</ResultCount>
                 </SectionHeader>
-                <DayGroupedList
-                  items={results.milestoneResults}
-                  getDate={m => m.createdAt}
-                  getKey={m => m.id}
-                  renderItem={m => (
-                    <MilestoneCard milestone={m} tasks={tasks}
-                      goalTitle={m.parentGoalId ? (goalTitles.get(m.parentGoalId) || null) : null}
-                      goalOptions={goalOptions} accentColor={accentColor}
-                      isEditing={editingId === m.id} onSelect={() => setEditingId(prev => prev === m.id ? null : m.id)}
-                      onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
-                      onToggleTask={handleToggleTask} onUnlinkTask={async () => {}}
-                      onCreateTask={async () => {}} onLinkTask={async () => {}} />
-                  )}
-                />
+                {results.milestoneResults.map(m => (
+                  <MilestoneCard key={m.id} milestone={m} tasks={tasks}
+                    goalTitle={m.parentGoalId ? (goalTitles.get(m.parentGoalId) || null) : null}
+                    goalOptions={goalOptions} accentColor={accentColor}
+                    isEditing={editingId === m.id} onSelect={() => setEditingId(prev => prev === m.id ? null : m.id)}
+                    onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
+                    onToggleTask={handleToggleTask} onUnlinkTask={async () => {}}
+                    onCreateTask={async () => {}} onLinkTask={async () => {}} />
+                ))}
               </>
             )}
 
@@ -929,22 +955,17 @@ export function PlannerFilterView() {
                 <SectionHeader $color={accentColor}>
                   Tasks <ResultCount>({results.taskResults.length})</ResultCount>
                 </SectionHeader>
-                <DayGroupedList
-                  items={results.taskResults}
-                  getDate={t => t.createdAt}
-                  getKey={t => t.id}
-                  renderItem={t => {
-                    const entry = entries.find(e => e.id === t.id);
-                    if (!entry) return null;
-                    const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                    return (
-                      <EditableEntryCard entry={entry} topic={topic} accentColor={accentColor}
-                        isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
-                        onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
-                        metaFields={[]} hideDate />
-                    );
-                  }}
-                />
+                {results.taskResults.map(t => {
+                  const entry = entries.find(e => e.id === t.id);
+                  if (!entry) return null;
+                  const topic = allTopics.find(tp => tp.id === t.taxonomyId);
+                  return (
+                    <EditableEntryCard key={t.id} entry={entry} topic={topic} accentColor={accentColor}
+                      isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
+                      onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
+                      metaFields={[]} hideDate flush />
+                  );
+                })}
               </>
             )}
 
@@ -953,27 +974,25 @@ export function PlannerFilterView() {
                 <SectionHeader $color={accentColor}>
                   Todos <ResultCount>({results.todoResults.length})</ResultCount>
                 </SectionHeader>
-                <DayGroupedList
-                  items={results.todoResults}
-                  getDate={t => t.createdAt}
-                  getKey={t => t.id}
-                  renderItem={t => {
-                    const entry = entries.find(e => e.id === t.id);
-                    if (!entry) return null;
-                    const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                    return (
-                      <EditableEntryCard entry={entry} topic={topic} accentColor={accentColor}
-                        isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
-                        onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
-                        metaFields={[]} hideDate />
-                    );
-                  }}
-                />
+                {results.todoResults.map(t => {
+                  const entry = entries.find(e => e.id === t.id);
+                  if (!entry) return null;
+                  const topic = allTopics.find(tp => tp.id === t.taxonomyId);
+                  return (
+                    <EditableEntryCard key={t.id} entry={entry} topic={topic} accentColor={accentColor}
+                      isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
+                      onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
+                      metaFields={[]} hideDate flush />
+                  );
+                })}
               </>
             )}
           </>
         )}
-      </ScrollList>
+      </div>
+          </Body>
+        </Inner>
+      </Page>
     </ContentTemplate>
   );
 }

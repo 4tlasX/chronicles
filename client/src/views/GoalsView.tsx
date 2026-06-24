@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import styled from 'styled-components';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -6,11 +7,8 @@ import {
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
-import { ScrollList } from '../components/atoms/ScrollList.js';
 import { Spinner } from '../components/atoms/Spinner.js';
-import { HeaderAddButton } from '../components/atoms/HeaderAddButton.js';
-import { ViewHeader } from '../components/molecules/ViewHeader.js';
-import { DayGroupedList } from '../components/molecules/DayGroupedList.js';
+import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 import { PlanningTabBar } from '../components/molecules/PlanningTabBar.js';
 import { GoalCard } from '../components/organisms/GoalCard.js';
 import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
@@ -25,6 +23,69 @@ import { entries as entriesApi } from '../services/api.js';
 import { stripHtml } from '../utils/stripHtml.js';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { GoalEntry, MilestoneEntryData, TaskEntryData } from '../types/goals.js';
+
+/* ── Layout (mirrors Health) ── */
+
+const Page = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+`;
+
+const Inner = styled.div`
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+  @media (max-width: 768px) { padding: 0 16px 48px; }
+`;
+
+const Head = styled.div`
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 53px 0 16px;
+`;
+
+const Title = styled.h1`
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 200;
+  line-height: 1;
+  color: var(--text-primary);
+  margin: 0;
+  @media (max-width: 480px) { font-size: 34px; }
+`;
+
+const NewBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 9px 4px;
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 120ms ease;
+  &:hover { opacity: 0.7; }
+`;
+
+const TabsRow = styled.div`
+  margin: 0;
+`;
+
+const Body = styled.div`
+  padding-top: 8px;
+`;
 
 export function GoalsView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
@@ -322,16 +383,21 @@ export function GoalsView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader
-        title="Planning"
-        titleTo="/goals"
-        onBack={() => navigate('/')}
-        right={activeAddTopic ? <HeaderAddButton label={addLabel} onClick={() => setIsAddOpen(true)} /> : undefined}
-      />
+      <Page>
+        <Inner>
+          <Head>
+            <Title>Planning</Title>
+            {activeAddTopic && (
+              <NewBtn onClick={() => setIsAddOpen(true)}>
+                <MaterialIcon $size={16} aria-hidden="true">add</MaterialIcon>
+                {addLabel}
+              </NewBtn>
+            )}
+          </Head>
 
-      <PlanningTabBar />
+          <TabsRow><PlanningTabBar /></TabsRow>
 
-      <ScrollList $padding="0" $gap="0">
+          <Body>
         {activeAddTopic && (
           <NewEntryCard
             topic={activeAddTopic}
@@ -379,58 +445,54 @@ export function GoalsView() {
 
         {tab === 'tasks' && (tasks.length === 0
             ? <EmptyState message="No tasks found." submessage="Create a journal entry with the Task topic to get started." />
-            : <DayGroupedList
-                items={tasks}
-                getDate={t => t.createdAt}
-                getKey={t => t.id}
-                renderItem={t => {
-                  const entry = entries.find(e => e.id === t.id);
-                  if (!entry) return null;
-                  const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                  return (
-                    <EditableEntryCard
-                      entry={entry}
-                      topic={topic}
-                      accentColor={accentColor}
-                      isEditing={editingId === t.id}
-                      onSelect={() => handleSelect(t.id)}
-                      onClose={() => setEditingId(null)}
-                      onDeleted={() => setEditingId(null)}
-                      metaFields={[]}
-                      hideDate
-                    />
-                  );
-                }}
-              />
+            : [...tasks].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).map(t => {
+                const entry = entries.find(e => e.id === t.id);
+                if (!entry) return null;
+                const topic = allTopics.find(tp => tp.id === t.taxonomyId);
+                return (
+                  <EditableEntryCard
+                    key={t.id}
+                    entry={entry}
+                    topic={topic}
+                    accentColor={accentColor}
+                    isEditing={editingId === t.id}
+                    onSelect={() => handleSelect(t.id)}
+                    onClose={() => setEditingId(null)}
+                    onDeleted={() => setEditingId(null)}
+                    metaFields={[]}
+                    hideDate
+                    flush
+                  />
+                );
+              })
         )}
 
         {tab === 'todos' && (todos.length === 0
             ? <EmptyState message="No todos found." submessage="Create a task without linking it to a milestone or goal." />
-            : <DayGroupedList
-                items={todos}
-                getDate={t => t.createdAt}
-                getKey={t => t.id}
-                renderItem={t => {
-                  const entry = entries.find(e => e.id === t.id);
-                  if (!entry) return null;
-                  const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                  return (
-                    <EditableEntryCard
-                      entry={entry}
-                      topic={topic}
-                      accentColor={accentColor}
-                      isEditing={editingId === t.id}
-                      onSelect={() => handleSelect(t.id)}
-                      onClose={() => setEditingId(null)}
-                      onDeleted={() => setEditingId(null)}
-                      metaFields={[]}
-                      hideDate
-                    />
-                  );
-                }}
-              />
+            : [...todos].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).map(t => {
+                const entry = entries.find(e => e.id === t.id);
+                if (!entry) return null;
+                const topic = allTopics.find(tp => tp.id === t.taxonomyId);
+                return (
+                  <EditableEntryCard
+                    key={t.id}
+                    entry={entry}
+                    topic={topic}
+                    accentColor={accentColor}
+                    isEditing={editingId === t.id}
+                    onSelect={() => handleSelect(t.id)}
+                    onClose={() => setEditingId(null)}
+                    onDeleted={() => setEditingId(null)}
+                    metaFields={[]}
+                    hideDate
+                    flush
+                  />
+                );
+              })
         )}
-      </ScrollList>
+          </Body>
+        </Inner>
+      </Page>
     </ContentTemplate>
   );
 }

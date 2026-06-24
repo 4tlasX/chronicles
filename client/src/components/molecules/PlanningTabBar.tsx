@@ -6,10 +6,9 @@ const Bar = styled.nav`
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
-  padding: 8px 24px;
-  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  @media (max-width: 768px) { padding: 8px 16px; }
-  @media (max-width: 480px) { padding: 8px 12px; }
+  padding: 8px 0;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
 `;
 
 const TabBtn = styled.button<{ $active?: boolean }>`
@@ -19,13 +18,16 @@ const TabBtn = styled.button<{ $active?: boolean }>`
   font-weight: ${({ $active }) => $active ? 600 : 400};
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: ${({ $active }) => $active ? 'var(--ink, #2b2824)' : 'var(--ink-3, #6b645a)'};
-  background: ${({ $active }) => $active ? 'var(--paper-surface, #f7f4ee)' : 'transparent'};
-  border: 1px solid ${({ $active }) => $active ? 'var(--rule, #d4cfc5)' : 'transparent'};
+  color: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--ink-3, #6b645a)'};
+  background: transparent;
+  border: none;
   border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 120ms ease, color 120ms ease;
+  transition: color 120ms ease;
+
+  /* Align the first tab's text with the column's left edge. */
+  &:first-of-type { padding-left: 0; }
 
   &:hover:not([aria-selected="true"]) {
     color: var(--ink, #2b2824);

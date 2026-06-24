@@ -48,25 +48,26 @@ const TopicSelectorBorder = styled.div`
   display: inline-block;
 `;
 
-const Card = styled.div<{ $accentColor?: string; $flat?: boolean; $bare?: boolean }>`
-  background: ${({ theme }) => theme.colors.surface};
-  border: ${({ $bare }) => $bare ? 'none' : '1px solid var(--rule, #d5d0c5)'};
-  border-left: ${({ $bare, $accentColor }) => $bare ? 'none' : `3px solid ${$accentColor || 'var(--accent)'}`};
+const Card = styled.div<{ $accentColor?: string; $flat?: boolean; $bare?: boolean; $flush?: boolean }>`
+  background: ${({ $flush, theme }) => $flush ? 'transparent' : theme.colors.surface};
+  border: ${({ $bare, $flush }) => ($bare || $flush) ? 'none' : '1px solid var(--rule, #d5d0c5)'};
+  border-left: ${({ $bare, $flush, $accentColor }) => ($bare || $flush) ? 'none' : `3px solid ${$accentColor || 'var(--accent)'}`};
+  ${({ $flush }) => $flush && 'border-top: 1px solid var(--border-subtle);'}
   border-radius: 0;
-  margin: ${({ $flat, $bare }) => $bare ? '0' : ($flat ? '0 0 8px 0' : '6px var(--s-4, 16px)')};
+  margin: ${({ $flat, $bare, $flush }) => ($bare || $flush) ? '0' : ($flat ? '0 0 8px 0' : '6px var(--s-4, 16px)')};
   min-width: 0;
-  ${({ $flat, $bare }) => !$flat && !$bare && `&:first-child { margin-top: 12px; }`}
+  ${({ $flat, $bare, $flush }) => !$flat && !$bare && !$flush && `&:first-child { margin-top: 12px; }`}
 `;
 
 const EditWrapper = styled.div<{ $compact?: boolean }>`
   margin: ${({ $compact }) => $compact ? '20px 0' : '20px'};
 `;
 
-const Row = styled.div<{ $centered?: boolean; $active?: boolean; $noDate?: boolean }>`
-  padding: 14px var(--s-4, 16px);
+const Row = styled.div<{ $centered?: boolean; $active?: boolean; $noDate?: boolean; $flush?: boolean; $rightDate?: boolean }>`
+  padding: ${({ $flush }) => $flush ? '16px 4px' : '14px var(--s-4, 16px)'};
   cursor: pointer;
   display: grid;
-  grid-template-columns: ${({ $noDate }) => $noDate ? '1fr' : '44px 1fr'};
+  grid-template-columns: ${({ $noDate, $rightDate }) => $rightDate ? '1fr auto' : ($noDate ? '1fr' : '44px 1fr')};
   gap: 10px;
   align-items: ${({ $centered }) => $centered ? 'center' : 'start'};
   background: ${({ $active }) => $active ? 'var(--paper-well, rgba(0,0,0,0.03))' : 'transparent'};
@@ -76,9 +77,21 @@ const Row = styled.div<{ $centered?: boolean; $active?: boolean; $noDate?: boole
   transition: background 120ms;
   min-height: 60px;
   border-radius: var(--r-sm, 2px);
-  &:hover { background: var(--paper-well, rgba(0,0,0,0.03)); }
-  @media (max-width: 768px) { padding: 12px 16px; }
-  @media (max-width: 480px) { padding: 10px 12px; gap: 8px; min-height: 52px; }
+  &:hover { background: var(--bg-hover, var(--paper-well, rgba(0,0,0,0.03))); }
+  @media (max-width: 768px) { padding: ${({ $flush }) => $flush ? '14px 4px' : '12px 16px'}; }
+  @media (max-width: 480px) { gap: 8px; min-height: 52px; }
+`;
+
+const RightDate = styled.div`
+  grid-column: 2;
+  align-self: center;
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  white-space: nowrap;
 `;
 
 const DateCol = styled.div`
@@ -171,9 +184,11 @@ interface EditableEntryCardProps {
   hideDate?: boolean;
   hideTopic?: boolean;
   autoExpandFields?: boolean;
+  /** Flat list style: no card border/accent-bar/side-margin, hairline top divider. */
+  flush?: boolean;
 }
 
-export function EditableEntryCard({ entry, topic, accentColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain, hidePreview, compactMargin, hideDate, hideTopic, autoExpandFields }: EditableEntryCardProps) {
+export function EditableEntryCard({ entry, topic, accentColor, isEditing, onSelect, onClose, onDeleted, metaFields = [], onStatusClick, showAsPlain, hidePreview, compactMargin, hideDate, hideTopic, autoExpandFields, flush }: EditableEntryCardProps) {
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const removeEntry = useEntriesStore(s => s.removeEntry);
@@ -248,6 +263,13 @@ export function EditableEntryCard({ entry, topic, accentColor, isEditing, onSele
   const dayNum = d.getDate();
   const monthCode = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
   const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const rightDateStr = (() => {
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+    if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
+    return d.toLocaleDateString('en-US', opts);
+  })();
+  /* In flush list mode, show the date on the right instead of the left column. */
+  const showRightDate = !!flush;
 
   const [editContent, setEditContent] = useState(entry.content);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>(cf);
@@ -384,10 +406,10 @@ export function EditableEntryCard({ entry, topic, accentColor, isEditing, onSele
   };
 
   return (
-    <Card $accentColor={accentColor} $flat={hideDate} $bare={hidePreview}>
+    <Card $accentColor={accentColor} $flat={hideDate} $bare={hidePreview} $flush={flush}>
       {!hidePreview && <SwipeActions onDelete={handleDelete} accentColor={accentColor} disabled={isEditing}>
-      <Row role="button" tabIndex={0} onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }} $centered $active={isEditing} $noDate={hideDate}>
-        {!hideDate && (
+      <Row role="button" tabIndex={0} onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }} $centered $active={isEditing} $noDate={hideDate} $flush={flush} $rightDate={showRightDate}>
+        {!hideDate && !showRightDate && (
           <DateCol>
             <DayNum>{dayNum}</DayNum>
             {monthCode}<br />{timeStr}
@@ -433,6 +455,7 @@ export function EditableEntryCard({ entry, topic, accentColor, isEditing, onSele
             )}
           </FooterMeta>
         </ContentArea>
+        {showRightDate && <RightDate>{rightDateStr}</RightDate>}
       </Row>
       </SwipeActions>}
 

@@ -16,16 +16,15 @@ import { entries as entriesApi } from '../../services/api.js';
 import type { MilestoneEntryData, TaskEntryData } from '../../types/goals.js';
 
 const Card = styled.div<{ $editing?: boolean; $dragging?: boolean; $accentColor?: string }>`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid var(--rule, #d5d0c5);
-  border-left: 3px solid ${({ $accentColor }) => $accentColor || 'var(--accent)'};
+  background: ${({ $dragging }) => $dragging ? 'var(--bg-surface, #fff)' : 'transparent'};
+  border: none;
+  border-top: 1px solid var(--border-subtle);
   border-radius: 0;
-  margin: 6px var(--s-4, 16px);
+  margin: 0;
   min-width: 0;
   opacity: ${({ $dragging }) => $dragging ? 0.6 : 1};
   box-shadow: ${({ $dragging }) => $dragging ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'};
   touch-action: manipulation;
-  &:first-child { margin-top: 12px; }
 `;
 
 const DragHandle = styled.button`

@@ -24,15 +24,14 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const Card = styled.div<{ $isDragging?: boolean; $editing?: boolean; $accentColor?: string }>`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid var(--rule, #d5d0c5);
-  border-left: 3px solid ${({ $accentColor }) => $accentColor || 'var(--accent)'};
+  background: ${({ $isDragging }) => $isDragging ? 'var(--bg-surface, #fff)' : 'transparent'};
+  border: none;
+  border-top: 1px solid var(--border-subtle);
   border-radius: 0;
-  margin: 6px var(--s-4, 16px);
+  margin: 0;
   min-width: 0;
   opacity: ${({ $isDragging }) => $isDragging ? 0.7 : 1};
   box-shadow: ${({ $isDragging }) => $isDragging ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'};
-  &:first-child { margin-top: 12px; }
 `;
 
 const CardHeader = styled.div<{ $active?: boolean }>`
