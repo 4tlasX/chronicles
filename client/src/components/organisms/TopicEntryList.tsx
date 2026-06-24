@@ -5,7 +5,6 @@ import { faChevronLeft, faPrint } from '@fortawesome/free-solid-svg-icons';
 import { EmptyState } from '../atoms/EmptyState.js';
 import { EditableEntryCard } from './EditableEntryCard.js';
 import { EntryCard } from './EntryCard.js';
-import { getTopicIcon } from '../../utils/topicIcons.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 import type { Topic } from '../../types/topics.js';
 import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
@@ -405,7 +404,6 @@ export function TopicEntryList({
                       date={entry.createdAt instanceof Date ? entry.createdAt.toISOString() : String(entry.createdAt)}
                       topicName={topic?.name}
                       topicColor={topicBarColor(topic?.name, topic?.color)}
-                      topicIcon={getTopicIcon(topic?.icon)}
                       topicId={topic?.id}
                       active={editingId === entry.id}
                       onClick={() => setExpandedId(editingId === entry.id ? null : entry.id)}

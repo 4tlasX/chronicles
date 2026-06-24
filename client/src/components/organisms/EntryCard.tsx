@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { SwipeActions } from '../molecules/SwipeActions.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { stripHtml } from '../../utils/stripHtml.js';
@@ -11,7 +10,6 @@ interface EntryCardProps {
   date: string;
   topicName?: string;
   topicColor?: string;
-  topicIcon?: IconDefinition;
   topicId?: number;
   active?: boolean;
   onClick: () => void;

@@ -1,120 +1,117 @@
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import {
-  faBook, faHeart, faStar, faBriefcase, faHome, faUtensils, faDumbbell,
-  faBrain, faMusic, faCamera, faPlane, faCar, faGraduationCap, faCode,
-  faGamepad, faPaintBrush, faLightbulb, faBolt, faLeaf, faSun, faMoon,
-  faCloud, faFire, faWater, faMountain, faTree, faFlask, faPills,
-  faAppleWhole, faMugSaucer, faWineGlass, faBed, faPersonRunning, faBicycle,
-  faPersonSwimming, faPersonHiking, faHandsPraying, faHandHoldingHeart,
-  faUsers, faUserGroup, faBaby, faDog, faCat, faMoneyBillWave,
-  faCreditCard, faChartLine, faCalendarCheck, faClipboardList, faFlag,
-  faTrophy, faMedal, faGem, faCrown, faCartShopping, faGift, faEnvelope,
-  faPhone, faComments, faBookOpen, faPen, faFilm, faTv, faHeadphones,
-  faGuitar, faBasketball, faFootball, faVolleyball, faBaseball, faGolfBallTee,
-  faCheck, faCircleCheck, faMagnifyingGlass, faCalendar, faBullseye,
-  faTriangleExclamation, faQuoteLeft,
-} from '@fortawesome/free-solid-svg-icons';
-import type { IconOption } from '../../types/ui.js';
-export type { IconOption } from '../../types/ui.js';
+import { MaterialIcon } from '../atoms/MaterialIcon.js';
+
+/* Topic icons — stored in the DB by `name` string, rendered as Google Material
+   Symbols glyphs. `name` is the stable identifier (do not rename); `glyph` is
+   the Material Symbols ligature. */
+export interface IconOption {
+  name: string;
+  glyph: string;
+}
 
 export const TOPIC_ICONS: IconOption[] = [
   // Tasks & Actions
-  { name: 'check', icon: faCheck },
-  { name: 'circle-check', icon: faCircleCheck },
-  { name: 'clipboard-list', icon: faClipboardList },
-  { name: 'calendar-check', icon: faCalendarCheck },
-  { name: 'calendar', icon: faCalendar },
-  { name: 'bullseye', icon: faBullseye },
-  { name: 'flag', icon: faFlag },
+  { name: 'check', glyph: 'check' },
+  { name: 'circle-check', glyph: 'check_circle' },
+  { name: 'clipboard-list', glyph: 'assignment' },
+  { name: 'calendar-check', glyph: 'event_available' },
+  { name: 'calendar', glyph: 'calendar_month' },
+  { name: 'bullseye', glyph: 'target' },
+  { name: 'flag', glyph: 'flag' },
   // General
-  { name: 'book', icon: faBook },
-  { name: 'book-open', icon: faBookOpen },
-  { name: 'pen', icon: faPen },
-  { name: 'magnifying-glass', icon: faMagnifyingGlass },
-  { name: 'heart', icon: faHeart },
-  { name: 'star', icon: faStar },
-  { name: 'lightbulb', icon: faLightbulb },
-  { name: 'bolt', icon: faBolt },
-  { name: 'quote-left', icon: faQuoteLeft },
+  { name: 'book', glyph: 'book_2' },
+  { name: 'book-open', glyph: 'menu_book' },
+  { name: 'pen', glyph: 'edit' },
+  { name: 'magnifying-glass', glyph: 'search' },
+  { name: 'heart', glyph: 'favorite' },
+  { name: 'star', glyph: 'star' },
+  { name: 'lightbulb', glyph: 'lightbulb' },
+  { name: 'bolt', glyph: 'bolt' },
+  { name: 'quote-left', glyph: 'format_quote' },
   // Work & Education
-  { name: 'briefcase', icon: faBriefcase },
-  { name: 'graduation-cap', icon: faGraduationCap },
-  { name: 'code', icon: faCode },
-  { name: 'chart-line', icon: faChartLine },
+  { name: 'briefcase', glyph: 'work' },
+  { name: 'graduation-cap', glyph: 'school' },
+  { name: 'code', glyph: 'code' },
+  { name: 'chart-line', glyph: 'monitoring' },
   // Health & Wellness
-  { name: 'brain', icon: faBrain },
-  { name: 'pills', icon: faPills },
-  { name: 'flask', icon: faFlask },
-  { name: 'triangle-exclamation', icon: faTriangleExclamation },
-  { name: 'dumbbell', icon: faDumbbell },
-  { name: 'person-running', icon: faPersonRunning },
-  { name: 'bicycle', icon: faBicycle },
-  { name: 'person-swimming', icon: faPersonSwimming },
-  { name: 'person-hiking', icon: faPersonHiking },
-  { name: 'bed', icon: faBed },
-  { name: 'hands-praying', icon: faHandsPraying },
+  { name: 'brain', glyph: 'psychology' },
+  { name: 'pills', glyph: 'medication' },
+  { name: 'flask', glyph: 'science' },
+  { name: 'triangle-exclamation', glyph: 'warning' },
+  { name: 'dumbbell', glyph: 'exercise' },
+  { name: 'person-running', glyph: 'directions_run' },
+  { name: 'bicycle', glyph: 'pedal_bike' },
+  { name: 'person-swimming', glyph: 'pool' },
+  { name: 'person-hiking', glyph: 'hiking' },
+  { name: 'bed', glyph: 'bed' },
+  { name: 'hands-praying', glyph: 'volunteer_activism' },
   // Food & Drink
-  { name: 'utensils', icon: faUtensils },
-  { name: 'apple-whole', icon: faAppleWhole },
-  { name: 'mug-saucer', icon: faMugSaucer },
-  { name: 'wine-glass', icon: faWineGlass },
+  { name: 'utensils', glyph: 'restaurant' },
+  { name: 'apple-whole', glyph: 'nutrition' },
+  { name: 'mug-saucer', glyph: 'local_cafe' },
+  { name: 'wine-glass', glyph: 'wine_bar' },
   // Hobbies & Entertainment
-  { name: 'music', icon: faMusic },
-  { name: 'guitar', icon: faGuitar },
-  { name: 'headphones', icon: faHeadphones },
-  { name: 'camera', icon: faCamera },
-  { name: 'paint-brush', icon: faPaintBrush },
-  { name: 'gamepad', icon: faGamepad },
-  { name: 'film', icon: faFilm },
-  { name: 'tv', icon: faTv },
+  { name: 'music', glyph: 'music_note' },
+  { name: 'guitar', glyph: 'piano' },
+  { name: 'headphones', glyph: 'headphones' },
+  { name: 'camera', glyph: 'photo_camera' },
+  { name: 'paint-brush', glyph: 'brush' },
+  { name: 'gamepad', glyph: 'sports_esports' },
+  { name: 'film', glyph: 'movie' },
+  { name: 'tv', glyph: 'tv' },
   // Sports
-  { name: 'basketball', icon: faBasketball },
-  { name: 'football', icon: faFootball },
-  { name: 'volleyball', icon: faVolleyball },
-  { name: 'baseball', icon: faBaseball },
-  { name: 'golf-ball-tee', icon: faGolfBallTee },
+  { name: 'basketball', glyph: 'sports_basketball' },
+  { name: 'football', glyph: 'sports_football' },
+  { name: 'volleyball', glyph: 'sports_volleyball' },
+  { name: 'baseball', glyph: 'sports_baseball' },
+  { name: 'golf-ball-tee', glyph: 'sports_golf' },
   // Nature
-  { name: 'leaf', icon: faLeaf },
-  { name: 'tree', icon: faTree },
-  { name: 'mountain', icon: faMountain },
-  { name: 'sun', icon: faSun },
-  { name: 'moon', icon: faMoon },
-  { name: 'cloud', icon: faCloud },
-  { name: 'fire', icon: faFire },
-  { name: 'water', icon: faWater },
+  { name: 'leaf', glyph: 'eco' },
+  { name: 'tree', glyph: 'park' },
+  { name: 'mountain', glyph: 'landscape' },
+  { name: 'sun', glyph: 'light_mode' },
+  { name: 'moon', glyph: 'dark_mode' },
+  { name: 'cloud', glyph: 'cloud' },
+  { name: 'fire', glyph: 'local_fire_department' },
+  { name: 'water', glyph: 'water_drop' },
   // Travel
-  { name: 'plane', icon: faPlane },
-  { name: 'car', icon: faCar },
-  { name: 'home', icon: faHome },
+  { name: 'plane', glyph: 'flight' },
+  { name: 'car', glyph: 'directions_car' },
+  { name: 'home', glyph: 'home' },
   // People & Relationships
-  { name: 'users', icon: faUsers },
-  { name: 'user-group', icon: faUserGroup },
-  { name: 'baby', icon: faBaby },
-  { name: 'hand-holding-heart', icon: faHandHoldingHeart },
+  { name: 'users', glyph: 'groups' },
+  { name: 'user-group', glyph: 'group' },
+  { name: 'baby', glyph: 'child_care' },
+  { name: 'hand-holding-heart', glyph: 'favorite' },
   // Pets
-  { name: 'dog', icon: faDog },
-  { name: 'cat', icon: faCat },
+  { name: 'dog', glyph: 'pets' },
+  { name: 'cat', glyph: 'pets' },
   // Money & Shopping
-  { name: 'money-bill-wave', icon: faMoneyBillWave },
-  { name: 'credit-card', icon: faCreditCard },
-  { name: 'cart-shopping', icon: faCartShopping },
-  { name: 'gift', icon: faGift },
+  { name: 'money-bill-wave', glyph: 'payments' },
+  { name: 'credit-card', glyph: 'credit_card' },
+  { name: 'cart-shopping', glyph: 'shopping_cart' },
+  { name: 'gift', glyph: 'card_giftcard' },
   // Achievements
-  { name: 'trophy', icon: faTrophy },
-  { name: 'medal', icon: faMedal },
-  { name: 'gem', icon: faGem },
-  { name: 'crown', icon: faCrown },
+  { name: 'trophy', glyph: 'trophy' },
+  { name: 'medal', glyph: 'military_tech' },
+  { name: 'gem', glyph: 'diamond' },
+  { name: 'crown', glyph: 'crown' },
   // Communication
-  { name: 'envelope', icon: faEnvelope },
-  { name: 'phone', icon: faPhone },
-  { name: 'comments', icon: faComments },
+  { name: 'envelope', glyph: 'mail' },
+  { name: 'phone', glyph: 'call' },
+  { name: 'comments', glyph: 'forum' },
 ];
 
-export const ICON_MAP: Record<string, IconDefinition> = Object.fromEntries(
-  TOPIC_ICONS.map(({ name, icon }) => [name, icon])
+/** name → Material Symbols glyph. */
+export const ICON_MAP: Record<string, string> = Object.fromEntries(
+  TOPIC_ICONS.map(({ name, glyph }) => [name, glyph])
 );
+
+/** Render a topic icon by its stored name (falls back to a book glyph). */
+export function TopicIcon({ name, size = 16 }: { name: string | null | undefined; size?: number }) {
+  const glyph = (name && ICON_MAP[name]) || 'book_2';
+  return <MaterialIcon $size={size} aria-hidden="true">{glyph}</MaterialIcon>;
+}
 
 /* ── Styled ── */
 
@@ -139,6 +136,7 @@ const IconBtn = styled.button<{ $selected?: boolean }>`
   cursor: pointer;
   transition: background 0.1s;
   padding: 0;
+  color: ${({ theme }) => theme.colors.text};
 
   &:hover {
     background: ${({ theme }) => theme.colors.surfaceHover};
@@ -163,12 +161,9 @@ export function IconPicker({ selectedIcon, onSelectIcon }: IconPickerProps) {
       <IconBtn $selected={selectedIcon === null} onClick={() => onSelectIcon(null)} title="No icon">
         <NoIconLabel>×</NoIconLabel>
       </IconBtn>
-      {TOPIC_ICONS.map(({ name, icon }) => (
+      {TOPIC_ICONS.map(({ name, glyph }) => (
         <IconBtn key={name} $selected={selectedIcon === name} onClick={() => onSelectIcon(name)} title={name}>
-          <FontAwesomeIcon
-            icon={icon}
-            style={{ fontSize: 14 }}
-          />
+          <MaterialIcon $size={16} aria-hidden="true">{glyph}</MaterialIcon>
         </IconBtn>
       ))}
     </Grid>

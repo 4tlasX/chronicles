@@ -1,7 +1,6 @@
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { TopicIcon } from './IconPicker.js';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
-import { getTopicIcon } from '../../utils/topicIcons.js';
 import type { Topic } from '../../types/topics.js';
 
 const Wrap = styled.div`
@@ -145,7 +144,7 @@ export function TopicQuickFilter({ topics, selectedTopicId, entryCounts, onSelec
             onClick={() => onSelect(topic.id)}
           >
             <ListIcon>
-              <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
+              <TopicIcon name={topic.icon} size={14} />
             </ListIcon>
             {topic.name}
             <ListCount>{entryCounts.get(topic.id) ?? 0}</ListCount>

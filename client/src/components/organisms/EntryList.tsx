@@ -3,7 +3,6 @@ import { useMemo, useCallback } from 'react';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { EntryCard } from './EntryCard.js';
-import { getTopicIcon } from '../../utils/topicIcons.js';
 import { entries as entriesApi } from '../../services/api.js';
 import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 
@@ -252,7 +251,6 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
                   date={entry.createdAt instanceof Date ? entry.createdAt.toISOString() : String(entry.createdAt)}
                   topicName={topic?.name}
                   topicColor={topicBarColor(topic?.name, topic?.color)}
-                  topicIcon={getTopicIcon(topic?.icon)}
                   topicId={topic?.id}
                   active={selectedEntryId === entry.id}
                   onClick={() => setSelectedEntryId(entry.id)}

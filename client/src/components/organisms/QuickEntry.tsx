@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { useUIStore } from '../../stores/uiStore.js';
-import { getTopicIcon } from '../../utils/topicIcons.js';
+import { TopicIcon as TopicGlyph } from '../molecules/IconPicker.js';
 import { TopicSelectorDropdown } from './TopicSelectorDropdown.js';
 import { Editor } from './Editor.js';
 import { stripHtml } from '../../utils/stripHtml.js';
@@ -129,7 +129,7 @@ export function QuickEntry({ onCreateEntry }: QuickEntryProps) {
           {selectedTopic ? (
             <>
               <TopicIconSmall>
-                <FontAwesomeIcon icon={getTopicIcon(selectedTopic.icon)} />
+                <TopicGlyph name={selectedTopic.icon} size={14} />
               </TopicIconSmall>
               {selectedTopic.name}
             </>

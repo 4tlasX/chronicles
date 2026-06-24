@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { getTopicIcon } from '../../utils/topicIcons.js';
+import { TopicIcon as TopicGlyph } from '../molecules/IconPicker.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import type { Topic } from '../../types/topics.js';
 
@@ -175,7 +174,7 @@ export function TopicSelectorDropdown({
             }}
           >
             <TopicIcon $color={accentColor}>
-              <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
+              <TopicGlyph name={topic.icon} size={15} />
             </TopicIcon>
             {topic.name}
           </Item>

@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SearchInput } from '../molecules/SearchInput.js';
-import { getTopicIcon } from '../../utils/topicIcons.js';
+import { TopicIcon as TopicGlyph } from '../molecules/IconPicker.js';
 import { useUIStore } from '../../stores/uiStore.js';
 
 const dropdownSlide = keyframes`
@@ -151,7 +151,7 @@ export function TopicSelector({ selectedId, onSelect, topics, filled }: TopicSel
       <Trigger $filled={filled ?? selectedId !== null} onClick={() => setOpen(!open)}>
         {selected ? (
           <>
-            <TopicIcon $color={accentColor}><FontAwesomeIcon icon={getTopicIcon(selected.icon)} /></TopicIcon>
+            <TopicIcon $color={accentColor}><TopicGlyph name={selected.icon} size={15} /></TopicIcon>
             {selected.name}
           </>
         ) : (
@@ -188,7 +188,7 @@ export function TopicSelector({ selectedId, onSelect, topics, filled }: TopicSel
                   $active={selectedId === t.id}
                   onClick={() => { onSelect(t.id); setOpen(false); setSearch(''); }}
                 >
-                  <TopicIcon $color={accentColor}><FontAwesomeIcon icon={getTopicIcon(t.icon)} /></TopicIcon>
+                  <TopicIcon $color={accentColor}><TopicGlyph name={t.icon} size={15} /></TopicIcon>
                   {t.name}
                 </Item>
               ))

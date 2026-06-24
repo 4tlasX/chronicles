@@ -1,10 +1,8 @@
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ICON_MAP } from '../molecules/IconPicker.js';
-import { getTopicIcon } from '../../utils/topicIcons.js';
+import { TopicIcon as TopicGlyph } from '../molecules/IconPicker.js';
 
 const Wrapper = styled.div<{ $isDragging?: boolean }>`
   opacity: ${({ $isDragging }) => $isDragging ? 0.5 : 1};
@@ -145,7 +143,7 @@ export function SortableTopicItem({ topic, isActive, count, accentColor, filterT
         </DragHandleBtn>
 
         <TopicIcon>
-          <FontAwesomeIcon icon={ICON_MAP[topic.icon || ''] || getTopicIcon(topic.icon)} />
+          <TopicGlyph name={topic.icon} size={16} />
         </TopicIcon>
 
         <Name>{highlightMatch(topic.name, filterText, accentColor)}</Name>

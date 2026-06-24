@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { TopicIcon as TopicGlyph } from '../components/molecules/IconPicker.js';
 import { Icon } from '../../../design-system/components/core/Icon.jsx';
 import type { IconName } from '../../../design-system/components/core/Icon.d.js';
 import {
@@ -32,7 +32,6 @@ import { stripHtml, summarizeUserFields } from '../utils/stripHtml.js';
 import { TopicSelector } from '../components/organisms/TopicSelector.js';
 import { Editor, type DictationControls } from '../components/organisms/Editor.js';
 import type { Topic } from '../types/topics.js';
-import { getTopicIcon } from '../utils/topicIcons.js';
 import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
 import { UserFieldsForm } from '../components/molecules/fields/UserFieldsForm.js';
 import { SectionDivider } from '../components/atoms/SectionDivider.js';
@@ -2236,7 +2235,7 @@ function TopicWidget({ topicId, accentColor, dragAttributes, dragListeners }: { 
     <DashCard>
       <CardHeader>
         <CardIconWrap>
-          <FontAwesomeIcon icon={getTopicIcon(topic.icon)} />
+          <TopicGlyph name={topic.icon} size={16} />
         </CardIconWrap>
         <CardTitle>{topic.name}</CardTitle>
         <CardViewLink to="/journal">View all</CardViewLink>
@@ -3494,7 +3493,7 @@ export function DashboardView() {
                                       <WidgetChips>
                                         {addableTopics.map(topic => (
                                           <WidgetChip key={topic.id} onClick={() => handleAddCard(`topic-${topic.id}` as CardId)}>
-                                            <FontAwesomeIcon icon={getTopicIcon(topic.icon)} style={{ fontSize: 11 }} />
+                                            <TopicGlyph name={topic.icon} size={13} />
                                             {topic.name}
                                           </WidgetChip>
                                         ))}
