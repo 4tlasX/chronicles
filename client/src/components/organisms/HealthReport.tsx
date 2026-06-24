@@ -462,7 +462,7 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
   }, [wellness]);
 
   return (
-    <ScrollList $gap="16px">
+    <ScrollList $gap="16px" $padding="16px 0">
       {/* Summary stats */}
       <StatsGrid>
         <StatCard>

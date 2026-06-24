@@ -1,16 +1,16 @@
 import styled from 'styled-components';
 import { useRef, useCallback, type KeyboardEvent } from 'react';
 
-const Row = styled.div`
+const Row = styled.div<{ $flush?: boolean; $bordered?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 4px;
   flex-wrap: wrap;
-  padding: 8px 24px;
-  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  @media (max-width: 768px) { padding: 8px 16px; }
-  @media (max-width: 480px) { padding: 8px 12px; }
+  padding: ${({ $flush }) => ($flush ? '8px 0' : '8px 24px')};
+  ${({ $bordered, theme }) => $bordered !== false && `border-bottom: 1px solid var(--rule, ${theme.colors.border});`}
+  @media (max-width: 768px) { padding: ${({ $flush }) => ($flush ? '8px 0' : '8px 16px')}; }
+  @media (max-width: 480px) { padding: ${({ $flush }) => ($flush ? '8px 0' : '8px 12px')}; }
 `;
 
 const Label = styled.span`
@@ -24,22 +24,24 @@ const Label = styled.span`
   flex-shrink: 0;
 `;
 
-const Btn = styled.button<{ $active?: boolean }>`
+const Btn = styled.button<{ $active?: boolean; $flush?: boolean }>`
   padding: 5px 12px;
   font-family: var(--ui, 'Montserrat', ${({ theme }) => theme.fontFamily.ui});
   font-size: 13px;
   font-weight: ${({ $active }) => $active ? 600 : 400};
   color: ${({ $active }) =>
-    $active ? 'var(--ink, #2b2824)' : 'var(--ink-3, #6b645a)'};
-  background: ${({ $active }) => $active ? 'var(--paper-surface, #f7f4ee)' : 'transparent'};
-  border: 1px solid ${({ $active }) => $active ? 'var(--rule, #d4cfc5)' : 'transparent'};
+    $active ? 'var(--color-accent)' : 'var(--ink-3, #6b645a)'};
+  background: transparent;
+  border: none;
   border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 120ms ease, color 120ms ease;
+  transition: color 120ms ease;
+
+  /* Align the first tab's text with the column's left edge when flush. */
+  ${({ $flush }) => $flush && `&:first-of-type { padding-left: 0; }`}
 
   &:hover:not([aria-selected="true"]) {
-    background: var(--paper-hover, #f0eeea);
     color: var(--ink, #2b2824);
   }
 `;
@@ -49,9 +51,13 @@ interface FilterTabsProps<T extends string> {
   active: T;
   onChange: (value: T) => void;
   label?: string;
+  /** Align the first tab's text with the container's left edge (no row padding). */
+  flush?: boolean;
+  /** Show the bottom divider rule. Defaults to true. */
+  bordered?: boolean;
 }
 
-export function FilterTabs<T extends string>({ options, active, onChange, label }: FilterTabsProps<T>) {
+export function FilterTabs<T extends string>({ options, active, onChange, label, flush, bordered = true }: FilterTabsProps<T>) {
   const safeOptions = options ?? [];
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -70,7 +76,7 @@ export function FilterTabs<T extends string>({ options, active, onChange, label 
   }, [safeOptions, onChange]);
 
   return (
-    <Row role="tablist">
+    <Row role="tablist" $flush={flush} $bordered={bordered}>
       {label && <Label>{label}</Label>}
       {safeOptions.map((opt, i) => (
         <Btn
@@ -80,6 +86,7 @@ export function FilterTabs<T extends string>({ options, active, onChange, label 
           aria-selected={active === opt.value}
           tabIndex={active === opt.value ? 0 : -1}
           $active={active === opt.value}
+          $flush={flush}
           onClick={() => onChange(opt.value)}
           onKeyDown={e => handleKeyDown(e, i)}
         >

@@ -2,7 +2,6 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
-import { ViewHeader } from '../components/molecules/ViewHeader.js';
 import { HealthTabBar } from '../components/molecules/HealthTabBar.js';
 import styled from 'styled-components';
 import { DateInput } from '../components/atoms/DateInput.js';
@@ -12,9 +11,8 @@ import { HealthReport } from '../components/organisms/HealthReport.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
-import { doses as dosesApi, entries as entriesApi } from '../services/api.js';
+import { doses as dosesApi } from '../services/api.js';
 import { stripHtml } from '../utils/stripHtml.js';
-import { useNavigate } from 'react-router-dom';
 import type { PeriodType } from '../types/health.js';
 import type {
   DecryptedSymptom,
@@ -38,10 +36,49 @@ const DateRangeRow = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 24px;
+  padding: 12px 4px;
   font-size: 15px;
   color: ${({ theme }) => theme.colors.textMuted};
-  @media (max-width: 480px) { padding: 10px 12px; gap: 8px; }
+  @media (max-width: 480px) { padding: 10px 0; gap: 8px; }
+`;
+
+/* ── Layout (mirrors HealthView) ── */
+
+const Page = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+`;
+
+const Inner = styled.div`
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+  @media (max-width: 768px) { padding: 0 16px 48px; }
+`;
+
+const Head = styled.div`
+  padding: 53px 0 16px;
+`;
+
+const Title = styled.h1`
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 200;
+  line-height: 1;
+  color: var(--text-primary);
+  margin: 0;
+  @media (max-width: 480px) { font-size: 34px; }
+`;
+
+const TabsRow = styled.div`
+  margin: 0;
+`;
+
+const SubTabs = styled.div`
+  padding: 10px 0 4px;
 `;
 
 /* ── Helpers ── */
@@ -63,7 +100,6 @@ export function HealthReportingView() {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
-  const navigate = useNavigate();
 
   const [period, setPeriod] = useState<PeriodType>('month');
   const [customFrom, setCustomFrom] = useState('');
@@ -205,30 +241,35 @@ export function HealthReportingView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Health Reporting" titleTo="/health" onBack={() => navigate('/')} />
-      <HealthTabBar />
-      <div style={{ padding: '0 20px 8px' }}>
-        <FilterTabs options={PERIOD_OPTIONS} active={period} onChange={setPeriod} />
-      </div>
-      {period === 'custom' && (
-        <DateRangeRow>
-          <span>From</span>
-          <DateInput value={customFrom} onChange={e => setCustomFrom(e.target.value)} />
-          <span>To</span>
-          <DateInput value={customTo} onChange={e => setCustomTo(e.target.value)} />
-        </DateRangeRow>
-      )}
+      <Page>
+        <Inner>
+          <Head>
+            <Title>Health</Title>
+          </Head>
+          <TabsRow><HealthTabBar /></TabsRow>
+          <SubTabs>
+            <FilterTabs options={PERIOD_OPTIONS} active={period} onChange={setPeriod} flush bordered={false} />
+          </SubTabs>
+          {period === 'custom' && (
+            <DateRangeRow>
+              <span>From</span>
+              <DateInput value={customFrom} onChange={e => setCustomFrom(e.target.value)} />
+              <span>To</span>
+              <DateInput value={customTo} onChange={e => setCustomTo(e.target.value)} />
+            </DateRangeRow>
+          )}
 
-      <HealthReport
-        symptoms={symptoms}
-        foods={foods}
-        medLogs={medLogs}
-        exercises={exercises}
-        wellness={wellness}
-        period={period}
-        accentColor={accentColor}
-
-      />
+          <HealthReport
+            symptoms={symptoms}
+            foods={foods}
+            medLogs={medLogs}
+            exercises={exercises}
+            wellness={wellness}
+            period={period}
+            accentColor={accentColor}
+          />
+        </Inner>
+      </Page>
     </ContentTemplate>
   );
 }

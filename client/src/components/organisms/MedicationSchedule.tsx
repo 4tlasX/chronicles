@@ -19,9 +19,7 @@ const DateNav = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
-  @media (max-width: 768px) { padding: 12px 16px; }
-  @media (max-width: 480px) { padding: 10px 12px; }
+  padding: 12px 0;
 `;
 
 const NavButton = styled.button`
@@ -48,9 +46,7 @@ const DateLabel = styled.span`
 `;
 
 const ProgressWrapper = styled.div`
-  padding: 0 24px 16px;
-  @media (max-width: 768px) { padding: 0 16px 14px; }
-  @media (max-width: 480px) { padding: 0 12px 12px; }
+  padding: 0 0 16px;
 `;
 
 const ProgressStats = styled.div`
@@ -86,13 +82,11 @@ const AllDoneMsg = styled.p<{ $color: string }>`
 const HelpText = styled.p`
   font-size: 14px;
   color: ${({ theme }) => theme.colors.textMuted};
-  padding: 0 24px 24px;
-  @media (max-width: 768px) { padding: 0 16px 24px; }
-  @media (max-width: 480px) { padding: 0 12px 24px; }
+  padding: 0 0 24px;
 `;
 
 const TimeGroup = styled.div`
-  padding: 0 var(--s-4, 16px);
+  padding: 0;
   &:first-of-type { margin-top: 8px; }
 `;
 
@@ -109,13 +103,12 @@ const DoseCard = styled.div<{ $taken: boolean; $accentColor: string }>`
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
-  margin-bottom: 8px;
-  background: var(--paper-surface, #f7f4ee);
-  border: 1px solid var(--rule, #d5d0c5);
-  border-left: 3px solid ${({ $accentColor }) => $accentColor};
+  padding: 16px 4px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border-subtle);
   border-radius: 0;
-  @media (max-width: 480px) { padding: 12px 14px; gap: 10px; }
+  @media (max-width: 480px) { padding: 14px 4px; gap: 10px; }
 `;
 
 const DoseCheckButton = styled.button<{ $taken: boolean; $color: string }>`

@@ -8,6 +8,7 @@ const mockNavigate = vi.fn();
 
 vi.mock('react-router-dom', () => ({
   useNavigate: vi.fn(() => mockNavigate),
+  useLocation: vi.fn(() => ({ pathname: '/health/reporting' })),
 }));
 
 vi.mock('@/hooks/useInitializeData', () => ({
@@ -53,13 +54,8 @@ vi.mock('@/components/atoms/Spinner', () => ({
   Spinner: () => <span data-testid="spinner">Loading...</span>,
 }));
 
-vi.mock('@/components/molecules/ViewHeader', () => ({
-  ViewHeader: ({ title, onBack }: any) => (
-    <div data-testid="view-header">
-      <h2>{title}</h2>
-      <button onClick={onBack}>Back</button>
-    </div>
-  ),
+vi.mock('@/components/molecules/HealthTabBar', () => ({
+  HealthTabBar: () => <div data-testid="health-tab-bar" />,
 }));
 
 vi.mock('@/components/molecules/FilterTabs', () => ({
@@ -127,9 +123,9 @@ describe('HealthReportingView (ready)', () => {
     });
   });
 
-  it('displays the view header with title', () => {
+  it('displays the Health title', () => {
     renderWithTheme(<HealthReportingView />);
-    expect(screen.getByText('Health Reporting')).toBeInTheDocument();
+    expect(screen.getByText('Health')).toBeInTheDocument();
   });
 
   it('renders period filter tabs', () => {
@@ -143,11 +139,5 @@ describe('HealthReportingView (ready)', () => {
   it('renders the health report component', () => {
     renderWithTheme(<HealthReportingView />);
     expect(screen.getByTestId('health-report')).toBeInTheDocument();
-  });
-
-  it('navigates back when back button is clicked', () => {
-    renderWithTheme(<HealthReportingView />);
-    screen.getByText('Back').click();
-    expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 });
