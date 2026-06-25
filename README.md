@@ -39,21 +39,20 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - Non-extractable CryptoKeys — master key cannot be exported from the browser's crypto subsystem
 - Split-token sessions — database leaks cannot reconstruct valid session tokens
 
-## Screenshots - Chronicles is in a redesign slated for July
-New look planned:
-<img width="1130" height="666" alt="Screenshot 2026-06-17 at 10 39 33 PM" src="https://github.com/user-attachments/assets/fc35be0a-017b-4684-bf69-317f7da623e6" />
-<img width="591" height="682" alt="Screenshot 2026-06-17 at 10 53 40 PM" src="https://github.com/user-attachments/assets/4b814df7-a4c1-4bb3-80e8-0b058460c30f" />
-<img width="717" height="650" alt="Screenshot 2026-06-17 at 10 53 32 PM" src="https://github.com/user-attachments/assets/1f9cfd75-ecb2-436e-a455-b20f1ef2cdb0" />
-
-
-Old Look: 
-<img width="1462" height="694" alt="Screenshot 2026-04-19 at 1 19 03 AM" src="https://github.com/user-attachments/assets/9931f768-3f58-4752-97b0-c51d4774a98e" />
-<img width="1459" height="699" alt="Screenshot 2026-04-19 at 1 20 19 AM" src="https://github.com/user-attachments/assets/0b811b72-94ae-4c06-969e-291e53097b6b" />
-<img width="1455" height="668" alt="Screenshot 2026-04-19 at 1 19 56 AM" src="https://github.com/user-attachments/assets/fc6cdcac-b8f9-4e1e-a40e-f80d9c125038" />
-<img width="1463" height="700" alt="Screenshot 2026-04-19 at 1 19 34 AM" src="https://github.com/user-attachments/assets/ddae4d8d-6145-417d-b1e7-c612412546fa" />
-<img width="1466" height="730" alt="Screenshot 2026-04-19 at 3 46 11 PM" src="https://github.com/user-attachments/assets/34680099-dad7-4e58-b38b-cf0262049750" />
-<img width="1460" height="642" alt="Screenshot 2026-04-19 at 3 46 01 PM" src="https://github.com/user-attachments/assets/a6dc4110-57ed-418a-8487-88e857225fa8" />
-<img width="1461" height="701" alt="Screenshot 2026-04-19 at 1 29 30 AM" src="https://github.com/user-attachments/assets/ddf6d0e1-743b-42f5-993d-ad0201f42ea7" />
+## Screenshots - Chronicles is in a redesign slated for July/August w/phone app via React Native soon.
+New look:
+<img width="1374" height="720" alt="Screenshot 2026-06-24 at 11 45 57 PM" src="https://github.com/user-attachments/assets/9c574af0-c97b-4dd2-9dd5-194044513e7e" />
+<img width="1374" height="722" alt="Screenshot 2026-06-24 at 11 47 51 PM" src="https://github.com/user-attachments/assets/fcef5215-b3eb-4f76-b7d2-65aa8b4e0f2b" />
+<img width="1382" height="718" alt="Screenshot 2026-06-24 at 11 48 00 PM" src="https://github.com/user-attachments/assets/dc28747f-120f-431c-8ac4-343d26efae7d" />
+<img width="1367" height="707" alt="Screenshot 2026-06-24 at 11 48 28 PM" src="https://github.com/user-attachments/assets/c7481ecb-735f-4de4-82c4-ac3674f59483" />
+<img width="1372" height="723" alt="Screenshot 2026-06-24 at 11 49 25 PM" src="https://github.com/user-attachments/assets/97e33025-ade1-41b6-bb0a-17f853c1d448" />
+<img width="1370" height="700" alt="Screenshot 2026-06-24 at 11 49 55 PM" src="https://github.com/user-attachments/assets/45d5a801-b54d-4ff1-8da8-23433498eac9" />
+<img width="1374" height="709" alt="Screenshot 2026-06-24 at 11 50 17 PM" src="https://github.com/user-attachments/assets/4ac9fd6e-2a0b-47a0-8101-56342ae40cc8" />
+<img width="1376" height="689" alt="Screenshot 2026-06-24 at 11 50 27 PM" src="https://github.com/user-attachments/assets/f9036d87-8593-4b32-855a-783c042f5330" />
+<img width="1373" height="701" alt="Screenshot 2026-06-24 at 11 50 42 PM" src="https://github.com/user-attachments/assets/5d3b70b8-9dbd-4e3f-8ad5-40b8fc4a2e86" />
+<img width="1378" height="708" alt="Screenshot 2026-06-24 at 11 51 49 PM" src="https://github.com/user-attachments/assets/3fb1861a-254f-41a7-8eb9-e9a0dd441787" />
+<img width="1383" height="720" alt="Screenshot 2026-06-24 at 11 52 00 PM" src="https://github.com/user-attachments/assets/bef2ad9d-c12f-40c9-8bb4-84c7a1d5810f" />
+<img width="1381" height="721" alt="Screenshot 2026-06-24 at 11 52 19 PM" src="https://github.com/user-attachments/assets/f5f9938c-7022-4986-a1aa-05c7f2cda893" />
 
 
 ## Architecture
