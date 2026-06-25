@@ -355,10 +355,9 @@ const RightColumn = styled.div`
 const DashCard = styled.div`
   display: flex;
   flex-direction: column;
-  background: var(--bg-hover);
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  overflow: hidden;
   padding: 0 18px 18px;
   min-width: 0;
   box-shadow: var(--shadow-2), var(--shadow-3);
@@ -371,6 +370,8 @@ const CardHeader = styled.div`
   padding: 14px 0 12px 0;
   margin-bottom: 14px;
   border-bottom: none;
+  cursor: grab;
+  &:active { cursor: grabbing; }
 `;
 
 const CardIconWrap = styled.span`
@@ -404,28 +405,17 @@ const CardBody = styled.div`
   flex: 1;
 `;
 
-/* Quick Entry = full-width accent container; the composer sits on a surface panel
-   inside the accent fill. */
+/* Quick Entry = full-width card with accent border. */
 const QuickEntryDashCard = styled(DashCard)`
-  background: var(--color-accent);
-  border: none;
-  border-radius: 8px;
-  padding: 22px 24px;
-  box-shadow: var(--shadow-2), var(--shadow-3);
-
   & ${CardHeader} {
-    padding: 0 0 14px 0;
+    padding: 20px 0 14px 0;
     margin-bottom: 6px;
     border-bottom: none;
   }
-  & ${CardHeader} ${CardIconWrap}, & ${CardHeader} ${CardTitle} {
-    color: var(--on-accent);
-  }
   & ${CardBody} {
-    padding: 16px;
+    padding: 0;
     overflow: visible;
-    background: var(--bg-surface);
-    border-radius: 6px;
+    background: transparent;
   }
 
   /* Topic picker trigger only (direct child button), not dropdown options. */
@@ -461,7 +451,7 @@ const ItemRow = styled.div<{ $done?: boolean }>`
   align-items: center;
   gap: 10px;
   padding: 6px 8px;
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: 0; }
 `;
 
@@ -470,28 +460,22 @@ const PriRow = styled.div<{ $done?: boolean }>`
   gap: 10px;
   align-items: flex-start;
   padding: 12px 8px;
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-subtle);
   font-size: 13.5px;
   color: ${({ $done }) => $done ? 'var(--text-tertiary)' : 'var(--text-primary)'};
   &:last-child { border-bottom: 0; }
 `;
 
-const CheckBtn = styled.button<{ $done?: boolean; $color: string }>`
-  width: 18px;
-  height: 18px;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  cursor: pointer;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${({ $done }) => $done ? 'var(--color-accent)' : 'var(--border-subtle)'};
-  font-size: 10px;
-  transition: color 120ms ease;
-  padding: 0;
+const CircleCheckBtn = styled.button<{ $color: string }>`
+  border: none; background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 12px; padding: 0; color: ${({ $color }) => $color};
+  transition: all 0.15s;
+  &:disabled { opacity: 0.5; cursor: wait; }
 `;
+
+const CheckBtn = styled(CircleCheckBtn)<{ $done?: boolean }>``;
+
 
 const ItemText = styled.span<{ $done?: boolean }>`
   font-size: 13.5px;
@@ -722,11 +706,11 @@ const DragGrip = styled.button`
   background: none;
   padding: 0;
   cursor: grab;
-  color: var(--rule, ${({ theme }) => theme.colors.border});
+  color: var(--text-secondary);
   font-size: 15px;
   flex-shrink: 0;
   touch-action: none;
-  &:hover { color: var(--ink-3, ${({ theme }) => theme.colors.textMuted}); }
+  &:hover { color: var(--text-primary); }
   &:active { cursor: grabbing; }
 `;
 
@@ -1337,13 +1321,13 @@ const MealsInput = styled.input`
   padding: 10px 2px;
   font-family: var(--sans, 'Lato', sans-serif);
   font-size: 14px;
-  color: var(--ink, #2b2824);
+  color: var(--text-primary);
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--border-strong, #d4cfc3);
+  border-bottom: 1px solid var(--border-strong);
   border-radius: 0;
-  &:focus { outline: none; border-bottom-color: var(--accent, #00b4d8); }
-  &::placeholder { color: var(--text-secondary); font-style: italic; opacity: 1; }
+  &:focus { outline: none; border-bottom-color: var(--color-accent); }
+  &::placeholder { color: var(--text-tertiary); font-style: italic; opacity: 1; }
 `;
 
 const MealsRow = styled.div`
@@ -1357,13 +1341,13 @@ const CaloriesInput = styled.input`
   padding: 10px 2px;
   font-family: var(--mono, 'JetBrains Mono', monospace);
   font-size: 12px;
-  color: var(--ink, #2b2824);
+  color: var(--text-primary);
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--border-strong, #d4cfc3);
+  border-bottom: 1px solid var(--border-strong);
   border-radius: 0;
-  &:focus { outline: none; border-bottom-color: var(--accent, #00b4d8); }
-  &::placeholder { color: var(--text-secondary); opacity: 1; }
+  &:focus { outline: none; border-bottom-color: var(--color-accent); }
+  &::placeholder { color: var(--text-tertiary); opacity: 1; }
 `;
 
 function MealsQuickCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
@@ -1440,6 +1424,7 @@ function MealsQuickCard({ accentColor, dragAttributes, dragListeners }: { accent
         <MealsRow>
           <MealsInput
             type="text"
+            data-underline
             placeholder="What did you eat?"
             value={description}
             onChange={e => setDescription(e.target.value)}
@@ -1448,13 +1433,14 @@ function MealsQuickCard({ accentColor, dragAttributes, dragListeners }: { accent
           />
           <CaloriesInput
             type="number"
+            data-underline
             placeholder="Cal"
             value={calories}
             onChange={e => setCalories(e.target.value)}
             style={{ flex: 1, width: 'auto', minWidth: 0 }}
           />
         </MealsRow>
-        <MealsRow style={{ justifyContent: 'flex-end' }}>
+        <MealsRow style={{ justifyContent: 'flex-end', marginTop: '20px' }}>
           <SaveBtn
             $accent={accentColor}
             $active={canSave}
@@ -1557,19 +1543,14 @@ function TasksCard({ accentColor, tasks, taskTopicId, dragAttributes, dragListen
         {incomplete.length === 0 && !adding && <EmptyNote>No pending tasks</EmptyNote>}
         {incomplete.map(t => (
           <ItemRow key={t.id}>
-            <CheckBtn $done={false} $color={accentColor} onClick={() => handleToggle(t)}>
-              <Icon name="circle" size={18} strokeWidth={2} />
-            </CheckBtn>
+            <CheckBtn $done={false} $color={accentColor} onClick={() => handleToggle(t)} />
             <ItemText>{stripHtml(t.content).slice(0, 80)}</ItemText>
           </ItemRow>
         ))}
         {completed.map(t => (
           <ItemRow key={t.id} $done>
             <CheckBtn $done $color={accentColor} onClick={() => handleToggle(t)}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <path d="M22 4 12 14.01l-3-3" />
-              </svg>
+              <Icon name="check" size={9} strokeWidth={2.5} />
             </CheckBtn>
             <ItemText $done>{stripHtml(t.content).slice(0, 80)}</ItemText>
           </ItemRow>
@@ -1587,7 +1568,7 @@ const EvtRow = styled.div`
   gap: 16px;
   align-items: start;
   padding: 14px 8px;
-  border-bottom: 1px dashed var(--border-strong);
+  border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: 0; }
 `;
 
@@ -1789,14 +1770,19 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
         )}
         {unchecked.slice(0, 10).map(it => (
           <ItemRow key={it.id}>
-            <CheckBtn $done={false} $color={accentColor} onClick={() => handleToggle(it.id)} />
+            <CheckBtn $done={false} $color={accentColor} onClick={() => handleToggle(it.id)}>
+              <Icon name="circle" size={18} strokeWidth={2} />
+            </CheckBtn>
             <ItemText>{it.name}</ItemText>
           </ItemRow>
         ))}
         {checked.slice(0, 3).map(it => (
           <ItemRow key={it.id} $done>
             <CheckBtn $done $color={accentColor} onClick={() => handleToggle(it.id)}>
-              <Icon name="check" size={14} strokeWidth={2.5} />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <path d="M22 4 12 14.01l-3-3" />
+              </svg>
             </CheckBtn>
             <ItemText $done>{it.name}</ItemText>
           </ItemRow>
@@ -1808,6 +1794,10 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
 }
 
 /* ── Widget: Medication Schedule ── */
+
+const MedsDashCard = styled(DashCard)`
+  border-color: var(--color-accent-subtle, color-mix(in srgb, var(--color-accent) 25%, transparent));
+`;
 
 const MedProgressBar = styled.div`
   height: 6px;
@@ -1835,11 +1825,7 @@ const MedRow = styled.div<{ $taken: boolean }>`
   &:last-child { border-bottom: 0; }
 `;
 
-const MedCircle = styled.button<{ $taken: boolean; $color: string }>`
-  border: none; background: transparent;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; font-size: 12px; padding: 0; color: ${({ $color }) => $color};
-  transition: all 0.15s;
+const MedCircle = styled(CircleCheckBtn)<{ $taken: boolean }>`
   &:disabled { opacity: 0.5; cursor: wait; }
 `;
 
@@ -1991,7 +1977,7 @@ const WeatherDayRow = styled.div<{ $today?: boolean }>`
   align-items: center;
   gap: 10px;
   padding: 6px 8px;
-  border-bottom: 1px dashed var(--border-strong, #d4cfc3);
+  border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: none; }
   ${({ $today }) => $today && 'padding: 8px 8px 10px;'}
 `;
@@ -2011,7 +1997,7 @@ const WeatherTodayTemp = styled.span`
   font-family: var(--serif, ${({ theme }) => theme.fontFamily.serif});
   font-size: 28px;
   font-style: italic;
-  font-weight: 400;
+  font-weight: 200;
   color: var(--ink, ${({ theme }) => theme.colors.text});
   line-height: 1;
 `;
@@ -2172,7 +2158,7 @@ const TopicEntryRow = styled.div`
   align-items: baseline;
   gap: 10px;
   padding: 6px 0;
-  border-bottom: 1px dashed var(--border-strong, #d4cfc3);
+  border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: none; }
 `;
 
@@ -2264,7 +2250,7 @@ const MealRow = styled.div`
   align-items: baseline;
   gap: 10px;
   padding: 8px;
-  border-bottom: 1px dashed var(--border-strong, #d4cfc3);
+  border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: none; }
 `;
 
@@ -2707,11 +2693,10 @@ function MedsCard({ accentColor, dragAttributes, dragListeners }: { accentColor:
       <CardHeader>
         <CardIconWrap><Icon name="pill" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Medications Today</CardTitle>
-        <CardViewLink to="/health/meds">View all</CardViewLink>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>}
+        <CardViewLink to="/health/meds">View all</CardViewLink>
       </CardHeader>
       <CardBody>
-        {/* Progress bar removed to match design spec */}
         {scheduledDoses.map((dose, i) => {
           const isTaken = getStatus(dose) === 'taken';
           const key = `${dose.medicationPostId}-${dose.time.substring(0, 5)}`;
@@ -2789,13 +2774,19 @@ function MiniCalendarCard({ accentColor, dragAttributes, dragListeners }: { acce
 const WATER_GOAL = 8;
 const SLEEP_GOAL = 10;
 
+const WellnessDashCard = styled(DashCard)`
+  & ${CardHeader} {
+    padding: 14px 0 0 0;
+  }
+`;
+
 const WSection = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-strong);
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: 0; }
 `;
 
@@ -3065,7 +3056,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
   };
 
   return (
-    <DashCard>
+    <WellnessDashCard>
       <CardHeader>
         <CardIconWrap><Icon name="heart" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Wellness Check-in</CardTitle>
@@ -3130,7 +3121,7 @@ function WellnessCheckInCard({ accentColor, dragAttributes, dragListeners }: { a
           </WSection>
         )}
       </CardBody>
-    </DashCard>
+    </WellnessDashCard>
   );
 }
 
@@ -3200,17 +3191,20 @@ export function DashboardView() {
     });
   }, [weatherEnabled]);
 
-  // Auto-remove stale topic-{id} widget for topics that now have a dedicated built-in card
+  // Auto-remove stale topic-{id} widgets for topics that have dedicated built-in cards
   useEffect(() => {
-    const menuPlanTopic = allTopics.find(t => t.name.toLowerCase() === 'menu plan');
-    if (!menuPlanTopic) return;
-    const staleId = `topic-${menuPlanTopic.id}` as CardId;
+    const BUILTIN_TOPIC_NAMES = ['menu plan', 'wellness', 'priorities'];
+    const staleIds = allTopics
+      .filter(t => BUILTIN_TOPIC_NAMES.includes(t.name.toLowerCase()))
+      .map(t => `topic-${t.id}` as CardId);
+    if (staleIds.length === 0) return;
     setLayout(prev => {
-      if (!prev.left.includes(staleId) && !prev.right.includes(staleId) && !prev.hidden.includes(staleId)) return prev;
+      const hasAny = staleIds.some(id => prev.left.includes(id) || prev.right.includes(id) || prev.hidden.includes(id));
+      if (!hasAny) return prev;
       const next = {
-        left: prev.left.filter(id => id !== staleId),
-        right: prev.right.filter(id => id !== staleId),
-        hidden: prev.hidden.filter(id => id !== staleId),
+        left: prev.left.filter(id => !staleIds.includes(id)),
+        right: prev.right.filter(id => !staleIds.includes(id)),
+        hidden: prev.hidden.filter(id => !staleIds.includes(id)),
       };
       saveLayout(next);
       return next;
