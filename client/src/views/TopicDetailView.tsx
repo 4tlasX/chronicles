@@ -191,7 +191,14 @@ export function TopicDetailView() {
                 const isEditing = editingId === entry.id;
                 return (
                   <div key={entry.id}>
-                    {isEditing ? (
+                    <EntryListCard
+                      content={entry.content}
+                      createdAt={created}
+                      topicName={topic.name}
+                      topicColor={topic.color || accentColor}
+                      onClick={() => setEditingId(isEditing ? null : entry.id)}
+                    />
+                    {isEditing && (
                       <EditWrap>
                         <EditableEntryCard
                           entry={entry}
@@ -204,14 +211,6 @@ export function TopicDetailView() {
                           onDeleted={() => setEditingId(null)}
                         />
                       </EditWrap>
-                    ) : (
-                      <EntryListCard
-                        content={entry.content}
-                        createdAt={created}
-                        topicName={topic.name}
-                        topicColor={topic.color || accentColor}
-                        onClick={() => setEditingId(entry.id)}
-                      />
                     )}
                   </div>
                 );
