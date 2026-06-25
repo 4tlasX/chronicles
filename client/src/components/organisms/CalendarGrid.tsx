@@ -1,7 +1,8 @@
 import styled from 'styled-components';
-import { Icon } from '../../../../design-system/components/core/Icon.jsx';
+import { CalendarHeader } from './CalendarHeader.js';
 import { stripHtml } from '../../utils/stripHtml.js';
 import type { DecryptedPost } from '@shared/crypto/types';
+import type { CalendarViewMode } from '../../views/CalendarView.js';
 
 /* ── Helpers ── */
 
@@ -15,7 +16,8 @@ function isSameDay(a: Date, b: Date): boolean {
 
 function getCalendarDays(year: number, month: number) {
   const firstDay = new Date(year, month, 1);
-  const startDow = firstDay.getDay();
+  let startDow = firstDay.getDay();
+  startDow = startDow === 0 ? 6 : startDow - 1; // Mon = 0
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const prevMonthDays = new Date(year, month, 0).getDate();
 
@@ -29,230 +31,314 @@ function getCalendarDays(year: number, month: number) {
 
 /* ── Styled ── */
 
-const Header = styled.div`
+const Wrapper = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 16px;
-  position: relative;
-`;
-
-const HeaderLeft = styled.div`
-  position: absolute;
-  left: 16px;
-  display: flex;
-  align-items: center;
-`;
-
-const NavBtn = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: none;
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  &:hover { background: rgba(0, 0, 0, 0.05); }
-`;
-
-const MonthLabel = styled.h2`
-  font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 16px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-  color: ${({ theme }) => theme.colors.text};
-  min-width: 160px;
-  text-align: center;
-`;
-
-const GridWrapper = styled.div`
+  flex-direction: column;
   flex: 1;
-  overflow-y: auto;
-  padding: 0 16px 16px;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-app);
+`;
+
+const GridArea = styled.div`
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0 0;
+  overflow: hidden;
 `;
 
 const WeekdayRow = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 4px;
-  @media (max-width: 768px) { display: none; }
+  border-top: 1px solid var(--border-subtle);
 `;
 
 const WeekdayLabel = styled.div`
   text-align: center;
-  font-size: 15px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.text};
-  padding: 4px 0;
+  font-family: var(--font-label, var(--font-sans));
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: 6px 0;
 `;
 
 const DaysGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-  @media (max-width: 768px) { grid-template-columns: 1fr; }
+  grid-template-rows: repeat(6, 1fr);
+  flex: 1;
+  min-height: 0;
+  border-top: 1px solid var(--border-subtle);
+  border-left: 1px solid var(--border-subtle);
 `;
 
-const DayCell = styled.div<{ $isOutside?: boolean; $isSelected?: boolean; $isToday?: boolean; $accentColor?: string }>`
-  aspect-ratio: 1;
+const DayCell = styled.div<{ $isOutside?: boolean; $isSelected?: boolean; $accentColor?: string }>`
+  border-right: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
   padding: 6px 8px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-width: 0 1px 1px 0;
-  &:nth-child(7n) { border-right: none; }
-  cursor: pointer;
-  background: ${({ $isSelected, $isToday, $accentColor }) =>
-    $isToday ? `${$accentColor}10` : $isSelected ? 'rgba(0,0,0,0.03)' : 'transparent'};
-  outline: ${({ $isSelected }) => $isSelected ? '2px solid #e5e6ea' : 'none'};
-  outline-offset: -2px;
-  opacity: ${({ $isOutside }) => $isOutside ? 0.4 : 1};
-  transition: background 0.1s;
+  cursor: ${({ $isOutside }) => $isOutside ? 'default' : 'pointer'};
+  background: ${({ $isSelected, $accentColor }) => $isSelected ? `${$accentColor}14` : 'transparent'};
+  opacity: ${({ $isOutside }) => $isOutside ? 0.35 : 1};
   overflow: hidden;
-  &:hover { background: rgba(0, 0, 0, 0.02); }
-  @media (max-width: 768px) {
-    aspect-ratio: auto;
-    min-height: 44px;
-    display: ${({ $isOutside }) => $isOutside ? 'none' : 'flex'};
-    align-items: flex-start;
-    gap: 8px;
-    padding: 8px 12px;
-    border-width: 0 0 1px 0;
-  }
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  transition: background 0.1s;
+  &:hover { background: ${({ $isOutside, $isSelected, $accentColor }) =>
+    $isOutside ? 'transparent' : $isSelected ? `${$accentColor}1a` : 'var(--bg-hover)'}; }
 `;
 
-const DayNumber = styled.div<{ $isToday?: boolean; $accentColor: string }>`
-  font-size: ${({ $isToday }) => $isToday ? '15px' : '13px'};
+const DayNumber = styled.div<{ $isToday?: boolean; $isSelected?: boolean; $accentColor: string }>`
+  font-family: var(--font-sans);
+  font-size: 13px;
   font-weight: ${({ $isToday }) => $isToday ? 700 : 400};
-  color: ${({ $isToday, $accentColor }) => $isToday ? $accentColor : 'inherit'};
-  margin-bottom: 2px;
+  color: ${({ $isToday, $isSelected, $accentColor }) =>
+    $isToday ? $accentColor : $isSelected ? $accentColor : 'var(--text-secondary)'};
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
   flex-shrink: 0;
-`;
-
-const MobileDayLabel = styled.span<{ $isOutside?: boolean }>`
-  display: none;
-  width: 28px;
-  font-size: 14px;
-  font-weight: 500;
-  color: ${({ theme, $isOutside }) => $isOutside ? theme.colors.border : theme.colors.textMuted};
-  flex-shrink: 0;
-  @media (max-width: 768px) { display: block; }
+  margin-bottom: 3px;
 `;
 
 const DayItems = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   overflow: hidden;
   flex: 1;
   min-height: 0;
-  @media (max-width: 768px) { display: none; }
 `;
 
-const DayItem = styled.div<{ $accent?: string }>`
-  font-size: 14px;
-  color: ${({ $accent, theme }) => $accent || theme.colors.textSecondary};
-  background: ${({ $accent }) => $accent ? `${$accent}18` : 'transparent'};
-  padding: 1px 4px;
+const DayItem = styled.div`
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--text-secondary);
+  padding: 2px 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   border-radius: 2px;
-  font-weight: ${({ $accent }) => $accent ? 500 : 400};
-  @media (max-width: 768px) { padding: 2px 0; }
+  font-weight: 400;
 `;
 
 const MoreLabel = styled.div`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 11px;
+  color: var(--text-tertiary);
   padding: 1px 4px;
 `;
 
-const MobileEntryCount = styled.span`
-  display: none;
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  margin-left: auto;
-  @media (max-width: 768px) { display: inline; }
+/* ── Mobile list view ── */
+
+const DesktopOnly = styled.div`
+  display: contents;
+  @media (max-width: 768px) { display: none; }
 `;
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MobileList = styled.div`
+  display: none;
+  @media (max-width: 768px) {
+    display: block;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 12px;
+  }
+`;
+
+const MobileDayRow = styled.div<{ $isToday: boolean; $accentColor: string }>`
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background 100ms;
+  &:hover { background: var(--bg-hover); }
+`;
+
+const MobileDateCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+  flex-shrink: 0;
+`;
+
+const MobileDayNum = styled.span<{ $isToday: boolean; $accentColor: string }>`
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 200;
+  line-height: 1;
+  color: ${({ $isToday, $accentColor }) => $isToday ? $accentColor : 'var(--text-primary)'};
+  letter-spacing: -0.01em;
+`;
+
+const MobileDayName = styled.span`
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-top: 5px;
+`;
+
+const MobileEntries = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 4px;
+  min-width: 0;
+`;
+
+const MobileEntryChip = styled.div`
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const MobileEmptyDay = styled.div`
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-tertiary);
+`;
+
+const WEEKDAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
 /* ── Component ── */
 
 interface CalendarGridProps {
   currentMonth: Date;
-  selectedDate: string | null;
+  selectedDate: string;
   entriesByDate: Map<string, DecryptedPost[]>;
   accentColor: string;
   eventTopicIds: Set<number>;
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
+  viewMode: CalendarViewMode;
+  currentDate: Date;
+  onPrev: () => void;
+  onNext: () => void;
+  onToday: () => void;
+  onViewMode: (mode: CalendarViewMode) => void;
   onDayClick: (dateStr: string) => void;
-  onEntryClick: (entryId: number) => void;
+  onDayDoubleClick: (dateStr: string) => void;
   getTopicName: (entry: DecryptedPost) => string | undefined;
 }
 
 export function CalendarGrid({
   currentMonth, selectedDate, entriesByDate, accentColor, eventTopicIds,
-  onPrevMonth, onNextMonth, onDayClick, onEntryClick, getTopicName,
+  viewMode, onPrev, onNext, onToday, onViewMode, onDayClick, onDayDoubleClick, getTopicName,
 }: CalendarGridProps) {
   const today = new Date();
   const days = getCalendarDays(currentMonth.getFullYear(), currentMonth.getMonth());
-  const monthLabel = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long' });
+  const year = currentMonth.getFullYear();
+
+  const title = <>{monthName} <span>{year}</span></>;
 
   return (
-    <>
-      <Header>
-        <NavBtn onClick={onPrevMonth}><Icon name="chevron-left" size={16} strokeWidth={2} /></NavBtn>
-        <MonthLabel>{monthLabel}</MonthLabel>
-        <NavBtn onClick={onNextMonth}><Icon name="chevron-right" size={16} strokeWidth={2} /></NavBtn>
-      </Header>
+    <Wrapper>
+      <CalendarHeader
+        title={title}
+        viewMode={viewMode}
+        accentColor={accentColor}
+        onPrev={onPrev}
+        onNext={onNext}
+        onToday={onToday}
+        onViewMode={onViewMode}
+      />
 
-      <GridWrapper>
-        <WeekdayRow>
-          {WEEKDAYS.map(d => <WeekdayLabel key={d}>{d}</WeekdayLabel>)}
-        </WeekdayRow>
+      {/* Desktop: full grid */}
+      <DesktopOnly>
+        <GridArea>
+          <WeekdayRow>
+            {WEEKDAYS.map(d => <WeekdayLabel key={d}>{d}</WeekdayLabel>)}
+          </WeekdayRow>
 
-        <DaysGrid>
-          {days.map(({ date, isOutside }, i) => {
-            const dateStr = toDateStr(date);
-            const dayEntries = entriesByDate.get(dateStr) || [];
-            const isToday = isSameDay(date, today);
-            const isSelected = selectedDate === dateStr;
-            const dow = WEEKDAYS[date.getDay()];
+          <DaysGrid>
+            {days.map(({ date, isOutside }, i) => {
+              const dateStr = toDateStr(date);
+              const dayEntries = entriesByDate.get(dateStr) || [];
+              const isToday = isSameDay(date, today);
+              const isSelected = selectedDate === dateStr;
 
-            return (
-              <DayCell key={i} $isOutside={isOutside} $isSelected={!isOutside && isSelected} $isToday={!isOutside && isToday} $accentColor={accentColor} onClick={() => !isOutside && onDayClick(dateStr)}>
-                {!isOutside && (
-                  <>
-                    <MobileDayLabel>{dow}</MobileDayLabel>
-                    <DayNumber $isToday={isToday} $accentColor={accentColor}>{date.getDate()}</DayNumber>
-                    {dayEntries.length > 0 && <MobileEntryCount>{dayEntries.length} {dayEntries.length === 1 ? 'entry' : 'entries'}</MobileEntryCount>}
-                    <DayItems>
-                      {dayEntries.slice(0, 3).map(entry => {
-                        const topicName = getTopicName(entry);
-                        const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
-                        const isEvent = taxId !== undefined && eventTopicIds.has(taxId);
-                        const preview = stripHtml(entry.content).slice(0, 40) || 'Entry';
-                        return (
-                          <DayItem key={entry.id} $accent={isEvent ? accentColor : undefined} onClick={e => { e.stopPropagation(); onEntryClick(entry.id); }}>
-                            {topicName ? `${topicName}: ` : ''}{preview}
-                          </DayItem>
-                        );
-                      })}
-                      {dayEntries.length > 3 && <MoreLabel>+{dayEntries.length - 3} more</MoreLabel>}
-                    </DayItems>
-                  </>
+              return (
+                <DayCell
+                  key={i}
+                  $isOutside={isOutside}
+                  $isSelected={!isOutside && isSelected}
+                  $accentColor={accentColor}
+                  onClick={() => !isOutside && onDayClick(dateStr)}
+                  onDoubleClick={() => !isOutside && onDayDoubleClick(dateStr)}
+                >
+                  {!isOutside && (
+                    <>
+                      <DayNumber $isToday={isToday} $isSelected={isSelected} $accentColor={accentColor}>
+                        {date.getDate()}
+                      </DayNumber>
+                      <DayItems>
+                        {dayEntries.slice(0, 3).map(entry => {
+                          const topicName = getTopicName(entry);
+                          const preview = stripHtml(entry.content).slice(0, 30) || topicName || 'Entry';
+                          return <DayItem key={entry.id}>{preview}</DayItem>;
+                        })}
+                        {dayEntries.length > 3 && <MoreLabel>+{dayEntries.length - 3} more</MoreLabel>}
+                      </DayItems>
+                    </>
+                  )}
+                </DayCell>
+              );
+            })}
+          </DaysGrid>
+        </GridArea>
+      </DesktopOnly>
+
+      {/* Mobile: scrollable day list */}
+      <MobileList>
+        {days.filter(d => !d.isOutside).map(({ date }) => {
+          const dateStr = toDateStr(date);
+          const dayEntries = entriesByDate.get(dateStr) || [];
+          const isToday = isSameDay(date, today);
+          const weekday = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+
+          return (
+            <MobileDayRow
+              key={dateStr}
+              $isToday={isToday}
+              $accentColor={accentColor}
+              onClick={() => onDayClick(dateStr)}
+            >
+              <MobileDateCol>
+                <MobileDayNum $isToday={isToday} $accentColor={accentColor}>{date.getDate()}</MobileDayNum>
+                <MobileDayName>{weekday}</MobileDayName>
+              </MobileDateCol>
+              <MobileEntries>
+                {dayEntries.length === 0 ? (
+                  <MobileEmptyDay>No entries</MobileEmptyDay>
+                ) : (
+                  dayEntries.map(entry => {
+                    const topicName = getTopicName(entry);
+                    const preview = stripHtml(entry.content).slice(0, 50) || topicName || 'Entry';
+                    return <MobileEntryChip key={entry.id}>{preview}</MobileEntryChip>;
+                  })
                 )}
-              </DayCell>
-            );
-          })}
-        </DaysGrid>
-      </GridWrapper>
-    </>
+              </MobileEntries>
+            </MobileDayRow>
+          );
+        })}
+      </MobileList>
+    </Wrapper>
   );
 }

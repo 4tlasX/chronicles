@@ -1,29 +1,75 @@
 import { useState, useMemo, useCallback } from 'react';
-import { ContentTemplate } from '../components/templates/ContentTemplate.js';
+import styled from 'styled-components';
 import { CalendarGrid } from '../components/organisms/CalendarGrid.js';
+import { CalendarDayView } from '../components/organisms/CalendarDayView.js';
+import { CalendarWeekView } from '../components/organisms/CalendarWeekView.js';
 import { CalendarDayDetail } from '../components/organisms/CalendarDayDetail.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
+import { AppTemplate } from '../components/templates/AppTemplate.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 
+export type CalendarViewMode = 'day' | 'week' | 'month';
+
 function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+
+function startOfWeek(d: Date): Date {
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // Mon = start
+  const result = new Date(d);
+  result.setDate(d.getDate() + diff);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+const Layout = styled.div`
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-app);
+`;
+
+const GridPane = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border-subtle);
+`;
+
+const DetailPane = styled.div`
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  @media (max-width: 900px) { display: none; }
+`;
 
 export function CalendarView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
-  const [currentMonth, setCurrentMonth] = useState(() => new Date());
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  // IDs of Event and Meeting topics
+  const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
+  const [currentDate, setCurrentDate] = useState(() => new Date()); // anchor: for month=1st of month, week=Monday, day=that day
+  const [selectedDate, setSelectedDate] = useState<string>(() => toDateStr(new Date()));
+
   const eventTopicIds = useMemo(
     () => new Set(allTopics.filter(t => ['event', 'meeting'].includes(t.name.toLowerCase())).map(t => t.id)),
+    [allTopics]
+  );
+
+  const taskTopicIds = useMemo(
+    () => new Set(allTopics.filter(t => t.name.toLowerCase() === 'task').map(t => t.id)),
     [allTopics]
   );
 
@@ -41,7 +87,6 @@ export function CalendarView() {
       const isEventEntry = taxId !== undefined && eventTopicIds.has(taxId);
 
       if (isEventEntry) {
-        // Use startDate from custom fields for events/meetings
         const cf = meta?._customFields as Record<string, unknown> | undefined;
         const startDate = cf?.startDate as string | undefined;
         if (startDate) { addEntry(startDate, entry); continue; }
@@ -50,7 +95,6 @@ export function CalendarView() {
       addEntry(toDateStr(d), entry);
     }
 
-    // Sort each day so events/meetings come first
     for (const [key, arr] of map) {
       map.set(key, arr.sort((a, b) => {
         const aIsEvent = eventTopicIds.has((a.metadata as Record<string, unknown>)?._taxonomyId as number);
@@ -64,62 +108,164 @@ export function CalendarView() {
     return map;
   }, [entries, eventTopicIds]);
 
-  const getTopicName = useCallback((entry: typeof entries[number]) => {
+  const getTopicForEntry = useCallback((entry: typeof entries[number]) => {
     const taxId = (entry.metadata as Record<string, unknown>)?._taxonomyId as number | undefined;
-    const topic = taxId ? allTopics.find(t => t.id === taxId) : undefined;
-    return topic?.name;
+    return taxId ? allTopics.find(t => t.id === taxId) : undefined;
   }, [allTopics]);
 
+
   const handleDayClick = useCallback((dateStr: string) => {
-    setSelectedDate(prev => prev === dateStr ? null : dateStr);
+    setSelectedDate(dateStr);
   }, []);
 
-  const handleEntryClick = useCallback((entryId: number) => {
-    const entry = entries.find(e => e.id === entryId);
-    if (entry) {
-      const d = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt);
-      setSelectedDate(toDateStr(d));
-    }
-  }, [entries]);
+  const handleDayDoubleClick = useCallback((dateStr: string) => {
+    setSelectedDate(dateStr);
+    setCurrentDate(new Date(dateStr + 'T00:00:00'));
+    setViewMode('day');
+  }, []);
 
-  const goToPrev = () => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-  const goToNext = () => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  // Navigation: prev/next semantics depend on view mode
+  const goToPrev = useCallback(() => {
+    setCurrentDate(prev => {
+      const d = new Date(prev);
+      if (viewMode === 'month') return new Date(d.getFullYear(), d.getMonth() - 1, 1);
+      if (viewMode === 'week') { d.setDate(d.getDate() - 7); return d; }
+      d.setDate(d.getDate() - 1); return d;
+    });
+  }, [viewMode]);
+
+  const goToNext = useCallback(() => {
+    setCurrentDate(prev => {
+      const d = new Date(prev);
+      if (viewMode === 'month') return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      if (viewMode === 'week') { d.setDate(d.getDate() + 7); return d; }
+      d.setDate(d.getDate() + 1); return d;
+    });
+  }, [viewMode]);
+
+  const goToToday = useCallback(() => {
+    const today = new Date();
+    setCurrentDate(today);
+    setSelectedDate(toDateStr(today));
+  }, []);
+
+  const handleViewMode = useCallback((mode: CalendarViewMode) => {
+    setViewMode(mode);
+    // When switching to day/week, anchor currentDate to selectedDate
+    if (mode === 'day') setCurrentDate(new Date(selectedDate + 'T00:00:00'));
+    if (mode === 'week') setCurrentDate(startOfWeek(new Date(selectedDate + 'T00:00:00')));
+  }, [selectedDate]);
 
   const selectedEntries = useMemo(() => {
-    if (!selectedDate) return [];
     return entriesByDate.get(selectedDate) || [];
   }, [selectedDate, entriesByDate]);
 
-  if (needsUnlock) return (<><ContentTemplate><EmptyState message="Unlock your journal to view calendar" /></ContentTemplate><UnlockDialog onUnlock={handleUnlock} /></>);
-  if (isLoading || !isReady) return (<ContentTemplate><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}><Spinner size={40} /></div></ContentTemplate>);
+  // Title for day/week header
+  const currentMonth = viewMode === 'month'
+    ? currentDate
+    : viewMode === 'week'
+      ? startOfWeek(currentDate)
+      : currentDate;
 
+  const sharedHeaderProps = {
+    viewMode,
+    accentColor,
+    currentDate,
+    onPrev: goToPrev,
+    onNext: goToNext,
+    onToday: goToToday,
+    onViewMode: handleViewMode,
+  };
+
+  if (needsUnlock) return (
+    <AppTemplate transparentContent hideAccentStripe>
+      <Layout>
+        <GridPane><EmptyState message="Unlock your journal to view calendar" /></GridPane>
+        <UnlockDialog onUnlock={handleUnlock} />
+      </Layout>
+    </AppTemplate>
+  );
+
+  if (isLoading || !isReady) return (
+    <AppTemplate transparentContent hideAccentStripe>
+      <Layout>
+        <GridPane><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}><Spinner size={40} /></div></GridPane>
+      </Layout>
+    </AppTemplate>
+  );
+
+  if (viewMode === 'day') {
+    return (
+      <AppTemplate transparentContent hideAccentStripe>
+        <Layout>
+          <GridPane>
+            <CalendarDayView
+              {...sharedHeaderProps}
+              dateStr={toDateStr(currentDate)}
+              entries={entriesByDate.get(toDateStr(currentDate)) || []}
+              allTopics={allTopics}
+              eventTopicIds={eventTopicIds}
+              taskTopicIds={taskTopicIds}
+              getTopicForEntry={getTopicForEntry}
+            />
+          </GridPane>
+        </Layout>
+      </AppTemplate>
+    );
+  }
+
+  if (viewMode === 'week') {
+    const weekStart = startOfWeek(currentDate);
+    return (
+      <AppTemplate transparentContent hideAccentStripe>
+        <Layout>
+          <GridPane>
+            <CalendarWeekView
+              {...sharedHeaderProps}
+              weekStart={weekStart}
+              entriesByDate={entriesByDate}
+              allTopics={allTopics}
+              eventTopicIds={eventTopicIds}
+              taskTopicIds={taskTopicIds}
+              selectedDate={selectedDate}
+              getTopicForEntry={getTopicForEntry}
+              onDayClick={handleDayClick}
+              onDayDoubleClick={handleDayDoubleClick}
+            />
+          </GridPane>
+        </Layout>
+      </AppTemplate>
+    );
+  }
+
+  // Month view — keep two-panel layout
   return (
-    <ContentTemplate>
-      {!selectedDate && (
-        <CalendarGrid
-          currentMonth={currentMonth}
-          selectedDate={selectedDate}
-          entriesByDate={entriesByDate}
-          accentColor={accentColor}
-          eventTopicIds={eventTopicIds}
-          onPrevMonth={goToPrev}
-          onNextMonth={goToNext}
-          onDayClick={handleDayClick}
-          onEntryClick={handleEntryClick}
-          getTopicName={getTopicName}
-        />
-      )}
-
-      {selectedDate && (
-        <CalendarDayDetail
-          dateStr={selectedDate}
-          entries={selectedEntries}
-          allTopics={allTopics}
-          accentColor={accentColor}
-          eventTopicIds={eventTopicIds}
-          onClose={() => setSelectedDate(null)}
-        />
-      )}
-    </ContentTemplate>
+    <AppTemplate transparentContent hideAccentStripe>
+      <Layout>
+        <GridPane>
+          <CalendarGrid
+            {...sharedHeaderProps}
+            currentMonth={currentMonth}
+            selectedDate={selectedDate}
+            entriesByDate={entriesByDate}
+            eventTopicIds={eventTopicIds}
+            onDayClick={handleDayClick}
+            onDayDoubleClick={handleDayDoubleClick}
+            getTopicName={entry => getTopicForEntry(entry)?.name}
+          />
+        </GridPane>
+        <DetailPane>
+          <CalendarDayDetail
+            dateStr={selectedDate}
+            entries={selectedEntries}
+            allTopics={allTopics}
+            accentColor={accentColor}
+            eventTopicIds={eventTopicIds}
+            taskTopicIds={taskTopicIds}
+            onClose={() => {}}
+          />
+        </DetailPane>
+      </Layout>
+    </AppTemplate>
   );
 }
