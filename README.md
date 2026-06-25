@@ -39,7 +39,7 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - Non-extractable CryptoKeys — master key cannot be exported from the browser's crypto subsystem
 - Split-token sessions — database leaks cannot reconstruct valid session tokens
 
-## Screenshots - Chronicles is in a re-design slated for release July/August w/phone app via React Native soon.
+## Screenshots - Chronicles is in a re-design slated for release July/August with a phone app via React Native coming soon.
 New look:
 <img width="1374" height="720" alt="Screenshot 2026-06-24 at 11 45 57 PM" src="https://github.com/user-attachments/assets/9c574af0-c97b-4dd2-9dd5-194044513e7e" />
 <img width="1374" height="722" alt="Screenshot 2026-06-24 at 11 47 51 PM" src="https://github.com/user-attachments/assets/fcef5215-b3eb-4f76-b7d2-65aa8b4e0f2b" />
