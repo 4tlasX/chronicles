@@ -231,9 +231,9 @@ export function Sidebar() {
           </NavIconBtn>
         )}
 
-        <NavIconBtn $active={startsWith('/goals')} onClick={() => navigate('/goals')} title="Planning">
+        <NavIconBtn $active={startsWith('/goals')} onClick={() => navigate('/goals')} title="Roadmap">
           <MaterialIcon aria-hidden="true">checklist</MaterialIcon>
-          <SrOnly>Planning</SrOnly>
+          <SrOnly>Roadmap</SrOnly>
         </NavIconBtn>
 
         <NavIconBtn $active={at('/calendar')} onClick={() => navigate('/calendar')} title="Calendar">

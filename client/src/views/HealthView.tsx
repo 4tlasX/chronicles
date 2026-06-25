@@ -6,6 +6,7 @@ import { Spinner } from '../components/atoms/Spinner.js';
 import { HealthTabBar } from '../components/molecules/HealthTabBar.js';
 import { FilterTabs } from '../components/molecules/FilterTabs.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
+import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { SwipeActions } from '../components/molecules/SwipeActions.js';
@@ -16,9 +17,7 @@ import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 import { entries as entriesApi } from '../services/api.js';
 import { toDateStr, startOfWeek, startOfMonth } from '../utils/dateUtils.js';
-import { stripHtml } from '../utils/stripHtml.js';
 import type { DateFilter } from '../types/health.js';
-import type { DecryptedPost } from '@shared/crypto/types';
 
 const DATE_FILTERS = [
   { value: 'all' as const, label: 'All' },
@@ -38,7 +37,7 @@ const Page = styled.div`
 
 const Inner = styled.div`
   width: 100%;
-  max-width: 920px;
+  max-width: 1150px;
   margin: 0 auto;
   padding: 0 24px 64px;
   @media (max-width: 768px) { padding: 0 16px 48px; }
@@ -126,88 +125,12 @@ const List = styled.div`
   flex-direction: column;
 `;
 
-const Row = styled.div`
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  padding: 18px 4px;
-  border-top: 1px solid var(--border-subtle);
-  cursor: pointer;
-  transition: background 120ms ease;
-  &:hover { background: var(--bg-hover); }
-`;
-
-const RowText = styled.div`
-  min-width: 0;
-`;
-
-const RowTitle = styled.div`
-  font-family: var(--font-sans);
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const RowMeta = styled.div`
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const RowDate = styled.div`
-  font-family: var(--font-label);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  white-space: nowrap;
-`;
-
 const EditWrap = styled.div`
   border-top: 1px solid var(--border-subtle);
   padding: 8px 0;
 `;
 
 /* ── Helpers ── */
-
-function entryTitle(html: string): string {
-  const headingMatch = html.match(/<h[1-4][^>]*>(.*?)<\/h[1-4]>/i);
-  if (headingMatch) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = headingMatch[1];
-    const text = (tmp.textContent || tmp.innerText || '').trim();
-    if (text) return text;
-  }
-  return stripHtml(html).trim().slice(0, 80) || 'Untitled entry';
-}
-
-function entryDate(date: Date): string {
-  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-  if (date.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
-  return date.toLocaleDateString('en-US', opts);
-}
-
-function metaPreview(entry: DecryptedPost, fields: { key: string; label: string }[]): string {
-  const cf = ((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>) || {};
-  return fields
-    .map(f => {
-      const v = cf[f.key];
-      if (v == null || v === '' || v === false) return null;
-      return `${f.label}: ${v === true ? 'Yes' : v}`;
-    })
-    .filter(Boolean)
-    .join(' · ');
-}
 
 /* ── Props ── */
 
@@ -372,16 +295,15 @@ export function HealthView({ topicNames, metaFields = [], showDateFilter = true,
             <List>
               {sortedEntries.map(entry => {
                 const created = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt);
-                const title = entryTitle(entry.content);
-                const meta = metaPreview(entry, metaFields);
                 const isEditing = editingId === entry.id;
+                const topic = getTopicForEntry(entry);
                 return (
                   <div key={entry.id}>
                     {isEditing ? (
                       <EditWrap>
                         <EditableEntryCard
                           entry={entry}
-                          topic={getTopicForEntry(entry)}
+                          topic={topic}
                           accentColor={accentColor}
                           isEditing
                           hidePreview
@@ -393,13 +315,12 @@ export function HealthView({ topicNames, metaFields = [], showDateFilter = true,
                       </EditWrap>
                     ) : (
                       <SwipeActions accentColor={accentColor} onDelete={() => handleDelete(entry.id)}>
-                        <Row onClick={() => setEditingId(entry.id)}>
-                          <RowText>
-                            <RowTitle>{title}</RowTitle>
-                            {meta && <RowMeta>{meta}</RowMeta>}
-                          </RowText>
-                          <RowDate>{entryDate(created)}</RowDate>
-                        </Row>
+                        <EntryListCard
+                          content={entry.content}
+                          createdAt={created}
+                          topicName={topic?.name}
+                          onClick={() => setEditingId(entry.id)}
+                        />
                       </SwipeActions>
                     )}
                   </div>

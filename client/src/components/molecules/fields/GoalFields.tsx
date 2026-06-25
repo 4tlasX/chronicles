@@ -44,10 +44,10 @@ export function GoalFields({ values, onChange }: GoalFieldsProps) {
             value={values.goalStatus}
             onChange={e => onChange({ ...values, goalStatus: e.target.value as GoalFieldValues['goalStatus'] })}
           >
-            <option value="active">Active</option>
+            <option value="new">New</option>
+            <option value="planned">Planned</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
-            <option value="archived">Archived</option>
           </Select>
         </FormField>
       </Row>

@@ -36,33 +36,20 @@ function extractTitle(html: string, fallback?: string): string {
   return plain.slice(0, 70) || fallback || 'Untitled entry';
 }
 
-function extractPreview(html: string): string {
-  const headingMatch = html.match(/<h[1-4][^>]*>.*?<\/h[1-4]>/i);
-  let remainder = html;
-  if (headingMatch) {
-    remainder = html.slice((headingMatch.index ?? 0) + headingMatch[0].length);
-  } else {
-    const plain = stripHtml(html).trim();
-    if (plain.length <= 70) return '';
-    remainder = plain.slice(70);
-  }
-  return stripHtml(remainder).trim();
-}
 
-/* DS entry-list row: [accent bar][title + subtitle][time]. Borderless except a
-   hairline bottom rule; selected row gets a topic-colored left bar + faint fill. */
+/* Mobile-style entry row: big day number + weekday left, dot + uppercase topic
+   label, title, preview, right chevron. Hairline divider; selected row gets a
+   faint fill + topic-colored left bar. */
 const Row = styled.div<{ $active?: boolean; $accent?: string }>`
   position: relative;
   display: grid;
-  grid-template-columns: 3px 1fr auto;
-  gap: var(--s-3, 12px);
+  grid-template-columns: 52px 1fr auto;
+  gap: 18px;
   align-items: center;
-  height: 70px;
   box-sizing: border-box;
   cursor: pointer;
-  padding: 0 var(--s-4, 18px) 0 0;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--border-subtle);
-  overflow: hidden;
   background: ${({ $active }) => $active ? 'var(--bg-active)' : 'transparent'};
   transition: background 120ms;
 
@@ -73,7 +60,7 @@ const Row = styled.div<{ $active?: boolean; $accent?: string }>`
     top: 0;
     bottom: 0;
     width: 3px;
-    background: ${({ $active, $accent }) => $active ? ($accent || 'var(--color-accent)') : 'transparent'};
+    background: ${({ $active }) => $active ? 'var(--color-accent)' : 'transparent'};
   }
 
   &:hover {
@@ -81,16 +68,57 @@ const Row = styled.div<{ $active?: boolean; $accent?: string }>`
   }
 `;
 
+const DateCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+`;
+
+const DayNum = styled.span`
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 200;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.01em;
+`;
+
+const Weekday = styled.span`
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+`;
+
 const ContentArea = styled.div`
   min-width: 0;
-  grid-column: 2;
+`;
+
+const TopicRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 5px;
+`;
+
+const TopicLabel = styled.span<{ $active?: boolean }>`
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--text-tertiary)'};
 `;
 
 const TitleText = styled.div<{ $completed?: boolean }>`
   font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 15px;
-  color: var(--text-primary);
+  font-weight: 400;
+  font-size: 17px;
+  color: ${({ $completed }) => $completed ? 'var(--text-tertiary)' : 'var(--text-primary)'};
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -99,40 +127,14 @@ const TitleText = styled.div<{ $completed?: boolean }>`
   margin: 0;
 `;
 
-const PreviewText = styled.div`
-  font-family: var(--font-sans);
-  font-size: 11.5px;
-  color: var(--text-tertiary);
-  line-height: 1.4;
-  margin-top: var(--s-1, 4px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const TimeStamp = styled.div<{ $active?: boolean; $accent?: string }>`
-  grid-column: 3;
+const EndCol = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  font-family: var(--font-label);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: ${({ $active, $accent }) => $active ? ($accent || 'var(--color-accent)') : 'var(--text-tertiary)'};
-`;
-
-const DateLabel = styled.div`
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1;
+  align-items: center;
+  gap: var(--s-2, 8px);
+  color: var(--text-tertiary);
 `;
 
 const BookmarkIcon = styled.span`
-  margin-left: var(--s-2, 8px);
   color: var(--color-accent);
   font-size: 11px;
   line-height: 1;
@@ -142,27 +144,33 @@ const BookmarkIcon = styled.span`
 `;
 
 export function EntryCard({
-  id, content, date, topicColor,
+  id, content, date, topicName, topicColor,
   active, onClick, onDelete, onToggleBookmark,
   isCompleted, isFavorite, previewText,
 }: EntryCardProps) {
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const d = new Date(date);
-  const monthAbbr = d.toLocaleDateString('en-US', { month: 'short' });
-  const dateStr = `${monthAbbr} ${String(d.getDate()).padStart(2, '0')}`;
+  const dayNum = d.getDate();
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
 
   const title = extractTitle(content, previewText);
-  const subtitle = extractPreview(content);
 
   const inner = (
     <Row $active={active} $accent={topicColor} onClick={onClick}>
+      <DateCol>
+        <DayNum>{dayNum}</DayNum>
+        <Weekday>{weekday}</Weekday>
+      </DateCol>
       <ContentArea>
+        {topicName && (
+          <TopicRow>
+            <TopicLabel $active={active}>{topicName}</TopicLabel>
+          </TopicRow>
+        )}
         <TitleText $completed={isCompleted}>{title}</TitleText>
-        {subtitle && <PreviewText>{subtitle}</PreviewText>}
       </ContentArea>
-      <TimeStamp $active={active} $accent={topicColor}>
-        <DateLabel>{dateStr}</DateLabel>
+      <EndCol>
         {isFavorite && (
           <BookmarkIcon
             onClick={e => { e.stopPropagation(); onToggleBookmark?.(id, false); }}
@@ -171,7 +179,7 @@ export function EntryCard({
             <Icon name="bookmark" size={14} strokeWidth={2} />
           </BookmarkIcon>
         )}
-      </TimeStamp>
+      </EndCol>
     </Row>
   );
 

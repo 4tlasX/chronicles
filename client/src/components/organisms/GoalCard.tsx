@@ -3,25 +3,18 @@ import styled from 'styled-components';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { DragHandle } from '../atoms/DragHandle.js';
 import { ProgressBar } from '../atoms/ProgressBar.js';
 import { Badge } from '../atoms/Badge.js';
 import { Checkbox } from '../atoms/Checkbox.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { InlineEditPanel } from '../molecules/InlineEditPanel.js';
-import { SwipeActions } from '../molecules/SwipeActions.js';
 import { Editor } from './Editor.js';
 import { GoalFields, type GoalFieldValues } from '../molecules/fields/GoalFields.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { entries as entriesApi } from '../../services/api.js';
-import type { GoalEntry, MilestoneEntryData } from '../../types/goals.js';
-
-const STATUS_COLORS: Record<string, string> = {
-  active: '#10b981',
-  completed: '#6366f1',
-  archived: '#9ca3af',
-};
+import type { GoalEntry, MilestoneEntryData, RoadmapStatus } from '../../types/goals.js';
+import { normalizeRoadmapStatus } from '../../types/goals.js';
 
 const Card = styled.div<{ $isDragging?: boolean; $editing?: boolean; $accentColor?: string }>`
   background: ${({ $isDragging }) => $isDragging ? 'var(--bg-surface, #fff)' : 'transparent'};
@@ -35,16 +28,18 @@ const Card = styled.div<{ $isDragging?: boolean; $editing?: boolean; $accentColo
 `;
 
 const CardHeader = styled.div<{ $active?: boolean }>`
-  padding: 16px 4px;
-  cursor: pointer;
+  padding: 18px 12px;
+  cursor: grab;
+  touch-action: none;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 8px;
   align-items: start;
   background: ${({ $active }) => $active ? 'var(--bg-hover, rgba(0,0,0,0.03))' : 'transparent'};
+  border-radius: 6px;
   transition: background 120ms;
   &:hover { background: var(--bg-hover, rgba(0,0,0,0.03)); }
-  @media (max-width: 480px) { gap: 8px; }
+  &:active { cursor: grabbing; }
 `;
 
 const DateCol = styled.div`
@@ -219,20 +214,20 @@ interface GoalCardProps {
   onUnlinkMilestone: (m: MilestoneEntryData) => void;
   onLinkMilestone: (goalId: number, milestoneId: number) => void;
   onCreateMilestone: (goalId: number, title: string) => Promise<void>;
+  roadmapStatus?: RoadmapStatus;
 }
 
-export function GoalCard({ goal, milestones, accentColor, isEditing, onSelect, onClose, onSaved, onToggleMilestone, onUnlinkMilestone, onLinkMilestone, onCreateMilestone }: GoalCardProps) {
+export function GoalCard({ goal, milestones, accentColor, isEditing, onSelect, onClose, onSaved, onToggleMilestone, onUnlinkMilestone, onLinkMilestone, onCreateMilestone, roadmapStatus }: GoalCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: goal.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
-  const removeEntry = useEntriesStore(s => s.removeEntry);
 
   const [editContent, setEditContent] = useState(goal.content);
   const [editFields, setEditFields] = useState<GoalFieldValues>({
     goalType: (goal.goalType as GoalFieldValues['goalType']) || 'short_term',
-    goalStatus: (goal.goalStatus as GoalFieldValues['goalStatus']) || 'active',
+    goalStatus: normalizeRoadmapStatus(goal.goalStatus),
     targetDate: goal.targetDate,
   });
   const [saving, setSaving] = useState(false);
@@ -244,7 +239,7 @@ export function GoalCard({ goal, milestones, accentColor, isEditing, onSelect, o
       setEditContent(goal.content);
       setEditFields({
         goalType: (goal.goalType as GoalFieldValues['goalType']) || 'short_term',
-        goalStatus: (goal.goalStatus as GoalFieldValues['goalStatus']) || 'active',
+        goalStatus: normalizeRoadmapStatus(goal.goalStatus),
         targetDate: goal.targetDate,
       });
       setStatus('');
@@ -276,19 +271,12 @@ export function GoalCard({ goal, milestones, accentColor, isEditing, onSelect, o
     finally { setSaving(false); }
   };
 
-  const handleDelete = async () => {
-    try { await entriesApi.delete(goal.id); removeEntry(goal.id); onClose(); }
-    catch { setStatus('Delete failed'); }
-  };
-
   return (
     <Card ref={setNodeRef} style={style} $isDragging={isDragging} $editing={isEditing} $accentColor={accentColor}>
-      <SwipeActions onDelete={handleDelete} accentColor={accentColor} disabled={isEditing || isDragging}>
-      <CardHeader onClick={onSelect} $active={isEditing}>
+      <CardHeader onClick={onSelect} $active={isEditing} {...attributes} {...listeners}>
         <ContentWrap>
           <TitleRow>
-            <Title $completed={goal.goalStatus === 'completed'}>{goal.title}</Title>
-            <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
+            <Title $completed={roadmapStatus === 'completed'}>{goal.title}</Title>
           </TitleRow>
           {linkedMilestones.length > 0 && <div style={{ marginTop: 6 }}><ProgressBar percent={progress} color={accentColor} /></div>}
           {linkedMilestones.length > 0 && (
@@ -371,7 +359,6 @@ export function GoalCard({ goal, milestones, accentColor, isEditing, onSelect, o
         />
         </EditWrapper>
       )}
-      </SwipeActions>
     </Card>
   );
 }

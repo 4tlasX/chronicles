@@ -112,10 +112,13 @@ export function SeverityTrendChart({ data, title }: SeverityTrendChartProps) {
   const chartHeight = 120;
   const maxSeverity = 10;
 
-  const points = data.map((d, i) => ({
-    x: (i / (data.length - 1 || 1)) * 100,
-    y: ((maxSeverity - d.avgSeverity) / maxSeverity) * chartHeight,
-  }));
+  const points = data.map((d, i) => {
+    const sev = Number.isFinite(d.avgSeverity) ? d.avgSeverity : 0;
+    return {
+      x: (i / (data.length - 1 || 1)) * 100,
+      y: ((maxSeverity - sev) / maxSeverity) * chartHeight,
+    };
+  });
 
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x}% ${p.y}`).join(' ');
 

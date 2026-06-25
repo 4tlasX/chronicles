@@ -27,7 +27,7 @@ const Page = styled.div`
 
 const Inner = styled.div`
   width: 100%;
-  max-width: 920px;
+  max-width: 1150px;
   margin: 0 auto;
   padding: 0 24px 64px;
   @media (max-width: 768px) { padding: 0 16px 48px; }

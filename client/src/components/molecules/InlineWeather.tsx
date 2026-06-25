@@ -70,13 +70,6 @@ const Temp = styled.span<{ $light?: boolean }>`
   color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
 `;
 
-const HiLo = styled.span<{ $light?: boolean }>`
-  font-family: var(--font-sans, ${({ theme }) => theme.fontFamily.sans});
-  font-size: 10px;
-  color: ${({ $light }) => $light ? 'rgba(0,0,0,0.7)' : '#f0ebdf'};
-  opacity: 0.7;
-`;
-
 export function InlineWeather({ $light }: { $light?: boolean } = {}) {
   const cityName = useUIStore(s => s.weatherCity);
   const weatherEnabled = useUIStore(s => s.weatherEnabled);

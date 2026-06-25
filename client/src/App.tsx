@@ -49,7 +49,7 @@ const LIGHT_CSS_VARS: Record<string, string> = {
   /* DS text */
   '--text-primary':      '#18181c',
   '--text-secondary':    '#56565f',
-  '--text-tertiary':     '#74747f',
+  '--text-tertiary':     '#90909a',
   '--text-disabled':     '#a0a0aa',
   '--text-inverse':      '#ffffff',
   /* DS borders — hairlines only */

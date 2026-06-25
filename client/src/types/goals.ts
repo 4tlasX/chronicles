@@ -10,6 +10,56 @@ export interface GoalEntry {
   createdAt: Date;
 }
 
+/* Roadmap (Kanban) status columns for goals. */
+export type RoadmapStatus = 'new' | 'planned' | 'in_progress' | 'completed';
+
+export const ROADMAP_COLUMNS: { key: RoadmapStatus; label: string }[] = [
+  { key: 'new', label: 'New' },
+  { key: 'planned', label: 'Planned' },
+  { key: 'in_progress', label: 'In Progress' },
+  { key: 'completed', label: 'Completed' },
+];
+
+/* Map any stored/legacy goalStatus onto one of the four roadmap columns.
+   Legacy: active→new, archived→new; in_progress/completed unchanged. */
+export function normalizeRoadmapStatus(raw: unknown): RoadmapStatus {
+  switch (raw) {
+    case 'planned':     return 'planned';
+    case 'in_progress': return 'in_progress';
+    case 'completed':   return 'completed';
+    case 'new':
+    case 'active':
+    case 'archived':
+    default:            return 'new';
+  }
+}
+
+/* Milestones store both milestoneStatus and an isCompleted flag. Map them onto
+   the same four roadmap columns. isCompleted wins. Legacy: not_started/active→new. */
+export function normalizeMilestoneRoadmapStatus(milestoneStatus: unknown, isCompleted: boolean): RoadmapStatus {
+  if (isCompleted) return 'completed';
+  switch (milestoneStatus) {
+    case 'completed':   return 'completed';
+    case 'in_progress': return 'in_progress';
+    case 'planned':     return 'planned';
+    case 'new':
+    case 'not_started':
+    case 'active':
+    default:            return 'new';
+  }
+}
+
+/* Convert a chosen roadmap column back into the milestone's stored fields. */
+export function milestoneFieldsForStatus(status: RoadmapStatus): { milestoneStatus: string; isCompleted: boolean } {
+  switch (status) {
+    case 'completed':   return { milestoneStatus: 'completed', isCompleted: true };
+    case 'in_progress': return { milestoneStatus: 'in_progress', isCompleted: false };
+    case 'planned':     return { milestoneStatus: 'planned', isCompleted: false };
+    case 'new':
+    default:            return { milestoneStatus: 'not_started', isCompleted: false };
+  }
+}
+
 export interface MilestoneEntryData {
   id: number;
   content: string;

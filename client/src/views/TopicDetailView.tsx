@@ -7,11 +7,11 @@ import { Spinner } from '../components/atoms/Spinner.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
+import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
-import { stripHtml } from '../utils/stripHtml.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 
 /* ── Layout (mirrors TopicsView) ── */
@@ -25,7 +25,7 @@ const Page = styled.div`
 
 const Inner = styled.div`
   width: 100%;
-  max-width: 920px;
+  max-width: 1150px;
   margin: 0 auto;
   padding: 0 24px 64px;
   @media (max-width: 768px) { padding: 0 16px 48px; }
@@ -101,43 +101,6 @@ const List = styled.div`
   flex-direction: column;
 `;
 
-const Row = styled.div`
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  padding: 18px 4px;
-  border-top: 1px solid var(--border-subtle);
-  cursor: pointer;
-  transition: background 120ms ease;
-  &:hover { background: var(--bg-hover); }
-`;
-
-const RowText = styled.div`
-  min-width: 0;
-`;
-
-const RowTitle = styled.div`
-  font-family: var(--font-sans);
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const RowTime = styled.div`
-  font-family: var(--font-label);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  white-space: nowrap;
-`;
-
 const EditWrap = styled.div`
   border-top: 1px solid var(--border-subtle);
   padding: 8px 0;
@@ -146,25 +109,6 @@ const EditWrap = styled.div`
 const AddWrap = styled.div`
   padding: 8px 0 0;
 `;
-
-/* ── Helpers ── */
-
-function entryTitle(html: string): string {
-  const headingMatch = html.match(/<h[1-4][^>]*>(.*?)<\/h[1-4]>/i);
-  if (headingMatch) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = headingMatch[1];
-    const text = (tmp.textContent || tmp.innerText || '').trim();
-    if (text) return text;
-  }
-  return stripHtml(html).trim().slice(0, 80) || 'Untitled entry';
-}
-
-function entryDate(date: Date): string {
-  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-  if (date.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
-  return date.toLocaleDateString('en-US', opts);
-}
 
 /* ── View ── */
 
@@ -244,7 +188,6 @@ export function TopicDetailView() {
             <List>
               {topicEntries.map((entry: DecryptedPost) => {
                 const created = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt);
-                const title = entryTitle(entry.content);
                 const isEditing = editingId === entry.id;
                 return (
                   <div key={entry.id}>
@@ -262,12 +205,13 @@ export function TopicDetailView() {
                         />
                       </EditWrap>
                     ) : (
-                      <Row onClick={() => setEditingId(entry.id)}>
-                        <RowText>
-                          <RowTitle>{title}</RowTitle>
-                        </RowText>
-                        <RowTime>{entryDate(created)}</RowTime>
-                      </Row>
+                      <EntryListCard
+                        content={entry.content}
+                        createdAt={created}
+                        topicName={topic.name}
+                        topicColor={topic.color || accentColor}
+                        onClick={() => setEditingId(entry.id)}
+                      />
                     )}
                   </div>
                 );

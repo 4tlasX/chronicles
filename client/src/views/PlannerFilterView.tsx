@@ -6,9 +6,8 @@ import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { PlanningTabBar } from '../components/molecules/PlanningTabBar.js';
-import { GoalCard } from '../components/organisms/GoalCard.js';
-import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
+import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
@@ -33,7 +32,7 @@ const Page = styled.div`
 
 const Inner = styled.div`
   width: 100%;
-  max-width: 920px;
+  max-width: 1150px;
   margin: 0 auto;
   padding: 0 24px 64px;
   @media (max-width: 768px) { padding: 0 16px 48px; }
@@ -534,7 +533,6 @@ export function PlannerFilterView() {
   }, [entries, taskTopicId]);
 
   const goalOptions = useMemo(() => goals.map(g => ({ id: g.id, title: g.title })), [goals]);
-  const goalTitles = useMemo(() => new Map(goals.map(g => [g.id, g.title])), [goals]);
   const milestoneOptions = useMemo(() => milestones.map(m => ({ id: m.id, title: m.title, parentGoalId: m.parentGoalId })), [milestones]);
 
   // Milestone IDs under selected goal (for cross-hierarchy task filtering — uses applied filter)
@@ -631,29 +629,31 @@ export function PlannerFilterView() {
     ? results.goalResults.length + results.milestoneResults.length + results.taskResults.length + results.todoResults.length
     : 0;
 
-  // Persist helper
-  const persistEntry = useCallback(async (id: number, content: string, taxonomyId: number, customFields: Record<string, unknown>) => {
-    const metadata: Record<string, unknown> = { _taxonomyId: taxonomyId, _customFields: customFields };
-    updateDecryptedEntry(id, { metadata });
-    const encrypted = await encryptPost(content, metadata);
-    await entriesApi.update(id, {
-      contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
-      metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
-      taxonomyIds: [taxonomyId],
-    });
-  }, [encryptPost, updateDecryptedEntry]);
 
-  const handleToggleMilestone = useCallback(async (m: MilestoneEntryData) => {
-    const newCompleted = !m.isCompleted;
-    const newStatus = newCompleted ? 'completed' : 'active';
-    try { await persistEntry(m.id, m.content, m.taxonomyId, { ...m.customFields, milestoneStatus: newStatus, isCompleted: newCompleted }); }
-    catch (err) { console.error(err); }
-  }, [persistEntry]);
-
-  const handleToggleTask = useCallback(async (t: TaskEntryData) => {
-    try { await persistEntry(t.id, t.content, t.taxonomyId, { ...t.customFields, isCompleted: !t.isCompleted }); }
-    catch (err) { console.error(err); }
-  }, [persistEntry]);
+  // Unified result row: standard entry-list card when collapsed, inline editor when editing.
+  const renderResultCard = (id: number, taxonomyId: number, completed: boolean) => {
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return null;
+    const topic = allTopics.find(tp => tp.id === taxonomyId);
+    if (editingId !== id) {
+      return (
+        <EntryListCard
+          key={id}
+          content={entry.content}
+          createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
+          topicName={topic?.name}
+          completed={completed}
+          onClick={() => setEditingId(id)}
+        />
+      );
+    }
+    return (
+      <EditableEntryCard key={id} entry={entry} topic={topic} accentColor={accentColor}
+        isEditing onSelect={() => setEditingId(null)}
+        onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
+        metaFields={[]} hideDate flush />
+    );
+  };
 
   const hasPendingChanges = !filtersEqual(pending, filter);
   const isApplied = !isFilterEmpty(filter);
@@ -923,13 +923,7 @@ export function PlannerFilterView() {
                 <SectionHeader $color={accentColor}>
                   Goals <ResultCount>({results.goalResults.length})</ResultCount>
                 </SectionHeader>
-                {results.goalResults.map(g => (
-                  <GoalCard key={g.id} goal={g} milestones={milestones} accentColor={accentColor}
-                    isEditing={editingId === g.id} onSelect={() => setEditingId(prev => prev === g.id ? null : g.id)}
-                    onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
-                    onToggleMilestone={handleToggleMilestone} onUnlinkMilestone={async () => {}}
-                    onLinkMilestone={async () => {}} onCreateMilestone={async () => {}} />
-                ))}
+                {results.goalResults.map(g => renderResultCard(g.id, g.taxonomyId, g.goalStatus === 'completed'))}
               </>
             )}
 
@@ -938,15 +932,7 @@ export function PlannerFilterView() {
                 <SectionHeader $color={accentColor}>
                   Milestones <ResultCount>({results.milestoneResults.length})</ResultCount>
                 </SectionHeader>
-                {results.milestoneResults.map(m => (
-                  <MilestoneCard key={m.id} milestone={m} tasks={tasks}
-                    goalTitle={m.parentGoalId ? (goalTitles.get(m.parentGoalId) || null) : null}
-                    goalOptions={goalOptions} accentColor={accentColor}
-                    isEditing={editingId === m.id} onSelect={() => setEditingId(prev => prev === m.id ? null : m.id)}
-                    onClose={() => setEditingId(null)} onSaved={() => setEditingId(null)}
-                    onToggleTask={handleToggleTask} onUnlinkTask={async () => {}}
-                    onCreateTask={async () => {}} onLinkTask={async () => {}} />
-                ))}
+                {results.milestoneResults.map(m => renderResultCard(m.id, m.taxonomyId, m.isCompleted))}
               </>
             )}
 
@@ -955,17 +941,7 @@ export function PlannerFilterView() {
                 <SectionHeader $color={accentColor}>
                   Tasks <ResultCount>({results.taskResults.length})</ResultCount>
                 </SectionHeader>
-                {results.taskResults.map(t => {
-                  const entry = entries.find(e => e.id === t.id);
-                  if (!entry) return null;
-                  const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                  return (
-                    <EditableEntryCard key={t.id} entry={entry} topic={topic} accentColor={accentColor}
-                      isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
-                      onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
-                      metaFields={[]} hideDate flush />
-                  );
-                })}
+                {results.taskResults.map(t => renderResultCard(t.id, t.taxonomyId, t.isCompleted))}
               </>
             )}
 
@@ -974,17 +950,7 @@ export function PlannerFilterView() {
                 <SectionHeader $color={accentColor}>
                   Todos <ResultCount>({results.todoResults.length})</ResultCount>
                 </SectionHeader>
-                {results.todoResults.map(t => {
-                  const entry = entries.find(e => e.id === t.id);
-                  if (!entry) return null;
-                  const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                  return (
-                    <EditableEntryCard key={t.id} entry={entry} topic={topic} accentColor={accentColor}
-                      isEditing={editingId === t.id} onSelect={() => setEditingId(prev => prev === t.id ? null : t.id)}
-                      onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
-                      metaFields={[]} hideDate flush />
-                  );
-                })}
+                {results.todoResults.map(t => renderResultCard(t.id, t.taxonomyId, t.isCompleted))}
               </>
             )}
           </>

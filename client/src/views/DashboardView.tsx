@@ -36,6 +36,7 @@ import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
 import { UserFieldsForm } from '../components/molecules/fields/UserFieldsForm.js';
 import { SectionDivider } from '../components/atoms/SectionDivider.js';
 import { StackedLinesIcon } from '../components/atoms/StackedLinesIcon.js';
+import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 
 /* ── Constants ── */
 
@@ -197,12 +198,12 @@ const DateInfo = styled.div`
 
 const DateLabel = styled.p`
   font-family: var(--font-label);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text-tertiary);
-  margin: 0;
+  margin: 2px 0 0 0;
 `;
 
 const DailyPrompt = styled.p`
@@ -262,7 +263,7 @@ const WeatherSlot = styled.div`
 
 const InlineTemp = styled.div`
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 33px;
   font-weight: 200;
   line-height: 1;
   color: var(--text-primary);
@@ -270,11 +271,13 @@ const InlineTemp = styled.div`
 
 const WeatherCity = styled.div`
   font-family: var(--font-label);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-size: 12px;
+  font-weight: 400;
   text-transform: uppercase;
   color: var(--text-tertiary);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
 `;
 
 const InlineHiLo = styled.span`
@@ -323,6 +326,11 @@ const Grid = styled.div`
   @media (max-width: 1024px) { grid-template-columns: 1fr; gap: 0; }
 `;
 
+/* Full-width row above the 2/3 + 1/3 grid for the Quick Entry accent container. */
+const QuickEntryRow = styled.div`
+  margin-bottom: 24px;
+`;
+
 const LeftColumn = styled.div`
   display: flex;
   flex-direction: column;
@@ -339,48 +347,45 @@ const RightColumn = styled.div`
   @media (max-width: 1024px) { width: 100%; }
 `;
 
-/* DS widget = borderless flat section: 1px top rule + label row + content. */
+/* Widget card = standard hover-surface tile, 8px corners, subtle soft shadow. */
 const DashCard = styled.div`
   display: flex;
   flex-direction: column;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  overflow: visible;
-  padding-top: 0;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 0 18px 18px;
   min-width: 0;
+  box-shadow: var(--shadow-2), var(--shadow-3);
 `;
 
 const CardHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 0 8px 0;
+  padding: 14px 0 12px 0;
+  margin-bottom: 14px;
   border-bottom: none;
 `;
 
 const CardIconWrap = styled.span`
-  color: var(--text-tertiary);
-  font-size: 12px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: none;
 `;
 
 const CardTitle = styled.span`
   font-family: var(--font-label);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.08em;
   color: var(--text-tertiary);
   flex: 1;
 `;
 
 const CardViewLink = styled(Link)`
   font-family: var(--font-label, ${({ theme }) => theme.fontFamily.sans});
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -395,12 +400,40 @@ const CardBody = styled.div`
   flex: 1;
 `;
 
+/* Quick Entry = full-width accent container; the composer sits on a surface panel
+   inside the accent fill. */
 const QuickEntryDashCard = styled(DashCard)`
-  overflow: visible;
-  background: transparent;
-  border-top: none;
-  & ${CardHeader} { display: none; }
-  & ${CardBody} { padding: 0; overflow: visible; }
+  background: var(--color-accent);
+  border: none;
+  border-radius: 8px;
+  padding: 22px 24px;
+  box-shadow: var(--shadow-2), var(--shadow-3);
+
+  & ${CardHeader} {
+    padding: 0 0 14px 0;
+    margin-bottom: 6px;
+    border-bottom: none;
+  }
+  & ${CardHeader} ${CardIconWrap}, & ${CardHeader} ${CardTitle} {
+    color: var(--on-accent);
+  }
+  & ${CardBody} {
+    padding: 16px;
+    overflow: visible;
+    background: var(--bg-surface);
+    border-radius: 6px;
+  }
+
+  /* Topic picker trigger: match the editor — flat with a bright bottom border. */
+  & .qe-topic-picker button {
+    border: none;
+    border-bottom: 1px solid var(--border-strong);
+    border-radius: 0;
+    background: transparent;
+  }
+  & .qe-topic-picker button:hover { background: transparent; }
+  /* Dropdown menu: the absolutely-positioned div inside the picker wrapper. */
+  & .qe-topic-picker > div > div { border: none; }
 `;
 
 const AddBtn = styled.button`
@@ -423,8 +456,8 @@ const ItemRow = styled.div<{ $done?: boolean }>`
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-strong);
   &:last-child { border-bottom: 0; }
 `;
 
@@ -432,8 +465,8 @@ const PriRow = styled.div<{ $done?: boolean }>`
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border-strong);
   font-size: 13.5px;
   color: ${({ $done }) => $done ? 'var(--text-tertiary)' : 'var(--text-primary)'};
   &:last-child { border-bottom: 0; }
@@ -480,14 +513,14 @@ const InlineInput = styled.input`
 `;
 
 const QuickEditorWrap = styled.div`
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-strong);
   background: transparent;
   margin-bottom: 0;
 
   > div { min-height: 120px; height: auto; }
 
   .tiptap {
-    padding: 16px 12px;
+    padding: 16px;
     font-family: var(--font-display);
     font-style: italic;
     font-size: 17px;
@@ -500,7 +533,6 @@ const QuickEditorWrap = styled.div`
   }
 
   &:focus-within {
-    border-bottom-color: var(--border-default);
     background: transparent;
   }
 `;
@@ -594,7 +626,7 @@ const FieldLabel = styled.label`
 `;
 
 const FieldInput = styled.input`
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 0;
   background: var(--bg-sunken);
   font-size: 13.5px;
@@ -610,7 +642,7 @@ const FieldInput = styled.input`
 `;
 
 const FieldSelect = styled.select`
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-strong);
   border-radius: 0;
   background: var(--bg-sunken);
   font-size: 13.5px;
@@ -635,8 +667,8 @@ const CheckRow = styled.div`
 
 const EventMeta = styled.span`
   font-family: var(--font-label);
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 300;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-tertiary);
@@ -658,6 +690,8 @@ const PriBody = styled.div<{ $done?: boolean }>`
   line-height: 1.4;
   color: ${({ $done }) => $done ? 'var(--ink-4)' : 'var(--ink-2)'};
   text-decoration: ${({ $done }) => $done ? 'line-through' : 'none'};
+
+  input::placeholder { color: var(--text-secondary); opacity: 1; }
 `;
 
 const PriorityNumber = PriNum;
@@ -775,11 +809,8 @@ function SortableDashCard({ id, children }: { id: CardId; children: (drag: DragP
 
 /* ── Edit-mode UI ── */
 
-const CardWrapper = styled.div<{ $noDivider?: boolean }>`
+const CardWrapper = styled.div`
   position: relative;
-  border-bottom: ${({ $noDivider }) => $noDivider ? 'none' : '1px solid var(--border-default)'};
-  padding-bottom: 12px;
-  margin-bottom: 12px;
 `;
 
 const RemoveBtn = styled.button`
@@ -1169,8 +1200,8 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>}
       </CardHeader>
       <CardBody>
-        <div style={{ marginBottom: 10 }}>
-          <TopicSelector selectedId={selectedTopicId} onSelect={handleTopicChange} topics={topics} filled />
+        <div className="qe-topic-picker" style={{ marginBottom: 10 }}>
+          <TopicSelector selectedId={selectedTopicId} onSelect={handleTopicChange} topics={topics} filled allowNone={false} />
         </div>
         {fieldDefs.length > 0 && (
           <FieldGrid>
@@ -1319,7 +1350,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
               onClick={() => dictationControlRef.current?.toggle()}
               type="button"
             >
-              <Icon name="mic" size={17} strokeWidth={2} />
+              <MaterialIcon $size={25}>mic</MaterialIcon>
             </FooterIconBtn>
             <FooterIconBtn
               title={toolbarOpen ? 'Hide formatting' : 'Show formatting'}
@@ -1327,7 +1358,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
               onClick={() => setToolbarOpen(o => !o)}
               type="button"
             >
-              <Icon name="pencil" size={14} strokeWidth={2} />
+              <MaterialIcon $size={25}>stylus_fountain_pen</MaterialIcon>
             </FooterIconBtn>
           </SaveRowLeft>
           <SaveBtn $accent={accentColor} $active={canSave} onClick={handleSave} disabled={saving || !canSave}>
@@ -1360,14 +1391,14 @@ const MealTypeBtn = styled.button<{ $active?: boolean; $accent: string }>`
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: ${({ $active }) => $active ? 'white' : 'var(--ink-3, #6b645a)'};
-  background: ${({ $active, $accent }) => $active ? $accent : 'var(--paper-well, #e8e3d7)'};
-  border: 1px solid ${({ $active }) => $active ? 'transparent' : 'var(--rule, #d4cfc3)'};
+  color: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--ink-3, #6b645a)'};
+  background: transparent;
+  border: 1px solid ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--border-strong, #d4cfc3)'};
   border-radius: 4px;
   cursor: pointer;
   transition: all 150ms ease;
   &:hover {
-    background: ${({ $active, $accent }) => $active ? $accent : 'var(--paper-surface, #f5f2ea)'};
+    background: ${({ $active }) => $active ? 'var(--color-accent-subtle)' : 'var(--bg-hover)'};
   }
 `;
 
@@ -1379,10 +1410,10 @@ const MealsInput = styled.input`
   color: var(--ink, #2b2824);
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--rule, #d4cfc3);
+  border-bottom: 1px solid var(--border-strong, #d4cfc3);
   border-radius: 0;
   &:focus { outline: none; border-bottom-color: var(--accent, #00b4d8); }
-  &::placeholder { color: var(--ink-4, #8a857c); font-style: italic; }
+  &::placeholder { color: var(--text-secondary); font-style: italic; opacity: 1; }
 `;
 
 const MealsRow = styled.div`
@@ -1399,10 +1430,10 @@ const CaloriesInput = styled.input`
   color: var(--ink, #2b2824);
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--rule, #d4cfc3);
+  border-bottom: 1px solid var(--border-strong, #d4cfc3);
   border-radius: 0;
   &:focus { outline: none; border-bottom-color: var(--accent, #00b4d8); }
-  &::placeholder { color: var(--ink-4, #8a857c); }
+  &::placeholder { color: var(--text-secondary); opacity: 1; }
 `;
 
 function MealsQuickCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
@@ -1494,7 +1525,19 @@ function MealsQuickCard({ accentColor, dragAttributes, dragListeners }: { accent
           />
         </MealsRow>
         <MealsRow style={{ justifyContent: 'flex-end' }}>
-          <SaveBtn $accent={accentColor} $active={canSave} onClick={handleSave} disabled={saving || !canSave} style={{ flex: 1, maxWidth: 150 }}>
+          <SaveBtn
+            $accent={accentColor}
+            $active={canSave}
+            onClick={handleSave}
+            disabled={saving || !canSave}
+            style={{
+              flex: 1,
+              maxWidth: 150,
+              fontSize: 12,
+              background: canSave ? 'var(--color-accent)' : 'transparent',
+              color: canSave ? 'var(--on-accent)' : 'var(--color-accent)',
+            }}
+          >
             {saving ? <Spinner size={10} /> : 'Log meal'}
           </SaveBtn>
         </MealsRow>
@@ -1613,15 +1656,15 @@ const EvtRow = styled.div`
   grid-template-columns: 48px 1fr;
   gap: 16px;
   align-items: start;
-  padding: 14px 0;
-  border-bottom: 1px dashed var(--border-subtle);
+  padding: 14px 8px;
+  border-bottom: 1px dashed var(--border-strong);
   &:last-child { border-bottom: 0; }
 `;
 
 const EvtDayNum = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: left;
+  align-items: stretch;
   line-height: 1;
 `;
 
@@ -1636,12 +1679,13 @@ const EvtDayNumVal = styled.span`
 
 const EvtMonthAbbr = styled.span`
   font-family: var(--font-label);
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-tertiary);
   margin-top: 4px;
+  margin-left: 4px;
 `;
 
 const EvtContent = styled.div`
@@ -1651,11 +1695,11 @@ const EvtContent = styled.div`
 
 const EvtTitle = styled.div`
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 400;
   color: var(--text-primary);
   line-height: 1.3;
-  margin-bottom: 5px;
+  margin-bottom: 0;
 `;
 
 interface EventEntry { id: number; content: string; metadata: Record<string, unknown>; }
@@ -1780,8 +1824,8 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
         <CardHeader>
           <CardIconWrap><Icon name="list" size={12} strokeWidth={2} /></CardIconWrap>
           <CardTitle>Shopping List</CardTitle>
-          <CardViewLink to="/shopping">View all</CardViewLink>
           {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>}
+          <CardViewLink to="/shopping">View all</CardViewLink>
         </CardHeader>
         <CardBody><EmptyNote>No active shopping list</EmptyNote></CardBody>
       </DashCard>
@@ -1796,9 +1840,9 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
       <CardHeader>
         <CardIconWrap><Icon name="list" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Shopping List</CardTitle>
-        <CardViewLink to="/shopping">View all</CardViewLink>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>}
         <AddBtn onClick={() => setAdding(a => !a)} style={{ width: 20, height: 20 }}><Icon name="plus" size={14} strokeWidth={2.5} /></AddBtn>
+        <CardViewLink to="/shopping">View all</CardViewLink>
       </CardHeader>
       <CardBody>
         {adding && (
@@ -1857,7 +1901,7 @@ const MedRow = styled.div<{ $taken: boolean }>`
   gap: 12px;
   padding: 8px 0;
   opacity: ${({ $taken }) => $taken ? 0.6 : 1};
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-strong);
   &:last-child { border-bottom: 0; }
 `;
 
@@ -1998,10 +2042,14 @@ function InlineWeather() {
   return (
     <InlineWeatherWrap>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Icon name="sun" size={30} strokeWidth={1.3} style={{ color: 'var(--color-accent)' }} />
+        <Icon name="sun" size={33} strokeWidth={1.3} style={{ color: 'var(--color-accent)' }} />
         <InlineTemp>{current.temp}°</InlineTemp>
       </div>
-      <WeatherCity>{cityName && cityName.split(',')[0]}</WeatherCity>
+      <WeatherCity>
+        {(cityName ? cityName.split(',')[0].trim() : '').split('').map((ch, i) => (
+          <span key={i}>{ch === ' ' ? ' ' : ch}</span>
+        ))}
+      </WeatherCity>
     </InlineWeatherWrap>
   );
 }
@@ -2012,10 +2060,10 @@ const WeatherDayRow = styled.div<{ $today?: boolean }>`
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 0;
-  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
+  padding: 6px 8px;
+  border-bottom: 1px dashed var(--border-strong, #d4cfc3);
   &:last-child { border-bottom: none; }
-  ${({ $today }) => $today && 'padding: 8px 0 10px;'}
+  ${({ $today }) => $today && 'padding: 8px 8px 10px;'}
 `;
 
 const WeatherDayLabel = styled.span<{ $today?: boolean }>`
@@ -2194,7 +2242,7 @@ const TopicEntryRow = styled.div`
   align-items: baseline;
   gap: 10px;
   padding: 6px 0;
-  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
+  border-bottom: 1px dashed var(--border-strong, #d4cfc3);
   &:last-child { border-bottom: none; }
 `;
 
@@ -2285,8 +2333,8 @@ const MealRow = styled.div`
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px dashed var(--rule, ${({ theme }) => theme.colors.border});
+  padding: 8px;
+  border-bottom: 1px dashed var(--border-strong, #d4cfc3);
   &:last-child { border-bottom: none; }
 `;
 
@@ -2296,7 +2344,7 @@ const MealLabel = styled.span`
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textMuted});
+  color: var(--text-secondary);
   width: 68px;
   flex-shrink: 0;
 `;
@@ -2382,10 +2430,10 @@ function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentCo
       <CardHeader>
         <CardIconWrap><Icon name="utensils" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>{cardTitle}</CardTitle>
-        <CardViewLink to="/menu">View plan</CardViewLink>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
+        <CardViewLink to="/menu">View plan</CardViewLink>
       </CardHeader>
       <CardBody>
         {!menuTopicId ? (
@@ -2440,7 +2488,7 @@ const AffirmationCount = styled.span`
   font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
   font-size: 10px;
   letter-spacing: 0.1em;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textFaint});
+  color: var(--text-secondary);
   min-width: 40px;
   text-align: center;
 `;
@@ -2817,7 +2865,7 @@ const WSection = styled.div`
   align-items: flex-start;
   gap: 6px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-strong);
   &:last-child { border-bottom: 0; }
 `;
 
@@ -3396,7 +3444,7 @@ export function DashboardView() {
             <DateNumeral>{today.getDate()}</DateNumeral>
             <DateInfo>
               <DateLabel>{`${today.toLocaleDateString('en-US', { weekday: 'long' })}, ${today.toLocaleDateString('en-US', { month: 'long' })}`}</DateLabel>
-              <DailyPrompt>{getDailyQuote().text}</DailyPrompt>
+              <DailyPrompt>{getDailyQuote().text} — {getDailyQuote().author}</DailyPrompt>
             </DateInfo>
           </GreetingBlock>
           <WeatherSlot><InlineWeather /></WeatherSlot>
@@ -3426,10 +3474,10 @@ export function DashboardView() {
               case 'mini-calendar': return <MiniCalendarCard accentColor={accentColor} {...drag} />;
             }
           };
-          const renderCol = (ids: CardId[]) => ids.map(id => (
+          const renderCol = (ids: CardId[]) => ids.filter(id => id !== 'quick-entry').map(id => (
             <SortableDashCard key={id} id={id}>
               {(drag) => (
-                <CardWrapper $noDivider={id === 'meals-quick' || id === 'quick-entry'}>
+                <CardWrapper>
                   {isEditMode && (
                     <RemoveBtn onClick={() => handleRemoveCard(id)} title={`Remove ${cardLabel(id, allTopics)}`}>
                       <Icon name="x" size={14} strokeWidth={2} />
@@ -3440,8 +3488,14 @@ export function DashboardView() {
               )}
             </SortableDashCard>
           ));
+          const hasQuickEntry = visibleLeft.includes('quick-entry') || visibleRight.includes('quick-entry');
           return (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              {hasQuickEntry && (
+                <QuickEntryRow>
+                  {renderCard('quick-entry', {})}
+                </QuickEntryRow>
+              )}
               <Grid>
                 <SortableContext items={visibleLeft} strategy={rectSortingStrategy}>
                   <LeftColumn>{renderCol(visibleLeft)}</LeftColumn>

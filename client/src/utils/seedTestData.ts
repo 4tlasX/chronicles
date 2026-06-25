@@ -86,10 +86,10 @@ export async function seedTestData(deps: SeedDeps): Promise<string> {
 
     // Goals
     const goal1 = await createEntry(deps, 'Learn TypeScript deeply — generics, conditional types, mapped types', 'Goal', {
-      goalType: 'short_term', goalStatus: 'active', targetDate: nextMonth,
+      goalType: 'short_term', goalStatus: 'new', targetDate: nextMonth,
     }); count++;
     const goal2 = await createEntry(deps, 'Ship Chronicles rebuild — complete Phase 1 with full feature parity', 'Goal', {
-      goalType: 'long_term', goalStatus: 'active', targetDate: nextMonth,
+      goalType: 'long_term', goalStatus: 'new', targetDate: nextMonth,
     }); count++;
 
     onProgress?.('Creating milestones...');

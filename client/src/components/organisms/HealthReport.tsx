@@ -31,20 +31,23 @@ import React, { useMemo, useState } from 'react';
 const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  column-gap: 24px;
+  row-gap: 16px;
 `;
 
 const StatCard = styled.div`
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-hover);
+  box-shadow: var(--shadow-2), var(--shadow-3);
   padding: 14px;
   text-align: center;
 `;
 
 const StatValue = styled.div<{ $color: string }>`
+  font-family: var(--font-display);
   font-size: 31px;
-  font-weight: 700;
+  font-weight: 300;
   color: ${({ $color }) => $color};
 `;
 
@@ -61,16 +64,17 @@ const StatSub = styled.div`
 `;
 
 const SectionCard = styled.div`
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
-  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-hover);
+  box-shadow: var(--shadow-2), var(--shadow-3);
   padding: 16px;
 `;
 
 const SectionTitle = styled.h3`
-  font-family: ${({ theme }) => theme.typography.h3.fontFamily};
+  font-family: var(--font-display);
   font-size: ${({ theme }) => theme.typography.h3.fontSize};
-  font-weight: ${({ theme }) => theme.typography.h3.fontWeight};
+  font-weight: 300;
   color: ${({ theme }) => theme.colors.text};
   margin: 0 0 12px;
 `;
@@ -146,8 +150,9 @@ const CalorieStat = styled.div`
 `;
 
 const CalorieValue = styled.div<{ $color: string }>`
+  font-family: var(--font-display);
   font-size: 25px;
-  font-weight: 700;
+  font-weight: 300;
   color: ${({ $color }) => $color};
 `;
 
@@ -244,7 +249,8 @@ const ImpactChange = styled.div<{ $positive: boolean; $neutral: boolean }>`
 const WellnessGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  column-gap: 24px;
+  row-gap: 16px;
 `;
 
 const WellnessTrendWrap = styled.div`
@@ -462,7 +468,7 @@ export function HealthReport({ symptoms, foods, medLogs, exercises, wellness, pe
   }, [wellness]);
 
   return (
-    <ScrollList $gap="16px" $padding="16px 0">
+    <ScrollList $gap="24px" $padding="16px 0">
       {/* Summary stats */}
       <StatsGrid>
         <StatCard>

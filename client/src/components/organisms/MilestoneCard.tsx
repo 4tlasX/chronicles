@@ -7,7 +7,6 @@ import { ProgressBar } from '../atoms/ProgressBar.js';
 import { Badge } from '../atoms/Badge.js';
 import { Checkbox } from '../atoms/Checkbox.js';
 import { InlineEditPanel } from '../molecules/InlineEditPanel.js';
-import { SwipeActions } from '../molecules/SwipeActions.js';
 import { Editor } from './Editor.js';
 import { MilestoneFields, type MilestoneFieldValues } from '../molecules/fields/MilestoneFields.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
@@ -24,38 +23,21 @@ const Card = styled.div<{ $editing?: boolean; $dragging?: boolean; $accentColor?
   min-width: 0;
   opacity: ${({ $dragging }) => $dragging ? 0.6 : 1};
   box-shadow: ${({ $dragging }) => $dragging ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'};
-  touch-action: manipulation;
-`;
-
-const DragHandle = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  color: ${({ theme }) => theme.colors.textMuted};
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: grab;
-  flex-shrink: 0;
-  font-size: 13px;
-  opacity: 0;
-  transition: opacity 150ms;
-  ${Card}:hover & { opacity: 1; }
-  &:active { cursor: grabbing; }
 `;
 
 const CardHeader = styled.div<{ $active?: boolean }>`
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 8px;
   align-items: start;
-  padding: 16px 4px;
-  cursor: pointer;
+  padding: 18px 12px;
+  cursor: grab;
+  touch-action: none;
   background: ${({ $active }) => $active ? 'var(--bg-hover, rgba(0,0,0,0.03))' : 'transparent'};
+  border-radius: 6px;
   transition: background 120ms;
   &:hover { background: var(--bg-hover, rgba(0,0,0,0.03)); }
-  @media (max-width: 480px) { gap: 8px; }
+  &:active { cursor: grabbing; }
 `;
 
 const DateCol = styled.div`
@@ -242,7 +224,6 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, accent
 
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
-  const removeEntry = useEntriesStore(s => s.removeEntry);
 
   const [editContent, setEditContent] = useState(milestone.content);
   const [editFields, setEditFields] = useState<MilestoneFieldValues>({
@@ -293,19 +274,12 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, accent
     finally { setSaving(false); }
   };
 
-  const handleDelete = async () => {
-    try { await entriesApi.delete(milestone.id); removeEntry(milestone.id); onClose(); }
-    catch { setStatus('Delete failed'); }
-  };
-
   return (
     <Card ref={setNodeRef} style={dragStyle} $editing={isEditing} $dragging={isDragging} $accentColor={accentColor}>
-      <SwipeActions onDelete={handleDelete} accentColor={accentColor} disabled={isEditing || isDragging}>
-      <CardHeader onClick={onSelect} $active={isEditing}>
+      <CardHeader onClick={onSelect} $active={isEditing} {...attributes} {...listeners}>
         <ContentWrap>
           <TitleRow>
             <Title $completed={milestone.isCompleted}>{milestone.title}</Title>
-            <DragHandle {...attributes} {...listeners} onClick={e => e.stopPropagation()} />
           </TitleRow>
           {linkedTasks.length > 0 && <div style={{ marginTop: 6 }}><ProgressBar percent={progress} color={accentColor} /></div>}
           <FooterMeta>
@@ -386,7 +360,6 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, accent
         />
         </EditWrapper>
       )}
-      </SwipeActions>
     </Card>
   );
 }

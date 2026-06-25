@@ -49,6 +49,7 @@ const TopicIcon = styled.span<{ $color?: string }>`
 
 const Placeholder = styled.span`
   color: ${({ theme }) => theme.colors.text};
+  padding-bottom: 7px;
 `;
 
 const ChevronIcon = styled.span<{ $open: boolean }>`
@@ -57,6 +58,7 @@ const ChevronIcon = styled.span<{ $open: boolean }>`
   color: ${({ theme }) => theme.colors.textMuted};
   transition: transform 0.15s;
   transform: ${({ $open }) => $open ? 'rotate(180deg)' : 'rotate(0)'};
+  padding-bottom: 7px;
 `;
 
 const Dropdown = styled.div`
@@ -78,14 +80,28 @@ const Dropdown = styled.div`
 
 const SearchWrapper = styled.div`
   padding: 8px;
-  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
+  border-bottom: 1px solid var(--border-strong, ${({ theme }) => theme.colors.border});
   position: sticky;
   top: 0;
   background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+
+  /* Brighter placeholder + search icon for the topic search field. */
+  input::placeholder { color: var(--text-secondary); opacity: 1; }
+  /* Magnifying glass: match the 14px input font, aligned to the text top. */
+  & > div > span:first-child {
+    align-self: flex-start;
+    line-height: 14px;
+    margin-top: 4px;
+  }
+  & > div > span:first-child svg {
+    color: var(--text-secondary);
+    width: 14px;
+    height: 14px;
+  }
 `;
 
 const ItemList = styled.div`
-  padding: 4px 0;
+  padding: 10px 0 4px;
 `;
 
 const Item = styled.button<{ $active?: boolean }>`
@@ -96,11 +112,14 @@ const Item = styled.button<{ $active?: boolean }>`
   padding: 10px 14px;
   font-size: ${({ theme }) => theme.fontSize.sm}px;
   text-align: left;
-  color: ${({ theme }) => theme.colors.text};
+  color: var(--text-secondary);
   background: ${({ $active }) => $active ? 'rgba(0,0,0,0.04)' : 'transparent'};
   border: none;
   cursor: pointer;
   transition: background 0.1s;
+
+  /* Option icon matches the option/placeholder text color. */
+  & span { color: var(--text-secondary); }
 
   &:hover {
     background: rgba(0, 0, 0, 0.04);
@@ -119,9 +138,11 @@ interface TopicSelectorProps {
   onSelect: (id: number | null) => void;
   topics: { id: number; name: string; icon: string | null; color: string | null }[];
   filled?: boolean;
+  /** Show the "No topic" clear option in the list. Defaults to true. */
+  allowNone?: boolean;
 }
 
-export function TopicSelector({ selectedId, onSelect, topics, filled }: TopicSelectorProps) {
+export function TopicSelector({ selectedId, onSelect, topics, filled, allowNone = true }: TopicSelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -173,12 +194,14 @@ export function TopicSelector({ selectedId, onSelect, topics, filled }: TopicSel
             />
           </SearchWrapper>
           <ItemList>
-            <Item
-              $active={selectedId === null}
-              onClick={() => { onSelect(null); setOpen(false); setSearch(''); }}
-            >
-              No topic
-            </Item>
+            {allowNone && (
+              <Item
+                $active={selectedId === null}
+                onClick={() => { onSelect(null); setOpen(false); setSearch(''); }}
+              >
+                No topic
+              </Item>
+            )}
             {filtered.length === 0 ? (
               <EmptyMessage>No topics found</EmptyMessage>
             ) : (

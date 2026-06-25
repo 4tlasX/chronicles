@@ -82,7 +82,7 @@ const DayNum = styled.span<{ $isToday?: boolean }>`
 
 const EntryDot = styled.span`
   position: absolute;
-  bottom: 4px;
+  bottom: 1px;
   left: 50%;
   transform: translateX(-50%);
   width: 4px;

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
@@ -29,6 +30,25 @@ import { getOrCreateJournalTopic } from '../utils/getOrCreateJournalTopic.js';
 import { stripHtml, summarizeUserFields } from '../utils/stripHtml.js';
 import { toDateStr } from '../utils/dateUtils.js';
 import type { EncryptedPost } from '@shared/crypto/types';
+
+const PlanningLink = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 16px 20px 0;
+  padding: 6px 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  transition: opacity 120ms ease;
+  &:hover { opacity: 0.7; }
+`;
 
 const DateFilterBar = styled.div`
   display: flex;
@@ -116,6 +136,7 @@ export function JournalView() {
   const setTopicCustomFields = useUIStore(s => s.setTopicCustomFields);
   const searchKeyword = useUIStore(s => s.searchKeyword);
   const setSearchKeyword = useUIStore(s => s.setSearchKeyword);
+  const navigate = useNavigate();
 
   const entryDates = useMemo(() => {
     const set = new Set<string>();
@@ -144,6 +165,13 @@ export function JournalView() {
   const isWellnessEntry = useMemo(() => {
     if (!editorTopicId) return false;
     return topics.find(t => t.id === editorTopicId)?.name?.toLowerCase() === 'wellness';
+  }, [editorTopicId, topics]);
+
+  // Goal & milestone entries get a quick link back to the Roadmap/Planning board.
+  const isPlanningEntry = useMemo(() => {
+    if (!editorTopicId) return false;
+    const name = topics.find(t => t.id === editorTopicId)?.name?.toLowerCase();
+    return name === 'goal' || name === 'milestone';
   }, [editorTopicId, topics]);
 
   // Wellness auto-save: saves without closing the editor
@@ -580,6 +608,15 @@ export function JournalView() {
         }
         editorPanel={
           <EditorPanel visibleMobile={showMobileEditor}>
+            {isPlanningEntry && selectedEntryId !== null && (
+              <PlanningLink onClick={() => navigate(
+                topics.find(t => t.id === editorTopicId)?.name?.toLowerCase() === 'milestone'
+                  ? '/goals/milestones' : '/goals'
+              )}>
+                <Icon name="arrow-left" size={13} strokeWidth={2} />
+                Planning
+              </PlanningLink>
+            )}
             <EntryForm
               entryId={selectedEntryId}
               content={editorContent}
