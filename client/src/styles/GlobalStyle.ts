@@ -56,10 +56,33 @@ export const GlobalStyle = createGlobalStyle`
     color: inherit;
   }
 
-  textarea {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--border-subtle, ${({ theme }) => theme.colors.border});
+  /* Inputs are never outlined — they separate from the canvas by fill tone,
+     not a border. Each input keeps its own background; focus shows no outline. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    border: none !important;
+    box-shadow: none !important;
+    /* Flat, transparent fields app-wide — no filled box. background-color (not
+       shorthand) so select chevron background-images survive. */
+    background-color: transparent;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+  textarea:focus,
+  select:focus,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Checkbox / radio labels match field labels at 13px. */
+  .ch-check__label,
+  .ch-radio__label {
+    font-size: 13px;
   }
 
   /* Global focus-visible outline — uses user's header color */
@@ -68,14 +91,6 @@ export const GlobalStyle = createGlobalStyle`
   [tabindex]:focus-visible {
     outline: 2px solid rgba(var(--focus-color-rgb, 78, 110, 126), 0.5);
     outline-offset: 2px;
-  }
-
-  /* Bordered inputs get a full border color change instead of outline */
-  input:focus-visible,
-  select:focus-visible,
-  textarea:focus-visible {
-    outline: none;
-    border-color: var(--focus-color, #4A5568);
   }
 
   /* Reduced motion for users who prefer it */

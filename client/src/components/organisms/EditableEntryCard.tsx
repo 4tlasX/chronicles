@@ -46,10 +46,20 @@ function getCustomType(topicName: string | undefined): string | null {
 
 const TopicSelectorBorder = styled.div`
   display: inline-block;
+
+  /* Topic picker trigger: no border. */
+  & > div > button {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+  & > div > button:hover { background: transparent; }
+  /* Dropdown menu: no accent border. */
+  & > div > div { border: none; }
 `;
 
 const Card = styled.div<{ $accentColor?: string; $flat?: boolean; $bare?: boolean; $flush?: boolean }>`
-  background: ${({ $flush, theme }) => $flush ? 'transparent' : theme.colors.surface};
+  background: transparent;
   border: ${({ $bare, $flush }) => ($bare || $flush) ? 'none' : '1px solid var(--rule, #d5d0c5)'};
   border-left: ${({ $bare, $flush, $accentColor }) => ($bare || $flush) ? 'none' : `3px solid ${$accentColor || 'var(--accent)'}`};
   ${({ $flush }) => $flush && 'border-top: 1px solid var(--border-subtle);'}
@@ -60,7 +70,7 @@ const Card = styled.div<{ $accentColor?: string; $flat?: boolean; $bare?: boolea
 `;
 
 const EditWrapper = styled.div<{ $compact?: boolean }>`
-  margin: ${({ $compact }) => $compact ? '20px 0' : '20px'};
+  margin: 20px 0;
 `;
 
 const Row = styled.div<{ $centered?: boolean; $active?: boolean; $noDate?: boolean; $flush?: boolean; $rightDate?: boolean }>`
@@ -462,13 +472,13 @@ export function EditableEntryCard({ entry, topic, accentColor, isEditing, onSele
       {isEditing && (
         <EditWrapper $compact={compactMargin}>
           <InlineEditPanel
-            title={editingTopic ? `Editing ${editingTopic.name}` : 'Edit entry'}
             topicSelector={
               <TopicSelectorBorder>
                 <TopicSelector
                   selectedId={selectedTopicId || null}
                   onSelect={handleTopicChange}
                   topics={allTopics}
+                  allowNone={false}
                 />
               </TopicSelectorBorder>
             }
@@ -479,7 +489,6 @@ export function EditableEntryCard({ entry, topic, accentColor, isEditing, onSele
             status={status}
             onSave={handleSave}
             onCancel={onClose}
-            defaultFieldsOpen={autoExpandFields}
           />
         </EditWrapper>
       )}

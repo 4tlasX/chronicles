@@ -36,6 +36,10 @@ import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
 import { UserFieldsForm } from '../components/molecules/fields/UserFieldsForm.js';
 import { SectionDivider } from '../components/atoms/SectionDivider.js';
 import { StackedLinesIcon } from '../components/atoms/StackedLinesIcon.js';
+import { TextInput } from '../components/atoms/TextInput.js';
+import { Select } from '../components/atoms/Select.js';
+import { Checkbox } from '../components/atoms/Checkbox.js';
+import { FormField, FieldRowLayoutContext } from '../components/molecules/FormField.js';
 import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 
 /* ── Constants ── */
@@ -424,14 +428,14 @@ const QuickEntryDashCard = styled(DashCard)`
     border-radius: 6px;
   }
 
-  /* Topic picker trigger: match the editor — flat with a bright bottom border. */
-  & .qe-topic-picker button {
+  /* Topic picker trigger only (direct child button), not dropdown options. */
+  & .qe-topic-picker > div > button {
     border: none;
     border-bottom: 1px solid var(--border-strong);
     border-radius: 0;
     background: transparent;
   }
-  & .qe-topic-picker button:hover { background: transparent; }
+  & .qe-topic-picker > div > button:hover { background: transparent; }
   /* Dropdown menu: the absolutely-positioned div inside the picker wrapper. */
   & .qe-topic-picker > div > div { border: none; }
 `;
@@ -603,66 +607,6 @@ const EmptyNote = styled.p`
 `;
 
 
-const FieldGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px 12px;
-  margin-bottom: 14px;
-`;
-
-const FieldCol = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const FieldLabel = styled.label`
-  font-family: var(--font-label);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-`;
-
-const FieldInput = styled.input`
-  border: 1px solid var(--border-strong);
-  border-radius: 0;
-  background: var(--bg-sunken);
-  font-size: 13.5px;
-  color: var(--text-primary);
-  padding: 8px 10px;
-  outline: none;
-  font-family: var(--font-sans);
-  width: 100%;
-  box-sizing: border-box;
-  &::placeholder { color: var(--text-tertiary); font-style: italic; }
-  &[type="date"], &[type="time"] { color-scheme: light dark; }
-  &:focus { border-color: var(--border-default); }
-`;
-
-const FieldSelect = styled.select`
-  border: 1px solid var(--border-strong);
-  border-radius: 0;
-  background: var(--bg-sunken);
-  font-size: 13.5px;
-  color: var(--text-primary);
-  padding: 8px 10px;
-  outline: none;
-  font-family: var(--font-sans);
-  width: 100%;
-  box-sizing: border-box;
-  appearance: none;
-  cursor: pointer;
-  &:focus { border-color: var(--border-strong); box-shadow: var(--focus); }
-`;
-
-const CheckRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-top: 6px;
-`;
 
 
 const EventMeta = styled.span`
@@ -1203,127 +1147,6 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
         <div className="qe-topic-picker" style={{ marginBottom: 10 }}>
           <TopicSelector selectedId={selectedTopicId} onSelect={handleTopicChange} topics={topics} filled allowNone={false} />
         </div>
-        {fieldDefs.length > 0 && (
-          <FieldGrid>
-            {fieldDefs.map(f => (
-              <FieldCol key={f.key} style={f.type === 'boolean' ? { gridColumn: 'span 2' } : undefined}>
-                {f.type === 'boolean' ? (
-                  <CheckRow>
-                    <input
-                      type="checkbox"
-                      id={`qe-${f.key}`}
-                      checked={!!customFields[f.key]}
-                      onChange={e => setField(f.key, e.target.checked)}
-                    />
-                    <FieldLabel htmlFor={`qe-${f.key}`} style={{ textTransform: 'none', fontSize: 12, fontWeight: 300 }}>{f.label}</FieldLabel>
-                  </CheckRow>
-                ) : (
-                  <>
-                    <FieldLabel>{f.label}</FieldLabel>
-                    {f.type === 'select' ? (
-                      <FieldSelect value={(customFields[f.key] as string) || ''} onChange={e => setField(f.key, e.target.value)}>
-                        <option value=""></option>
-                        {f.options!.map(o => <option key={o} value={o}>{o}</option>)}
-                      </FieldSelect>
-                    ) : (
-                      <FieldInput
-                        type={f.type}
-                        value={(customFields[f.key] as string) ?? ''}
-                        onChange={e => setField(f.key, f.type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value)}
-                      />
-                    )}
-                  </>
-                )}
-              </FieldCol>
-            ))}
-          </FieldGrid>
-        )}
-        {isTaskTopic && (
-          <FieldGrid>
-            <FieldCol style={{ gridColumn: 'span 2' }}>
-              <FieldLabel>Goal</FieldLabel>
-              <FieldSelect
-                value={(customFields.parentGoalId as number | undefined) ?? ''}
-                onChange={e => setCustomFields(prev => ({ ...prev, parentGoalId: e.target.value ? Number(e.target.value) : undefined, parentMilestoneId: undefined }))}
-              >
-                <option value="">No goal</option>
-                {goalOptions.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
-              </FieldSelect>
-            </FieldCol>
-            <FieldCol style={{ gridColumn: 'span 2' }}>
-              <FieldLabel>Milestone</FieldLabel>
-              <FieldSelect
-                value={(customFields.parentMilestoneId as number | undefined) ?? ''}
-                onChange={e => setField('parentMilestoneId', e.target.value ? Number(e.target.value) : undefined)}
-              >
-                <option value="">No milestone</option>
-                {visibleMilestones.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
-              </FieldSelect>
-            </FieldCol>
-          </FieldGrid>
-        )}
-        {isMedicationTopic && (
-          <FieldGrid>
-            <FieldCol>
-              <FieldLabel>Dosage</FieldLabel>
-              <FieldInput
-                type="text"
-                placeholder="e.g. 500mg"
-                value={(customFields.dosage as string) ?? ''}
-                onChange={e => setField('dosage', e.target.value)}
-              />
-            </FieldCol>
-            <FieldCol>
-              <FieldLabel>Frequency</FieldLabel>
-              <FieldSelect value={(customFields.frequency as string) || 'once_daily'} onChange={e => setField('frequency', e.target.value)}>
-                <option value="once_daily">Once daily</option>
-                <option value="twice_daily">Twice daily</option>
-                <option value="three_times_daily">Three times daily</option>
-                <option value="as_needed">As needed</option>
-                <option value="custom">Custom</option>
-              </FieldSelect>
-            </FieldCol>
-            <FieldCol style={{ gridColumn: 'span 2' }}>
-              <FieldLabel>Schedule Times</FieldLabel>
-              {((customFields.scheduleTimes as string[]) ?? []).map((t, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <FieldInput
-                    type="time"
-                    value={t}
-                    onChange={e => {
-                      const times = [...((customFields.scheduleTimes as string[]) ?? [])];
-                      times[i] = e.target.value;
-                      setField('scheduleTimes', times);
-                    }}
-                  />
-                  <button
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.5, fontSize: 12 }}
-                    onClick={() => setField('scheduleTimes', ((customFields.scheduleTimes as string[]) ?? []).filter((_, j) => j !== i))}
-                  >✕</button>
-                </div>
-              ))}
-              <button
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'inherit', opacity: 0.6, padding: '2px 0' }}
-                onClick={() => setField('scheduleTimes', [...((customFields.scheduleTimes as string[]) ?? []), '08:00'])}
-              >+ Add time</button>
-            </FieldCol>
-            <FieldCol style={{ gridColumn: 'span 2' }}>
-              <CheckRow>
-                <input type="checkbox" id="qe-isActive" checked={!!(customFields.isActive ?? true)} onChange={e => setField('isActive', e.target.checked)} />
-                <FieldLabel htmlFor="qe-isActive" style={{ textTransform: 'none', fontSize: 12, fontWeight: 300 }}>Currently active</FieldLabel>
-              </CheckRow>
-            </FieldCol>
-          </FieldGrid>
-        )}
-        {userFieldDefs.length > 0 && (
-          <div style={{ marginBottom: 10 }}>
-            <UserFieldsForm
-              fieldDefs={userFieldDefs}
-              values={(customFields._userFields as Record<string, unknown>) ?? {}}
-              onChange={vals => setCustomFields(prev => ({ ...prev, _userFields: vals }))}
-            />
-          </div>
-        )}
         <QuickEditorWrap>
           <Editor
             content={content}
@@ -1342,6 +1165,113 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
             {dictationInterim}
           </div>
         )}
+        <FieldRowLayoutContext.Provider value={true}>
+        {fieldDefs.length > 0 && fieldDefs.map(f => (
+          <FormField key={f.key} label={f.label}>
+            {f.type === 'boolean' ? (
+              <Checkbox
+                checked={!!customFields[f.key]}
+                onChange={checked => setField(f.key, checked)}
+                label={f.label}
+              />
+            ) : f.type === 'select' ? (
+              <Select value={(customFields[f.key] as string) || ''} onChange={e => setField(f.key, e.target.value)}>
+                <option value=""></option>
+                {f.options!.map(o => <option key={o} value={o}>{o}</option>)}
+              </Select>
+            ) : (
+              <TextInput
+                type={f.type}
+                placeholder={f.type === 'number' ? '0' : `Add ${f.label.toLowerCase()}…`}
+                value={(customFields[f.key] as string) ?? ''}
+                onChange={e => setField(f.key, f.type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value)}
+              />
+            )}
+          </FormField>
+        ))}
+        {isTaskTopic && (
+          <>
+            <FormField label="Goal">
+              <Select
+                value={(customFields.parentGoalId as number | undefined) ?? ''}
+                onChange={e => setCustomFields(prev => ({ ...prev, parentGoalId: e.target.value ? Number(e.target.value) : undefined, parentMilestoneId: undefined }))}
+              >
+                <option value="">No goal</option>
+                {goalOptions.map(g => <option key={g.id} value={g.id}>{g.title}</option>)}
+              </Select>
+            </FormField>
+            <FormField label="Milestone">
+              <Select
+                value={(customFields.parentMilestoneId as number | undefined) ?? ''}
+                onChange={e => setField('parentMilestoneId', e.target.value ? Number(e.target.value) : undefined)}
+              >
+                <option value="">No milestone</option>
+                {visibleMilestones.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+              </Select>
+            </FormField>
+          </>
+        )}
+        {isMedicationTopic && (
+          <>
+            <FormField label="Dosage">
+              <TextInput
+                type="text"
+                placeholder="e.g. 500mg"
+                value={(customFields.dosage as string) ?? ''}
+                onChange={e => setField('dosage', e.target.value)}
+              />
+            </FormField>
+            <FormField label="Frequency">
+              <Select value={(customFields.frequency as string) || 'once_daily'} onChange={e => setField('frequency', e.target.value)}>
+                <option value="once_daily">Once daily</option>
+                <option value="twice_daily">Twice daily</option>
+                <option value="three_times_daily">Three times daily</option>
+                <option value="as_needed">As needed</option>
+                <option value="custom">Custom</option>
+              </Select>
+            </FormField>
+            <FormField label="Schedule Times">
+              <div>
+                {((customFields.scheduleTimes as string[]) ?? []).map((t, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <TextInput
+                      type="time"
+                      value={t}
+                      onChange={e => {
+                        const times = [...((customFields.scheduleTimes as string[]) ?? [])];
+                        times[i] = e.target.value;
+                        setField('scheduleTimes', times);
+                      }}
+                    />
+                    <button
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.5, fontSize: 12 }}
+                      onClick={() => setField('scheduleTimes', ((customFields.scheduleTimes as string[]) ?? []).filter((_, j) => j !== i))}
+                    >✕</button>
+                  </div>
+                ))}
+                <button
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'inherit', opacity: 0.6, padding: '2px 0' }}
+                  onClick={() => setField('scheduleTimes', [...((customFields.scheduleTimes as string[]) ?? []), '08:00'])}
+                >+ Add time</button>
+              </div>
+            </FormField>
+            <FormField label="Active">
+              <Checkbox
+                checked={!!(customFields.isActive ?? true)}
+                onChange={checked => setField('isActive', checked)}
+                label="Currently active"
+              />
+            </FormField>
+          </>
+        )}
+        {userFieldDefs.length > 0 && (
+          <UserFieldsForm
+            fieldDefs={userFieldDefs}
+            values={(customFields._userFields as Record<string, unknown>) ?? {}}
+            onChange={vals => setCustomFields(prev => ({ ...prev, _userFields: vals }))}
+          />
+        )}
+        </FieldRowLayoutContext.Provider>
         <SaveRow>
           <SaveRowLeft>
             <FooterIconBtn

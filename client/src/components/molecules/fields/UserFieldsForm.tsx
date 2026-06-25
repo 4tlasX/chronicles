@@ -1,64 +1,28 @@
 import styled from 'styled-components';
 import type { UserFieldDef } from '../../../types/userFields.js';
 import { Checkbox } from '../../atoms/Checkbox.js';
+import { TextInput } from '../../atoms/TextInput.js';
+import { FormField } from '../FormField.js';
 
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-3, 12px);
-`;
-
-const FieldGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const FieldLabel = styled.label`
-  font-family: var(--ui, ${({ theme }) => theme.fontFamily.sans});
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
-  margin-bottom: 3px;
-  display: block;
-`;
-
-const BaseInput = styled.input`
-  width: 100%;
-  padding: 7px 10px;
-  background: var(--paper-surface, #f7f4ee);
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: var(--r-sm, 2px);
-  font-family: var(--sans, ${({ theme }) => theme.fontFamily.sans});
-  font-size: 14px;
-  color: var(--ink, ${({ theme }) => theme.colors.text});
-  outline: none;
-  box-sizing: border-box;
-  &:focus { border-color: var(--accent-stroke, ${({ theme }) => theme.colors.accent}); }
-`;
-
-const MonoInput = styled(BaseInput)`
-  font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
-`;
+/* Renders a topic's user-defined custom fields. Uses the shared FormField +
+   TextInput/Checkbox atoms — styling and layout come from those, so changing
+   the atoms or FormField changes these fields everywhere too. */
 
 const UrlWrapper = styled.div`
   position: relative;
+  width: 100%;
   &::before {
     content: 'https://';
     position: absolute;
-    left: 10px;
+    left: 0;
     top: 50%;
     transform: translateY(-50%);
     font-family: var(--mono, ${({ theme }) => theme.fontFamily.mono});
     font-size: 11px;
-    color: var(--ink-4, ${({ theme }) => theme.colors.textMuted});
+    color: var(--text-tertiary);
     pointer-events: none;
   }
-`;
-
-const UrlInput = styled(MonoInput)`
-  padding-left: 60px;
+  input { padding-left: 56px; }
 `;
 
 interface UserFieldsFormProps {
@@ -71,69 +35,66 @@ export function UserFieldsForm({ fieldDefs, values, onChange }: UserFieldsFormPr
   const set = (id: string, value: unknown) => onChange({ ...values, [id]: value });
 
   return (
-    <Wrapper>
+    <>
       {fieldDefs.map(f => {
         const val = values[f.id];
         switch (f.type) {
           case 'boolean':
             return (
-              <FieldGroup key={f.id}>
+              <FormField key={f.id} label={f.label}>
                 <Checkbox
                   checked={!!val}
                   onChange={checked => set(f.id, checked)}
                   label={f.label}
                 />
-              </FieldGroup>
+              </FormField>
             );
           case 'number':
             return (
-              <FieldGroup key={f.id}>
-                <FieldLabel>{f.label}</FieldLabel>
-                <MonoInput
+              <FormField key={f.id} label={f.label}>
+                <TextInput
                   type="number"
                   value={val != null ? String(val) : ''}
                   onChange={e => set(f.id, e.target.value === '' ? '' : Number(e.target.value))}
                 />
-              </FieldGroup>
+              </FormField>
             );
           case 'date':
             return (
-              <FieldGroup key={f.id}>
-                <FieldLabel>{f.label}</FieldLabel>
-                <MonoInput
+              <FormField key={f.id} label={f.label}>
+                <TextInput
                   type="date"
                   value={typeof val === 'string' ? val : ''}
                   onChange={e => set(f.id, e.target.value)}
                 />
-              </FieldGroup>
+              </FormField>
             );
           case 'url':
             return (
-              <FieldGroup key={f.id}>
-                <FieldLabel>{f.label}</FieldLabel>
+              <FormField key={f.id} label={f.label}>
                 <UrlWrapper>
-                  <UrlInput
+                  <TextInput
                     type="url"
                     value={typeof val === 'string' ? val : ''}
                     onChange={e => set(f.id, e.target.value)}
                     placeholder="goodreads.com/book/show/…"
                   />
                 </UrlWrapper>
-              </FieldGroup>
+              </FormField>
             );
           default: // text
             return (
-              <FieldGroup key={f.id}>
-                <FieldLabel>{f.label}</FieldLabel>
-                <BaseInput
+              <FormField key={f.id} label={f.label}>
+                <TextInput
                   type="text"
+                  placeholder={`Add ${f.label.toLowerCase()}…`}
                   value={typeof val === 'string' ? val : ''}
                   onChange={e => set(f.id, e.target.value)}
                 />
-              </FieldGroup>
+              </FormField>
             );
         }
       })}
-    </Wrapper>
+    </>
   );
 }

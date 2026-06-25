@@ -80,12 +80,20 @@ const Dropdown = styled.div`
 
 const SearchWrapper = styled.div`
   padding: 8px;
-  border-bottom: 1px solid var(--border-strong, ${({ theme }) => theme.colors.border});
+  border-bottom: 1px solid #2e2f32;
   position: sticky;
   top: 0;
   background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
 
-  /* Brighter placeholder + search icon for the topic search field. */
+  /* Search field: no box/border/fill — just icon + text above the bottom divider. */
+  & > div {
+    border: none;
+    background: transparent !important;
+    box-shadow: none;
+    padding-left: 6px;
+  }
+  & > div:focus-within { box-shadow: none; }
+  input { background: transparent !important; }
   input::placeholder { color: var(--text-secondary); opacity: 1; }
   /* Magnifying glass: match the 14px input font, aligned to the text top. */
   & > div > span:first-child {
@@ -101,7 +109,7 @@ const SearchWrapper = styled.div`
 `;
 
 const ItemList = styled.div`
-  padding: 10px 0 4px;
+  padding: 0;
 `;
 
 const Item = styled.button<{ $active?: boolean }>`
@@ -115,11 +123,14 @@ const Item = styled.button<{ $active?: boolean }>`
   color: var(--text-secondary);
   background: ${({ $active }) => $active ? 'rgba(0,0,0,0.04)' : 'transparent'};
   border: none;
+  border-bottom: 1px solid #2e2f32;
   cursor: pointer;
   transition: background 0.1s;
 
   /* Option icon matches the option/placeholder text color. */
   & span { color: var(--text-secondary); }
+
+  &:last-child { border-bottom: none; }
 
   &:hover {
     background: rgba(0, 0, 0, 0.04);

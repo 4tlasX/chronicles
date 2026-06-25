@@ -5,6 +5,7 @@ import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { Editor, type DictationControls } from './Editor.js';
 import { TopicSelector } from './TopicSelector.js';
 import { Spinner } from '../atoms/Spinner.js';
+import { FieldRowLayoutContext } from '../molecules/FormField.js';
 import { TaskFields, type TaskFieldValues } from '../molecules/fields/TaskFields.js';
 import { GoalFields, type GoalFieldValues } from '../molecules/fields/GoalFields.js';
 import { MilestoneFields, type MilestoneFieldValues } from '../molecules/fields/MilestoneFields.js';
@@ -86,7 +87,7 @@ const EdDateBlock = styled.div`
   margin-bottom: 0;
   padding-top: 26px;
   padding-bottom: 22px;
-  border-bottom: 2px solid var(--color-accent);
+  border-bottom: 1px solid var(--border-default);
 `;
 
 const EdDateContent = styled.div`
@@ -140,6 +141,17 @@ const EdTopicRow = styled.div`
   border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
   position: relative;
+
+  /* Topic picker trigger only (direct child button), not dropdown options. */
+  & > div:first-child > button {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+  & > div:first-child > button:hover { background: transparent; }
+  /* Dropdown menu: drop the outer border (matches Quick Entry) — scoped to
+     the picker wrapper's direct div child so options are unaffected. */
+  & > div:first-child > div { border: none; }
 `;
 
 
@@ -168,52 +180,48 @@ const EdTitle = styled.div`
 /* cf-card: the card that wraps each custom-fields section */
 const CustomFieldsSection = styled.div`
   background: transparent;
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: var(--r-md, 4px);
-  padding: var(--s-5, 20px) var(--s-6, 24px);
+  border: none;
+  border-radius: 0;
+  padding: var(--s-5, 20px) 0;
   position: relative;
   margin-top: var(--s-5, 20px);
 `;
 
-/* cf-card-head: header row inside the card */
-const CustomFieldsHeader = styled.button`
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  width: 100%;
-  padding: 0 0 var(--s-3, 12px);
-  margin-bottom: var(--s-5, 20px);
-  background: none;
-  border: none;
-  border-bottom: 1px solid var(--rule-2, #e5dfd2);
-  cursor: pointer;
-  text-align: left;
-`;
-
-/* cf-card-title: italic heading inside header */
-const CfCardTitle = styled.span`
-  font-family: var(--sans, 'Lato', sans-serif);
-  font-style: italic;
-  font-size: 18px;
-  color: var(--ink, #2b2824);
+/* Section header: tracked uppercase label with a trailing hairline rule. */
+const CustomFieldsHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 6px;
+`;
+
+const CfCardTitle = styled.span`
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+
+  /* Trailing hairline rule to the right of the label. */
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #2e2f32;
+  }
 `;
 
 /* cf-card-badge: mono uppercase label on the right of header */
-const CfCardBadge = styled.span`
-  font-family: var(--mono, 'JetBrains Mono', monospace);
-  font-size: 9.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-4, #8a857c);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+const CustomFieldsBody = styled.div`
+  /* Editor wrappers/rows: no extra gap — each field row carries its own padding. */
+  & > div { gap: 0 !important; }
 `;
-
-const CustomFieldsBody = styled.div``;
 
 const EditorArea = styled.div`
   display: flex;
@@ -352,8 +360,6 @@ export function EntryForm({
 }: EntryFormProps) {
   const isFavorite = !!customFields._isFavorite;
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
-  const [fieldsExpanded, setFieldsExpanded] = useState(true);
-  const [userFieldsExpanded, setUserFieldsExpanded] = useState(true);
   const [toolbarOpen, setToolbarOpen] = useState(false);
   const [savedAgoText, setSavedAgoText] = useState('');
   useEffect(() => {
@@ -510,6 +516,8 @@ export function EntryForm({
               selectedId={topicId}
               onSelect={id => onTopicChange(id)}
               topics={topics}
+              filled
+              allowNone={false}
             />
             <EdActions style={{ marginLeft: 'auto' }}>
               <IconBtn
@@ -577,15 +585,14 @@ export function EntryForm({
             />
           </EditorArea>
 
-          {/* Custom fields — collapsible, below editor */}
+          {/* Custom fields, below editor */}
           {customType && (
             <CustomFieldsSection>
-              <CustomFieldsHeader onClick={() => setFieldsExpanded(!fieldsExpanded)}>
+              <CustomFieldsHeader>
                 <CfCardTitle>{customType === 'task' ? 'Task Options' : customType === 'goal' ? 'Goal Type' : customType === 'milestone' ? 'Milestone Status' : customType === 'food' ? 'Meal Type' : customType === 'medication' ? 'Dosage' : customType === 'symptom' ? 'Severity' : customType === 'exercise' ? 'Exercise Type' : customType === 'event' ? 'Event Details' : customType === 'meeting' ? 'Meeting Details' : customType === 'allergy' ? 'Allergy Details' : customType === 'shopping_list' ? 'Shopping List' : customType === 'recipe' ? 'Recipe Details' : customType === 'wellness' ? 'Check-in Details' : 'Settings'}</CfCardTitle>
-                <CfCardBadge><Icon name={fieldsExpanded ? 'chevron-up' : 'chevron-down'} size={11} strokeWidth={2} /></CfCardBadge>
               </CustomFieldsHeader>
-              {fieldsExpanded && (
                 <CustomFieldsBody>
+                  <FieldRowLayoutContext.Provider value={true}>
                   {customType === 'task' && <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentGoalId: null, parentMilestoneId: null, priority: 'none', deadline: '', ...customFields } as TaskFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} goalOptions={goalOptions} milestoneOptions={milestoneOptions} />}
                   {customType === 'goal' && <GoalFields values={{ goalType: 'short_term', goalStatus: 'new', targetDate: '', ...customFields } as GoalFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
                   {customType === 'milestone' && <MilestoneFields values={{ milestoneStatus: 'not_started', targetDate: '', isCompleted: false, parentGoalId: null, ...customFields } as MilestoneFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} goalOptions={goalOptions} linkedTasks={linkedTasks} onToggleTaskComplete={handleToggleTaskComplete} onUnlinkTask={handleUnlinkTask} />}
@@ -600,27 +607,26 @@ export function EntryForm({
                   {customType === 'recipe' && <RecipeFields values={{ servings: '', prepTime: '', cookTime: '', cuisine: '', ingredients: [], instructions: '', linkedShoppingListIds: [], ...(customFields as Partial<RecipeFieldValues>) } as RecipeFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} shoppingListOptions={shoppingListOptions} />}
                   {customType === 'priorities' && <PrioritiesFields values={{ priorities: [], ...(customFields as Partial<PrioritiesFieldValues>) } as PrioritiesFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} />}
                   {customType === 'wellness' && <WellnessFields values={{ date: '', waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0, ...customFields } as WellnessFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} cycleTrackingEnabled={cycleTrackingEnabled} onAutoSave={onAutoSave} />}
+                  </FieldRowLayoutContext.Provider>
                 </CustomFieldsBody>
-              )}
             </CustomFieldsSection>
           )}
 
           {/* User-defined custom fields */}
           {userFieldDefs.length > 0 && (
             <CustomFieldsSection>
-              <CustomFieldsHeader onClick={() => setUserFieldsExpanded(!userFieldsExpanded)}>
+              <CustomFieldsHeader>
                 <CfCardTitle>Custom Fields</CfCardTitle>
-                <CfCardBadge><Icon name={userFieldsExpanded ? 'chevron-up' : 'chevron-down'} size={11} strokeWidth={2} /></CfCardBadge>
               </CustomFieldsHeader>
-              {userFieldsExpanded && (
                 <CustomFieldsBody>
-                  <UserFieldsForm
-                    fieldDefs={userFieldDefs}
-                    values={(customFields._userFields as Record<string, unknown>) ?? {}}
-                    onChange={vals => onCustomFieldsChange({ ...customFields, _userFields: vals })}
-                  />
+                  <FieldRowLayoutContext.Provider value={true}>
+                    <UserFieldsForm
+                      fieldDefs={userFieldDefs}
+                      values={(customFields._userFields as Record<string, unknown>) ?? {}}
+                      onChange={vals => onCustomFieldsChange({ ...customFields, _userFields: vals })}
+                    />
+                  </FieldRowLayoutContext.Provider>
                 </CustomFieldsBody>
-              )}
             </CustomFieldsSection>
           )}
         </EdBody>

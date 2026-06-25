@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import styled from 'styled-components';
-import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { Spinner } from '../atoms/Spinner.js';
 
 function isDark(bg: string): boolean {
@@ -15,41 +13,48 @@ const overlay = (theme: { colors: { background: string } }, alpha: number) =>
     : `rgba(0,0,0,${alpha})`;
 
 const Panel = styled.div`
-  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
+  background: transparent;
   margin: 20px 0;
-  padding: 24px 16px 8px;
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: var(--r-md, 4px);
+  padding: 0;
+  border: none;
+  border-radius: 0;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+`;
 
-  & input, & select, & textarea {
-    border-color: ${({ theme }) => theme.colors.border};
+/* Section header: tracked uppercase label with a trailing hairline rule. */
+const SectionHeader = styled.div<{ $noTopicPicker?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: 20px 0 6px;
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #2e2f32;
   }
 `;
 
-const SectionHeader = styled.div<{ $noTopicPicker?: boolean }>`
-  font-family: var(--sans, 'Lato', sans-serif);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-4, ${({ theme }) => theme.colors.textMuted});
-  margin: ${({ $noTopicPicker }) => $noTopicPicker ? '16px' : '0'} 16px 6px;
-`;
-
 const EditorWrap = styled.div`
-  margin: 0 16px 15px;
+  margin: 0 0 15px;
   overflow: hidden;
-  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 
   /* Compact the TipTap editor for inline use */
   & > div { min-height: unset; }
   && .tiptap {
     min-height: 60px;
-    padding: 15px 40px 15px 15px;
+    padding: 12px 0;
     font-family: var(--sans, 'Lato', sans-serif);
     font-style: italic;
     font-size: 16px;
@@ -58,48 +63,22 @@ const EditorWrap = styled.div`
 `;
 
 const FieldsWrap = styled.div`
-  padding: 12px 16px 24px;
-  @media (max-width: 768px) { padding: 12px 16px 22px; }
-  @media (max-width: 480px) { padding: 10px 12px 18px; }
+  padding: 0;
 `;
 
 const FieldsSectionWrap = styled.div`
-  margin: 10px 16px 0;
+  margin: 0;
 `;
 
-const FieldsToggle = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 12px 10px 0;
-  font-family: var(--sans, 'Lato', sans-serif);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-3, ${({ theme }) => theme.colors.textMuted});
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  cursor: pointer;
-  transition: background 120ms;
-`;
-
-const FieldsContent = styled.div<{ $open: boolean }>`
-  display: ${({ $open }) => $open ? 'block' : 'none'};
-  padding: 14px 16px 20px;
-  margin-top: 8px;
-  background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
-  border: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  border-radius: var(--r-md, 4px);
+const FieldsContent = styled.div`
+  padding: 0;
 `;
 
 const Actions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 24px 16px 24px;
+  padding: 24px 0;
   border-radius: 0;
   flex-wrap: wrap;
 `;
@@ -146,7 +125,7 @@ const EditTitle = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: ${({ theme }) => theme.colors.textMuted};
-  padding: 0 16px 8px;
+  padding: 0 0 8px;
 `;
 
 interface InlineEditPanelProps {
@@ -159,12 +138,9 @@ interface InlineEditPanelProps {
   onCancel: () => void;
   title?: string;
   topicSelector?: React.ReactNode;
-  defaultFieldsOpen?: boolean;
 }
 
-export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title, topicSelector, defaultFieldsOpen = false }: InlineEditPanelProps) {
-  const [fieldsOpen, setFieldsOpen] = useState(defaultFieldsOpen);
-
+export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title, topicSelector }: InlineEditPanelProps) {
   return (
     <Panel>
       {title && <EditTitle>{title}</EditTitle>}
@@ -173,11 +149,8 @@ export function InlineEditPanel({ editor, fields, accentColor, saving, status, o
       <EditorWrap>{editor}</EditorWrap>
       {fields && (
         <FieldsSectionWrap>
-          <FieldsToggle onClick={() => setFieldsOpen(o => !o)}>
-            <Icon name={fieldsOpen ? 'chevron-down' : 'chevron-right'} size={11} strokeWidth={2} />
-            Custom fields
-          </FieldsToggle>
-          <FieldsContent $open={fieldsOpen}>{fields}</FieldsContent>
+          <SectionHeader>Custom fields</SectionHeader>
+          <FieldsContent>{fields}</FieldsContent>
         </FieldsSectionWrap>
       )}
       <Actions>

@@ -9,7 +9,7 @@ export type { AllergyFieldValues } from '../../../types/fields.js';
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 15px;
 `;
 
 interface AllergyFieldsProps {

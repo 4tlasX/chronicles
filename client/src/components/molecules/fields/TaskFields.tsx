@@ -18,13 +18,14 @@ const PRIORITY_OPTIONS = [
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 15px;
 `;
 
 const CheckboxGroup = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16px;
 `;
 
 interface TaskFieldsProps {
@@ -98,23 +99,25 @@ export function TaskFields({ values, onChange, goalOptions = [], milestoneOption
           onChange={e => onChange({ ...values, deadline: e.target.value })}
         />
       </FormField>
-      <CheckboxGroup>
-        <Checkbox
-          checked={values.isInProgress}
-          onChange={v => onChange({ ...values, isInProgress: v })}
-          label="In Progress"
-        />
-        <Checkbox
-          checked={values.isCompleted}
-          onChange={v => onChange({ ...values, isCompleted: v })}
-          label="Completed"
-        />
-        <Checkbox
-          checked={values.isAutoMigrating}
-          onChange={v => onChange({ ...values, isAutoMigrating: v })}
-          label="Auto-migrate"
-        />
-      </CheckboxGroup>
+      <FormField label="Status">
+        <CheckboxGroup>
+          <Checkbox
+            checked={values.isInProgress}
+            onChange={v => onChange({ ...values, isInProgress: v })}
+            label="In Progress"
+          />
+          <Checkbox
+            checked={values.isCompleted}
+            onChange={v => onChange({ ...values, isCompleted: v })}
+            label="Completed"
+          />
+          <Checkbox
+            checked={values.isAutoMigrating}
+            onChange={v => onChange({ ...values, isAutoMigrating: v })}
+            label="Auto-migrate"
+          />
+        </CheckboxGroup>
+      </FormField>
     </Wrapper>
   );
 }
