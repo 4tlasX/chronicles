@@ -45,17 +45,15 @@ function getCustomType(topicName: string | undefined): string | null {
 /* ── Styled ── */
 
 const TopicSelectorBorder = styled.div`
-  display: inline-block;
+  display: block;
 
-  /* Topic picker trigger: no border. */
   & > div > button {
     border: none;
+    border-bottom: 1px solid var(--border-subtle);
     border-radius: 0;
     background: transparent;
   }
   & > div > button:hover { background: transparent; }
-  /* Dropdown menu: no accent border. */
-  & > div > div { border: none; }
 `;
 
 const Card = styled.div<{ $accentColor?: string; $flat?: boolean; $bare?: boolean; $flush?: boolean }>`
@@ -70,7 +68,7 @@ const Card = styled.div<{ $accentColor?: string; $flat?: boolean; $bare?: boolea
 `;
 
 const EditWrapper = styled.div<{ $compact?: boolean }>`
-  margin: 20px 0;
+  margin: 0 0 20px;
 `;
 
 const Row = styled.div<{ $centered?: boolean; $active?: boolean; $noDate?: boolean; $flush?: boolean; $rightDate?: boolean }>`

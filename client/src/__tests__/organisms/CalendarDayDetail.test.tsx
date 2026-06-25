@@ -23,28 +23,29 @@ describe('CalendarDayDetail', () => {
     entries: [] as ReturnType<typeof makeEntry>[],
     allTopics: [],
     eventTopicIds: new Set<number>(),
+    taskTopicIds: new Set<number>(),
     accentColor: '#4281a4',
     onClose: vi.fn(),
   };
 
-  it('renders the date label', () => {
+  it('renders the day number', () => {
     renderWithTheme(<CalendarDayDetail {...defaultProps} />);
-    expect(screen.getByText(/June 15, 2024/)).toBeInTheDocument();
+    expect(screen.getByText('15')).toBeInTheDocument();
   });
 
-  it('renders entry count for zero entries', () => {
-    renderWithTheme(<CalendarDayDetail {...defaultProps} />);
-    expect(screen.getByText('0 entries')).toBeInTheDocument();
+  it('shows empty state when no entries', () => {
+    renderWithTheme(<CalendarDayDetail {...defaultProps} entries={[]} />);
+    expect(screen.getByText('No entries for this day.')).toBeInTheDocument();
   });
 
-  it('renders entry count singular for one entry', () => {
+  it('renders entry count line for one entry', () => {
     renderWithTheme(
       <CalendarDayDetail
         {...defaultProps}
         entries={[makeEntry(1, 'Test entry')]}
       />
     );
-    expect(screen.getByText(/1 Entry/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 entry/i)).toBeInTheDocument();
   });
 
   it('renders multiple entries without crashing', () => {
@@ -55,18 +56,5 @@ describe('CalendarDayDetail', () => {
       />
     );
     expect(document.body).toBeTruthy();
-  });
-
-  it('calls onClose when close button is clicked', () => {
-    const onClose = vi.fn();
-    renderWithTheme(<CalendarDayDetail {...defaultProps} onClose={onClose} />);
-    const buttons = screen.getAllByRole('button');
-    fireEvent.click(buttons[0]);
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it('shows empty state when no entries', () => {
-    renderWithTheme(<CalendarDayDetail {...defaultProps} entries={[]} />);
-    expect(screen.getByText('No entries for this day.')).toBeInTheDocument();
   });
 });

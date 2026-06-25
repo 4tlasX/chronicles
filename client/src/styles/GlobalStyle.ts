@@ -58,7 +58,7 @@ export const GlobalStyle = createGlobalStyle`
 
   /* Inputs are never outlined — they separate from the canvas by fill tone,
      not a border. Each input keeps its own background; focus shows no outline. */
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([data-underline]),
   textarea,
   select {
     border: none !important;
@@ -68,15 +68,39 @@ export const GlobalStyle = createGlobalStyle`
     background-color: transparent;
   }
 
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([data-underline]):focus,
   textarea:focus,
   select:focus,
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([data-underline]):focus-visible,
   textarea:focus-visible,
   select:focus-visible {
     outline: none;
     border: none !important;
     box-shadow: none !important;
+  }
+
+  /* Date/time picker icons: gray, inline next to the value not pushed to the far right. */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    opacity: 0.4;
+    filter: invert(60%);
+    cursor: pointer;
+    margin-left: 6px;
+    margin-right: 0;
+    margin-top: 3px;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    width: auto;
+    display: inline-flex;
+    align-items: center;
   }
 
   /* Checkbox / radio labels match field labels at 13px. */

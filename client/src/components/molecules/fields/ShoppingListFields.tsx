@@ -104,8 +104,6 @@ const NotesSection = styled.div`
 
 const LinkedSection = styled.div`
   margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const SectionLabel = styled.div`
@@ -260,7 +258,6 @@ export function ShoppingListFields({ values, onChange, recipeOptions = [] }: Sho
       </NotesSection>
 
       <LinkedSection>
-        <SectionLabel>Linked Recipes</SectionLabel>
         {recipeOptions.filter(r => !linkedRecipeIds.includes(r.id)).length > 0 && (
           <Select
             value=""

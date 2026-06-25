@@ -299,7 +299,15 @@ export function HealthView({ topicNames, metaFields = [], showDateFilter = true,
                 const topic = getTopicForEntry(entry);
                 return (
                   <div key={entry.id}>
-                    {isEditing ? (
+                    <SwipeActions accentColor={accentColor} onDelete={() => handleDelete(entry.id)} disabled={isEditing}>
+                      <EntryListCard
+                        content={entry.content}
+                        createdAt={created}
+                        topicName={topic?.name}
+                        onClick={() => setEditingId(isEditing ? null : entry.id)}
+                      />
+                    </SwipeActions>
+                    {isEditing && (
                       <EditWrap>
                         <EditableEntryCard
                           entry={entry}
@@ -313,15 +321,6 @@ export function HealthView({ topicNames, metaFields = [], showDateFilter = true,
                           onDeleted={() => setEditingId(null)}
                         />
                       </EditWrap>
-                    ) : (
-                      <SwipeActions accentColor={accentColor} onDelete={() => handleDelete(entry.id)}>
-                        <EntryListCard
-                          content={entry.content}
-                          createdAt={created}
-                          topicName={topic?.name}
-                          onClick={() => setEditingId(entry.id)}
-                        />
-                      </SwipeActions>
                     )}
                   </div>
                 );

@@ -8,21 +8,23 @@ export const HeaderRow = styled.div`
 `;
 
 export const Title = styled.h1`
-  font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 1.5rem;
-  font-weight: 500;
-  font-style: italic;
-  color: ${({ theme }) => theme.colors.text};
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 200;
+  line-height: 1;
+  color: var(--text-primary);
 `;
 
 export const SectionTitle = styled.h2`
   font-family: ${({ theme }) => theme.fontFamily.ui};
-  font-size: 13px;
+  font-size: 15px;
   font-weight: ${({ theme }) => theme.fontWeight.medium};
   text-transform: uppercase;
   letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.text};
-  margin: 32px 0 12px;
+  margin: 56px 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
 `;
 
 export const SectionDescription = styled.p`
@@ -38,7 +40,7 @@ export const DangerTitle = styled.h2`
   text-transform: uppercase;
   letter-spacing: 0.05rem;
   color: ${({ theme }) => theme.colors.textMuted};
-  margin: 32px 0 12px;
+  margin: 56px 0 12px;
 `;
 
 export const CollapsibleHeader = styled.button`

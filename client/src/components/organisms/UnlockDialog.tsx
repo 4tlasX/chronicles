@@ -1,10 +1,8 @@
 import { useState, useRef, useId, type FormEvent } from 'react';
 import styled from 'styled-components';
 import { createPortal } from 'react-dom';
-import { PasswordInput } from '../atoms/PasswordInput.js';
 import { Button } from '../atoms/Button.js';
 import { Spinner } from '../atoms/Spinner.js';
-import { FormField } from '../molecules/FormField.js';
 import { useFocusTrap } from '../../hooks/useFocusTrap.js';
 
 const Overlay = styled.div`
@@ -22,34 +20,60 @@ const Card = styled.div`
   width: 100%;
   max-width: 380px;
   padding: ${({ theme }) => theme.spacing.xl}px;
-  background: var(--paper);
+  background: var(--bg-surface);
   border-radius: 0;
   box-shadow: ${({ theme }) => theme.shadow.lg};
 `;
 
 const Title = styled.h2`
-  font-family: ${({ theme }) => theme.fontFamily.serif};
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: ${({ theme }) => theme.spacing.md}px;
-`;
-
-const Description = styled.p`
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  margin-bottom: ${({ theme }) => theme.spacing.lg}px;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 200;
+  color: var(--text-primary);
+  margin-bottom: 20px;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.md}px;
+  gap: 16px;
+`;
+
+const InputWrap = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--bg-sunken);
+  &:focus-within { border-color: var(--color-accent); }
+`;
+
+const StyledInput = styled.input`
+  flex: 1;
+  height: 42px;
+  padding: 0 14px;
+  font-size: 15px;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  &::placeholder { color: var(--text-disabled); }
+`;
+
+const ShowBtn = styled.button`
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  &:hover { color: var(--text-primary); }
 `;
 
 const ErrorText = styled.div`
-  font-size: ${({ theme }) => theme.fontSize.sm}px;
-  color: ${({ theme }) => theme.colors.danger};
+  font-size: 13px;
+  color: var(--color-danger);
 `;
 
 interface UnlockDialogProps {
@@ -58,6 +82,7 @@ interface UnlockDialogProps {
 
 export function UnlockDialog({ onUnlock }: UnlockDialogProps) {
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -85,9 +110,10 @@ export function UnlockDialog({ onUnlock }: UnlockDialogProps) {
         <Title id={titleId}>Unlock Your Journal</Title>
         <Form onSubmit={handleSubmit}>
           {error && <ErrorText role="alert" id={errorId}>{error}</ErrorText>}
-          <div>
-            <PasswordInput
+          <InputWrap>
+            <StyledInput
               id="unlock-pw"
+              type={showPassword ? 'text' : 'password'}
               aria-label="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -97,7 +123,10 @@ export function UnlockDialog({ onUnlock }: UnlockDialogProps) {
               autoComplete="current-password"
               aria-describedby={error ? errorId : undefined}
             />
-          </div>
+            <ShowBtn type="button" onClick={() => setShowPassword(v => !v)}>
+              {showPassword ? 'Hide' : 'Show'}
+            </ShowBtn>
+          </InputWrap>
           <Button type="submit" fullWidth disabled={loading} variant="secondary">
             {loading ? <Spinner size={18} /> : 'Unlock'}
           </Button>

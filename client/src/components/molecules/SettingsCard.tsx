@@ -2,11 +2,9 @@ import styled from 'styled-components';
 import type { ReactNode } from 'react';
 
 const Card = styled.div`
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.xl}px;
-  background: var(--paper-surface);
+  background: transparent;
   overflow: hidden;
-  padding: 0 16px;
+  padding: 0;
 `;
 
 const Row = styled.div<{ $noBorder?: boolean }>`

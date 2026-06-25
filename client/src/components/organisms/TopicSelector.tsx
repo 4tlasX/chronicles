@@ -71,7 +71,7 @@ const Dropdown = styled.div`
   max-height: 320px;
   overflow-y: auto;
   background: var(--paper-surface, ${({ theme }) => theme.colors.surface});
-  border: 1px solid var(--accent-stroke, var(--rule, ${({ theme }) => theme.colors.border}));
+  border: 1px solid var(--border-subtle);
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   box-shadow: ${({ theme }) => theme.shadow.lg};
   animation: ${dropdownSlide} 0.15s ease-out;

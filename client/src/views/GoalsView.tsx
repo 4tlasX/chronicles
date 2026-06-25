@@ -640,10 +640,10 @@ export function GoalsView() {
                 const entry = entries.find(e => e.id === t.id);
                 if (!entry) return null;
                 const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                if (editingId !== t.id) {
-                  return (
+                const isEditing = editingId === t.id;
+                return (
+                  <div key={t.id}>
                     <EntryListCard
-                      key={t.id}
                       content={entry.content}
                       createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
                       topicName={topic?.name}
@@ -651,22 +651,22 @@ export function GoalsView() {
                       completed={t.isCompleted}
                       onClick={() => handleSelect(t.id)}
                     />
-                  );
-                }
-                return (
-                  <EditableEntryCard
-                    key={t.id}
-                    entry={entry}
-                    topic={topic}
-                    accentColor={accentColor}
-                    isEditing
-                    onSelect={() => handleSelect(t.id)}
-                    onClose={() => setEditingId(null)}
-                    onDeleted={() => setEditingId(null)}
-                    metaFields={[]}
-                    hideDate
-                    flush
-                  />
+                    {isEditing && (
+                      <EditableEntryCard
+                        entry={entry}
+                        topic={topic}
+                        accentColor={accentColor}
+                        isEditing
+                        hidePreview
+                        onSelect={() => handleSelect(t.id)}
+                        onClose={() => setEditingId(null)}
+                        onDeleted={() => setEditingId(null)}
+                        metaFields={[]}
+                        hideDate
+                        flush
+                      />
+                    )}
+                  </div>
                 );
               })
         )}
@@ -677,10 +677,10 @@ export function GoalsView() {
                 const entry = entries.find(e => e.id === t.id);
                 if (!entry) return null;
                 const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                if (editingId !== t.id) {
-                  return (
+                const isEditing = editingId === t.id;
+                return (
+                  <div key={t.id}>
                     <EntryListCard
-                      key={t.id}
                       content={entry.content}
                       createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
                       topicName={topic?.name}
@@ -688,22 +688,22 @@ export function GoalsView() {
                       completed={t.isCompleted}
                       onClick={() => handleSelect(t.id)}
                     />
-                  );
-                }
-                return (
-                  <EditableEntryCard
-                    key={t.id}
-                    entry={entry}
-                    topic={topic}
-                    accentColor={accentColor}
-                    isEditing
-                    onSelect={() => handleSelect(t.id)}
-                    onClose={() => setEditingId(null)}
-                    onDeleted={() => setEditingId(null)}
-                    metaFields={[]}
-                    hideDate
-                    flush
-                  />
+                    {isEditing && (
+                      <EditableEntryCard
+                        entry={entry}
+                        topic={topic}
+                        accentColor={accentColor}
+                        isEditing
+                        hidePreview
+                        onSelect={() => handleSelect(t.id)}
+                        onClose={() => setEditingId(null)}
+                        onDeleted={() => setEditingId(null)}
+                        metaFields={[]}
+                        hideDate
+                        flush
+                      />
+                    )}
+                  </div>
                 );
               })
         )}

@@ -856,14 +856,6 @@ export function SettingsView() {
             ))}
           </div>
         </ColorSection>
-        <ColorSection style={{ borderBottom: 'none' }}>
-          <ColorSectionTitle>Wallpaper Pattern</ColorSectionTitle>
-          <ColorSectionDesc>Choose a subtle paper texture for the background</ColorSectionDesc>
-          <BackgroundPicker
-            selected={backgroundImage}
-            onImageChange={handleImageChange}
-          />
-        </ColorSection>
       </SettingsCard>
 
       {/* Security */}

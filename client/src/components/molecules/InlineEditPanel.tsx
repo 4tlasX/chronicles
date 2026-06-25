@@ -13,11 +13,11 @@ const overlay = (theme: { colors: { background: string } }, alpha: number) =>
     : `rgba(0,0,0,${alpha})`;
 
 const Panel = styled.div`
-  background: transparent;
-  margin: 20px 0;
-  padding: 0;
-  border: none;
-  border-radius: 0;
+  background: var(--bg-sunken);
+  margin: 0 0 20px;
+  padding: 16px 36px 32px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 `;
@@ -33,7 +33,7 @@ const SectionHeader = styled.div<{ $noTopicPicker?: boolean }>`
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-tertiary);
-  margin: 20px 0 6px;
+  margin: 32px 0 6px;
 
   &::after {
     content: '';
@@ -64,10 +64,12 @@ const EditorWrap = styled.div`
 
 const FieldsWrap = styled.div`
   padding: 0;
+  width: 100%;
+  margin-bottom: 10px;
 `;
 
 const FieldsSectionWrap = styled.div`
-  margin: 0;
+  margin-top: 50px;
 `;
 
 const FieldsContent = styled.div`
@@ -77,50 +79,51 @@ const FieldsContent = styled.div`
 const Actions = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 16px;
   padding: 24px 0;
-  border-radius: 0;
   flex-wrap: wrap;
 `;
 
 const ActionBtn = styled.button`
   padding: 6px 16px;
   font-family: var(--font-label);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: ${({ theme }) => theme.colors.text};
-  background: ${({ theme }) => overlay(theme, 0.08)};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  color: var(--text-tertiary);
+  background: transparent;
+  border: 1px solid var(--text-tertiary);
+  border-radius: 999px;
   cursor: pointer;
-  transition: background 0.15s;
-  &:hover { background: ${({ theme }) => overlay(theme, 0.14)}; }
+  transition: opacity 0.15s;
+  min-width: 80px;
+  &:hover { opacity: 0.7; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
 const SaveBtn = styled.button<{ $error?: boolean }>`
   padding: 6px 16px;
   font-family: var(--font-label);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: ${({ $error, theme }) => $error ? theme.colors.danger : theme.colors.text};
-  background: ${({ theme }) => overlay(theme, 0.08)};
-  border: 1px solid ${({ $error, theme }) => $error ? 'rgba(220,50,50,0.6)' : theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  color: ${({ $error }) => $error ? 'var(--color-danger, #dc3232)' : 'var(--color-accent)'};
+  background: transparent;
+  border: 1px solid ${({ $error }) => $error ? 'var(--color-danger, #dc3232)' : 'var(--color-accent)'};
+  border-radius: 999px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-  min-width: 60px;
-  &:hover:not(:disabled) { background: ${({ theme }) => overlay(theme, 0.14)}; }
+  transition: opacity 0.15s;
+  min-width: 80px;
+  &:hover:not(:disabled) { opacity: 0.7; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
 const EditTitle = styled.div`
   font-family: var(--font-label);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -145,7 +148,6 @@ export function InlineEditPanel({ editor, fields, accentColor, saving, status, o
     <Panel>
       {title && <EditTitle>{title}</EditTitle>}
       {topicSelector && <FieldsWrap>{topicSelector}</FieldsWrap>}
-      <SectionHeader $noTopicPicker={!topicSelector}>Main content</SectionHeader>
       <EditorWrap>{editor}</EditorWrap>
       {fields && (
         <FieldsSectionWrap>

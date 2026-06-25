@@ -15,34 +15,35 @@ function renderWithTheme(ui: React.ReactElement) {
 describe('CalendarGrid', () => {
   const defaultProps = {
     currentMonth: new Date(2024, 5, 1), // June 2024
-    selectedDate: null,
+    currentDate: new Date(2024, 5, 1),
+    selectedDate: '2024-06-01',
     entriesByDate: new Map(),
     accentColor: '#4281a4',
-    onPrevMonth: vi.fn(),
-    onNextMonth: vi.fn(),
+    viewMode: 'month' as const,
+    onPrev: vi.fn(),
+    onNext: vi.fn(),
+    onToday: vi.fn(),
+    onViewMode: vi.fn(),
     onDayClick: vi.fn(),
-    onEntryClick: vi.fn(),
+    onDayDoubleClick: vi.fn(),
     getTopicName: vi.fn(),
     eventTopicIds: new Set<number>(),
   };
 
   it('renders month label', () => {
     renderWithTheme(<CalendarGrid {...defaultProps} />);
-    expect(screen.getByText('June 2024')).toBeInTheDocument();
+    expect(screen.getByText('June')).toBeInTheDocument();
+    expect(screen.getByText('2024')).toBeInTheDocument();
   });
 
   it('renders weekday headers', () => {
     renderWithTheme(<CalendarGrid {...defaultProps} />);
-    // Weekday headers may appear multiple times due to mobile + desktop
-    const sunLabels = screen.getAllByText('Sun');
-    expect(sunLabels.length).toBeGreaterThanOrEqual(1);
-    const monLabels = screen.getAllByText('Mon');
-    expect(monLabels.length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('MON')).toBeInTheDocument();
+    expect(screen.getByText('FRI')).toBeInTheDocument();
   });
 
   it('renders day numbers for the month', () => {
     renderWithTheme(<CalendarGrid {...defaultProps} />);
-    // Day numbers may appear multiple times (day cell + mobile label)
     const ones = screen.getAllByText('1');
     expect(ones.length).toBeGreaterThanOrEqual(1);
     const fifteens = screen.getAllByText('15');
@@ -51,19 +52,21 @@ describe('CalendarGrid', () => {
     expect(thirties.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('calls onPrevMonth when prev button is clicked', () => {
+  it('calls onPrev when prev chevron is clicked', () => {
     const onPrev = vi.fn();
-    renderWithTheme(<CalendarGrid {...defaultProps} onPrevMonth={onPrev} />);
+    renderWithTheme(<CalendarGrid {...defaultProps} onPrev={onPrev} />);
     const buttons = screen.getAllByRole('button');
-    fireEvent.click(buttons[0]); // prev button
+    const svgBtns = buttons.filter(b => b.querySelector('svg'));
+    fireEvent.click(svgBtns[0]);
     expect(onPrev).toHaveBeenCalled();
   });
 
-  it('calls onNextMonth when next button is clicked', () => {
+  it('calls onNext when next chevron is clicked', () => {
     const onNext = vi.fn();
-    renderWithTheme(<CalendarGrid {...defaultProps} onNextMonth={onNext} />);
+    renderWithTheme(<CalendarGrid {...defaultProps} onNext={onNext} />);
     const buttons = screen.getAllByRole('button');
-    fireEvent.click(buttons[1]); // next button
+    const svgBtns = buttons.filter(b => b.querySelector('svg'));
+    fireEvent.click(svgBtns[svgBtns.length - 1]);
     expect(onNext).toHaveBeenCalled();
   });
 

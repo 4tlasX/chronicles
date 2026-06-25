@@ -1,11 +1,10 @@
 import { useState, useMemo, useCallback, useEffect, Fragment } from 'react';
 import styled from 'styled-components';
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight, faCartShopping } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
-import { ViewHeader } from '../components/molecules/ViewHeader.js';
 import { MealsTabBar } from '../components/molecules/MealsTabBar.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
@@ -41,7 +40,7 @@ function fmtShort(d: Date): string {
 }
 
 function fmtDay(d: Date): string {
-  return d.toLocaleDateString('en-US', { weekday: 'short' });
+  return d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
 }
 
 const MEAL_SLOTS: { key: MealSlotType; label: string }[] = [
@@ -54,22 +53,63 @@ const MEAL_SLOTS: { key: MealSlotType; label: string }[] = [
 const emptySlot = (): MenuMealSlot => ({ mealName: '', recipeId: null, recipeName: '' });
 const emptyDay  = (): MenuPlanDay  => ({ breakfast: emptySlot(), lunch: emptySlot(), dinner: emptySlot(), snack: emptySlot() });
 
-/* ── Styled components ── */
+const todayStr = toDateStr(new Date());
 
-const NavRow = styled.div`
+/* ── Layout (mirrors HealthView) ── */
+
+const Page = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+`;
+
+const Inner = styled.div`
+  width: 100%;
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 0 24px;
+  @media (max-width: 768px) { padding: 0 16px; }
+`;
+
+const Head = styled.div`
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 53px 0 16px;
+  flex-wrap: wrap;
+`;
+
+const Title = styled.h1`
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 200;
+  line-height: 1;
+  color: var(--text-primary);
+  margin: 0;
+  @media (max-width: 480px) { font-size: 34px; }
+`;
+
+const HeadActions = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 12px 24px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
+const WeekNav = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2px;
 `;
 
 const WeekLabel = styled.span`
   font-family: var(--font-label);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  min-width: 180px;
+  color: var(--text-primary);
+  min-width: 150px;
   text-align: center;
 `;
 
@@ -77,142 +117,218 @@ const NavBtn = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   background: none;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  border: none;
   cursor: pointer;
-  color: ${({ theme }) => theme.colors.text};
-  &:hover { background: ${({ theme }) => theme.colors.surfaceHover}; }
-`;
-
-const ActionRow = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 10px 24px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  @media (max-width: 480px) { padding: 10px 12px; }
+  color: var(--text-secondary);
+  &:hover { color: var(--text-primary); }
 `;
 
 const ActionBtn = styled.button<{ $primary?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 7px 14px;
   font-family: var(--font-label);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  letter-spacing: 0.08em;
+  border-radius: var(--r-md);
   cursor: pointer;
-  border: 1px solid ${({ $primary, theme }) => $primary ? 'transparent' : theme.colors.border};
-  background: ${({ $primary, theme }) => $primary ? theme.colors.text : 'transparent'};
-  color: ${({ $primary, theme }) => $primary ? theme.colors.textInverse : theme.colors.text};
+  white-space: nowrap;
+  transition: opacity 0.15s;
+
+  ${({ $primary }) => $primary ? `
+    background: transparent;
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--r-full);
+  ` : `
+    background: transparent;
+    color: var(--color-accent);
+    border: none;
+  `}
+
   &:disabled { opacity: 0.5; cursor: not-allowed; }
-  &:hover:not(:disabled) { opacity: 0.85; }
+  &:hover:not(:disabled) { opacity: 0.7; }
+`;
+
+const TabsRow = styled.div`
+  margin: 0;
 `;
 
 const StatusMsg = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  padding: 10px 24px;
-  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 8px 0;
 `;
 
 /* ── Desktop grid ── */
 
 const ScrollArea = styled.div`
-  flex: 1;
   overflow: auto;
   @media (max-width: 640px) { display: none; }
 `;
 
 const PlannerGrid = styled.div`
   display: grid;
-  grid-template-columns: 90px repeat(7, minmax(140px, 1fr));
+  grid-template-columns: 80px repeat(7, minmax(130px, 1fr));
   min-width: 760px;
 `;
 
-const HeaderCell = styled.div`
-  padding: 10px 8px;
+const CornerCell = styled.div`
+  border-bottom: 2px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  background: var(--bg-app);
+`;
+
+const HeaderCell = styled.div<{ $isToday?: boolean }>`
+  padding: 10px 10px 0;
   text-align: center;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-right: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface};
+  border-bottom: 2px solid ${({ $isToday }) => $isToday ? 'var(--color-accent)' : 'var(--border-subtle)'};
+  border-right: 1px solid var(--border-subtle);
+  background: ${({ $isToday }) => $isToday ? 'var(--bg-active)' : 'var(--bg-app)'};
   &:last-child { border-right: none; }
+  padding-bottom: 8px;
 `;
 
-const DayName = styled.div`
-  font-family: var(--font-label);
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-`;
-
-const DayDate = styled.div`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  margin-top: 2px;
-`;
-
-const MealLabelCell = styled.div`
-  padding: 10px 8px;
-  display: flex;
-  align-items: flex-start;
-  padding-top: 12px;
+const DayName = styled.div<{ $isToday?: boolean }>`
   font-family: var(--font-label);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-right: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface};
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
 `;
 
-const MealCell = styled.div`
-  padding: 6px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  border-right: 1px solid ${({ theme }) => theme.colors.border};
+const DayDate = styled.div`
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+`;
+
+const MealLabelCell = styled.div`
+  padding: 10px 8px 10px 0;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 14px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  background: var(--bg-app);
+`;
+
+const MealCell = styled.div<{ $isToday?: boolean }>`
+  padding: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  background: ${({ $isToday }) => $isToday ? 'var(--bg-active)' : 'transparent'};
   &:last-child { border-right: none; }
+`;
+
+const MealNameBlock = styled.div<{ $hasContent: boolean }>`
+  display: flex;
+  gap: 0;
+  min-height: 42px;
+`;
+
+const MealAccentBar = styled.div`
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-accent);
+  margin-right: 8px;
+  flex-shrink: 0;
+  align-self: stretch;
+`;
+
+const MealNameArea = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const MealTitle = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+`;
+
+const MealPlaceholder = styled.div`
+  font-size: 13px;
+  color: var(--text-disabled);
+  font-style: italic;
+  line-height: 1.35;
+  padding-top: 2px;
 `;
 
 const MealInput = styled.textarea`
   width: 100%;
   box-sizing: border-box;
-  font-size: 15px;
-  padding: 5px 7px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+  border: none;
   background: transparent;
-  color: ${({ theme }) => theme.colors.text};
+  color: var(--text-primary);
   font-family: inherit;
   resize: none;
   overflow: hidden;
-  min-height: 30px;
-  line-height: 1.4;
+  min-height: 20px;
+  line-height: 1.35;
   field-sizing: content;
-  &::placeholder { color: ${({ theme }) => theme.colors.textMuted}; }
-  &:focus { outline: none; border-color: ${({ theme }) => theme.colors.textSecondary}; }
+  &::placeholder { color: var(--text-disabled); font-style: italic; font-weight: 400; }
+  &:focus { outline: none; }
+`;
+
+const RecipeSelectWrap = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
 `;
 
 const RecipeSelect = styled.select`
   width: 100%;
   box-sizing: border-box;
-  font-size: 15px;
-  padding: 3px 20px 3px 5px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  font-size: 12px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: var(--r-md);
   background: transparent;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-family: inherit;
+  color: var(--text-secondary);
+  font-family: var(--font-label);
   cursor: pointer;
   appearance: auto;
+  &:focus { outline: 1px solid var(--color-accent); }
+`;
+
+const LinkRecipeBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  &:hover { color: var(--text-secondary); }
 `;
 
 /* ── Mobile cards ── */
@@ -220,55 +336,56 @@ const RecipeSelect = styled.select`
 const MobileArea = styled.div`
   display: none;
   flex-direction: column;
-  flex: 1;
-  overflow: auto;
   @media (max-width: 640px) { display: flex; }
 `;
 
 const DayCard = styled.div`
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 1px solid var(--border-subtle);
 `;
 
-const DayCardHeader = styled.div`
+const DayCardHeader = styled.div<{ $isToday?: boolean }>`
   display: flex;
   align-items: baseline;
   gap: 8px;
   padding: 10px 16px 6px;
-  background: ${({ theme }) => theme.colors.surface};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ $isToday }) => $isToday ? 'var(--bg-active)' : 'var(--bg-surface)'};
+  border-bottom: 1px solid var(--border-subtle);
+  border-left: 3px solid ${({ $isToday }) => $isToday ? 'var(--color-accent)' : 'transparent'};
 `;
 
 const DayCardName = styled.span`
   font-family: var(--font-label);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
 `;
 
 const DayCardDate = styled.span`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  font-size: 13px;
+  color: var(--text-tertiary);
 `;
 
 const MobileSlotRow = styled.div`
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 16px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
   &:last-child { border-bottom: none; }
 `;
 
 const MobileSlotLabel = styled.div`
   font-family: var(--font-label);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  width: 70px;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  width: 65px;
   flex-shrink: 0;
+  padding-top: 3px;
 `;
 
 const MobileSlotInputs = styled.div`
@@ -295,6 +412,7 @@ export function MenuView() {
   const [isSaving, setIsSaving]     = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusMsg, setStatusMsg]   = useState('');
+  const [editingCell, setEditingCell] = useState<string | null>(null);
 
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
   const weekStartStr = toDateStr(weekStart);
@@ -354,7 +472,6 @@ export function MenuView() {
             ...existing,
             recipeId,
             recipeName: recipe?.title || '',
-            // Auto-fill meal name from recipe if it's currently empty
             mealName: existing.mealName || recipe?.title || '',
           },
         },
@@ -460,31 +577,59 @@ export function MenuView() {
 
   /* ── Render helpers ── */
 
-  const renderSlot = (dateStr: string, slotKey: MealSlotType) => {
+  const renderSlot = (dateStr: string, slotKey: MealSlotType, compact = false) => {
     const slot = meals[dateStr]?.[slotKey] || emptySlot();
+    const cellKey = `${dateStr}-${slotKey}`;
+    const isEditing = editingCell === cellKey;
+    const placeholderMap: Record<MealSlotType, string> = {
+      breakfast: "What's for breakfast?",
+      lunch: "What's for lunch?",
+      dinner: "What's for dinner?",
+      snack: "What's for a snack?",
+    };
+
     return (
       <>
-        <MealInput
-          rows={1}
-          value={slot.mealName}
-          onChange={e => {
-            const el = e.target as HTMLTextAreaElement;
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
-            handleMealNameChange(dateStr, slotKey, el.value);
-          }}
-          placeholder="What's for…"
-        />
-        {recipes.length > 0 && (
-          <RecipeSelect
-            value={slot.recipeId?.toString() || ''}
-            onChange={e => handleRecipeChange(dateStr, slotKey, e.target.value ? parseInt(e.target.value) : null)}
-          >
-            <option value="">link recipe…</option>
-            {recipes.map(r => (
-              <option key={r.id} value={r.id}>{r.title}</option>
-            ))}
-          </RecipeSelect>
+        <MealNameBlock $hasContent={!!slot.mealName}>
+          <MealNameArea>
+            {isEditing ? (
+              <MealInput
+                autoFocus
+                rows={1}
+                value={slot.mealName}
+                onChange={e => {
+                  const el = e.target as HTMLTextAreaElement;
+                  el.style.height = 'auto';
+                  el.style.height = el.scrollHeight + 'px';
+                  handleMealNameChange(dateStr, slotKey, el.value);
+                }}
+                onBlur={() => setEditingCell(null)}
+                placeholder={placeholderMap[slotKey]}
+              />
+            ) : slot.mealName ? (
+              <MealTitle onClick={() => setEditingCell(cellKey)}>{slot.mealName}</MealTitle>
+            ) : (
+              <MealPlaceholder onClick={() => setEditingCell(cellKey)}>
+                {compact ? placeholderMap[slotKey] : placeholderMap[slotKey]}
+              </MealPlaceholder>
+            )}
+          </MealNameArea>
+        </MealNameBlock>
+
+        {recipes.length > 0 ? (
+          <RecipeSelectWrap>
+            <RecipeSelect
+              value={slot.recipeId?.toString() || ''}
+              onChange={e => handleRecipeChange(dateStr, slotKey, e.target.value ? parseInt(e.target.value) : null)}
+            >
+              <option value="">{slot.recipeName ? slot.recipeName.slice(0, 20) : 'Link recipe…'}</option>
+              {recipes.map(r => (
+                <option key={r.id} value={r.id}>{r.title}</option>
+              ))}
+            </RecipeSelect>
+          </RecipeSelectWrap>
+        ) : (
+          <LinkRecipeBtn onClick={() => navigate('/')}>+ Link recipe</LinkRecipeBtn>
         )}
       </>
     );
@@ -524,86 +669,91 @@ export function MenuView() {
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Meals" titleTo="/menu" onBack={() => navigate('/')} />
-      <MealsTabBar />
+      <Page>
+        <Inner>
+          <Head>
+            <Title>Meals</Title>
+            <HeadActions>
+              <WeekNav>
+                <NavBtn onClick={() => setWeekStart(w => addDays(w, -7))} aria-label="Previous week">
+                  <FontAwesomeIcon icon={faChevronLeft} size="xs" />
+                </NavBtn>
+                <WeekLabel>{fmtShort(weekStart)} – {fmtShort(addDays(weekStart, 6))}</WeekLabel>
+                <NavBtn onClick={() => setWeekStart(w => addDays(w, 7))} aria-label="Next week">
+                  <FontAwesomeIcon icon={faChevronRight} size="xs" />
+                </NavBtn>
+              </WeekNav>
+              <ActionBtn onClick={() => navigate('/')}>+ New Recipe</ActionBtn>
+              <ActionBtn onClick={handleGenerateShoppingList} disabled={isGenerating}>
+                <FontAwesomeIcon icon={faCartShopping} size="xs" />
+                {isGenerating ? 'Generating…' : 'Generate Shopping List'}
+              </ActionBtn>
+              <ActionBtn $primary onClick={handleSave} disabled={isSaving}>
+                {isSaving ? 'Saving…' : 'Save Menu'}
+              </ActionBtn>
+            </HeadActions>
+          </Head>
 
-      {/* Week navigation */}
-      <NavRow>
-        <NavBtn onClick={() => setWeekStart(w => addDays(w, -7))} aria-label="Previous week">
-          <FontAwesomeIcon icon={faChevronLeft} size="xs" />
-        </NavBtn>
-        <WeekLabel>{fmtShort(weekStart)} – {fmtShort(addDays(weekStart, 6))}</WeekLabel>
-        <NavBtn onClick={() => setWeekStart(w => addDays(w, 7))} aria-label="Next week">
-          <FontAwesomeIcon icon={faChevronRight} size="xs" />
-        </NavBtn>
-      </NavRow>
+          <TabsRow><MealsTabBar /></TabsRow>
 
-      {/* Action buttons */}
-      <ActionRow>
-        <ActionBtn onClick={() => navigate('/')} title="Create a new Recipe entry in your journal">
-          + New Recipe
-        </ActionBtn>
-        <ActionBtn onClick={handleGenerateShoppingList} disabled={isGenerating}>
-          {isGenerating ? 'Generating…' : 'Generate Shopping List'}
-        </ActionBtn>
-        <ActionBtn $primary onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Saving…' : 'Save Menu'}
-        </ActionBtn>
-      </ActionRow>
+          {statusMsg && <StatusMsg>{statusMsg}</StatusMsg>}
+        </Inner>
 
-      {statusMsg && <StatusMsg>{statusMsg}</StatusMsg>}
+        {/* Grid breaks out of Inner to fill full page width */}
+        <ScrollArea>
+          <PlannerGrid>
+            <CornerCell />
+            {weekDays.map(day => {
+              const ds = toDateStr(day);
+              const isToday = ds === todayStr;
+              return (
+                <HeaderCell key={ds} $isToday={isToday}>
+                  <DayName $isToday={isToday}>{fmtDay(day)}</DayName>
+                  <DayDate>{fmtShort(day)}</DayDate>
+                </HeaderCell>
+              );
+            })}
+            {MEAL_SLOTS.map(({ key, label }) => (
+              <Fragment key={key}>
+                <MealLabelCell>{label}</MealLabelCell>
+                {weekDays.map(day => {
+                  const dateStr = toDateStr(day);
+                  return (
+                    <MealCell key={`${dateStr}-${key}`} $isToday={dateStr === todayStr}>
+                      {renderSlot(dateStr, key)}
+                    </MealCell>
+                  );
+                })}
+              </Fragment>
+            ))}
+          </PlannerGrid>
+        </ScrollArea>
 
-      {/* Desktop grid (hidden on mobile) */}
-      <ScrollArea>
-        <PlannerGrid>
-          {/* Header row */}
-          <HeaderCell />
-          {weekDays.map(day => (
-            <HeaderCell key={toDateStr(day)}>
-              <DayName>{fmtDay(day)}</DayName>
-              <DayDate>{fmtShort(day)}</DayDate>
-            </HeaderCell>
-          ))}
-
-          {/* Meal rows */}
-          {MEAL_SLOTS.map(({ key, label }) => (
-            <Fragment key={key}>
-              <MealLabelCell>{label}</MealLabelCell>
-              {weekDays.map(day => {
-                const dateStr = toDateStr(day);
-                return (
-                  <MealCell key={`${dateStr}-${key}`}>
-                    {renderSlot(dateStr, key)}
-                  </MealCell>
-                );
-              })}
-            </Fragment>
-          ))}
-        </PlannerGrid>
-      </ScrollArea>
-
-      {/* Mobile cards (hidden on desktop) */}
-      <MobileArea>
-        {weekDays.map(day => {
-          const dateStr = toDateStr(day);
-          return (
-            <DayCard key={dateStr}>
-              <DayCardHeader>
-                <DayCardName>{fmtDay(day)}</DayCardName>
-                <DayCardDate>{fmtShort(day)}</DayCardDate>
-              </DayCardHeader>
-              {MEAL_SLOTS.map(({ key, label }) => (
-                <MobileSlotRow key={key}>
-                  <MobileSlotLabel>{label}</MobileSlotLabel>
-                  <MobileSlotInputs>
-                    {renderSlot(dateStr, key)}
-                  </MobileSlotInputs>
-                </MobileSlotRow>
-              ))}
-            </DayCard>
-          );
-        })}
-      </MobileArea>
+        <Inner>
+          <MobileArea>
+            {weekDays.map(day => {
+              const dateStr = toDateStr(day);
+              const isToday = dateStr === todayStr;
+              return (
+                <DayCard key={dateStr}>
+                  <DayCardHeader $isToday={isToday}>
+                    <DayCardName>{fmtDay(day)}</DayCardName>
+                    <DayCardDate>{fmtShort(day)}</DayCardDate>
+                  </DayCardHeader>
+                  {MEAL_SLOTS.map(({ key, label }) => (
+                    <MobileSlotRow key={key}>
+                      <MobileSlotLabel>{label}</MobileSlotLabel>
+                      <MobileSlotInputs>
+                        {renderSlot(dateStr, key, true)}
+                      </MobileSlotInputs>
+                    </MobileSlotRow>
+                  ))}
+                </DayCard>
+              );
+            })}
+          </MobileArea>
+        </Inner>
+      </Page>
     </ContentTemplate>
   );
 }

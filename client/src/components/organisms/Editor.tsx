@@ -6,6 +6,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import styled, { keyframes, css } from 'styled-components';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
+import { MaterialIcon } from '../atoms/MaterialIcon.js';
 import { useDictation } from '../../hooks/useDictation.js';
 import { DrawingNode } from '../tiptap/DrawingNode.js';
 import { DrawingCanvas } from '../atoms/DrawingCanvas.js';
@@ -384,7 +385,7 @@ export function Editor({ content, onChange, readOnly = false, placeholder = 'Sta
             </Toolbar>
           )}
           {!hideToolbarToggle && <ToolbarToggle $open={toolbarOpen} onClick={() => setToolbarOpen(!toolbarOpen)} aria-label="Toggle formatting toolbar" aria-expanded={toolbarOpen}>
-            <Icon name="pencil" size={16} strokeWidth={2} />
+            <MaterialIcon $size={20}>stylus_fountain_pen</MaterialIcon>
           </ToolbarToggle>}
           {!hideToolbarToggle && dictationSupported && (
             <MicButton

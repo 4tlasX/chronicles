@@ -28,22 +28,16 @@ const LogoMark = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 12px;
-  padding-top: 24px;
-  margin-bottom: 10px;
+  padding: 8px 0 28px;
 `;
 
-
 const LogoText = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
   font-family: var(--font-display, 'Work Sans', sans-serif);
   font-size: 22px;
-  font-weight: 300;
+  font-weight: 200;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
   color: var(--text-primary, ${({ theme }) => theme.colors.text});
 `;
 
@@ -83,13 +77,8 @@ export function AuthTemplate({ title, children, footer, brand }: AuthTemplatePro
     <Wrapper>
       <Card>
         <LogoMark>
-          <LogoText>
-            <svg width="22" height="22" viewBox="0 0 32 32" fill="none" style={{ color: 'var(--color-accent)' }} aria-hidden>
-              <path d="M16 6L26 16L16 26L6 16Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
-              <circle cx="16" cy="16" r="3.6" fill="currentColor" />
-            </svg>
-            Chronicles
-          </LogoText>
+          <img src="/chronicles-poppy.svg" alt="Chronicles" width={64} height={64} />
+          <LogoText>Chronicles</LogoText>
         </LogoMark>
         {!brand && <PageTitle>{title}</PageTitle>}
         {children}

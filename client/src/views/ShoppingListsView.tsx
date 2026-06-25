@@ -1,35 +1,70 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
-import { ViewHeader } from '../components/molecules/ViewHeader.js';
 import { MealsTabBar } from '../components/molecules/MealsTabBar.js';
 import { FilterTabs } from '../components/molecules/FilterTabs.js';
+import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
+import { SwipeActions } from '../components/molecules/SwipeActions.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 import type { ShoppingItem } from '../types/fields.js';
 
-/* ── Styled ── */
+/* ── Layout (mirrors HealthView) ── */
 
-const TabsRow = styled.div`
-  padding: 0 24px;
-  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  @media (max-width: 480px) { padding: 0 16px; }
-`;
-
-const ListArea = styled.div`
+const Page = styled.div`
   flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 16px 24px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+`;
+
+const Inner = styled.div`
+  width: 100%;
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+  @media (max-width: 768px) { padding: 0 16px 48px; }
+`;
+
+const Head = styled.div`
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 16px;
-  @media (max-width: 480px) { padding: 12px 16px; }
+  padding: 53px 0 16px;
+`;
+
+const Title = styled.h1`
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 200;
+  line-height: 1;
+  color: var(--text-primary);
+  margin: 0;
+  @media (max-width: 480px) { font-size: 34px; }
+`;
+
+const TabsRow = styled.div`
+  margin: 0;
+`;
+
+const SubTabs = styled.div`
+  padding: 10px 0 4px;
+`;
+
+const List = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const EditWrap = styled.div`
+  border-top: 1px solid var(--border-subtle);
+  padding: 8px 0;
 `;
 
 /* ── Tabs ── */
@@ -75,58 +110,78 @@ export function ShoppingListsView() {
     [lists, tab]
   );
 
-  if (needsUnlock) {
-    return (
-      <>
-        <ContentTemplate><EmptyState message="Unlock your journal to view shopping lists" /></ContentTemplate>
-        <UnlockDialog onUnlock={handleUnlock} />
-      </>
-    );
-  }
+  if (needsUnlock) return (
+    <>
+      <ContentTemplate><EmptyState message="Unlock your journal to view shopping lists" /></ContentTemplate>
+      <UnlockDialog onUnlock={handleUnlock} />
+    </>
+  );
 
-  if (isLoading || !isReady) {
-    return (
-      <ContentTemplate>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-          <Spinner size={40} />
-        </div>
-      </ContentTemplate>
-    );
-  }
+  if (isLoading || !isReady) return (
+    <ContentTemplate>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+        <Spinner size={40} />
+      </div>
+    </ContentTemplate>
+  );
 
   return (
     <ContentTemplate>
-      <ViewHeader title="Meals" titleTo="/menu" />
-      <MealsTabBar />
+      <Page>
+        <Inner>
+          <Head>
+            <Title>Meals</Title>
+          </Head>
 
-      <TabsRow>
-        <FilterTabs options={TABS} active={tab} onChange={v => setTab(v as Tab)} />
-      </TabsRow>
+          <TabsRow><MealsTabBar /></TabsRow>
 
-      <ListArea>
-        {visible.length === 0 ? (
-          <EmptyState
-            message={tab === 'completed' ? 'No completed lists yet.' : 'No current shopping lists.'}
-            submessage={tab === 'current' ? 'Create a new entry with the Shopping List topic to get started.' : undefined}
-          />
-        ) : (
-          visible.map(({ entry }) => (
-            <EditableEntryCard
-              key={entry.id}
-              entry={entry}
-              topic={shoppingListTopic}
-              accentColor={accentColor}
-              isEditing={editingId === entry.id}
-              onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
-              onClose={() => setEditingId(null)}
-              onDeleted={() => setEditingId(null)}
-              hideDate
-              hideTopic
-              autoExpandFields
+          <SubTabs>
+            <FilterTabs options={TABS} active={tab} onChange={v => setTab(v as Tab)} flush bordered={false} />
+          </SubTabs>
+
+          {visible.length === 0 ? (
+            <EmptyState
+              message={tab === 'completed' ? 'No completed lists yet.' : 'No current shopping lists.'}
+              submessage={tab === 'current' ? 'Create a new entry with the Shopping List topic to get started.' : undefined}
             />
-          ))
-        )}
-      </ListArea>
+          ) : (
+            <List>
+              {visible.map(({ entry, completed }) => {
+                const created = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt);
+                const isEditing = editingId === entry.id;
+                return (
+                  <div key={entry.id}>
+                    <SwipeActions accentColor={accentColor} onDelete={() => {}} disabled={isEditing}>
+                      <EntryListCard
+                        content={entry.content}
+                        createdAt={created}
+                        topicName={shoppingListTopic?.name}
+                        completed={completed}
+                        onClick={() => setEditingId(isEditing ? null : entry.id)}
+                      />
+                    </SwipeActions>
+                    {isEditing && (
+                      <EditWrap>
+                        <EditableEntryCard
+                          entry={entry}
+                          topic={shoppingListTopic}
+                          accentColor={accentColor}
+                          isEditing
+                          hidePreview
+                          onSelect={() => setEditingId(null)}
+                          onClose={() => setEditingId(null)}
+                          onDeleted={() => setEditingId(null)}
+                          autoExpandFields
+                        />
+                      </EditWrap>
+                    )}
+                  </div>
+                );
+              })}
+            </List>
+          )}
+        </Inner>
+      </Page>
     </ContentTemplate>
   );
 }

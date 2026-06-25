@@ -6,10 +6,8 @@ const Bar = styled.nav`
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
-  padding: 8px 24px;
-  border-bottom: 1px solid var(--rule, ${({ theme }) => theme.colors.border});
-  @media (max-width: 768px) { padding: 8px 16px; }
-  @media (max-width: 480px) { padding: 8px 12px; }
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
 `;
 
 const TabBtn = styled.button<{ $active?: boolean }>`
