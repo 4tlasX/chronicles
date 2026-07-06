@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
@@ -8,10 +8,12 @@ import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
+import { SwipeActions } from '../components/molecules/SwipeActions.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
+import { entries as entriesApi } from '../services/api.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 
 /* ── Layout (mirrors TopicsView) ── */
@@ -118,12 +120,21 @@ export function TopicDetailView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const allTopics = useEntriesStore(s => s.allTopics);
   const entries = useEntriesStore(s => s.decryptedEntries);
+  const removeEntry = useEntriesStore(s => s.removeEntry);
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const topic = allTopics.find(t => String(t.id) === String(topicId));
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+
+  const handleDeleteEntry = useCallback(async (id: number) => {
+    try {
+      await entriesApi.delete(id);
+      removeEntry(id);
+      if (editingId === id) setEditingId(null);
+    } catch (err) { console.error('Failed to delete entry:', err); }
+  }, [removeEntry, editingId]);
 
   const topicEntries = useMemo(() => {
     if (!topic) return [];
@@ -191,13 +202,15 @@ export function TopicDetailView() {
                 const isEditing = editingId === entry.id;
                 return (
                   <div key={entry.id}>
-                    <EntryListCard
-                      content={entry.content}
-                      createdAt={created}
-                      topicName={topic.name}
-                      topicColor={topic.color || accentColor}
-                      onClick={() => setEditingId(isEditing ? null : entry.id)}
-                    />
+                    <SwipeActions accentColor={accentColor} onDelete={() => handleDeleteEntry(entry.id)} disabled={isEditing}>
+                      <EntryListCard
+                        content={entry.content}
+                        createdAt={created}
+                        topicName={topic.name}
+                        topicColor={topic.color || accentColor}
+                        onClick={() => setEditingId(isEditing ? null : entry.id)}
+                      />
+                    </SwipeActions>
                     {isEditing && (
                       <EditWrap>
                         <EditableEntryCard

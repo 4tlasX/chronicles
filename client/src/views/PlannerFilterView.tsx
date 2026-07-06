@@ -8,6 +8,7 @@ import { Spinner } from '../components/atoms/Spinner.js';
 import { PlanningTabBar } from '../components/molecules/PlanningTabBar.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
+import { SwipeActions } from '../components/molecules/SwipeActions.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
@@ -439,6 +440,7 @@ export function PlannerFilterView() {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
+  const removeEntry = useEntriesStore(s => s.removeEntry);
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const { encryptPost } = useEncryption();
 
@@ -630,6 +632,14 @@ export function PlannerFilterView() {
     : 0;
 
 
+  const handleDeleteEntry = useCallback(async (id: number) => {
+    try {
+      await entriesApi.delete(id);
+      removeEntry(id);
+      if (editingId === id) setEditingId(null);
+    } catch (err) { console.error('Failed to delete entry:', err); }
+  }, [removeEntry, editingId]);
+
   // Unified result row: standard entry-list card when collapsed, inline editor when editing.
   const renderResultCard = (id: number, taxonomyId: number, completed: boolean) => {
     const entry = entries.find(e => e.id === id);
@@ -637,14 +647,15 @@ export function PlannerFilterView() {
     const topic = allTopics.find(tp => tp.id === taxonomyId);
     if (editingId !== id) {
       return (
-        <EntryListCard
-          key={id}
-          content={entry.content}
-          createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
-          topicName={topic?.name}
-          completed={completed}
-          onClick={() => setEditingId(id)}
-        />
+        <SwipeActions key={id} accentColor={accentColor} onDelete={() => handleDeleteEntry(id)}>
+          <EntryListCard
+            content={entry.content}
+            createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
+            topicName={topic?.name}
+            completed={completed}
+            onClick={() => setEditingId(id)}
+          />
+        </SwipeActions>
       );
     }
     return (

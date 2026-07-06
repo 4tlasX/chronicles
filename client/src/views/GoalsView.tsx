@@ -14,6 +14,7 @@ import { GoalCard } from '../components/organisms/GoalCard.js';
 import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
+import { SwipeActions } from '../components/molecules/SwipeActions.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
@@ -177,6 +178,7 @@ export function GoalsView() {
   const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
+  const removeEntry = useEntriesStore(s => s.removeEntry);
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const setSelectedEntryId = useUIStore(s => s.setSelectedEntryId);
   const setShowMobileEditor = useUIStore(s => s.setShowMobileEditor);
@@ -526,6 +528,14 @@ export function GoalsView() {
 
   const handleSelect = (id: number) => setEditingId(prev => prev === id ? null : id);
 
+  const handleDeleteEntry = useCallback(async (id: number) => {
+    try {
+      await entriesApi.delete(id);
+      removeEntry(id);
+      if (editingId === id) setEditingId(null);
+    } catch (err) { console.error('Failed to delete entry:', err); }
+  }, [removeEntry, editingId]);
+
   // Goals & milestones open in the standard journal editor (not inline). The
   // editor shows a "Planning" link back to this board.
   const openInJournal = useCallback((id: number) => {
@@ -643,14 +653,16 @@ export function GoalsView() {
                 const isEditing = editingId === t.id;
                 return (
                   <div key={t.id}>
-                    <EntryListCard
-                      content={entry.content}
-                      createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
-                      topicName={topic?.name}
-                      topicColor={topic?.color || accentColor}
-                      completed={t.isCompleted}
-                      onClick={() => handleSelect(t.id)}
-                    />
+                    <SwipeActions accentColor={accentColor} onDelete={() => handleDeleteEntry(t.id)} disabled={isEditing}>
+                      <EntryListCard
+                        content={entry.content}
+                        createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
+                        topicName={topic?.name}
+                        topicColor={topic?.color || accentColor}
+                        completed={t.isCompleted}
+                        onClick={() => handleSelect(t.id)}
+                      />
+                    </SwipeActions>
                     {isEditing && (
                       <EditableEntryCard
                         entry={entry}
@@ -680,14 +692,16 @@ export function GoalsView() {
                 const isEditing = editingId === t.id;
                 return (
                   <div key={t.id}>
-                    <EntryListCard
-                      content={entry.content}
-                      createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
-                      topicName={topic?.name}
-                      topicColor={topic?.color || accentColor}
-                      completed={t.isCompleted}
-                      onClick={() => handleSelect(t.id)}
-                    />
+                    <SwipeActions accentColor={accentColor} onDelete={() => handleDeleteEntry(t.id)} disabled={isEditing}>
+                      <EntryListCard
+                        content={entry.content}
+                        createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
+                        topicName={topic?.name}
+                        topicColor={topic?.color || accentColor}
+                        completed={t.isCompleted}
+                        onClick={() => handleSelect(t.id)}
+                      />
+                    </SwipeActions>
                     {isEditing && (
                       <EditableEntryCard
                         entry={entry}
