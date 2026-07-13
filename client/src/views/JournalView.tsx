@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
@@ -48,6 +48,17 @@ const PlanningLink = styled.button`
   color: var(--color-accent);
   transition: opacity 120ms ease;
   &:hover { opacity: 0.7; }
+`;
+
+const NewEntryDateNote = styled.div`
+  margin: 16px 20px 0;
+  padding: 6px 0;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent);
 `;
 
 const DateFilterBar = styled.div`
@@ -161,6 +172,26 @@ export function JournalView() {
   const dictationControlRef = useRef<DictationControls | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  // Set when arriving from the calendar's "Add" button — the next created entry is dated to this day (YYYY-MM-DD)
+  const [pendingEntryDate, setPendingEntryDate] = useState<string | null>(null);
+  // On arrival the entry-load effect may still run once with a stale selectedEntryId from the store;
+  // this flag makes that first run skip clearing the pending date
+  const calendarArrivalRef = useRef(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    const state = location.state as { newEntryDate?: string } | null;
+    if (state?.newEntryDate) {
+      const dateStr = state.newEntryDate;
+      calendarArrivalRef.current = true;
+      setSelectedEntryId(null);
+      setPendingEntryDate(dateStr);
+      setSelectedDate(new Date(dateStr + 'T00:00:00'));
+      setViewMode('date');
+      setShowMobileEditor(true);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.state]);
 
   const isWellnessEntry = useMemo(() => {
     if (!editorTopicId) return false;
@@ -255,10 +286,12 @@ export function JournalView() {
           contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
           metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
           isEncrypted: true, taxonomyIds: effectiveTopicId ? [effectiveTopicId] : [],
+          ...(pendingEntryDate ? { createdAt: new Date(pendingEntryDate + 'T12:00:00').toISOString() } : {}),
         });
         const newId = result.id as number;
         addDecryptedEntry({ id: newId, content: currentContent, metadata, isEncrypted: true,
           createdAt: new Date(result.createdAt as string), updatedAt: new Date((result.updatedAt || result.createdAt) as string) });
+        setPendingEntryDate(null);
         setSelectedEntryId(newId);
       }
       loadedStateRef.current = { content: currentContent, customFields: currentFields };
@@ -362,6 +395,8 @@ export function JournalView() {
         setShowMobileEditor(true);
         loadedStateRef.current = { content: entry.content, customFields: JSON.stringify(cf) };
         setLastSavedAt(null);
+        if (calendarArrivalRef.current) calendarArrivalRef.current = false;
+        else setPendingEntryDate(null);
       }
     } else {
       setEditorContent('');
@@ -370,6 +405,7 @@ export function JournalView() {
       setWidgetType(null);
       loadedStateRef.current = { content: '', customFields: '{}' };
       setLastSavedAt(null);
+      calendarArrivalRef.current = false;
     }
   }, [selectedEntryId, decryptedEntries]);
 
@@ -411,15 +447,17 @@ export function JournalView() {
           contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
           metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
           isEncrypted: true, taxonomyIds: effectiveTopicId ? [effectiveTopicId] : [],
+          ...(pendingEntryDate ? { createdAt: new Date(pendingEntryDate + 'T12:00:00').toISOString() } : {}),
         });
         addDecryptedEntry({ id: result.id as number, content: finalContent, metadata, isEncrypted: true,
           createdAt: new Date(result.createdAt as string), updatedAt: new Date((result.updatedAt || result.createdAt) as string) });
+        setPendingEntryDate(null);
         setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
         setShowMobileEditor(false);
       }
     } catch (err) { console.error('Save failed:', err); setSaveStatus('Save failed'); }
     finally { setIsSaving(false); }
-  }, [editorContent, selectedEntryId, editorTopicId, widgetType, customFields, topicCustomFields, encryptPost, setSelectedEntryId, setShowMobileEditor]);
+  }, [editorContent, selectedEntryId, editorTopicId, widgetType, customFields, topicCustomFields, pendingEntryDate, encryptPost, setSelectedEntryId, setShowMobileEditor]);
 
   const handleDelete = useCallback(async () => {
     if (!selectedEntryId) return;
@@ -434,6 +472,7 @@ export function JournalView() {
   const handleNew = () => {
     setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
     setLastSavedAt(null);
+    setPendingEntryDate(null);
     setShowMobileEditor(false);
   };
 
@@ -608,6 +647,11 @@ export function JournalView() {
         }
         editorPanel={
           <EditorPanel visibleMobile={showMobileEditor}>
+            {pendingEntryDate && selectedEntryId === null && (
+              <NewEntryDateNote>
+                New entry for {new Date(pendingEntryDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </NewEntryDateNote>
+            )}
             {isPlanningEntry && selectedEntryId !== null && (
               <PlanningLink onClick={() => navigate(
                 topics.find(t => t.id === editorTopicId)?.name?.toLowerCase() === 'milestone'

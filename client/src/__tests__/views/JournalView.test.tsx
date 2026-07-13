@@ -6,6 +6,7 @@ import { useEncryption } from '@/contexts/EncryptionContext';
 
 vi.mock('react-router-dom', () => ({
   useNavigate: vi.fn(() => vi.fn()),
+  useLocation: vi.fn(() => ({ pathname: '/journal', state: null })),
   Link: ({ children, to, ...props }: any) => <a href={to} {...props}>{children}</a>,
 }));
 

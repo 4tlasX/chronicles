@@ -19,10 +19,8 @@ function toDateStr(d: Date): string {
 }
 
 function startOfWeek(d: Date): Date {
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // Mon = start
   const result = new Date(d);
-  result.setDate(d.getDate() + diff);
+  result.setDate(d.getDate() - d.getDay()); // Sun = start
   result.setHours(0, 0, 0, 0);
   return result;
 }
@@ -60,7 +58,7 @@ export function CalendarView() {
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
-  const [currentDate, setCurrentDate] = useState(() => new Date()); // anchor: for month=1st of month, week=Monday, day=that day
+  const [currentDate, setCurrentDate] = useState(() => new Date()); // anchor: for month=1st of month, week=Sunday, day=that day
   const [selectedDate, setSelectedDate] = useState<string>(() => toDateStr(new Date()));
 
   const eventTopicIds = useMemo(

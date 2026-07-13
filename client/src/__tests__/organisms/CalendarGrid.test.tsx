@@ -36,10 +36,12 @@ describe('CalendarGrid', () => {
     expect(screen.getByText('2024')).toBeInTheDocument();
   });
 
-  it('renders weekday headers', () => {
+  it('renders weekday headers starting on Sunday', () => {
     renderWithTheme(<CalendarGrid {...defaultProps} />);
-    expect(screen.getByText('MON')).toBeInTheDocument();
-    expect(screen.getByText('FRI')).toBeInTheDocument();
+    const sun = screen.getAllByText('SUN')[0];
+    const mon = screen.getAllByText('MON')[0];
+    expect(sun).toBeInTheDocument();
+    expect(sun.compareDocumentPosition(mon) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('renders day numbers for the month', () => {
@@ -79,7 +81,7 @@ describe('CalendarGrid', () => {
     renderWithTheme(
       <CalendarGrid {...defaultProps} entriesByDate={entriesByDate as never} />
     );
-    expect(screen.getByText(/My journal entry/)).toBeInTheDocument();
+    expect(screen.getAllByText(/My journal entry/).length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows +N more label when more than 3 entries', () => {

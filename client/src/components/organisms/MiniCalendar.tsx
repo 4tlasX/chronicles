@@ -91,7 +91,7 @@ const EntryDot = styled.span`
   background: var(--color-accent);
 `;
 
-const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const DOW = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 function isSameDay(a: Date, b: Date): boolean {
   return (
@@ -115,14 +115,14 @@ export function MiniCalendar({ selectedDate, onSelectDate, entryDates }: MiniCal
   const today = useMemo(() => new Date(), []);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 52 weeks back + 52 weeks forward, Monday-start weeks.
+  // 52 weeks back + 52 weeks forward, Sunday-start weeks.
   const weeks = useMemo(() => {
     const weeksArray: Date[][] = [];
     const todayDate = new Date();
-    const mondayOffset = (todayDate.getDay() + 6) % 7; // days since Monday
+    const sundayOffset = todayDate.getDay(); // days since Sunday
 
     const startOfWeek = new Date(todayDate);
-    startOfWeek.setDate(todayDate.getDate() - mondayOffset);
+    startOfWeek.setDate(todayDate.getDate() - sundayOffset);
 
     const startDate = new Date(startOfWeek);
     startDate.setDate(startDate.getDate() - CURRENT_WEEK_INDEX * 7);

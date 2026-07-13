@@ -71,6 +71,27 @@ const CountLine = styled.div`
   color: var(--text-tertiary);
 `;
 
+const AddButton = styled.button`
+  margin-left: auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md, 1px);
+  cursor: pointer;
+  font-family: var(--font-label, var(--font-sans));
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  transition: background 120ms ease;
+  &:hover { background: var(--bg-hover); }
+`;
+
 const List = styled.div`
   flex: 1;
   overflow-y: auto;
@@ -208,6 +229,12 @@ export function CalendarDayDetail({
         <DayNumberRow>
           <BigDayNumber>{dayNum}</BigDayNumber>
           <WeekdayLabel>{weekday}</WeekdayLabel>
+          <AddButton onClick={() => navigate('/journal', { state: { newEntryDate: dateStr } })}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add
+          </AddButton>
         </DayNumberRow>
         {countLine && <CountLine>{countLine}</CountLine>}
       </DayHeader>

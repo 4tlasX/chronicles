@@ -16,8 +16,7 @@ function isSameDay(a: Date, b: Date): boolean {
 
 function getCalendarDays(year: number, month: number) {
   const firstDay = new Date(year, month, 1);
-  let startDow = firstDay.getDay();
-  startDow = startDow === 0 ? 6 : startDow - 1; // Mon = 0
+  const startDow = firstDay.getDay(); // Sun = 0
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const prevMonthDays = new Date(year, month, 0).getDate();
 
@@ -216,7 +215,7 @@ const MobileEmptyDay = styled.div`
   color: var(--text-tertiary);
 `;
 
-const WEEKDAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 /* ── Component ── */
 
