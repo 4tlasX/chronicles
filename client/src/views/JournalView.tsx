@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '../../../design-system/components/core/Icon.jsx';
@@ -97,6 +97,47 @@ const DateFilterClear = styled.button`
   &:hover { background: var(--paper-hover); }
 `;
 
+const editorExpandIn = keyframes`
+  from { opacity: 0.6; transform: scale(0.985); }
+  to   { opacity: 1;   transform: scale(1); }
+`;
+
+/* Wraps the editor panel content; clicking into the entry text expands it
+   to a full-screen focus overlay, collapsed again on save/Escape/close. */
+const EditorFocusWrap = styled.div<{ $expanded?: boolean }>`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+
+  ${({ $expanded }) => $expanded && css`
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--bg-app);
+    animation: ${editorExpandIn} 160ms ease-out;
+  `}
+`;
+
+const EditorCollapseBtn = styled.button`
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 120ms ease;
+  &:hover { color: var(--text-primary); }
+`;
+
 /* DS rail search — pill-shaped, icon + input, sunken fill. */
 const SearchBlock = styled.div`
   padding: 16px 20px;
@@ -161,6 +202,7 @@ export function JournalView() {
   const selectedDate = useUIStore(s => s.selectedDate);
   const setSelectedDate = useUIStore(s => s.setSelectedDate);
   const [calendarExpanded, setCalendarExpanded] = useState(false);
+  const [editorExpanded, setEditorExpanded] = useState(false);
   const [editorContent, setEditorContent] = useState('');
   const [editorTopicId, setEditorTopicId] = useState<number | null>(null);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
@@ -304,6 +346,13 @@ export function JournalView() {
     return () => clearTimeout(timer);
   }, [editorContent, customFields]);
 
+  useEffect(() => {
+    if (!editorExpanded) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setEditorExpanded(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [editorExpanded]);
+
   const handleUnlock = useCallback(async (password: string) => {
     if (!encryptionData?.kekSalt || !encryptionData?.encryptedMasterKey || !encryptionData?.kekWrapIv) {
       throw new Error('Missing encryption data');
@@ -442,6 +491,7 @@ export function JournalView() {
         updateDecryptedEntry(selectedEntryId, { content: finalContent, metadata });
         setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
         setShowMobileEditor(false);
+        setEditorExpanded(false);
       } else {
         const result = await entriesApi.create({
           contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
@@ -454,6 +504,7 @@ export function JournalView() {
         setPendingEntryDate(null);
         setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
         setShowMobileEditor(false);
+        setEditorExpanded(false);
       }
     } catch (err) { console.error('Save failed:', err); setSaveStatus('Save failed'); }
     finally { setIsSaving(false); }
@@ -466,6 +517,7 @@ export function JournalView() {
       removeEntry(selectedEntryId);
       setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
       setShowMobileEditor(false);
+      setEditorExpanded(false);
     } catch (err) { console.error('Delete failed:', err); }
   }, [selectedEntryId]);
 
@@ -474,10 +526,12 @@ export function JournalView() {
     setLastSavedAt(null);
     setPendingEntryDate(null);
     setShowMobileEditor(false);
+    setEditorExpanded(false);
   };
 
   const handleMobileBack = () => {
     setShowMobileEditor(false);
+    setEditorExpanded(false);
   };
 
   // Keep a fresh ref to handleSave so the global keydown listener never captures a stale version
@@ -647,6 +701,16 @@ export function JournalView() {
         }
         editorPanel={
           <EditorPanel visibleMobile={showMobileEditor}>
+            <EditorFocusWrap
+              $expanded={editorExpanded}
+              onFocus={e => { if ((e.target as HTMLElement).closest?.('.tiptap')) setEditorExpanded(true); }}
+              onPointerDown={e => { if ((e.target as HTMLElement).closest?.('.tiptap')) setEditorExpanded(true); }}
+            >
+            {editorExpanded && (
+              <EditorCollapseBtn title="Collapse" onClick={() => setEditorExpanded(false)} type="button">
+                <Icon name="x" size={18} strokeWidth={2} />
+              </EditorCollapseBtn>
+            )}
             {pendingEntryDate && selectedEntryId === null && (
               <NewEntryDateNote>
                 New entry for {new Date(pendingEntryDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -683,6 +747,7 @@ export function JournalView() {
               lastSavedAt={lastSavedAt}
               dictationControlRef={dictationControlRef}
             />
+            </EditorFocusWrap>
           </EditorPanel>
         }
       />
@@ -707,6 +772,7 @@ export function JournalView() {
               useUIStore.getState().setSelectedEntryId(null);
               useUIStore.getState().setShowMobileEditor(false);
               setEditorContent(''); setEditorTopicId(null); setCustomFields({});
+              setEditorExpanded(false);
             }).catch(err => console.error('Delete failed:', err));
           }
           setPendingDeleteId(null);

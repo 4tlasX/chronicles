@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { TopicIcon as TopicGlyph } from '../components/molecules/IconPicker.js';
 import { Icon } from '../../../design-system/components/core/Icon.jsx';
 import type { IconName } from '../../../design-system/components/core/Icon.d.js';
@@ -405,8 +405,27 @@ const CardBody = styled.div`
   flex: 1;
 `;
 
+const qeExpandIn = keyframes`
+  from { opacity: 0.6; transform: scale(0.985); }
+  to   { opacity: 1;   transform: scale(1); }
+`;
+
 /* Quick Entry = full-width card with accent border. */
-const QuickEntryDashCard = styled(DashCard)`
+const QuickEntryDashCard = styled(DashCard)<{ $expanded?: boolean }>`
+  ${({ $expanded }) => $expanded && css`
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    border: none;
+    border-radius: 0;
+    background: var(--bg-app);
+    padding: 32px 48px 48px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: ${qeExpandIn} 160ms ease-out;
+    @media (max-width: 640px) { padding: 20px 20px 32px; }
+  `}
+
   & ${CardHeader} {
     padding: 20px 0 14px 0;
     margin-bottom: 6px;
@@ -500,12 +519,12 @@ const InlineInput = styled.input`
   &:focus { border-color: var(--ink-4); box-shadow: var(--focus); }
 `;
 
-const QuickEditorWrap = styled.div`
+const QuickEditorWrap = styled.div<{ $expanded?: boolean }>`
   border-bottom: 1px solid var(--border-strong);
   background: transparent;
   margin-bottom: 0;
 
-  > div { min-height: 120px; height: auto; }
+  > div { min-height: ${({ $expanded }) => $expanded ? '45vh' : '120px'}; height: auto; }
 
   .tiptap {
     padding: 16px;
@@ -514,7 +533,7 @@ const QuickEditorWrap = styled.div`
     font-size: 17px;
     font-weight: 300;
     line-height: 1.5;
-    min-height: 130px;
+    min-height: ${({ $expanded }) => $expanded ? '45vh' : '130px'};
     height: auto;
     color: var(--text-primary);
     outline: none;
@@ -1040,9 +1059,17 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
   const [toolbarOpen, setToolbarOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [dictationInterim, setDictationInterim] = useState('');
   const dictationControlRef = useRef<DictationControls | null>(null);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setExpanded(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expanded]);
   const reflectionPrompt = useMemo(() => {
     const d = new Date();
     const dayOfYear = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
@@ -1115,23 +1142,34 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
       setContent('');
       setSelectedTopicId(null);
       setCustomFields({});
+      setExpanded(false);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <QuickEntryDashCard>
+    <QuickEntryDashCard $expanded={expanded}>
       <CardHeader>
         <CardIconWrap><Icon name="feather" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Quick Entry</CardTitle>
-        {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>}
+        {expanded ? (
+          <FooterIconBtn title="Collapse" onClick={() => setExpanded(false)} type="button">
+            <Icon name="x" size={16} strokeWidth={2} />
+          </FooterIconBtn>
+        ) : (
+          dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>
+        )}
       </CardHeader>
       <CardBody>
         <div className="qe-topic-picker" style={{ marginBottom: 10 }}>
           <TopicSelector selectedId={selectedTopicId} onSelect={handleTopicChange} topics={topics} filled allowNone={false} />
         </div>
-        <QuickEditorWrap>
+        <QuickEditorWrap
+          $expanded={expanded}
+          onFocus={() => setExpanded(true)}
+          onPointerDown={() => setExpanded(true)}
+        >
           <Editor
             content={content}
             onChange={setContent}

@@ -1,4 +1,6 @@
-import styled from 'styled-components';
+import { useEffect, useState } from 'react';
+import styled, { css, keyframes } from 'styled-components';
+import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { Spinner } from '../atoms/Spinner.js';
 
 function isDark(bg: string): boolean {
@@ -12,7 +14,13 @@ const overlay = (theme: { colors: { background: string } }, alpha: number) =>
     ? `rgba(255,255,255,${alpha})`
     : `rgba(0,0,0,${alpha})`;
 
-const Panel = styled.div`
+const panelExpandIn = keyframes`
+  from { opacity: 0.6; transform: scale(0.985); }
+  to   { opacity: 1;   transform: scale(1); }
+`;
+
+const Panel = styled.div<{ $expanded?: boolean }>`
+  position: relative;
   background: var(--bg-sunken);
   margin: 0 0 20px;
   padding: 16px 36px 32px;
@@ -20,6 +28,37 @@ const Panel = styled.div`
   border-radius: 8px;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+
+  ${({ $expanded }) => $expanded && css`
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    padding: 32px 48px 48px;
+    overflow-y: auto;
+    animation: ${panelExpandIn} 160ms ease-out;
+    @media (max-width: 640px) { padding: 20px 20px 32px; }
+  `}
+`;
+
+const CollapseBtn = styled.button`
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 120ms ease;
+  &:hover { color: var(--text-primary); }
 `;
 
 /* Section header: tracked uppercase label with a trailing hairline rule. */
@@ -43,7 +82,7 @@ const SectionHeader = styled.div<{ $noTopicPicker?: boolean }>`
   }
 `;
 
-const EditorWrap = styled.div`
+const EditorWrap = styled.div<{ $expanded?: boolean }>`
   margin: 0 0 15px;
   overflow: hidden;
   background: transparent;
@@ -53,7 +92,7 @@ const EditorWrap = styled.div`
   /* Compact the TipTap editor for inline use */
   & > div { min-height: unset; }
   && .tiptap {
-    min-height: 60px;
+    min-height: ${({ $expanded }) => $expanded ? '40vh' : '60px'};
     padding: 12px 0;
     font-family: var(--sans, 'Lato', sans-serif);
     font-style: italic;
@@ -144,11 +183,29 @@ interface InlineEditPanelProps {
 }
 
 export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title, topicSelector }: InlineEditPanelProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setExpanded(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expanded]);
+
   return (
-    <Panel>
+    <Panel $expanded={expanded}>
+      {expanded && (
+        <CollapseBtn title="Collapse" onClick={() => setExpanded(false)} type="button">
+          <Icon name="x" size={18} strokeWidth={2} />
+        </CollapseBtn>
+      )}
       {title && <EditTitle>{title}</EditTitle>}
       {topicSelector && <FieldsWrap>{topicSelector}</FieldsWrap>}
-      <EditorWrap>{editor}</EditorWrap>
+      <EditorWrap
+        $expanded={expanded}
+        onFocus={() => setExpanded(true)}
+        onPointerDown={() => setExpanded(true)}
+      >{editor}</EditorWrap>
       {fields && (
         <FieldsSectionWrap>
           <SectionHeader>Custom fields</SectionHeader>
@@ -157,13 +214,13 @@ export function InlineEditPanel({ editor, fields, accentColor, saving, status, o
       )}
       <Actions>
         <SaveBtn
-          onClick={onSave}
+          onClick={() => { setExpanded(false); onSave(); }}
           disabled={saving}
           $error={status.toLowerCase().includes('fail')}
         >
           {saving ? <Spinner size={14} /> : status.toLowerCase().includes('fail') ? 'Failed' : 'Save'}
         </SaveBtn>
-        <ActionBtn onClick={onCancel}>Cancel</ActionBtn>
+        <ActionBtn onClick={() => { setExpanded(false); onCancel(); }}>Cancel</ActionBtn>
       </Actions>
     </Panel>
   );
