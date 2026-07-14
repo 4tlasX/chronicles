@@ -224,6 +224,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, accent
 
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
+  const removeEntry = useEntriesStore(s => s.removeEntry);
 
   const [editContent, setEditContent] = useState(milestone.content);
   const [editFields, setEditFields] = useState<MilestoneFieldValues>({
@@ -272,6 +273,14 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, accent
       onSaved();
     } catch (err) { console.error('Milestone save failed:', err); setStatus('Failed'); }
     finally { setSaving(false); }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await entriesApi.delete(milestone.id);
+      removeEntry(milestone.id);
+      onClose();
+    } catch (err) { console.error('Milestone delete failed:', err); setStatus('Delete failed'); }
   };
 
   return (
@@ -357,6 +366,7 @@ export function MilestoneCard({ milestone, tasks, goalTitle, goalOptions, accent
           status={status}
           onSave={handleSave}
           onCancel={onClose}
+          onDelete={handleDelete}
         />
         </EditWrapper>
       )}

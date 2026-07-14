@@ -34,6 +34,7 @@ import { Editor, type DictationControls } from '../components/organisms/Editor.j
 import type { Topic } from '../types/topics.js';
 import { MiniCalendar } from '../components/organisms/MiniCalendar.js';
 import { UserFieldsForm } from '../components/molecules/fields/UserFieldsForm.js';
+import { RecipeAutocomplete } from '../components/molecules/RecipeAutocomplete.js';
 import { SectionDivider } from '../components/atoms/SectionDivider.js';
 import { StackedLinesIcon } from '../components/atoms/StackedLinesIcon.js';
 import { TextInput } from '../components/atoms/TextInput.js';
@@ -1444,6 +1445,7 @@ function MealsQuickCard({ accentColor, dragAttributes, dragListeners }: { accent
       <CardHeader>
         <CardIconWrap><Icon name="utensils" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Log Meal</CardTitle>
+        <CardViewLink to="/menu/meals">View all</CardViewLink>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>}
       </CardHeader>
       <CardBody>
@@ -1711,7 +1713,6 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
-  const [adding, setAdding] = useState(false);
   const [newItem, setNewItem] = useState('');
 
   const currentEntry = useMemo(() => {
@@ -1764,7 +1765,7 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
         taxonomyIds: taxId ? [taxId] : [],
       });
     } catch { updateDecryptedEntry(currentEntry.id, { metadata: currentEntry.metadata }); }
-    setNewItem(''); setAdding(false);
+    setNewItem('');
   };
 
   if (!currentEntry) {
@@ -1790,22 +1791,9 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
         <CardIconWrap><Icon name="list" size={12} strokeWidth={2} /></CardIconWrap>
         <CardTitle>Shopping List</CardTitle>
         {dragAttributes && <DragGrip {...dragAttributes as any} {...dragListeners as any}><Icon name="grip" size={14} strokeWidth={2} /></DragGrip>}
-        <AddBtn onClick={() => setAdding(a => !a)} style={{ width: 20, height: 20 }}><Icon name="plus" size={14} strokeWidth={2.5} /></AddBtn>
         <CardViewLink to="/shopping">View all</CardViewLink>
       </CardHeader>
       <CardBody>
-        {adding && (
-          <ItemRow>
-            <CheckBtn $done={false} $color={accentColor} onClick={() => {}} style={{ opacity: 0.3 }} />
-            <InlineInput
-              autoFocus
-              value={newItem}
-              placeholder="Add item..."
-              onChange={e => setNewItem(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleAddItem(); if (e.key === 'Escape') { setAdding(false); setNewItem(''); } }}
-            />
-          </ItemRow>
-        )}
         {unchecked.slice(0, 10).map(it => (
           <ItemRow key={it.id}>
             <CheckBtn $done={false} $color={accentColor} onClick={() => handleToggle(it.id)}>
@@ -1814,6 +1802,22 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
             <ItemText>{it.name}</ItemText>
           </ItemRow>
         ))}
+        <ItemRow>
+          <AddBtn
+            onClick={handleAddItem}
+            disabled={!newItem.trim()}
+            aria-label="Add item"
+            style={{ width: 20, height: 20 }}
+          >
+            <Icon name="plus" size={16} strokeWidth={2.5} />
+          </AddBtn>
+          <InlineInput
+            value={newItem}
+            placeholder="Add item..."
+            onChange={e => setNewItem(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleAddItem(); if (e.key === 'Escape') setNewItem(''); }}
+          />
+        </ItemRow>
         {checked.slice(0, 3).map(it => (
           <ItemRow key={it.id} $done>
             <CheckBtn $done $color={accentColor} onClick={() => handleToggle(it.id)}>
@@ -1825,7 +1829,7 @@ function ShoppingCard({ accentColor, listEntry, dragAttributes, dragListeners }:
             <ItemText $done>{it.name}</ItemText>
           </ItemRow>
         ))}
-        {unchecked.length === 0 && !adding && checked.length === 0 && <EmptyNote>List is empty</EmptyNote>}
+        {unchecked.length === 0 && checked.length === 0 && <EmptyNote>List is empty</EmptyNote>}
       </CardBody>
     </DashCard>
   );
@@ -2275,12 +2279,20 @@ function TopicWidget({ topicId, accentColor, dragAttributes, dragListeners }: { 
 
 /* ── Menu Plan Card ── */
 
-interface MenuMealSlot { mealName: string; recipeName: string; }
+interface MenuMealSlot { mealName: string; recipeId?: number | null; recipeName: string; }
 interface MenuPlanDay {
   breakfast?: MenuMealSlot;
   lunch?: MenuMealSlot;
   dinner?: MenuMealSlot;
   snack?: MenuMealSlot;
+}
+
+function getMondayOf(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 const MealRow = styled.div`
@@ -2315,25 +2327,68 @@ const MealName = styled.span`
 const MEAL_SLOTS: { key: keyof MenuPlanDay; label: string }[] = [
   { key: 'breakfast', label: 'Breakfast' },
   { key: 'lunch',     label: 'Lunch' },
-  { key: 'dinner',    label: 'Dinner' },
   { key: 'snack',     label: 'Snack' },
+  { key: 'dinner',    label: 'Dinner' },
 ];
 
+const MealSlotEditor = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const ClearMealBtn = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  align-self: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease;
+  &:hover { color: var(--text-primary); }
+  ${MealRow}:hover & { opacity: 1; }
+  @media (hover: none) { opacity: 1; }
+`;
+
+
 function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentColor: string } & DragProps) {
+  const { encryptPost } = useEncryption();
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
+  const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
+  const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
 
   const menuTopicId = useMemo(
     () => allTopics.find(t => t.name.toLowerCase() === 'menu plan')?.id ?? null,
     [allTopics]
   );
+  const recipeTopicId = useMemo(
+    () => allTopics.find(t => t.name.toLowerCase() === 'recipe')?.id ?? null,
+    [allTopics]
+  );
+
+  const recipes = useMemo(() => {
+    if (!recipeTopicId) return [];
+    return decryptedEntries
+      .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === recipeTopicId)
+      .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || `Recipe #${e.id}` }));
+  }, [decryptedEntries, recipeTopicId]);
 
   const todayStr = useMemo(() => toDateStr(new Date()), []);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
-  // Find current week's plan, then show today or next upcoming day with meals
-  const display = useMemo((): { dayLabel: string; meals: MenuPlanDay; slots: typeof MEAL_SLOTS } | null => {
+  // Current week's plan entry (whose weekStart..weekStart+6 covers today)
+  const weekEntry = useMemo(() => {
     if (!menuTopicId) return null;
-    const entry = decryptedEntries.find(e => {
+    return decryptedEntries.find(e => {
       const meta = e.metadata as Record<string, unknown>;
       if (meta._taxonomyId !== menuTopicId) return false;
       const cf = meta._customFields as Record<string, unknown> | undefined;
@@ -2342,48 +2397,82 @@ function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentCo
       const end = new Date(`${weekStart}T12:00:00`);
       end.setDate(end.getDate() + 6);
       return todayStr >= weekStart && todayStr <= toDateStr(end);
-    });
-    if (!entry) return null;
-
-    const cf = (entry.metadata as Record<string, unknown>)._customFields as Record<string, unknown> | undefined;
-    const weekStart = cf?.weekStart as string;
-    const days = cf?.days as Record<string, MenuPlanDay> | undefined;
-    if (!days) return null;
-
-    // Build the 7 dates of this week starting from weekStart
-    const weekDates: string[] = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(`${weekStart}T12:00:00`);
-      d.setDate(d.getDate() + i);
-      weekDates.push(toDateStr(d));
-    }
-
-    // Start from today, fall forward to next day with planned meals
-    const startIdx = Math.max(0, weekDates.indexOf(todayStr));
-    for (let i = startIdx; i < 7; i++) {
-      const dateStr = weekDates[i];
-      const meals = days[dateStr];
-      const slots = MEAL_SLOTS.filter(s => meals?.[s.key]?.mealName);
-      if (slots.length > 0) {
-        let label = 'Today';
-        if (dateStr !== todayStr) {
-          const diff = i - weekDates.indexOf(todayStr);
-          label = diff === 1 ? 'Tomorrow'
-            : new Date(`${dateStr}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long' });
-        }
-        return { dayLabel: label, meals, slots };
-      }
-    }
-    return null;
+    }) ?? null;
   }, [decryptedEntries, menuTopicId, todayStr]);
 
-  const cardTitle = display && display.dayLabel !== 'Today' ? `${display.dayLabel}'s Menu` : "Today's Menu";
+  const todayMeals = useMemo((): MenuPlanDay => {
+    const cf = (weekEntry?.metadata as Record<string, unknown> | undefined)?._customFields as Record<string, unknown> | undefined;
+    const days = cf?.days as Record<string, MenuPlanDay> | undefined;
+    return days?.[todayStr] ?? {};
+  }, [weekEntry, todayStr]);
+
+  const persistSlot = useCallback(async (slotKey: keyof MenuPlanDay, patch: Partial<MenuMealSlot>) => {
+    if (!menuTopicId) return;
+    if (weekEntry) {
+      const meta = weekEntry.metadata as Record<string, unknown>;
+      const cf = (meta._customFields as Record<string, unknown>) || {};
+      const days = { ...((cf.days as Record<string, MenuPlanDay>) || {}) };
+      const existingDay = days[todayStr] || {};
+      const existingSlot = existingDay[slotKey] || { mealName: '', recipeId: null, recipeName: '' };
+      days[todayStr] = { ...existingDay, [slotKey]: { ...existingSlot, ...patch } };
+      const newMeta = { ...meta, _customFields: { ...cf, days } };
+      updateDecryptedEntry(weekEntry.id, { metadata: newMeta });
+      try {
+        const encrypted = await encryptPost(weekEntry.content, newMeta);
+        await entriesApi.update(weekEntry.id, {
+          contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+          metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+          taxonomyIds: [menuTopicId],
+        });
+      } catch { updateDecryptedEntry(weekEntry.id, { metadata: weekEntry.metadata as Record<string, unknown> }); }
+    } else {
+      // No plan for this week yet — create one holding just today's slot
+      const monday = getMondayOf(new Date());
+      const weekEnd = new Date(monday);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const content = `<p>Menu: ${fmt(monday)} – ${fmt(weekEnd)}</p>`;
+      const days = { [todayStr]: { [slotKey]: { mealName: '', recipeId: null, recipeName: '', ...patch } } };
+      const metadata: Record<string, unknown> = {
+        _taxonomyId: menuTopicId,
+        _customFields: { weekStart: toDateStr(monday), days },
+      };
+      try {
+        const encrypted = await encryptPost(content, metadata);
+        const result = await entriesApi.create({
+          contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+          metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+          isEncrypted: true, taxonomyIds: [menuTopicId],
+        });
+        addDecryptedEntry({
+          id: result.id as number, content, metadata, isEncrypted: true,
+          createdAt: new Date(result.createdAt as string),
+          updatedAt: new Date((result.updatedAt || result.createdAt) as string),
+        });
+      } catch (err) { console.error('Failed to save menu:', err); }
+    }
+  }, [menuTopicId, weekEntry, todayStr, encryptPost, updateDecryptedEntry, addDecryptedEntry]);
+
+  const commitDraft = (slotKey: keyof MenuPlanDay) => {
+    const val = (drafts[slotKey] ?? '').trim();
+    if (!val) return;
+    persistSlot(slotKey, { mealName: val });
+    setDrafts(prev => ({ ...prev, [slotKey]: '' }));
+  };
+
+  const linkRecipe = (slotKey: keyof MenuPlanDay, id: number) => {
+    const recipe = recipes.find(r => r.id === id);
+    if (!recipe) return;
+    const draft = (drafts[slotKey] ?? '').trim();
+    persistSlot(slotKey, { recipeId: id, recipeName: recipe.title, mealName: draft || recipe.title });
+    setDrafts(prev => ({ ...prev, [slotKey]: '' }));
+  };
 
   return (
     <DashCard>
       <CardHeader>
         <CardIconWrap><Icon name="utensils" size={12} strokeWidth={2} /></CardIconWrap>
-        <CardTitle>{cardTitle}</CardTitle>
+        <CardTitle>Today's Menu</CardTitle>
         <DragGrip {...(dragAttributes ?? {})} {...(dragListeners ?? {})}>
           <Icon name="grip" size={14} strokeWidth={2} />
         </DragGrip>
@@ -2392,15 +2481,45 @@ function MenuPlanCard({ accentColor, dragAttributes, dragListeners }: { accentCo
       <CardBody>
         {!menuTopicId ? (
           <div style={{ fontSize: 13, opacity: 0.5, padding: '8px 0' }}>No Menu Plan topic found.</div>
-        ) : !display ? (
-          <div style={{ fontSize: 13, opacity: 0.5, padding: '8px 0' }}>No meals planned for this week.</div>
         ) : (
-          display.slots.map(({ key, label }) => (
-            <MealRow key={key}>
-              <MealLabel>{label}</MealLabel>
-              <MealName>{display.meals[key]!.mealName}</MealName>
-            </MealRow>
-          ))
+          MEAL_SLOTS.map(({ key, label }) => {
+            const slot = todayMeals[key];
+            return (
+              <MealRow key={key} style={slot?.mealName ? undefined : { alignItems: 'flex-start' }}>
+                <MealLabel style={slot?.mealName ? undefined : { paddingTop: 6 }}>{label}</MealLabel>
+                {slot?.mealName ? (
+                  <>
+                    <MealName>{slot.mealName}</MealName>
+                    <ClearMealBtn
+                      type="button"
+                      onClick={() => persistSlot(key, { mealName: '', recipeId: null, recipeName: '' })}
+                      aria-label={`Clear ${label.toLowerCase()}`}
+                      title="Clear meal"
+                    >
+                      <Icon name="x" size={13} strokeWidth={2} />
+                    </ClearMealBtn>
+                  </>
+                ) : (
+                  <MealSlotEditor>
+                    <InlineInput
+                      value={drafts[key] ?? ''}
+                      placeholder={`What's for ${label.toLowerCase()}?`}
+                      onChange={e => setDrafts(prev => ({ ...prev, [key]: e.target.value }))}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') commitDraft(key);
+                        if (e.key === 'Escape') setDrafts(prev => ({ ...prev, [key]: '' }));
+                      }}
+                      onBlur={() => commitDraft(key)}
+                      style={{ padding: '4px 8px', fontSize: 13 }}
+                    />
+                    {recipes.length > 0 && (
+                      <RecipeAutocomplete recipes={recipes} onSelect={id => linkRecipe(key, id)} />
+                    )}
+                  </MealSlotEditor>
+                )}
+              </MealRow>
+            );
+          })
         )}
       </CardBody>
     </DashCard>

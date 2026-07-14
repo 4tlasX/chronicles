@@ -1,11 +1,12 @@
 import { useState, useMemo, useCallback, useEffect, Fragment } from 'react';
 import styled from 'styled-components';
-import { faChevronLeft, faChevronRight, faCartShopping } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight, faCartShopping, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { MealsTabBar } from '../components/molecules/MealsTabBar.js';
+import { RecipeAutocomplete } from '../components/molecules/RecipeAutocomplete.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
@@ -299,19 +300,30 @@ const RecipeSelectWrap = styled.div`
   align-items: center;
 `;
 
-const RecipeSelect = styled.select`
-  width: 100%;
-  box-sizing: border-box;
+const LinkedRecipeName = styled.span`
+  flex: 1;
+  min-width: 0;
   font-size: 12px;
-  padding: 4px 8px;
-  border: none;
-  border-radius: var(--r-md);
-  background: transparent;
+  padding: 4px 0;
   color: var(--text-secondary);
   font-family: var(--font-label);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const ClearRecipeBtn = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
   cursor: pointer;
-  appearance: auto;
-  &:focus { outline: 1px solid var(--color-accent); }
+  color: var(--text-tertiary);
+  &:hover { color: var(--text-primary); }
 `;
 
 const LinkRecipeBtn = styled.button`
@@ -464,16 +476,20 @@ export function MenuView() {
     const recipe = recipeId ? recipes.find(r => r.id === recipeId) : null;
     setMeals(prev => {
       const existing = prev[dateStr]?.[slot] || emptySlot();
-      return {
-        ...prev,
-        [dateStr]: {
-          ...(prev[dateStr] || emptyDay()),
-          [slot]: {
+      // Clearing the link empties the whole slot, including the meal name.
+      const next: MenuMealSlot = recipeId === null
+        ? emptySlot()
+        : {
             ...existing,
             recipeId,
             recipeName: recipe?.title || '',
             mealName: existing.mealName || recipe?.title || '',
-          },
+          };
+      return {
+        ...prev,
+        [dateStr]: {
+          ...(prev[dateStr] || emptyDay()),
+          [slot]: next,
         },
       };
     });
@@ -618,15 +634,24 @@ export function MenuView() {
 
         {recipes.length > 0 ? (
           <RecipeSelectWrap>
-            <RecipeSelect
-              value={slot.recipeId?.toString() || ''}
-              onChange={e => handleRecipeChange(dateStr, slotKey, e.target.value ? parseInt(e.target.value) : null)}
-            >
-              <option value="">{slot.recipeName ? slot.recipeName.slice(0, 20) : 'Link recipe…'}</option>
-              {recipes.map(r => (
-                <option key={r.id} value={r.id}>{r.title}</option>
-              ))}
-            </RecipeSelect>
+            {slot.recipeId != null ? (
+              <>
+                <LinkedRecipeName title={slot.recipeName}>{slot.recipeName}</LinkedRecipeName>
+                <ClearRecipeBtn
+                  type="button"
+                  onClick={() => handleRecipeChange(dateStr, slotKey, null)}
+                  aria-label="Remove linked recipe"
+                  title="Remove linked recipe"
+                >
+                  <FontAwesomeIcon icon={faXmark} size="xs" />
+                </ClearRecipeBtn>
+              </>
+            ) : (
+              <RecipeAutocomplete
+                recipes={recipes}
+                onSelect={id => handleRecipeChange(dateStr, slotKey, id)}
+              />
+            )}
           </RecipeSelectWrap>
         ) : (
           <LinkRecipeBtn onClick={() => navigate('/')}>+ Link recipe</LinkRecipeBtn>

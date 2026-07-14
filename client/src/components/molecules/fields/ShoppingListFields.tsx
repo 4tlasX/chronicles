@@ -6,6 +6,7 @@ import { Select } from '../../atoms/Select.js';
 import { Checkbox } from '../../atoms/Checkbox.js';
 import { Textarea } from '../../atoms/Textarea.js';
 import { FormField } from '../FormField.js';
+import { RecipeAutocomplete } from '../RecipeAutocomplete.js';
 import type { ShoppingListFieldValues, ShoppingItem, ShoppingCategory } from '../../../types/fields.js';
 export type { ShoppingListFieldValues } from '../../../types/fields.js';
 
@@ -259,21 +260,15 @@ export function ShoppingListFields({ values, onChange, recipeOptions = [] }: Sho
 
       <LinkedSection>
         {recipeOptions.filter(r => !linkedRecipeIds.includes(r.id)).length > 0 && (
-          <Select
-            value=""
-            onChange={e => {
-              if (!e.target.value) return;
-              const id = parseInt(e.target.value);
+          <RecipeAutocomplete
+            recipes={recipeOptions.filter(r => !linkedRecipeIds.includes(r.id))}
+            placeholder="Link a recipe..."
+            onSelect={id => {
               if (!linkedRecipeIds.includes(id)) {
                 onChange({ ...values, linkedRecipeIds: [...linkedRecipeIds, id] });
               }
             }}
-          >
-            <option value="">Link a recipe...</option>
-            {recipeOptions.filter(r => !linkedRecipeIds.includes(r.id)).map(r => (
-              <option key={r.id} value={r.id}>{r.title}</option>
-            ))}
-          </Select>
+          />
         )}
         {linkedRecipeIds.length > 0 ? (
           <LinkedList>

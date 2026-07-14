@@ -124,6 +124,23 @@ const Actions = styled.div`
   flex-wrap: wrap;
 `;
 
+/* Catch-all delete — quiet gray text that turns red on hover. */
+const DeleteBtn = styled.button`
+  margin-right: auto;
+  padding: 6px 0;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-disabled);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+  &:hover { color: var(--color-danger, #dc3232); }
+`;
+
 const ActionBtn = styled.button`
   padding: 6px 16px;
   font-family: var(--font-label);
@@ -171,7 +188,8 @@ const EditTitle = styled.div`
 `;
 
 interface InlineEditPanelProps {
-  editor: React.ReactNode;
+  /** Rich-text editor node — omit to show a fields-only panel. */
+  editor?: React.ReactNode;
   fields: React.ReactNode;
   accentColor: string;
   saving: boolean;
@@ -180,9 +198,13 @@ interface InlineEditPanelProps {
   onCancel: () => void;
   title?: string;
   topicSelector?: React.ReactNode;
+  /** Hide the "Custom fields" section label above the fields. */
+  hideFieldsHeader?: boolean;
+  /** Delete the entry being edited — shows a gray "Delete" (red on hover) on the left of the footer. */
+  onDelete?: () => void;
 }
 
-export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title, topicSelector }: InlineEditPanelProps) {
+export function InlineEditPanel({ editor, fields, accentColor, saving, status, onSave, onCancel, title, topicSelector, hideFieldsHeader, onDelete }: InlineEditPanelProps) {
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
@@ -201,18 +223,27 @@ export function InlineEditPanel({ editor, fields, accentColor, saving, status, o
       )}
       {title && <EditTitle>{title}</EditTitle>}
       {topicSelector && <FieldsWrap>{topicSelector}</FieldsWrap>}
-      <EditorWrap
-        $expanded={expanded}
-        onFocus={() => setExpanded(true)}
-        onPointerDown={() => setExpanded(true)}
-      >{editor}</EditorWrap>
-      {fields && (
+      {editor != null && (
+        <EditorWrap
+          $expanded={expanded}
+          onFocus={() => setExpanded(true)}
+          onPointerDown={() => setExpanded(true)}
+        >{editor}</EditorWrap>
+      )}
+      {fields && (hideFieldsHeader ? (
+        <FieldsContent style={{ marginTop: 16 }}>{fields}</FieldsContent>
+      ) : (
         <FieldsSectionWrap>
           <SectionHeader>Custom fields</SectionHeader>
           <FieldsContent>{fields}</FieldsContent>
         </FieldsSectionWrap>
-      )}
+      ))}
       <Actions>
+        {onDelete && (
+          <DeleteBtn type="button" onClick={() => { setExpanded(false); onDelete(); }}>
+            Delete
+          </DeleteBtn>
+        )}
         <SaveBtn
           onClick={() => { setExpanded(false); onSave(); }}
           disabled={saving}

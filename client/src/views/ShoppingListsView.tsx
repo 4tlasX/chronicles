@@ -7,6 +7,8 @@ import { MealsTabBar } from '../components/molecules/MealsTabBar.js';
 import { FilterTabs } from '../components/molecules/FilterTabs.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
+import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
+import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 import { SwipeActions } from '../components/molecules/SwipeActions.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { entries as entriesApi } from '../services/api.js';
@@ -54,6 +56,26 @@ const TabsRow = styled.div`
   margin: 0;
 `;
 
+const NewBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 9px 4px;
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 120ms ease;
+  &:hover { opacity: 0.7; }
+`;
+
 const SubTabs = styled.div`
   padding: 10px 0 4px;
 `;
@@ -87,6 +109,7 @@ export function ShoppingListsView() {
 
   const [tab, setTab] = useState<Tab>('current');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   const handleDelete = useCallback(async (id: number) => {
     try {
@@ -141,6 +164,12 @@ export function ShoppingListsView() {
         <Inner>
           <Head>
             <Title>Meals</Title>
+            {shoppingListTopic && (
+              <NewBtn onClick={() => setIsAddOpen(true)}>
+                <MaterialIcon $size={16} aria-hidden="true">add</MaterialIcon>
+                New list
+              </NewBtn>
+            )}
           </Head>
 
           <TabsRow><MealsTabBar /></TabsRow>
@@ -149,10 +178,20 @@ export function ShoppingListsView() {
             <FilterTabs options={TABS} active={tab} onChange={v => setTab(v as Tab)} flush bordered={false} />
           </SubTabs>
 
+          {shoppingListTopic && isAddOpen && (
+            <NewEntryCard
+              topic={shoppingListTopic}
+              accentColor={accentColor}
+              hideButton
+              isOpen={isAddOpen}
+              onOpenChange={setIsAddOpen}
+            />
+          )}
+
           {visible.length === 0 ? (
             <EmptyState
               message={tab === 'completed' ? 'No completed lists yet.' : 'No current shopping lists.'}
-              submessage={tab === 'current' ? 'Create a new entry with the Shopping List topic to get started.' : undefined}
+              submessage={tab === 'current' ? 'Use “New list” above to create your first shopping list.' : undefined}
             />
           ) : (
             <List>

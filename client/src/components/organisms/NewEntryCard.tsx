@@ -13,6 +13,7 @@ import { ExerciseFields } from '../molecules/fields/ExerciseFields.js';
 import { EventFields } from '../molecules/fields/EventFields.js';
 import { MeetingFields } from '../molecules/fields/MeetingFields.js';
 import { WellnessFields, type WellnessFieldValues } from '../molecules/fields/WellnessFields.js';
+import { ShoppingListFields, type ShoppingListFieldValues } from '../molecules/fields/ShoppingListFields.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
@@ -23,7 +24,7 @@ const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
   meals: 'food', medication: 'medication', symptom: 'symptom',
   exercise: 'exercise', event: 'event', meeting: 'meeting',
-  wellness: 'wellness',
+  wellness: 'wellness', 'shopping list': 'shopping_list',
 };
 
 function getCustomType(topicName: string | undefined): string | null {
@@ -92,6 +93,14 @@ export function NewEntryCard({ topic, accentColor, onCreated, hideButton, isOpen
       .map(e => ({ id: e.id, title: e.content.replace(/<[^>]+>/g, '').slice(0, 80) || 'Untitled goal' }));
   }, [entries, allTopics]);
 
+  const recipeOptions = useMemo(() => {
+    const recipeTopicId = allTopics.find(t => t.name.toLowerCase() === 'recipe')?.id;
+    if (!recipeTopicId) return [];
+    return entries
+      .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === recipeTopicId)
+      .map(e => ({ id: e.id, title: e.content.replace(/<[^>]+>/g, '').slice(0, 80) || 'Untitled recipe' }));
+  }, [entries, allTopics]);
+
   const milestoneOptions = useMemo(() => {
     const milestoneTopicId = allTopics.find(t => t.name.toLowerCase() === 'milestone')?.id;
     if (!milestoneTopicId) return [];
@@ -118,10 +127,15 @@ export function NewEntryCard({ topic, accentColor, onCreated, hideButton, isOpen
 
   const handleSave = async () => {
     const isWellness = customType === 'wellness';
+    const isShoppingList = customType === 'shopping_list';
     const hasText = !!content.trim();
-    if (!hasText && !isWellness) return;
+    const hasItems = Array.isArray(customFields.items) && (customFields.items as unknown[]).length > 0;
+    if (!hasText && !isWellness && !(isShoppingList && hasItems)) return;
     setSaving(true); setStatus('');
     let finalContent = content;
+    if (!hasText && isShoppingList) {
+      finalContent = `<p>Shopping List: ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>`;
+    }
     if (!hasText && isWellness) {
       const w = (customFields.waterGlasses as number) || 0;
       const g = (customFields.waterGoal as number) || 8;
@@ -172,6 +186,7 @@ export function NewEntryCard({ topic, accentColor, onCreated, hideButton, isOpen
       case 'event': return <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
       case 'meeting': return <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
       case 'wellness': return <WellnessFields values={{ date: '', waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0, ...customFields } as WellnessFieldValues} onChange={onChange as never} cycleTrackingEnabled={cycleTrackingEnabled} />;
+      case 'shopping_list': return <ShoppingListFields values={{ items: [], notes: '', linkedRecipeIds: [], ...customFields } as ShoppingListFieldValues} onChange={onChange as never} recipeOptions={recipeOptions} />;
       default: return null;
     }
   };
@@ -187,17 +202,20 @@ export function NewEntryCard({ topic, accentColor, onCreated, hideButton, isOpen
     );
   }
 
+  const isShoppingList = customType === 'shopping_list';
+
   return (
     <Card $accentColor={accentColor}>
       <EditWrapper>
         <InlineEditPanel
-          editor={<Editor content={content} onChange={setContent} placeholder={`Write a new ${topic.name.toLowerCase()} entry...`} />}
+          editor={isShoppingList ? undefined : <Editor content={content} onChange={setContent} placeholder={`Write a new ${topic.name.toLowerCase()} entry...`} />}
           fields={renderFields()}
           accentColor={accentColor}
           saving={saving}
           status={status}
           onSave={handleSave}
           onCancel={handleCancel}
+          hideFieldsHeader={isShoppingList}
         />
       </EditWrapper>
     </Card>

@@ -147,6 +147,10 @@ interface HealthViewProps {
   showDateFilter?: boolean;
   printable?: boolean;
   summaryFields?: SummaryField[];
+  /** Page title — defaults to "Health". */
+  title?: string;
+  /** Tab bar shown under the title — defaults to the Health tabs. */
+  tabBar?: React.ReactNode;
 }
 
 /**
@@ -154,7 +158,7 @@ interface HealthViewProps {
  * (tabs), a date filter (sub-tabs), then the entry list. Entries swipe to
  * reveal delete and open inline for editing (via EditableEntryCard).
  */
-export function HealthView({ topicNames, metaFields = [], showDateFilter = true, printable = false, summaryFields = [] }: HealthViewProps) {
+export function HealthView({ topicNames, metaFields = [], showDateFilter = true, printable = false, summaryFields = [], title = 'Health', tabBar }: HealthViewProps) {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
@@ -244,7 +248,7 @@ export function HealthView({ topicNames, metaFields = [], showDateFilter = true,
       <Page>
         <Inner>
           <Head>
-            <Title>Health</Title>
+            <Title>{title}</Title>
             {(addTopic || printable) && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} data-print-hide>
                 {addTopic && (
@@ -258,7 +262,7 @@ export function HealthView({ topicNames, metaFields = [], showDateFilter = true,
             )}
           </Head>
 
-          <TabsRow data-print-hide><HealthTabBar /></TabsRow>
+          <TabsRow data-print-hide>{tabBar ?? <HealthTabBar />}</TabsRow>
 
           {showDateFilter && (
             <SubTabs data-print-hide>

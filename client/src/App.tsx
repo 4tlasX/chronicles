@@ -20,6 +20,7 @@ import { GoalsView } from './views/GoalsView.js';
 import { PlannerFilterView } from './views/PlannerFilterView.js';
 import { TopicEntriesView } from './views/TopicEntriesView.js';
 import { HealthView } from './views/HealthView.js';
+import { MealsTabBar } from './components/molecules/MealsTabBar.js';
 import { MedicationScheduleView } from './views/MedicationScheduleView.js';
 import { HealthReportingView } from './views/HealthReportingView.js';
 import { MenuView } from './views/MenuView.js';
@@ -353,6 +354,7 @@ export function App() {
               <Route path="/goals/todos" element={<R><GoalsView /></R>} />
               <Route path="/goals/filter" element={<R><PlannerFilterView /></R>} />
               <Route path="/menu" element={<R><MenuView /></R>} />
+              <Route path="/menu/meals" element={<R><HealthView topicNames={['Meals']} metaFields={[{ key: 'mealType', label: 'Meal' }, { key: 'calories', label: 'Calories' }, { key: 'ingredients', label: 'Ingredients' }]} summaryFields={[{ key: 'calories', label: 'Total Calories' }]} title="Meals" tabBar={<MealsTabBar />} /></R>} />
               <Route path="/shopping" element={<R><ShoppingListsView /></R>} />
 
               {/* Health */}

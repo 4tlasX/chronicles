@@ -34,6 +34,7 @@ const TabBtn = styled.button<{ $active?: boolean }>`
 const TABS: { label: string; path: string }[] = [
   { label: 'Menu', path: '/menu' },
   { label: 'Shopping Lists', path: '/shopping' },
+  { label: 'Meals', path: '/menu/meals' },
 ];
 
 export function MealsTabBar() {

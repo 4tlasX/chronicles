@@ -487,6 +487,7 @@ export function EditableEntryCard({ entry, topic, accentColor, isEditing, onSele
             status={status}
             onSave={handleSave}
             onCancel={onClose}
+            onDelete={handleDelete}
           />
         </EditWrapper>
       )}

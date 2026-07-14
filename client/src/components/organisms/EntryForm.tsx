@@ -229,6 +229,30 @@ const EditorArea = styled.div`
   overflow: hidden;
 `;
 
+/* Catch-all delete in the footer — quiet gray text that turns red on hover. */
+const FooterDeleteBtn = styled.button`
+  padding: 6px 0;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-disabled);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s;
+  &:hover { color: var(--color-danger, #dc3232); }
+`;
+
+const FooterLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+`;
+
 /* Footer — bottom-docked, outside the scroll area */
 const SaveRow = styled.div`
   display: flex;
@@ -634,7 +658,14 @@ export function EntryForm({
 
       {/* Footer — bottom-docked save/discard */}
       <SaveRow>
-        {saveStatusNode}
+        <FooterLeft>
+          {entryId && onDelete && (
+            <FooterDeleteBtn type="button" onClick={onDelete} title="Delete entry">
+              Delete
+            </FooterDeleteBtn>
+          )}
+          {saveStatusNode}
+        </FooterLeft>
         <SaveRowActions>
           <DiscardBtn onClick={onNew}>Discard changes</DiscardBtn>
           <SaveButton $disabled={!canSave || isSaving} disabled={!canSave || isSaving} onClick={onSave}>

@@ -223,6 +223,7 @@ export function GoalCard({ goal, milestones, accentColor, isEditing, onSelect, o
 
   const { encryptPost } = useEncryption();
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
+  const removeEntry = useEntriesStore(s => s.removeEntry);
 
   const [editContent, setEditContent] = useState(goal.content);
   const [editFields, setEditFields] = useState<GoalFieldValues>({
@@ -269,6 +270,14 @@ export function GoalCard({ goal, milestones, accentColor, isEditing, onSelect, o
       onSaved();
     } catch (err) { console.error('Goal save failed:', err); setStatus('Failed'); }
     finally { setSaving(false); }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await entriesApi.delete(goal.id);
+      removeEntry(goal.id);
+      onClose();
+    } catch (err) { console.error('Goal delete failed:', err); setStatus('Delete failed'); }
   };
 
   return (
@@ -356,6 +365,7 @@ export function GoalCard({ goal, milestones, accentColor, isEditing, onSelect, o
           status={status}
           onSave={handleSave}
           onCancel={onClose}
+          onDelete={handleDelete}
         />
         </EditWrapper>
       )}
