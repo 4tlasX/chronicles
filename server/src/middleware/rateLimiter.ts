@@ -43,6 +43,18 @@ export const apiLimiter = rateLimit({
 });
 
 /**
+ * ICS feed rate limiter — public calendar feed fetches
+ * 60 requests per 15-minute window per IP (calendar apps poll periodically)
+ */
+export const icsFeedLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+});
+
+/**
  * Share lookup rate limiter — public share token lookups
  * 30 requests per 15-minute window per IP to prevent brute-force
  */

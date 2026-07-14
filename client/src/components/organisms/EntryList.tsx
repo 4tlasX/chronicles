@@ -1,9 +1,11 @@
 import styled from 'styled-components';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { EntryCard } from './EntryCard.js';
+import { Checkbox } from '../atoms/Checkbox.js';
 import { entries as entriesApi } from '../../services/api.js';
+import { removeEntriesLocally } from '../../services/calendarSync.js';
 import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 
 const TOPIC_TO_TYPE: Record<string, string> = {
@@ -55,6 +57,47 @@ const EmptyState = styled.div`
   font-size: var(--text-sm, 15px);
 `;
 
+const BulkBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border-subtle, ${({ theme }) => theme.colors.border});
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+`;
+
+const BulkButton = styled.button<{ $danger?: boolean }>`
+  padding: 3px 10px;
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${({ $danger }) => ($danger ? 'var(--color-danger, #c0392b)' : 'var(--text-secondary)')};
+  background: transparent;
+  border: 1px solid var(--border-default, ${({ theme }) => theme.colors.border});
+  border-radius: var(--r-md, 1px);
+  cursor: pointer;
+  &:hover { background: var(--bg-hover); }
+  &:disabled { opacity: 0.5; cursor: default; }
+`;
+
+const BulkSpacer = styled.span`
+  margin-left: auto;
+`;
+
+const SelectRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  & > label { padding: 18px 0 0 20px; flex-shrink: 0; }
+  & > *:last-child { flex: 1; min-width: 0; }
+`;
+
 const CHECKABLE_TYPES = new Set(['task', 'goal', 'milestone']);
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -89,6 +132,30 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   const searchKeyword = useUIStore(s => s.searchKeyword);
   const searchDateFrom = useUIStore(s => s.searchDateFrom);
   const searchDateTo = useUIStore(s => s.searchDateTo);
+  const calendarSyncEnabled = useUIStore(s => s.calendarSyncEnabled);
+
+  // Bulk selection
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState(false);
+  const [alsoDeleteRemote, setAlsoDeleteRemote] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+    setBulkConfirm(false);
+    setAlsoDeleteRemote(false);
+  }, []);
+
+  const toggleSelected = useCallback((id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+    setBulkConfirm(false);
+  }, []);
 
   const handleTopicClick = useCallback((topicId: number) => {
     setSelectedTopicId(topicId);
@@ -209,12 +276,84 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
     return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
   }, [filteredEntries]);
 
+  const selectedEntries = useMemo(
+    () => filteredEntries.filter(e => selectedIds.has(e.id)),
+    [filteredEntries, selectedIds],
+  );
+  const selectionHasSyncLinks = useMemo(
+    () => selectedEntries.some(e => !!((e.metadata?._customFields as Record<string, unknown> | undefined)?._sync)),
+    [selectedEntries],
+  );
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedEntries.length === 0) return;
+    setBulkDeleting(true);
+    try {
+      if (alsoDeleteRemote) {
+        // Plain deletes — the sync hook's deletion tracker propagates linked
+        // entries to Google Calendar
+        for (const entry of selectedEntries) {
+          try {
+            await entriesApi.delete(entry.id);
+            removeEntry(entry.id);
+          } catch (err) {
+            console.error('Failed to delete entry:', err);
+          }
+        }
+      } else {
+        // Strip sync links first so nothing is deleted from Google Calendar
+        await removeEntriesLocally(selectedEntries);
+      }
+    } finally {
+      setBulkDeleting(false);
+      exitSelectMode();
+    }
+  }, [selectedEntries, alsoDeleteRemote, removeEntry, exitSelectMode]);
+
   if (filteredEntries.length === 0) {
     return <EmptyState>{viewMode === 'orphaned' ? 'No orphaned entries' : 'No entries yet'}</EmptyState>;
   }
 
   return (
     <ListContainer>
+      <BulkBar>
+        {!selectMode ? (
+          <>
+            <BulkSpacer />
+            <BulkButton onClick={() => setSelectMode(true)}>Select</BulkButton>
+          </>
+        ) : (
+          <>
+            <span>{selectedIds.size} selected</span>
+            <BulkButton onClick={() => { setSelectedIds(new Set(filteredEntries.map(e => e.id))); setBulkConfirm(false); }}>
+              Select all
+            </BulkButton>
+            <BulkSpacer />
+            {!bulkConfirm ? (
+              <BulkButton $danger disabled={selectedIds.size === 0 || bulkDeleting} onClick={() => setBulkConfirm(true)}>
+                Delete ({selectedIds.size})
+              </BulkButton>
+            ) : (
+              <>
+                <span style={{ textTransform: 'none', letterSpacing: 0 }}>
+                  Delete {selectedIds.size} {selectedIds.size === 1 ? 'entry' : 'entries'}?
+                </span>
+                {calendarSyncEnabled && selectionHasSyncLinks && (
+                  <Checkbox
+                    checked={alsoDeleteRemote}
+                    onChange={setAlsoDeleteRemote}
+                    label="Also delete from Google Calendar"
+                  />
+                )}
+                <BulkButton $danger disabled={bulkDeleting} onClick={handleBulkDelete}>
+                  {bulkDeleting ? 'Deleting…' : 'Confirm delete'}
+                </BulkButton>
+              </>
+            )}
+            <BulkButton disabled={bulkDeleting} onClick={exitSelectMode}>Cancel</BulkButton>
+          </>
+        )}
+      </BulkBar>
       {groups.map(([dateKey, groupEntries]) => {
         return (
           <div key={dateKey}>
@@ -243,27 +382,35 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
                 }
               }
 
-              return (
+              const card = (
                 <EntryCard
-                  key={entry.id}
+                  key={selectMode ? undefined : entry.id}
                   id={entry.id}
                   content={entry.content}
                   date={entry.createdAt instanceof Date ? entry.createdAt.toISOString() : String(entry.createdAt)}
                   topicName={topic?.name}
                   topicColor={topicBarColor(topic?.name, topic?.color)}
                   topicId={topic?.id}
-                  active={selectedEntryId === entry.id}
-                  onClick={() => setSelectedEntryId(entry.id)}
-                  onDelete={() => handleDelete(entry.id)}
-                  onTopicClick={handleTopicClick}
-                  onToggleComplete={hasCheckbox ? handleToggleComplete : undefined}
-                  onToggleBookmark={handleToggleBookmarkLocal}
+                  active={selectMode ? selectedIds.has(entry.id) : selectedEntryId === entry.id}
+                  onClick={() => (selectMode ? toggleSelected(entry.id) : setSelectedEntryId(entry.id))}
+                  onDelete={selectMode ? undefined : () => handleDelete(entry.id)}
+                  onTopicClick={selectMode ? undefined : handleTopicClick}
+                  onToggleComplete={hasCheckbox && !selectMode ? handleToggleComplete : undefined}
+                  onToggleBookmark={selectMode ? undefined : handleToggleBookmarkLocal}
                   hasCheckbox={hasCheckbox}
                   isCompleted={isCompleted}
                   isFavorite={isFavorite}
                   customType={customType || undefined}
                   previewText={previewText}
                 />
+              );
+
+              if (!selectMode) return card;
+              return (
+                <SelectRow key={entry.id}>
+                  <Checkbox checked={selectedIds.has(entry.id)} onChange={() => toggleSelected(entry.id)} />
+                  {card}
+                </SelectRow>
               );
             })}
           </div>

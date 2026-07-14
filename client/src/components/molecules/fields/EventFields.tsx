@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import { TextInput } from '../../atoms/TextInput.js';
 import { Textarea } from '../../atoms/Textarea.js';
 import { DateTimeInput } from '../../atoms/DateTimeInput.js';
+import { Checkbox } from '../../atoms/Checkbox.js';
 import { FormField } from '../FormField.js';
 import type { EventFieldValues } from '../../../types/fields.js';
 export type { EventFieldValues } from '../../../types/fields.js';
@@ -22,9 +23,11 @@ const Row = styled.div`
 interface EventFieldsProps {
   values: EventFieldValues;
   onChange: (values: EventFieldValues) => void;
+  /** Show the calendar-sync opt-out checkbox (when calendar sync is enabled). */
+  showCalendarSync?: boolean;
 }
 
-export function EventFields({ values, onChange }: EventFieldsProps) {
+export function EventFields({ values, onChange, showCalendarSync }: EventFieldsProps) {
   return (
     <Wrapper>
       <Row>
@@ -77,6 +80,13 @@ export function EventFields({ values, onChange }: EventFieldsProps) {
           style={{ minHeight: 60 }}
         />
       </FormField>
+      {showCalendarSync && (
+        <Checkbox
+          checked={!!values.noCalendarSync}
+          onChange={checked => onChange({ ...values, noCalendarSync: checked })}
+          label="Don't sync to calendar"
+        />
+      )}
     </Wrapper>
   );
 }

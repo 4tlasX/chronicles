@@ -7,6 +7,7 @@ import { GlobalStyle } from './styles/GlobalStyle.js';
 import { AuthProvider } from './contexts/AuthContext.js';
 import { EncryptionProvider } from './contexts/EncryptionContext.js';
 import { ProtectedRoute } from './components/organisms/ProtectedRoute.js';
+import { useCalendarSync } from './hooks/useCalendarSync.js';
 import { LoginView } from './views/LoginView.js';
 import { RegisterView } from './views/RegisterView.js';
 import { RecoverView } from './views/RecoverView.js';
@@ -279,6 +280,7 @@ function deriveAccentScale(base: string): Record<string, string> {
 }
 
 function R({ children }: { children: React.ReactNode }) {
+  useCalendarSync();
   return <ProtectedRoute>{children}</ProtectedRoute>;
 }
 

@@ -32,8 +32,24 @@ model Account {
   totpBackupCodes    String[]  @default([]) @map("totp_backup_codes")
   sessions           Session[]
   shares             shares[]
+  calendarIntegration CalendarIntegration?
 
   @@map("accounts")
+}
+
+model CalendarIntegration {
+  id                 Int       @id @default(autoincrement())
+  accountId          Int       @unique @map("account_id")
+  googleRefreshToken String?   @map("google_refresh_token")
+  googleEmail        String?   @map("google_email")
+  icsToken           String?   @unique @map("ics_token") @db.VarChar(64)
+  icsCalendar        String?   @map("ics_calendar")
+  icsUpdatedAt       DateTime? @map("ics_updated_at") @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  account            Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("calendar_integrations")
 }
 
 model Session {

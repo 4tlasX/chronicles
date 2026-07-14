@@ -81,6 +81,7 @@ interface NewEntryCardProps {
 export function NewEntryCard({ topic, accentColor, onCreated, hideButton, isOpen: isOpenProp, onOpenChange }: NewEntryCardProps) {
   const { encryptPost } = useEncryption();
   const cycleTrackingEnabled = useUIStore(s => s.cycleTrackingEnabled);
+  const calendarSyncEnabled = useUIStore(s => s.calendarSyncEnabled);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
@@ -183,8 +184,8 @@ export function NewEntryCard({ topic, accentColor, onCreated, hideButton, isOpen
       case 'medication': return <MedicationFields values={{ dosage: '', frequency: 'once_daily', scheduleTimes: ['08:00'], isActive: true, notes: '', ...customFields } as never} onChange={onChange as never} />;
       case 'symptom': return <SymptomFields values={{ severity: 5, occurredDate: '', occurredTime: '', duration: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
       case 'exercise': return <ExerciseFields values={{ exerciseType: 'running', duration: '', intensity: 'medium', distance: '', distanceUnit: 'miles', calories: '', performedDate: '', performedTime: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
-      case 'event': return <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
-      case 'meeting': return <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} />;
+      case 'event': return <EventFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} showCalendarSync={calendarSyncEnabled} />;
+      case 'meeting': return <MeetingFields values={{ startDate: '', startTime: '', endDate: '', endTime: '', meetingTopic: '', attendees: '', location: '', address: '', phone: '', notes: '', ...customFields } as never} onChange={onChange as never} showCalendarSync={calendarSyncEnabled} />;
       case 'wellness': return <WellnessFields values={{ date: '', waterGlasses: 0, waterGoal: 8, moodScore: 0, sleepHours: 0, sleepQuality: 0, ...customFields } as WellnessFieldValues} onChange={onChange as never} cycleTrackingEnabled={cycleTrackingEnabled} />;
       case 'shopping_list': return <ShoppingListFields values={{ items: [], notes: '', linkedRecipeIds: [], ...customFields } as ShoppingListFieldValues} onChange={onChange as never} recipeOptions={recipeOptions} />;
       default: return null;

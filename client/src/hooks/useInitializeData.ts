@@ -28,6 +28,10 @@ export function useInitializeData() {
   const setWeatherUnit = useUIStore(s => s.setWeatherUnit);
   const setTopicCustomFields = useUIStore(s => s.setTopicCustomFields);
   const setCycleTrackingEnabled = useUIStore(s => s.setCycleTrackingEnabled);
+  const setCalendarSyncEnabled = useUIStore(s => s.setCalendarSyncEnabled);
+  const setGoogleCalendarId = useUIStore(s => s.setGoogleCalendarId);
+  const setGoogleSyncToken = useUIStore(s => s.setGoogleSyncToken);
+  const setCalendarImportMode = useUIStore(s => s.setCalendarImportMode);
 
   const handleUnlock = useCallback(async (password: string) => {
     if (!encryptionData?.kekSalt || !encryptionData?.encryptedMasterKey || !encryptionData?.kekWrapIv) {
@@ -38,6 +42,8 @@ export function useInitializeData() {
 
   useEffect(() => {
     if (!isUnlocked || isInitialized) return;
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
     const load = async () => {
       setLoading(true);
       try {
@@ -63,6 +69,10 @@ export function useInitializeData() {
         if (typeof settingsMap.weatherCity === 'string') setWeatherCity(settingsMap.weatherCity);
         if (settingsMap.weatherUnit === 'f' || settingsMap.weatherUnit === 'c') setWeatherUnit(settingsMap.weatherUnit);
         if (typeof settingsMap.cycleTrackingEnabled === 'boolean') setCycleTrackingEnabled(settingsMap.cycleTrackingEnabled);
+        if (typeof settingsMap.calendarSyncEnabled === 'boolean') setCalendarSyncEnabled(settingsMap.calendarSyncEnabled);
+        if (typeof settingsMap.googleCalendarId === 'string') setGoogleCalendarId(settingsMap.googleCalendarId);
+        if (typeof settingsMap.googleSyncToken === 'string') setGoogleSyncToken(settingsMap.googleSyncToken);
+        if (settingsMap.calendarImportMode === 'chroniclesOnly' || settingsMap.calendarImportMode === 'all') setCalendarImportMode(settingsMap.calendarImportMode);
 
         // Feature flags — default to true (enabled) when not explicitly saved
         const KNOWN_FLAGS = [
@@ -109,14 +119,20 @@ export function useInitializeData() {
           }
         }
         setDecryptedEntries(decrypted);
-      } catch (err) {
-        console.error('Failed to load:', err);
-        setDecryptedEntries([]);
-      } finally {
         setLoading(false);
+      } catch (err) {
+        // Transient failure (rate limit, server restart, network) — keep the
+        // loading state and retry rather than rendering an empty journal,
+        // which reads as data loss
+        console.error('Failed to load, retrying in 10s:', err);
+        if (!cancelled) retryTimer = setTimeout(load, 10_000);
       }
     };
     load();
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+    };
   }, [isUnlocked, isInitialized]);
 
   const needsUnlock = !!encryptionData?.encryptionEnabled && !isUnlocked;

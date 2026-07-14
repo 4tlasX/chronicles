@@ -7,6 +7,7 @@ const mockNavigate = vi.fn();
 
 vi.mock('react-router-dom', () => ({
   useNavigate: vi.fn(() => mockNavigate),
+  useLocation: vi.fn(() => ({ pathname: '/settings', search: '' })),
   Link: ({ children, to, ...props }: any) => <a href={to} {...props}>{children}</a>,
 }));
 
@@ -59,6 +60,16 @@ vi.mock('@/services/api', () => ({
   settings: { getAll: vi.fn().mockResolvedValue([]), upsert: vi.fn() },
   sessions: { getAll: vi.fn().mockResolvedValue([]), revoke: vi.fn() },
   topics: { getAll: vi.fn().mockResolvedValue([]) },
+  calendar: {
+    getStatus: vi.fn().mockResolvedValue({ googleConnected: false, googleEmail: null, icsEnabled: false, icsToken: null }),
+    getAuthUrl: vi.fn(),
+    getAccessToken: vi.fn(),
+    disconnectGoogle: vi.fn(),
+    enableIcs: vi.fn(),
+    regenerateIcs: vi.fn(),
+    disableIcs: vi.fn(),
+    uploadIcs: vi.fn(),
+  },
 }));
 
 vi.mock('@/components/templates/SettingsTemplate', () => ({

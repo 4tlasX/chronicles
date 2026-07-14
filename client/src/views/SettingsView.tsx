@@ -20,6 +20,7 @@ import { FormField } from '../components/molecules/FormField.js';
 import { BackgroundPicker } from '../components/molecules/BackgroundPicker.js';
 import { SessionRow } from '../components/molecules/SessionRow.js';
 import { RecoveryKeyDisplay } from '../components/molecules/RecoveryKeyDisplay.js';
+import { CalendarSyncSettings } from '../components/organisms/CalendarSyncSettings.js';
 import { useAuth } from '../contexts/AuthContext.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useUIStore } from '../stores/uiStore.js';
@@ -790,6 +791,10 @@ export function SettingsView() {
           )}
         </SettingsRow>
       </SettingsCard>
+
+      {/* Calendar Sync */}
+      <SectionTitle>Calendar Sync</SectionTitle>
+      <CalendarSyncSettings themeMode={themeMode} />
 
       {/* Theme */}
       <SectionTitle>Theme</SectionTitle>

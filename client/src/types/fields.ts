@@ -124,6 +124,10 @@ export interface EventFieldValues {
   address: string;
   phone: string;
   notes: string;
+  /** Calendar sync: opt this entry out of Google/Apple calendar sync. */
+  noCalendarSync?: boolean;
+  /** Calendar sync: event title shown in the external calendar (falls back to entry content). */
+  calendarTitle?: string;
 }
 
 export interface MeetingFieldValues {
@@ -137,6 +141,8 @@ export interface MeetingFieldValues {
   address: string;
   phone: string;
   notes: string;
+  /** Calendar sync: opt this entry out of Google/Apple calendar sync. */
+  noCalendarSync?: boolean;
 }
 
 export interface AllergyFieldValues {

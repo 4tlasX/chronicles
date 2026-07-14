@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import { TextInput } from '../../atoms/TextInput.js';
 import { Textarea } from '../../atoms/Textarea.js';
 import { DateTimeInput } from '../../atoms/DateTimeInput.js';
+import { Checkbox } from '../../atoms/Checkbox.js';
 import { FormField } from '../FormField.js';
 import type { MeetingFieldValues } from '../../../types/fields.js';
 export type { MeetingFieldValues } from '../../../types/fields.js';
@@ -22,9 +23,11 @@ const Row = styled.div`
 interface MeetingFieldsProps {
   values: MeetingFieldValues;
   onChange: (values: MeetingFieldValues) => void;
+  /** Show the calendar-sync opt-out checkbox (when calendar sync is enabled). */
+  showCalendarSync?: boolean;
 }
 
-export function MeetingFields({ values, onChange }: MeetingFieldsProps) {
+export function MeetingFields({ values, onChange, showCalendarSync }: MeetingFieldsProps) {
   return (
     <Wrapper>
       <FormField label="Meeting Topic">
@@ -91,6 +94,13 @@ export function MeetingFields({ values, onChange }: MeetingFieldsProps) {
           style={{ minHeight: 60 }}
         />
       </FormField>
+      {showCalendarSync && (
+        <Checkbox
+          checked={!!values.noCalendarSync}
+          onChange={checked => onChange({ ...values, noCalendarSync: checked })}
+          label="Don't sync to calendar"
+        />
+      )}
     </Wrapper>
   );
 }

@@ -151,8 +151,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { useEntriesStore } = await import('../stores/entriesStore.js');
       const { useUIStore } = await import('../stores/uiStore.js');
+      const { resetCalendarSyncSession } = await import('../services/calendarSync.js');
       useEntriesStore.getState().clearAll();
       useUIStore.getState().clearSearch();
+      resetCalendarSyncSession();
     } catch {
       // Non-critical — stores may not be loaded
     }

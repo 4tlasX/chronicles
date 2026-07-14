@@ -76,6 +76,16 @@ interface UIState {
   // Cycle tracking
   cycleTrackingEnabled: boolean;
   setCycleTrackingEnabled: (v: boolean) => void;
+
+  // Calendar sync
+  calendarSyncEnabled: boolean;
+  googleCalendarId: string;
+  googleSyncToken: string;
+  calendarImportMode: 'chroniclesOnly' | 'all';
+  setCalendarSyncEnabled: (v: boolean) => void;
+  setGoogleCalendarId: (id: string) => void;
+  setGoogleSyncToken: (token: string) => void;
+  setCalendarImportMode: (mode: 'chroniclesOnly' | 'all') => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -139,4 +149,13 @@ export const useUIStore = create<UIState>((set) => ({
 
   cycleTrackingEnabled: false,
   setCycleTrackingEnabled: (v) => set({ cycleTrackingEnabled: v }),
+
+  calendarSyncEnabled: false,
+  googleCalendarId: '',
+  googleSyncToken: '',
+  calendarImportMode: 'chroniclesOnly',
+  setCalendarSyncEnabled: (v) => set({ calendarSyncEnabled: v }),
+  setGoogleCalendarId: (id) => set({ googleCalendarId: id }),
+  setGoogleSyncToken: (token) => set({ googleSyncToken: token }),
+  setCalendarImportMode: (mode) => set({ calendarImportMode: mode }),
 }));

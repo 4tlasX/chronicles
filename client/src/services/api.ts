@@ -301,5 +301,36 @@ export const shares = {
     request<{ success: boolean }>(`/shares/${token}`, { method: 'DELETE' }),
 };
 
+// =============================================================================
+// Calendar sync
+// =============================================================================
+
+export interface CalendarStatus {
+  googleConnected: boolean;
+  googleEmail: string | null;
+  icsEnabled: boolean;
+  icsToken: string | null;
+}
+
+export const calendar = {
+  getAuthUrl: () => request<{ url: string }>('/calendar/google/auth-url'),
+
+  getStatus: () => request<CalendarStatus>('/calendar/status'),
+
+  getAccessToken: () =>
+    request<{ accessToken: string; expiresInSeconds: number }>('/calendar/google/token', { method: 'POST' }),
+
+  disconnectGoogle: () =>
+    request<{ success: boolean }>('/calendar/google', { method: 'DELETE' }),
+
+  enableIcs: () => request<{ icsToken: string }>('/calendar/ics/enable', { method: 'POST' }),
+
+  regenerateIcs: () => request<{ icsToken: string }>('/calendar/ics/regenerate', { method: 'POST' }),
+
+  disableIcs: () => request<{ success: boolean }>('/calendar/ics', { method: 'DELETE' }),
+
+  uploadIcs: (ics: string) => request<{ success: boolean }>('/calendar/ics', { method: 'PUT', body: { ics } }),
+};
+
 export { ApiError };
-export default { auth, entries, topics, settings, sessions, doses, shares };
+export default { auth, entries, topics, settings, sessions, doses, shares, calendar };
