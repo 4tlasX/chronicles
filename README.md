@@ -21,7 +21,9 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - **Health Reporting** - Correlation analysis, severity trends, exercise impact, and wellness trends (water/mood/sleep) with cross-correlation insights (sleep→mood, water→symptoms, exercise→sleep, mood→symptoms); cycle calendar showing period and flow days by month; date range filtering
 - **Mini Calendar Widget** - Monthly grid on dashboard with entry-presence dots; click any day to jump to that day's journal entries
 - **Calendar View** - Visual month overview; events and meetings appear on their scheduled date in your header colour
-- **Entry Sharing** - Share entries via encrypted public links
+- **Calendar Sync** - Two-way sync of Event and Meeting entries with Google Calendar (pick any calendar you own); optional import of events created directly in Google; read-only Apple Calendar subscription feed (ICS) for iPhone/iPad/Mac; connect, disconnect, and sync on demand from Settings
+- **Entry Images** - Attach up to 7 photos per entry, stored **zero-knowledge in your own Cloudflare R2 bucket**; images are encrypted in the browser with your master key before upload, so your bucket only ever holds ciphertext; thumbnail strip, tap-to-open lightbox, and an optional featured image that renders as a hero banner above the entry
+- **Entry Sharing** - Share entries via encrypted public links (hidden automatically for entries with images)
 - **PWA Support** - Installable as a standalone app with offline shell caching
 - **Customizable Theme** - 40+ muted vintage header colors, 28 background images, light/dark mode
 - **Display Name** - Set a display name shown in the dashboard greeting; username shown read-only in account settings
@@ -32,6 +34,7 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 ## Privacy & Security
 
 - All entry content is encrypted in the browser before transmission
+- **Images never touch the Chronicles server** — they are encrypted client-side and uploaded straight to your own R2 bucket with URLs signed in the browser; your R2 credentials are themselves encrypted with your master key, so the server stores only ciphertext it cannot read
 - **Two-factor authentication** (TOTP) — no external services; secrets stored encrypted server-side
 - Recovery key system allows password reset without compromising zero-knowledge design
 - Schema-per-user database isolation (not row-level security)
@@ -143,6 +146,25 @@ Analyze health data with correlation analysis:
 - **Calorie summaries** by meal type
 - **Date range filtering** — Today, Week, Month, Year, or custom date range
 
+### Calendar Sync
+
+Keep Event and Meeting entries in sync with the calendars you already use:
+
+- **Google Calendar (two-way)** — Connect your Google account in Settings → Calendar Sync and pick which calendar to sync to. Events and meetings you create in Chronicles appear there; edits and deletions propagate. Optionally import events created directly in Google (from today onward) as Chronicles entries.
+- **Apple Calendar (subscription feed)** — Enable the ICS feed to get a private `webcal://` URL you can subscribe to from iPhone, iPad, or Mac (one-way: Chronicles → Apple Calendar). Regenerate the URL any time if it leaks.
+
+Only event titles, times, and locations are synced — never your journal content. Requires Google OAuth credentials on the server (see `server/.env.example`); the Apple feed works with no external setup.
+
+### Entry Images
+
+Add up to 7 photos to any journal entry — without giving up zero-knowledge:
+
+1. **Bring your own bucket** — Create a free Cloudflare R2 bucket and an API token (Object Read & Write, scoped to that bucket). Your storage, your bill (R2's free tier has no egress fees).
+2. **Enter credentials in Settings → Entry images** — They autosave as you type, get encrypted with your master key, and are stored as ciphertext the server cannot read. The setup guide in Settings walks through the bucket, token, and the required CORS policy, and an optional "Test connection" verifies everything from your browser.
+3. **Attach images in the editor** — Photos are downscaled, encrypted with AES-256-GCM in the browser, and uploaded directly to your bucket with browser-signed URLs. Chronicles' server never sees the images or your credentials — your bucket only ever contains encrypted noise.
+
+Star an image to feature it as a full-width banner above the entry; tap any thumbnail for a full-screen lightbox with keyboard and swipe navigation. Deleting an image or an entry (including bulk delete) also removes the objects from your bucket. Sharing is automatically disabled for entries that contain images.
+
 ### Printable Views
 
 Medication lists, symptom logs, and allergy records can be printed directly from the browser for sharing with healthcare providers.
@@ -153,6 +175,8 @@ Medication lists, symptom logs, and allergy records can be printed directly from
 - **Security** - Change password; Two-factor authentication (TOTP setup wizard with QR code and backup codes)
 - **Sessions** - View and revoke active sessions from any device
 - **Features** - Enable/disable health tracking, planning, entertainment, and more
+- **Calendar Sync** - Connect Google Calendar, choose the target calendar, toggle imports, manage the Apple ICS feed, and clean up old events
+- **Entry Images** - Toggle the feature, enter your Cloudflare R2 credentials (autosaved and master-key encrypted), test the connection, and follow the built-in setup guide
 - **Theme** - 40+ header colors, 28 background images, light/dark mode
 - **Data** - Seed test data, export/import entries
 
@@ -177,6 +201,9 @@ Medication lists, symptom logs, and allergy records can be printed directly from
    cp server/.env.example server/.env
    # Edit server/.env with your database credentials
    ```
+   Optional: to enable Google Calendar sync, add Google OAuth credentials and a
+   `CALENDAR_TOKEN_KEY` (see comments in `.env.example`). Entry images need **no**
+   server configuration — each user connects their own R2 bucket from Settings.
 
 4. Set up the database:
    ```bash
@@ -217,6 +244,8 @@ npm run test:coverage    # Run tests with coverage
 - **Backend**: Express 5, TypeScript, Prisma
 - **Database**: PostgreSQL (schema-per-user isolation)
 - **Encryption**: Web Crypto API (AES-256-GCM, PBKDF2-SHA256 600k iterations)
+- **Image Storage**: User-owned Cloudflare R2 buckets; dependency-free in-browser AWS SigV4 signing (Web Crypto HMAC)
+- **Calendar**: Google Calendar API (OAuth 2.0, two-way) + self-hosted ICS subscription feed
 - **Auth**: Split-token sessions (selector + SHA-256 verifier hash) + TOTP 2FA (otplib)
 - **PWA**: vite-plugin-pwa with Workbox (shell caching, no encrypted data cached)
 - **Accessibility**: ARIA roles, focus trapping, keyboard navigation, prefers-reduced-motion
