@@ -6,6 +6,7 @@ import { EntryCard } from './EntryCard.js';
 import { Checkbox } from '../atoms/Checkbox.js';
 import { entries as entriesApi } from '../../services/api.js';
 import { removeEntriesLocally } from '../../services/calendarSync.js';
+import { collectImageKeys, bestEffortDeleteImages } from '../../services/imageStorage.js';
 import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 
 const TOPIC_TO_TYPE: Record<string, string> = {
@@ -174,12 +175,16 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
 
   const handleDelete = useCallback(async (entryId: number) => {
     try {
+      // Collect R2 keys before the entry metadata disappears
+      const entry = entries.find(e => e.id === entryId);
+      const imageKeys = entry ? collectImageKeys([entry]) : [];
       await entriesApi.delete(entryId);
       removeEntry(entryId);
+      if (imageKeys.length > 0) void bestEffortDeleteImages(imageKeys);
     } catch (err) {
       console.error('Failed to delete entry:', err);
     }
-  }, [removeEntry]);
+  }, [entries, removeEntry]);
 
   const handleToggleComplete = useCallback((entryId: number, completed: boolean) => {
     const entry = entries.find(e => e.id === entryId);
@@ -288,14 +293,19 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
   const handleBulkDelete = useCallback(async () => {
     if (selectedEntries.length === 0) return;
     setBulkDeleting(true);
+    // R2 keys for entries whose delete succeeds — only those objects are removed,
+    // so a failed entry delete never strips images from a surviving entry
+    const cleanupKeys: string[] = [];
     try {
       if (alsoDeleteRemote) {
         // Plain deletes — the sync hook's deletion tracker propagates linked
         // entries to Google Calendar
         for (const entry of selectedEntries) {
           try {
+            const imageKeys = collectImageKeys([entry]);
             await entriesApi.delete(entry.id);
             removeEntry(entry.id);
+            cleanupKeys.push(...imageKeys);
           } catch (err) {
             console.error('Failed to delete entry:', err);
           }
@@ -303,8 +313,12 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
       } else {
         // Strip sync links first so nothing is deleted from Google Calendar
         await removeEntriesLocally(selectedEntries);
+        // Per-entry failures are swallowed above — clean up only entries gone from the store
+        const remaining = new Set(useEntriesStore.getState().decryptedEntries.map(e => e.id));
+        cleanupKeys.push(...collectImageKeys(selectedEntries.filter(e => !remaining.has(e.id))));
       }
     } finally {
+      if (cleanupKeys.length > 0) void bestEffortDeleteImages(cleanupKeys);
       setBulkDeleting(false);
       exitSelectMode();
     }

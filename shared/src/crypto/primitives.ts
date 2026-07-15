@@ -197,6 +197,39 @@ export async function encrypt(
 }
 
 /**
+ * Encrypt binary data (images, files) with AES-GCM using the master key directly.
+ * The key is the existing non-extractable CryptoKey — no raw material is handled.
+ */
+export async function encryptBytes(
+  masterKey: CryptoKey,
+  data: ArrayBuffer
+): Promise<{ ciphertext: ArrayBuffer; iv: string }> {
+  const iv = generateIv();
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: AES_ALGORITHM, iv: iv.buffer as ArrayBuffer },
+    masterKey,
+    data
+  );
+  return { ciphertext, iv: uint8ArrayToBase64(iv) };
+}
+
+/**
+ * Decrypt binary data with AES-GCM
+ */
+export async function decryptBytes(
+  masterKey: CryptoKey,
+  ciphertext: ArrayBuffer,
+  ivBase64: string
+): Promise<ArrayBuffer> {
+  const iv = base64ToUint8Array(ivBase64);
+  return crypto.subtle.decrypt(
+    { name: AES_ALGORITHM, iv: iv.buffer as ArrayBuffer },
+    masterKey,
+    ciphertext
+  );
+}
+
+/**
  * Decrypt ciphertext with AES-GCM
  */
 export async function decrypt(

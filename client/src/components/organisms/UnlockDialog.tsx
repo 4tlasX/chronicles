@@ -78,9 +78,11 @@ const ErrorText = styled.div`
 
 interface UnlockDialogProps {
   onUnlock: (password: string) => Promise<void>;
+  /** When provided, the dialog is dismissible (used for on-demand unlocks, e.g. Settings). */
+  onCancel?: () => void;
 }
 
-export function UnlockDialog({ onUnlock }: UnlockDialogProps) {
+export function UnlockDialog({ onUnlock, onCancel }: UnlockDialogProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -130,6 +132,11 @@ export function UnlockDialog({ onUnlock }: UnlockDialogProps) {
           <Button type="submit" fullWidth disabled={loading} variant="secondary">
             {loading ? <Spinner size={18} /> : 'Unlock'}
           </Button>
+          {onCancel && (
+            <Button type="button" fullWidth variant="ghost" onClick={onCancel} disabled={loading}>
+              Cancel
+            </Button>
+          )}
         </Form>
       </Card>
     </Overlay>,

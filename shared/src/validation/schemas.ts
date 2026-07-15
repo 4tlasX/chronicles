@@ -120,6 +120,18 @@ export const updateTaxonomySchema = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
 });
 
+// Entry images — client-side validation of the user's R2 credentials before
+// they are encrypted with the master key and stored as a setting. The server
+// never sees or validates these.
+export const imageStorageConfigSchema = z.object({
+  r2AccountId: z.string().regex(/^[0-9a-f]{32}$/, 'Account ID must be 32 hex characters'),
+  r2Bucket: z.string()
+    .min(3, 'Bucket name too short').max(63, 'Bucket name too long')
+    .regex(/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/, 'Invalid bucket name'),
+  r2AccessKeyId: z.string().min(1, 'Access key ID is required').max(128),
+  r2SecretAccessKey: z.string().min(1, 'Secret access key is required').max(128),
+});
+
 // Settings validation
 export const upsertSettingSchema = z.object({
   key: z.string().min(1).max(100),

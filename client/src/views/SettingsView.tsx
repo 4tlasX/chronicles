@@ -21,6 +21,10 @@ import { BackgroundPicker } from '../components/molecules/BackgroundPicker.js';
 import { SessionRow } from '../components/molecules/SessionRow.js';
 import { RecoveryKeyDisplay } from '../components/molecules/RecoveryKeyDisplay.js';
 import { CalendarSyncSettings } from '../components/organisms/CalendarSyncSettings.js';
+import { ImageStorageSettings } from '../components/organisms/ImageStorageSettings.js';
+import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
+import { EmptyState } from '../components/atoms/EmptyState.js';
+import { useInitializeData } from '../hooks/useInitializeData.js';
 import { useAuth } from '../contexts/AuthContext.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useUIStore } from '../stores/uiStore.js';
@@ -119,6 +123,9 @@ const FEATURES = [
 export function SettingsView() {
   const { user, logout, encryptionData } = useAuth();
   const { lock, rewrapMasterKey, generateRecoveryKey, encryptPost } = useEncryption();
+  // Same unlock gate as every other view — Settings exposes encrypted-at-rest
+  // preferences and master-key operations, so it locks with the journal
+  const { needsUnlock, handleUnlock } = useInitializeData();
   const clearAll = useEntriesStore(s => s.clearAll);
   const addDecryptedEntry = useEntriesStore(s => s.addDecryptedEntry);
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
@@ -632,6 +639,15 @@ export function SettingsView() {
     lock(); clearAll(); await logout(); navigate('/login');
   };
 
+  if (needsUnlock) return (
+    <>
+      <SettingsTemplate title="">
+        <EmptyState message="Unlock your journal to view settings" />
+      </SettingsTemplate>
+      <UnlockDialog onUnlock={handleUnlock} />
+    </>
+  );
+
   return (
     <SettingsTemplate title="">
       <HeaderRow>
@@ -795,6 +811,10 @@ export function SettingsView() {
       {/* Calendar Sync */}
       <SectionTitle>Calendar Sync</SectionTitle>
       <CalendarSyncSettings themeMode={themeMode} />
+
+      {/* Entry Images */}
+      <SectionTitle>Entry Images</SectionTitle>
+      <ImageStorageSettings themeMode={themeMode} />
 
       {/* Theme */}
       <SectionTitle>Theme</SectionTitle>

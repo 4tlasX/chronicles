@@ -1,4 +1,4 @@
-import { useState, useEffect, type MutableRefObject } from 'react';
+import { useState, useEffect, useRef, type MutableRefObject } from 'react';
 import styled from 'styled-components';
 import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
@@ -23,6 +23,8 @@ import { PrioritiesFields, type PrioritiesFieldValues } from '../molecules/field
 import { WellnessFields, type WellnessFieldValues } from '../molecules/fields/WellnessFields.js';
 import { UserFieldsForm } from '../molecules/fields/UserFieldsForm.js';
 import { useUIStore } from '../../stores/uiStore.js';
+import { EntryHeroBanner, EntryImageStrip, EntryLightbox } from './EntryImageGallery.js';
+import type { EntryImage } from '../../services/imageStorage.js';
 
 /* ── Styled components ── */
 
@@ -229,6 +231,14 @@ const EditorArea = styled.div`
   overflow: hidden;
 `;
 
+/* Inline image upload error under the action row (dictation-error pattern). */
+const ImageErrorText = styled.div`
+  margin: 8px 0 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-danger, #c0392b);
+`;
+
 /* Catch-all delete in the footer — quiet gray text that turns red on hover. */
 const FooterDeleteBtn = styled.button`
   padding: 6px 0;
@@ -373,6 +383,15 @@ interface EntryFormProps {
   lastSavedAt?: Date | null;
   placeholder?: string;
   dictationControlRef?: MutableRefObject<DictationControls | null>;
+  // Entry images (only active when image storage is enabled + configured)
+  images?: EntryImage[];
+  featuredKey?: string | null;
+  onImagesSelected?: (files: File[]) => void;
+  onImageRemoved?: (key: string) => void;
+  onSetFeatured?: (key: string | null) => void;
+  imageUploading?: boolean;
+  imageError?: string;
+  imagesReady?: boolean;
 }
 
 export function EntryForm({
@@ -381,10 +400,16 @@ export function EntryForm({
   onBookmark, onShare, onBack,
   isEditing, isSaving, saveStatus, lastSavedAt, placeholder = 'Start writing...',
   dictationControlRef,
+  images = [], featuredKey = null, onImagesSelected, onImageRemoved, onSetFeatured,
+  imageUploading = false, imageError, imagesReady = false,
 }: EntryFormProps) {
   const isFavorite = !!customFields._isFavorite;
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const [toolbarOpen, setToolbarOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const featuredImage = featuredKey ? images.find(img => img.key === featuredKey) ?? null : null;
+  const imagesFull = images.length >= 7;
   const [savedAgoText, setSavedAgoText] = useState('');
   useEffect(() => {
     if (!lastSavedAt) { setSavedAgoText(''); return; }
@@ -491,7 +516,9 @@ export function EntryForm({
   };
 
   const userFieldValues = (customFields._userFields as Record<string, unknown>) ?? {};
-  const canSave = stripHtml(content).length > 0 || (userFieldDefs.length > 0 && summarizeUserFields(userFieldDefs, userFieldValues) !== '');
+  const canSave = stripHtml(content).length > 0
+    || (userFieldDefs.length > 0 && summarizeUserFields(userFieldDefs, userFieldValues) !== '')
+    || images.length > 0;
 
   // Entry meta data for datestrip
   const currentEntry = entryId ? entries.find(e => e.id === entryId) : null;
@@ -521,6 +548,8 @@ export function EntryForm({
     <FormWrapper>
       {/* Scrollable body */}
       <ScrollArea>
+        {/* Featured image hero — outside EdBody for full-bleed width */}
+        {featuredImage && <EntryHeroBanner image={featuredImage} />}
         <EdBody>
           {/* DS date block — big numeral + weekday under a 2px accent rule */}
           {(entryCreatedAt || !entryId) && (
@@ -556,15 +585,45 @@ export function EntryForm({
               >
                 <Icon name="bookmark" size={16} strokeWidth={2} />
               </IconBtn>
-              <IconBtn
-                type="button"
-                aria-label="Share entry"
-                title="Share"
-                onClick={() => entryId && onShare?.()}
-                style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
-              >
-                <Icon name="share" size={16} strokeWidth={2} />
-              </IconBtn>
+              {/* Share is hidden entirely on entries with images — sharing
+                  can never distribute user-hosted imagery */}
+              {images.length === 0 && (
+                <IconBtn
+                  type="button"
+                  aria-label="Share entry"
+                  title="Share"
+                  onClick={() => entryId && onShare?.()}
+                  style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
+                >
+                  <Icon name="share" size={16} strokeWidth={2} />
+                </IconBtn>
+              )}
+              {imagesReady && (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                      const files = Array.from(e.target.files ?? []);
+                      if (files.length > 0) onImagesSelected?.(files);
+                      e.target.value = '';
+                    }}
+                  />
+                  <IconBtn
+                    type="button"
+                    aria-label="Add images"
+                    title={imagesFull ? 'Maximum of 7 images per entry' : 'Add images'}
+                    disabled={imagesFull || imageUploading}
+                    onClick={() => !imagesFull && !imageUploading && fileInputRef.current?.click()}
+                    style={{ opacity: imagesFull ? 0.35 : 1, cursor: imagesFull ? 'default' : 'pointer' }}
+                  >
+                    {imageUploading ? <Spinner size={14} /> : <Icon name="image" size={16} strokeWidth={2} />}
+                  </IconBtn>
+                </>
+              )}
               <IconBtn
                 type="button"
                 title="Dictate"
@@ -595,6 +654,8 @@ export function EntryForm({
               </IconBtn>
             </EdActions>
           </EdTopicRow>
+
+          {imageError && <ImageErrorText>{imageError}</ImageErrorText>}
 
           {/* Rich text editor */}
           <EditorArea>
@@ -654,8 +715,28 @@ export function EntryForm({
                 </CustomFieldsBody>
             </CustomFieldsSection>
           )}
+
+          {/* Image thumbnail strip at the bottom of the post */}
+          {(imagesReady || images.length > 0) && (
+            <EntryImageStrip
+              images={images}
+              featuredKey={featuredKey}
+              uploading={imageUploading}
+              onSetFeatured={key => onSetFeatured?.(key)}
+              onRemove={key => onImageRemoved?.(key)}
+              onOpen={setLightboxIndex}
+            />
+          )}
         </EdBody>
       </ScrollArea>
+
+      {lightboxIndex !== null && images.length > 0 && (
+        <EntryLightbox
+          images={images}
+          startIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
 
       {/* Footer — bottom-docked save/discard */}
       <SaveRow>

@@ -18,6 +18,8 @@ import {
   toNonExtractable,
   encrypt,
   decrypt,
+  encryptBytes,
+  decryptBytes,
 } from './primitives.js';
 import { uint8ArrayToBase64, base64ToUint8Array } from './encoding.js';
 import type {
@@ -262,6 +264,27 @@ class EncryptionService {
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
     };
+  }
+
+  /**
+   * Encrypt a binary file (image) with the master key
+   */
+  async encryptFile(
+    masterKey: CryptoKey,
+    data: ArrayBuffer
+  ): Promise<{ ciphertext: ArrayBuffer; iv: string }> {
+    return encryptBytes(masterKey, data);
+  }
+
+  /**
+   * Decrypt a binary file (image) with the master key
+   */
+  async decryptFile(
+    masterKey: CryptoKey,
+    ciphertext: ArrayBuffer,
+    ivBase64: string
+  ): Promise<ArrayBuffer> {
+    return decryptBytes(masterKey, ciphertext, ivBase64);
   }
 
   /**

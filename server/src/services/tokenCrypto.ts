@@ -1,18 +1,20 @@
 import crypto from 'crypto';
 
 /**
- * Encrypts OAuth refresh tokens at rest with AES-256-GCM.
- * Key comes from CALENDAR_TOKEN_KEY (base64, 32 bytes). Stored format: iv:ciphertext:tag (base64 parts).
+ * Encrypts server-held secrets at rest with AES-256-GCM (OAuth refresh tokens,
+ * R2 credentials). Key comes from SECRETS_ENCRYPTION_KEY (base64, 32 bytes);
+ * CALENDAR_TOKEN_KEY is accepted as a backward-compatible alias.
+ * Stored format: iv:ciphertext:tag (base64 parts).
  */
 
 function getKey(): Buffer {
-  const raw = process.env.CALENDAR_TOKEN_KEY;
+  const raw = process.env.SECRETS_ENCRYPTION_KEY || process.env.CALENDAR_TOKEN_KEY;
   if (!raw) {
-    throw new Error('CALENDAR_TOKEN_KEY is not configured');
+    throw new Error('SECRETS_ENCRYPTION_KEY is not configured');
   }
   const key = Buffer.from(raw, 'base64');
   if (key.length !== 32) {
-    throw new Error('CALENDAR_TOKEN_KEY must be 32 bytes (base64-encoded)');
+    throw new Error('SECRETS_ENCRYPTION_KEY must be 32 bytes (base64-encoded)');
   }
   return key;
 }

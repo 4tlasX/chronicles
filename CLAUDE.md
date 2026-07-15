@@ -397,8 +397,19 @@ const posts = await getAllPosts(req.auth.tenantSchemaName);
 - Theme: header color (40+), background image (28), light/dark mode
 - Data: seed test data
 
+**Entry Images**
+- Up to 7 encrypted images per entry, stored zero-knowledge in the user's own Cloudflare R2 bucket (see `docs/IMAGES_FEATURE_PLAN.md`)
+- **Fully client-side — the server has NO image code.** The user's R2 credentials (account ID, bucket, access key, secret) are entered in Settings, encrypted with the **master key**, and stored as the `imageStorageConfig` setting (ciphertext the server cannot read). No server env vars, routes, or DB tables are involved.
+- Requests are signed in the browser: `client/src/services/r2Signer.ts` is a dependency-free AWS SigV4 query presigner (Web Crypto HMAC, `UNSIGNED-PAYLOAD`, host-only signed headers), unit-tested against the official AWS documentation signature vector
+- Client pipeline: downscale to JPEG (`client/src/utils/processImage.ts`) → `encryptBytes` with the master key → signed PUT of ciphertext direct to R2 (`client/src/services/imageStorage.ts`)
+- Credential lifecycle mirrors the master key: decrypted config lives in module memory, cleared on `lock()` (`clearImageCache`), re-derived on `unlock()` (`rederiveImageStorageConfig` called from `EncryptionContext`)
+- "Save & test connection" runs a PUT+DELETE probe **from the browser**, which also validates the bucket CORS policy at setup time
+- Metadata lives in the entry's encrypted blob: `metadata._images: EntryImage[]` + `metadata._featuredKey`; thumbnails are separate encrypted objects (`img/<uuid>` / `img/<uuid>-t`, client-generated random UUIDs)
+- UI: thumbnail strip + lightbox + featured hero banner (`EntryImageGallery.tsx`); decrypted object URLs cached per session and revoked on lock
+- Share is hidden/blocked for any entry with images (hard product rule); entry deletion (editor, card, bulk) best-effort deletes the R2 objects via signed DELETEs
+- User setup requires a bucket CORS policy allowing `GET, PUT, DELETE` (documented in Settings → Entry Images → Setup guide); CSP `connect-src` allows `https://*.r2.cloudflarestorage.com`
+
 ### Planned
-- Image uploads (encrypted storage)
 - Recurring calendar events
 - Calorie correlation reporting
 

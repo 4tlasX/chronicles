@@ -4,6 +4,7 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { entries as entriesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
+import { loadImageStorageConfig } from '../services/imageStorage.js';
 import type { EncryptedPost } from '@shared/crypto/types';
 
 /**
@@ -13,7 +14,7 @@ import type { EncryptedPost } from '@shared/crypto/types';
  */
 export function useInitializeData() {
   const { encryptionData } = useAuth();
-  const { isUnlocked, unlock, decryptPosts } = useEncryption();
+  const { isUnlocked, unlock, decryptPosts, decryptBytes } = useEncryption();
   const {
     setDecryptedEntries, setRawEntries, setTopics, setFeatureFlags,
     isInitialized, setLoading, isLoading,
@@ -28,6 +29,8 @@ export function useInitializeData() {
   const setWeatherUnit = useUIStore(s => s.setWeatherUnit);
   const setTopicCustomFields = useUIStore(s => s.setTopicCustomFields);
   const setCycleTrackingEnabled = useUIStore(s => s.setCycleTrackingEnabled);
+  const setImagesEnabled = useUIStore(s => s.setImagesEnabled);
+  const setImagesConfigured = useUIStore(s => s.setImagesConfigured);
   const setCalendarSyncEnabled = useUIStore(s => s.setCalendarSyncEnabled);
   const setGoogleCalendarId = useUIStore(s => s.setGoogleCalendarId);
   const setGoogleSyncToken = useUIStore(s => s.setGoogleSyncToken);
@@ -69,6 +72,12 @@ export function useInitializeData() {
         if (typeof settingsMap.weatherCity === 'string') setWeatherCity(settingsMap.weatherCity);
         if (settingsMap.weatherUnit === 'f' || settingsMap.weatherUnit === 'c') setWeatherUnit(settingsMap.weatherUnit);
         if (typeof settingsMap.cycleTrackingEnabled === 'boolean') setCycleTrackingEnabled(settingsMap.cycleTrackingEnabled);
+        // Entry images are opt-in — defaults false, deliberately NOT in the default-true flag bag
+        if (typeof settingsMap.imagesEnabled === 'boolean') setImagesEnabled(settingsMap.imagesEnabled);
+        // R2 credentials live in a master-key-encrypted setting; decrypt client-side
+        loadImageStorageConfig(settingsMap.imageStorageConfig, decryptBytes)
+          .then(setImagesConfigured)
+          .catch(() => setImagesConfigured(false));
         if (typeof settingsMap.calendarSyncEnabled === 'boolean') setCalendarSyncEnabled(settingsMap.calendarSyncEnabled);
         if (typeof settingsMap.googleCalendarId === 'string') setGoogleCalendarId(settingsMap.googleCalendarId);
         if (typeof settingsMap.googleSyncToken === 'string') setGoogleSyncToken(settingsMap.googleSyncToken);

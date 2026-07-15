@@ -73,6 +73,7 @@ const PATHS = {
   "check-circle": "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18|M6 12l4 4 8-8",
   "plus-circle": "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z|M12 8v8M8 12h8",
   moon2: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z",
+  image: "M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z|M9 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z|M21 15l-3.1-3.1a2 2 0 0 0-2.8 0L6 21",
 };
 
 export function Icon({ name, size = 20, strokeWidth = 4, style, className, ...rest }) {

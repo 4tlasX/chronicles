@@ -11,6 +11,15 @@ vi.mock('react-router-dom', () => ({
   Link: ({ children, to, ...props }: any) => <a href={to} {...props}>{children}</a>,
 }));
 
+vi.mock('@/hooks/useInitializeData', () => ({
+  useInitializeData: vi.fn(() => ({
+    isReady: true,
+    isLoading: false,
+    needsUnlock: false,
+    handleUnlock: vi.fn(),
+  })),
+}));
+
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: vi.fn(() => ({
     user: { email: 'test@example.com' },
@@ -253,5 +262,20 @@ describe('SettingsView', () => {
     expect(screen.getByText('Data')).toBeInTheDocument();
     expect(screen.getByText('Default Topics')).toBeInTheDocument();
     expect(screen.getByText('Export Entries')).toBeInTheDocument();
+  });
+
+  it('gates behind the unlock dialog when the journal is locked', async () => {
+    const { useInitializeData } = await import('@/hooks/useInitializeData');
+    vi.mocked(useInitializeData).mockReturnValueOnce({
+      isReady: false,
+      isLoading: false,
+      needsUnlock: true,
+      handleUnlock: vi.fn(),
+    });
+    renderWithTheme(<SettingsView />);
+    expect(screen.getByText('Unlock Your Journal')).toBeInTheDocument();
+    expect(screen.getByText('Unlock your journal to view settings')).toBeInTheDocument();
+    // No settings content while locked
+    expect(screen.queryByText('Danger Zone')).not.toBeInTheDocument();
   });
 });

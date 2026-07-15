@@ -3,6 +3,7 @@ import { encryptionService } from '@shared/crypto/encryptionService.js';
 import { toNonExtractable } from '@shared/crypto/primitives.js';
 import { PBKDF2_ITERATIONS } from '@shared/crypto/constants.js';
 import type { EncryptedPostData, DecryptedPost, EncryptedPost, SetupEncryptionResult } from '@shared/crypto/types.js';
+import { clearImageCache, rederiveImageStorageConfig } from '../services/imageStorage.js';
 
 export interface EncryptionParams {
   kekSalt: string;
@@ -19,6 +20,8 @@ interface EncryptionContextValue {
   encryptPost: (content: string, metadata: Record<string, unknown>) => Promise<EncryptedPostData>;
   decryptPost: (post: EncryptedPost) => Promise<DecryptedPost>;
   decryptPosts: (posts: EncryptedPost[]) => Promise<DecryptedPost[]>;
+  encryptBytes: (data: ArrayBuffer) => Promise<{ ciphertext: ArrayBuffer; iv: string }>;
+  decryptBytes: (ciphertext: ArrayBuffer, iv: string) => Promise<ArrayBuffer>;
   unlockWithRecoveryKey: (recoveryKey: string, recoveryWrappedMK: string, recoveryWrapIv: string) => Promise<void>;
   rewrapMasterKey: (newPassword: string, currentPassword?: string, params?: EncryptionParams) => Promise<{ salt: string; wrappedMK: string; wrapIv: string }>;
   /** Generate a new recovery key wrapping using the current password to re-derive the extractable master key. */
@@ -53,6 +56,9 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     const key = await encryptionService.unwrapMasterKey(password, kekSalt, encryptedMasterKey, kekWrapIv, kekIterations);
     masterKeyRef.current = key;
     encryptionParamsRef.current = { kekSalt, encryptedMasterKey, kekWrapIv, kekIterations };
+    // Restore the in-memory R2 credentials (cleared on lock) from their
+    // master-key-encrypted blob so image display/cleanup keeps working
+    void rederiveImageStorageConfig((ct, iv) => encryptionService.decryptFile(key, ct, iv));
     setIsUnlocked(true);
   }, []);
 
@@ -60,6 +66,8 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     masterKeyRef.current = null;
     extractableKeyRef.current = null;
     encryptionParamsRef.current = null;
+    // Revoke decrypted image object URLs — they hold plaintext image bytes
+    clearImageCache();
     setIsUnlocked(false);
   }, []);
 
@@ -87,6 +95,14 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     return encryptionService.decryptPosts(getKey(), posts);
   }, []);
 
+  const encryptBytes = useCallback(async (data: ArrayBuffer) => {
+    return encryptionService.encryptFile(getKey(), data);
+  }, []);
+
+  const decryptBytes = useCallback(async (ciphertext: ArrayBuffer, iv: string) => {
+    return encryptionService.decryptFile(getKey(), ciphertext, iv);
+  }, []);
+
   // During recovery, we need the extractable key for rewrapping with a new password.
   // Store it separately so masterKeyRef always holds a non-extractable key.
   const extractableKeyRef = useRef<CryptoKey | null>(null);
@@ -100,8 +116,10 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
     // Store extractable key in separate ref for rewrap only
     extractableKeyRef.current = extractableKey;
     // Convert to non-extractable immediately for encrypt/decrypt operations
-    masterKeyRef.current = await toNonExtractable(extractableKey);
+    const key = await toNonExtractable(extractableKey);
+    masterKeyRef.current = key;
     encryptionParamsRef.current = null; // Recovery path — no stored params
+    void rederiveImageStorageConfig((ct, iv) => encryptionService.decryptFile(key, ct, iv));
     setIsUnlocked(true);
   }, []);
 
@@ -229,6 +247,8 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
       encryptPost,
       decryptPost,
       decryptPosts,
+      encryptBytes,
+      decryptBytes,
       unlockWithRecoveryKey,
       rewrapMasterKey,
       generateRecoveryKey,

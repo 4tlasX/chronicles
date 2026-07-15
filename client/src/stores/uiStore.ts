@@ -77,6 +77,12 @@ interface UIState {
   cycleTrackingEnabled: boolean;
   setCycleTrackingEnabled: (v: boolean) => void;
 
+  // Entry images (opt-in; imagesConfigured mirrors server-side R2 credential state)
+  imagesEnabled: boolean;
+  imagesConfigured: boolean;
+  setImagesEnabled: (v: boolean) => void;
+  setImagesConfigured: (v: boolean) => void;
+
   // Calendar sync
   calendarSyncEnabled: boolean;
   googleCalendarId: string;
@@ -149,6 +155,11 @@ export const useUIStore = create<UIState>((set) => ({
 
   cycleTrackingEnabled: false,
   setCycleTrackingEnabled: (v) => set({ cycleTrackingEnabled: v }),
+
+  imagesEnabled: false,
+  imagesConfigured: false,
+  setImagesEnabled: (v) => set({ imagesEnabled: v }),
+  setImagesConfigured: (v) => set({ imagesConfigured: v }),
 
   calendarSyncEnabled: false,
   googleCalendarId: '',

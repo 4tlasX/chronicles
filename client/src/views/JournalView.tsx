@@ -26,6 +26,7 @@ import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { entries as entriesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
+import { uploadEntryImage, bestEffortDeleteImages, collectImageKeys, loadImageStorageConfig, type EntryImage } from '../services/imageStorage.js';
 import { getOrCreateJournalTopic } from '../utils/getOrCreateJournalTopic.js';
 import { stripHtml, summarizeUserFields } from '../utils/stripHtml.js';
 import { toDateStr } from '../utils/dateUtils.js';
@@ -166,9 +167,13 @@ const SearchPillInput = styled.input`
   &::placeholder { color: var(--text-tertiary); }
 `;
 
+/** Compact change-detection signature for the entry's image set. */
+const imagesSig = (imgs: EntryImage[], featured: string | null) =>
+  JSON.stringify([imgs.map(i => i.key), featured]);
+
 export function JournalView() {
   const { encryptionData } = useAuth();
-  const { isUnlocked, unlock, decryptPosts, encryptPost } = useEncryption();
+  const { isUnlocked, unlock, decryptPosts, encryptPost, encryptBytes, decryptBytes } = useEncryption();
   const {
     decryptedEntries, setDecryptedEntries, setRawEntries,
     topics, setTopics, setFeatureFlags, isInitialized, setLoading, isLoading,
@@ -188,6 +193,11 @@ export function JournalView() {
   const setTopicCustomFields = useUIStore(s => s.setTopicCustomFields);
   const searchKeyword = useUIStore(s => s.searchKeyword);
   const setSearchKeyword = useUIStore(s => s.setSearchKeyword);
+  const imagesEnabled = useUIStore(s => s.imagesEnabled);
+  const imagesConfigured = useUIStore(s => s.imagesConfigured);
+  const setImagesEnabled = useUIStore(s => s.setImagesEnabled);
+  const setImagesConfigured = useUIStore(s => s.setImagesConfigured);
+  const imagesReady = imagesEnabled && imagesConfigured;
   const navigate = useNavigate();
 
   const entryDates = useMemo(() => {
@@ -207,10 +217,14 @@ export function JournalView() {
   const [editorTopicId, setEditorTopicId] = useState<number | null>(null);
   const [customFields, setCustomFields] = useState<Record<string, unknown>>({});
   const [widgetType, setWidgetType] = useState<string | null>(null);
+  const [entryImages, setEntryImages] = useState<EntryImage[]>([]);
+  const [featuredKey, setFeaturedKey] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const loadedStateRef = useRef({ content: '', customFields: '{}' });
+  const loadedStateRef = useRef({ content: '', customFields: '{}', images: imagesSig([], null) });
   const dictationControlRef = useRef<DictationControls | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
@@ -255,6 +269,10 @@ export function JournalView() {
     const metadata: Record<string, unknown> = { _taxonomyId: editorTopicId };
     if (widgetType) metadata._widgetType = widgetType;
     if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
+    if (entryImages.length > 0) {
+      metadata._images = entryImages;
+      if (featuredKey) metadata._featuredKey = featuredKey;
+    }
     const hasText = !!stripHtml(editorContent).trim();
     let finalContent = editorContent;
     if (!hasText) {
@@ -297,13 +315,15 @@ export function JournalView() {
   autoSaveDoRef.current = async () => {
     const currentContent = editorContent;
     const currentFields = JSON.stringify(customFields);
+    const currentImages = imagesSig(entryImages, featuredKey);
     if (
       currentContent === loadedStateRef.current.content &&
-      currentFields === loadedStateRef.current.customFields
+      currentFields === loadedStateRef.current.customFields &&
+      currentImages === loadedStateRef.current.images
     ) return;
     const hasText = !!stripHtml(currentContent).trim();
     const hasDrawing = currentContent.includes('data-type="drawing"');
-    if (!hasText && !hasDrawing) return;
+    if (!hasText && !hasDrawing && entryImages.length === 0) return;
 
     let effectiveTopicId = editorTopicId;
     if (!effectiveTopicId) {
@@ -314,6 +334,10 @@ export function JournalView() {
     if (effectiveTopicId) metadata._taxonomyId = effectiveTopicId;
     if (widgetType) metadata._widgetType = widgetType;
     if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
+    if (entryImages.length > 0) {
+      metadata._images = entryImages;
+      if (featuredKey) metadata._featuredKey = featuredKey;
+    }
     try {
       const encrypted = await encryptPost(currentContent, metadata);
       if (selectedEntryId) {
@@ -336,7 +360,7 @@ export function JournalView() {
         setPendingEntryDate(null);
         setSelectedEntryId(newId);
       }
-      loadedStateRef.current = { content: currentContent, customFields: currentFields };
+      loadedStateRef.current = { content: currentContent, customFields: currentFields, images: currentImages };
       setLastSavedAt(new Date());
     } catch (err) { console.error('Auto-save failed:', err); }
   };
@@ -344,7 +368,7 @@ export function JournalView() {
   useEffect(() => {
     const timer = setTimeout(() => { autoSaveDoRef.current(); }, 3000);
     return () => clearTimeout(timer);
-  }, [editorContent, customFields]);
+  }, [editorContent, customFields, entryImages, featuredKey]);
 
   useEffect(() => {
     if (!editorExpanded) return;
@@ -378,6 +402,11 @@ export function JournalView() {
         if (settingsMap.topicCustomFields && typeof settingsMap.topicCustomFields === 'object' && !Array.isArray(settingsMap.topicCustomFields)) {
           setTopicCustomFields(settingsMap.topicCustomFields as import('../types/userFields.js').TopicCustomFields);
         }
+        // Entry images are opt-in (default false); credentials are a master-key-encrypted setting
+        if (typeof settingsMap.imagesEnabled === 'boolean') setImagesEnabled(settingsMap.imagesEnabled);
+        loadImageStorageConfig(settingsMap.imageStorageConfig, decryptBytes)
+          .then(setImagesConfigured)
+          .catch(() => setImagesConfigured(false));
         // Extract feature flags and store them (must be set before setTopics so filtering works)
         const flags: Record<string, boolean> = {};
         for (const key of Object.keys(settingsMap)) {
@@ -438,11 +467,16 @@ export function JournalView() {
         setEditorContent(entry.content);
         const meta = entry.metadata as Record<string, unknown>;
         const cf = meta?._customFields as Record<string, unknown> ?? {};
+        const imgs = Array.isArray(meta?._images) ? (meta._images as EntryImage[]) : [];
+        const feat = typeof meta?._featuredKey === 'string' ? (meta._featuredKey as string) : null;
         setEditorTopicId(meta?._taxonomyId as number | null ?? null);
         setCustomFields(cf);
         setWidgetType(meta?._widgetType as string | null ?? null);
+        setEntryImages(imgs);
+        setFeaturedKey(feat);
+        setImageError('');
         setShowMobileEditor(true);
-        loadedStateRef.current = { content: entry.content, customFields: JSON.stringify(cf) };
+        loadedStateRef.current = { content: entry.content, customFields: JSON.stringify(cf), images: imagesSig(imgs, feat) };
         setLastSavedAt(null);
         if (calendarArrivalRef.current) calendarArrivalRef.current = false;
         else setPendingEntryDate(null);
@@ -452,7 +486,10 @@ export function JournalView() {
       setEditorTopicId(null);
       setCustomFields({});
       setWidgetType(null);
-      loadedStateRef.current = { content: '', customFields: '{}' };
+      setEntryImages([]);
+      setFeaturedKey(null);
+      setImageError('');
+      loadedStateRef.current = { content: '', customFields: '{}', images: imagesSig([], null) };
       setLastSavedAt(null);
       calendarArrivalRef.current = false;
     }
@@ -464,7 +501,7 @@ export function JournalView() {
     const userFieldDefs = editorTopicId != null ? (topicCustomFields[editorTopicId] ?? []) : [];
     const userFieldValues = (customFields._userFields as Record<string, unknown>) ?? {};
     const hasFieldValues = userFieldDefs.length > 0 && summarizeUserFields(userFieldDefs, userFieldValues) !== '';
-    if (!hasText && !hasDrawing && !hasFieldValues) return;
+    if (!hasText && !hasDrawing && !hasFieldValues && entryImages.length === 0) return;
     const finalContent = editorContent;
     setIsSaving(true); setSaveStatus('');
 
@@ -480,6 +517,10 @@ export function JournalView() {
       if (effectiveTopicId) metadata._taxonomyId = effectiveTopicId;
       if (widgetType) metadata._widgetType = widgetType;
       if (Object.keys(customFields).length > 0) metadata._customFields = customFields;
+      if (entryImages.length > 0) {
+        metadata._images = entryImages;
+        if (featuredKey) metadata._featuredKey = featuredKey;
+      }
       const encrypted = await encryptPost(finalContent, metadata);
 
       if (selectedEntryId) {
@@ -490,6 +531,7 @@ export function JournalView() {
         });
         updateDecryptedEntry(selectedEntryId, { content: finalContent, metadata });
         setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+        setEntryImages([]); setFeaturedKey(null); setImageError('');
         setShowMobileEditor(false);
         setEditorExpanded(false);
       } else {
@@ -503,26 +545,119 @@ export function JournalView() {
           createdAt: new Date(result.createdAt as string), updatedAt: new Date((result.updatedAt || result.createdAt) as string) });
         setPendingEntryDate(null);
         setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+        setEntryImages([]); setFeaturedKey(null); setImageError('');
         setShowMobileEditor(false);
         setEditorExpanded(false);
       }
     } catch (err) { console.error('Save failed:', err); setSaveStatus('Save failed'); }
     finally { setIsSaving(false); }
-  }, [editorContent, selectedEntryId, editorTopicId, widgetType, customFields, topicCustomFields, pendingEntryDate, encryptPost, setSelectedEntryId, setShowMobileEditor]);
+  }, [editorContent, selectedEntryId, editorTopicId, widgetType, customFields, topicCustomFields, entryImages, featuredKey, pendingEntryDate, encryptPost, setSelectedEntryId, setShowMobileEditor]);
+
+  /** Persist the image set into an existing entry's encrypted metadata.
+   *  Rebuilds from the store entry (mirrors handleBookmark) so it is safe to
+   *  call from upload completions that may race with autosave. */
+  const persistImages = useCallback(async (entryId: number, imgs: EntryImage[], featKey: string | null) => {
+    const entry = useEntriesStore.getState().decryptedEntries.find(e => e.id === entryId);
+    if (!entry) return;
+    const meta = { ...(entry.metadata as Record<string, unknown>) };
+    if (imgs.length > 0) {
+      meta._images = imgs;
+      if (featKey && imgs.some(i => i.key === featKey)) meta._featuredKey = featKey;
+      else delete meta._featuredKey;
+    } else {
+      delete meta._images;
+      delete meta._featuredKey;
+    }
+    try {
+      const encrypted = await encryptPost(entry.content, meta);
+      await entriesApi.update(entryId, {
+        contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+        metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+        taxonomyIds: meta._taxonomyId ? [meta._taxonomyId as number] : [],
+      });
+      updateDecryptedEntry(entryId, { metadata: meta });
+      loadedStateRef.current.images = imagesSig(imgs, featKey);
+    } catch (err) {
+      console.error('Image metadata save failed:', err);
+      setImageError('Failed to save images to the entry');
+    }
+  }, [encryptPost, updateDecryptedEntry]);
+
+  const handleImagesSelected = useCallback(async (files: File[]) => {
+    setImageError('');
+    const remaining = 7 - entryImages.length;
+    let selected = files;
+    if (files.length > remaining) {
+      setImageError(remaining <= 0
+        ? 'This entry already has the maximum of 7 images'
+        : `Only ${remaining} more image${remaining === 1 ? '' : 's'} can be added (max 7 per entry)`);
+      selected = files.slice(0, Math.max(0, remaining));
+    }
+    if (selected.length === 0) return;
+
+    setImageUploading(true);
+    const uploaded: EntryImage[] = [];
+    try {
+      for (const file of selected) {
+        uploaded.push(await uploadEntryImage(file, encryptBytes));
+      }
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : 'Image upload failed');
+    } finally {
+      setImageUploading(false);
+    }
+    if (uploaded.length === 0) return;
+
+    const nextImages = [...entryImages, ...uploaded];
+    setEntryImages(nextImages);
+    // Autosave may have created the entry mid-upload — read the current id
+    // from the store, never the closure
+    const currentId = useUIStore.getState().selectedEntryId;
+    if (currentId) await persistImages(currentId, nextImages, featuredKey);
+    // New entries: the autosave effect (which watches entryImages) persists them
+  }, [entryImages, featuredKey, encryptBytes, persistImages]);
+
+  const handleImageRemoved = useCallback(async (key: string) => {
+    const img = entryImages.find(i => i.key === key);
+    if (!img) return;
+    const nextImages = entryImages.filter(i => i.key !== key);
+    const nextFeatured = featuredKey === key ? null : featuredKey;
+    setEntryImages(nextImages);
+    setFeaturedKey(nextFeatured);
+    const currentId = useUIStore.getState().selectedEntryId;
+    if (currentId) await persistImages(currentId, nextImages, nextFeatured);
+    void bestEffortDeleteImages([img.key, img.thumbKey]);
+  }, [entryImages, featuredKey, persistImages]);
+
+  const handleSetFeatured = useCallback(async (key: string | null) => {
+    setFeaturedKey(key);
+    const currentId = useUIStore.getState().selectedEntryId;
+    if (currentId) await persistImages(currentId, entryImages, key);
+  }, [entryImages, persistImages]);
 
   const handleDelete = useCallback(async () => {
     if (!selectedEntryId) return;
     try {
+      // Collect R2 keys before the entry (and its metadata) disappears
+      const entry = useEntriesStore.getState().decryptedEntries.find(e => e.id === selectedEntryId);
+      const imageKeys = entry ? collectImageKeys([entry]) : [];
       await entriesApi.delete(selectedEntryId);
       removeEntry(selectedEntryId);
+      if (imageKeys.length > 0) void bestEffortDeleteImages(imageKeys);
       setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+      setEntryImages([]); setFeaturedKey(null); setImageError('');
       setShowMobileEditor(false);
       setEditorExpanded(false);
     } catch (err) { console.error('Delete failed:', err); }
   }, [selectedEntryId]);
 
   const handleNew = () => {
+    // Discarding a never-saved entry: clean up any already-uploaded R2 objects
+    if (!selectedEntryId && entryImages.length > 0) {
+      void bestEffortDeleteImages(entryImages.flatMap(i => [i.key, i.thumbKey]));
+    }
     setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+    setEntryImages([]); setFeaturedKey(null); setImageError('');
     setLastSavedAt(null);
     setPendingEntryDate(null);
     setShowMobileEditor(false);
@@ -551,6 +686,7 @@ export function JournalView() {
       if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+        setEntryImages([]); setFeaturedKey(null); setImageError('');
         setShowMobileEditor(true);
         return;
       }
@@ -561,6 +697,7 @@ export function JournalView() {
         if (tag === 'INPUT' || tag === 'TEXTAREA' || editable) return;
         e.preventDefault();
         setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
+        setEntryImages([]); setFeaturedKey(null); setImageError('');
         setShowMobileEditor(true);
         return;
       }
@@ -739,20 +876,28 @@ export function JournalView() {
               onDelete={selectedEntryId ? handleDelete : undefined}
               onNew={handleNew}
               onBookmark={handleBookmark}
-              onShare={() => setShareOpen(true)}
+              onShare={entryImages.length > 0 ? undefined : () => setShareOpen(true)}
               onBack={handleMobileBack}
               isEditing={selectedEntryId !== null}
               isSaving={isSaving}
               saveStatus={saveStatus}
               lastSavedAt={lastSavedAt}
               dictationControlRef={dictationControlRef}
+              images={entryImages}
+              featuredKey={featuredKey}
+              onImagesSelected={handleImagesSelected}
+              onImageRemoved={handleImageRemoved}
+              onSetFeatured={handleSetFeatured}
+              imageUploading={imageUploading}
+              imageError={imageError}
+              imagesReady={imagesReady}
             />
             </EditorFocusWrap>
           </EditorPanel>
         }
       />
 
-      {shareOpen && selectedEntryId && (
+      {shareOpen && selectedEntryId && entryImages.length === 0 && (
         <ShareModal
           entryContent={editorContent}
           onClose={() => setShareOpen(false)}
@@ -767,11 +912,15 @@ export function JournalView() {
         variant="danger"
         onConfirm={() => {
           if (pendingDeleteId) {
+            const entry = useEntriesStore.getState().decryptedEntries.find(e => e.id === pendingDeleteId);
+            const imageKeys = entry ? collectImageKeys([entry]) : [];
             entriesApi.delete(pendingDeleteId).then(() => {
               useEntriesStore.getState().removeEntry(pendingDeleteId);
+              if (imageKeys.length > 0) void bestEffortDeleteImages(imageKeys);
               useUIStore.getState().setSelectedEntryId(null);
               useUIStore.getState().setShowMobileEditor(false);
               setEditorContent(''); setEditorTopicId(null); setCustomFields({});
+              setEntryImages([]); setFeaturedKey(null); setImageError('');
               setEditorExpanded(false);
             }).catch(err => console.error('Delete failed:', err));
           }
