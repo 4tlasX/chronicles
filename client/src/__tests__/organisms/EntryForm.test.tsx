@@ -129,6 +129,38 @@ describe('EntryForm', () => {
     expect(onSave).toHaveBeenCalled();
   });
 
+  describe('breadcrumb', () => {
+    it('shows the Journal crumb for entries with no mapped topic', () => {
+      renderWithTheme(<EntryForm {...defaultProps} />);
+      expect(screen.getByText('Journal')).toBeInTheDocument();
+      expect(screen.getByLabelText('Entry location')).toBeInTheDocument();
+    });
+
+    it('derives ancestors from the topic and keeps the picker as last crumb', () => {
+      renderWithTheme(
+        <EntryForm {...defaultProps} topicId={7}
+          topics={[{ id: 7, name: 'Recipe', icon: null, color: null }]} />
+      );
+      expect(screen.getByText('Meals')).toBeInTheDocument();
+      expect(screen.getByTestId('topic-selector')).toBeInTheDocument();
+    });
+
+    it('navigates when an ancestor crumb is clicked', () => {
+      const onNavigate = vi.fn();
+      renderWithTheme(
+        <EntryForm {...defaultProps} onNavigate={onNavigate} topicId={7}
+          topics={[{ id: 7, name: 'Recipe', icon: null, color: null }]} />
+      );
+      fireEvent.click(screen.getByText('Meals'));
+      expect(onNavigate).toHaveBeenCalledWith('/menu');
+    });
+
+    it('renders ancestors as non-clickable without onNavigate', () => {
+      renderWithTheme(<EntryForm {...defaultProps} />);
+      expect(screen.getByText('Journal')).toBeDisabled();
+    });
+  });
+
   describe('collapsed editor for field-only entries', () => {
     const bookTopics = [{ id: 5, name: 'Books', icon: null, color: null }];
 

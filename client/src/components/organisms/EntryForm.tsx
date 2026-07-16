@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, type MutableRefObject } from 'react';
+import { useState, useEffect, useRef, Fragment, type MutableRefObject } from 'react';
 import styled from 'styled-components';
 import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
+import { getTopicTrail } from '../../utils/topicBreadcrumb.js';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { Editor, type DictationControls } from './Editor.js';
 import { TopicSelector } from './TopicSelector.js';
@@ -132,8 +133,7 @@ const EdDateDow = styled.span`
   color: var(--text-tertiary);
 `;
 
-/* Topic selector + actions row — pill picker left, action buttons right,
-   flanked by hairline rule bottom (DS spec). */
+/* Actions row — icon buttons right-aligned, flanked by hairline rules (DS spec). */
 const EdTopicRow = styled.div`
   display: flex;
   gap: var(--s-3, 12px);
@@ -143,17 +143,65 @@ const EdTopicRow = styled.div`
   border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
   position: relative;
+`;
 
-  /* Topic picker trigger only (direct child button), not dropdown options. */
-  & > div:first-child > button {
+/* Breadcrumb at the very top of the entry: VIEW / SUBVIEW / TOPIC.
+   Ancestors derive from the topic's home view; the topic is the last crumb. */
+const EdCrumbRow = styled.nav`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 20px;
+`;
+
+const CrumbLink = styled.button`
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  transition: color 120ms ease;
+  &:hover { color: var(--text-primary); }
+  &:disabled { cursor: default; }
+  &:disabled:hover { color: var(--text-tertiary); }
+`;
+
+const CrumbSep = styled.span`
+  font-family: var(--font-label);
+  font-size: 11px;
+  color: var(--text-tertiary);
+`;
+
+/* The topic is the last crumb AND the topic picker — restyle the
+   TopicSelector trigger to read as bright tracked-uppercase crumb text,
+   keeping its dropdown intact. */
+const CrumbTopic = styled.div`
+  /* Trigger only (direct child button of the picker wrapper). */
+  & > div > button {
     border: none;
     border-radius: 0;
+    padding: 0 2px;
     background: transparent;
+    font-family: var(--font-label);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    gap: 6px;
   }
-  & > div:first-child > button:hover { background: transparent; }
-  /* Dropdown menu: drop the outer border (matches Quick Entry) — scoped to
-     the picker wrapper's direct div child so options are unaffected. */
-  & > div:first-child > div { border: none; }
+  & > div > button:hover {
+    background: transparent;
+    color: var(--color-accent);
+  }
+  /* Dropdown menu: drop the outer border (matches Quick Entry). */
+  & > div > div { border: none; }
 `;
 
 
@@ -367,6 +415,8 @@ interface EntryFormProps {
   onBookmark?: () => void;
   onShare?: () => void;
   onBack?: () => void;
+  /** Navigate to a breadcrumb ancestor (router injected by the view). */
+  onNavigate?: (path: string) => void;
   isEditing: boolean;
   isSaving: boolean;
   saveStatus: string;
@@ -387,7 +437,7 @@ interface EntryFormProps {
 export function EntryForm({
   entryId, content, onContentChange, topicId, onTopicChange, topics,
   customFields, onCustomFieldsChange, onSave, onAutoSave, onDelete, onNew,
-  onBookmark, onShare, onBack,
+  onBookmark, onShare, onBack, onNavigate,
   isEditing, isSaving, saveStatus, lastSavedAt, placeholder = 'Start writing...',
   dictationControlRef,
   images = [], featuredKey = null, onImagesSelected, onImageRemoved, onSetFeatured,
@@ -421,6 +471,7 @@ export function EntryForm({
 
   const selectedTopic = topics.find(t => t.id === topicId);
   const customType = getCustomType(selectedTopic?.name);
+  const trail = getTopicTrail(selectedTopic?.name);
 
   // Build goal options for milestone linking
   const goalOptions = entries
@@ -549,6 +600,30 @@ export function EntryForm({
         {/* Featured image hero — outside EdBody for full-bleed width */}
         {featuredImage && <EntryHeroBanner image={featuredImage} />}
         <EdBody>
+          {/* Breadcrumb: view / subview / topic — the topic crumb is the picker */}
+          <EdCrumbRow aria-label="Entry location">
+            {trail.map(crumb => (
+              <Fragment key={crumb.label}>
+                <CrumbLink
+                  type="button"
+                  disabled={!crumb.path || !onNavigate}
+                  onClick={() => crumb.path && onNavigate?.(crumb.path)}
+                >
+                  {crumb.label}
+                </CrumbLink>
+                <CrumbSep>/</CrumbSep>
+              </Fragment>
+            ))}
+            <CrumbTopic>
+              <TopicSelector
+                selectedId={topicId}
+                onSelect={id => onTopicChange(id)}
+                topics={topics}
+                allowNone={false}
+              />
+            </CrumbTopic>
+          </EdCrumbRow>
+
           {/* DS date block — big numeral + weekday under a 2px accent rule */}
           {(entryCreatedAt || !entryId) && (
             <EdDateBlock>
@@ -562,15 +637,8 @@ export function EntryForm({
             </EdDateBlock>
           )}
 
-          {/* Topic picker + action buttons row, flanked by hairline rules */}
+          {/* Action buttons row, flanked by hairline rules */}
           <EdTopicRow>
-            <TopicSelector
-              selectedId={topicId}
-              onSelect={id => onTopicChange(id)}
-              topics={topics}
-              filled
-              allowNone={false}
-            />
             <EdActions style={{ marginLeft: 'auto' }}>
               <IconBtn
                 type="button"

@@ -876,6 +876,7 @@ export function JournalView() {
               onDelete={selectedEntryId ? handleDelete : undefined}
               onNew={handleNew}
               onBookmark={handleBookmark}
+              onNavigate={path => navigate(path)}
               onShare={entryImages.length > 0 ? undefined : () => setShareOpen(true)}
               onBack={handleMobileBack}
               isEditing={selectedEntryId !== null}
