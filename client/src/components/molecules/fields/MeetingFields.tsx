@@ -30,6 +30,13 @@ interface MeetingFieldsProps {
 export function MeetingFields({ values, onChange, showCalendarSync }: MeetingFieldsProps) {
   return (
     <Wrapper>
+      <FormField label="Meeting Name">
+        <TextInput
+          value={values.meetingName ?? ''}
+          onChange={e => onChange({ ...values, meetingName: e.target.value })}
+          placeholder="What is the meeting?"
+        />
+      </FormField>
       <FormField label="Meeting Topic">
         <TextInput
           value={values.meetingTopic}

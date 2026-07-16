@@ -17,6 +17,7 @@ vi.mock('@/stores/uiStore', () => ({
     selector({
       headerColor: '#4A5568',
       topicCustomFields: { 5: [{ id: 'author', label: 'Author', type: 'text' }] },
+      topicHideText: { 7: true },
     }),
 }));
 
@@ -25,6 +26,7 @@ vi.mock('@/utils/topicIcons', () => ({
 }));
 
 vi.mock('@/utils/stripHtml', () => ({
+  builtinEntryName: (cf: Record<string, unknown> | undefined | null) => { if (!cf) return ''; for (const k of ['eventName','meetingName','goalObjective','milestoneObjective','taskDescription','mealDescription']) { const v = cf[k]; if (typeof v === 'string' && v.trim()) return v.trim(); } return ''; },
   stripHtml: (html: string) => html.replace(/<[^>]*>/g, ''),
   summarizeUserFields: (defs: unknown[], values: Record<string, unknown>) =>
     Object.values(values || {}).filter(Boolean).join(' · '),
@@ -161,49 +163,46 @@ describe('EntryForm', () => {
     });
   });
 
-  describe('collapsed editor for field-only entries', () => {
-    const bookTopics = [{ id: 5, name: 'Books', icon: null, color: null }];
-
-    it('collapses the editor when an existing entry has custom fields but no text', () => {
+  describe('hidden text area for structured topics', () => {
+    it('hides the editor entirely for built-in structured topics (no Add notes affordance)', () => {
       renderWithTheme(
-        <EntryForm {...defaultProps} entryId={2} isEditing topicId={5} topics={bookTopics} content="" />
+        <EntryForm {...defaultProps} entryId={null} topicId={3}
+          topics={[{ id: 3, name: 'Event', icon: null, color: null }]} content="" />
       );
       expect(screen.getByTestId('editor')).not.toBeVisible();
-      expect(screen.getByText(/add notes/i)).toBeInTheDocument();
-    });
-
-    it('expands the editor when Add notes is clicked', () => {
-      renderWithTheme(
-        <EntryForm {...defaultProps} entryId={2} isEditing topicId={5} topics={bookTopics} content="" />
-      );
-      fireEvent.click(screen.getByText(/add notes/i));
-      expect(screen.getByTestId('editor')).toBeVisible();
       expect(screen.queryByText(/add notes/i)).not.toBeInTheDocument();
     });
 
-    it('does not collapse for new entries', () => {
+    it('hides the editor for custom topics with the hide-text option enabled', () => {
       renderWithTheme(
-        <EntryForm {...defaultProps} entryId={null} topicId={5} topics={bookTopics} content="" />
+        <EntryForm {...defaultProps} entryId={null} topicId={7}
+          topics={[{ id: 7, name: 'Dreams', icon: null, color: null }]} content="" />
       );
-      expect(screen.getByTestId('editor')).toBeVisible();
-      expect(screen.queryByText(/add notes/i)).not.toBeInTheDocument();
+      expect(screen.getByTestId('editor')).not.toBeVisible();
     });
 
-    it('does not collapse when the entry has text content', () => {
+    it('keeps the editor for custom topics without the hide option', () => {
       renderWithTheme(
-        <EntryForm {...defaultProps} entryId={2} isEditing topicId={5} topics={bookTopics} content="<p>Some notes</p>" />
+        <EntryForm {...defaultProps} entryId={2} isEditing topicId={5}
+          topics={[{ id: 5, name: 'Books', icon: null, color: null }]} content="" />
       );
       expect(screen.getByTestId('editor')).toBeVisible();
-      expect(screen.queryByText(/add notes/i)).not.toBeInTheDocument();
     });
 
-    it('does not collapse when the topic has no custom fields', () => {
+    it('keeps the editor for the Journal topic', () => {
       renderWithTheme(
         <EntryForm {...defaultProps} entryId={2} isEditing topicId={9}
           topics={[{ id: 9, name: 'Journal', icon: null, color: null }]} content="" />
       );
       expect(screen.getByTestId('editor')).toBeVisible();
-      expect(screen.queryByText(/add notes/i)).not.toBeInTheDocument();
+    });
+
+    it('keeps existing text content visible on structured topics', () => {
+      renderWithTheme(
+        <EntryForm {...defaultProps} entryId={2} isEditing topicId={3}
+          topics={[{ id: 3, name: 'Event', icon: null, color: null }]} content="<p>Some notes</p>" />
+      );
+      expect(screen.getByTestId('editor')).toBeVisible();
     });
   });
 });

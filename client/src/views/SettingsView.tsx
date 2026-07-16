@@ -855,13 +855,14 @@ export function SettingsView() {
           <ColorSectionDesc>Choose an accent color for highlights and interactive elements</ColorSectionDesc>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {[
+              /* All presets toned to the teal's muted chroma (~50% sat) */
               { name: 'Teal', color: '#34a5a2' },
               { name: 'Ink', color: '#1f2937' },
-              { name: 'Rose', color: '#e11d48' },
-              { name: 'Amber', color: '#d97706' },
-              { name: 'Sage', color: '#65a30d' },
-              { name: 'Denim', color: '#2563eb' },
-              { name: 'Purple', color: '#8b5cf6' },
+              { name: 'Rose', color: '#b8455e' },
+              { name: 'Amber', color: '#b8853d' },
+              { name: 'Sage', color: '#6f9a58' },
+              { name: 'Denim', color: '#3d64b8' },
+              { name: 'Purple', color: '#6e53ac' },
             ].map(a => (
               <button
                 key={a.color}

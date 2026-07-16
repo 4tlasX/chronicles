@@ -269,7 +269,7 @@ const MealTitle = styled.div`
 
 const MealPlaceholder = styled.div`
   font-size: 13px;
-  color: var(--text-disabled);
+  color: var(--text-tertiary);
   font-style: italic;
   line-height: 1.35;
   padding-top: 2px;
@@ -290,7 +290,7 @@ const MealInput = styled.textarea`
   min-height: 20px;
   line-height: 1.35;
   field-sizing: content;
-  &::placeholder { color: var(--text-disabled); font-style: italic; font-weight: 400; }
+  &::placeholder { color: var(--text-tertiary); font-style: italic; font-weight: 400; }
   &:focus { outline: none; }
 `;
 
@@ -430,7 +430,12 @@ export function MenuView() {
   const weekStartStr = toDateStr(weekStart);
 
   const menuPlanTopicId     = useMemo(() => allTopics.find(t => t.name.toLowerCase() === 'menu plan')?.id,    [allTopics]);
-  const recipeTopicId       = useMemo(() => allTopics.find(t => t.name.toLowerCase() === 'recipe')?.id,       [allTopics]);
+  // Prefer the current "Recipes" topic; the retired singular "Recipe" topic
+  // is only a fallback so menu link options never mix in stale entries
+  const recipeTopicId       = useMemo(() => (
+    allTopics.find(t => t.name.toLowerCase() === 'recipes')?.id
+      ?? allTopics.find(t => t.name.toLowerCase() === 'recipe')?.id
+  ), [allTopics]);
   const shoppingListTopicId = useMemo(() => allTopics.find(t => t.name.toLowerCase() === 'shopping list')?.id, [allTopics]);
 
   const menuPlanEntry = useMemo(() => {
@@ -446,7 +451,11 @@ export function MenuView() {
     if (!recipeTopicId) return [];
     return entries
       .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === recipeTopicId)
-      .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || `Recipe #${e.id}` }));
+      .map(e => {
+        const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> | undefined;
+        const name = typeof cf?.recipeName === 'string' ? cf.recipeName.trim() : '';
+        return { id: e.id, title: name || stripHtml(e.content).slice(0, 60) || `Recipe #${e.id}` };
+      });
   }, [entries, recipeTopicId]);
 
   useEffect(() => {

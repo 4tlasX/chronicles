@@ -2,6 +2,7 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { IconPicker } from './IconPicker.js';
+import { Checkbox } from '../atoms/Checkbox.js';
 import type { UserFieldDef } from '../../types/userFields.js';
 
 const Card = styled.div`
@@ -174,12 +175,16 @@ interface TopicEditFormProps {
   topicId?: number;
   fieldDefs?: UserFieldDef[];
   onFieldDefsChange?: (defs: UserFieldDef[]) => void;
+  // Entry editor option: hide the main text area for this topic's entries
+  hideTextField?: boolean;
+  onHideTextFieldChange?: (hide: boolean) => void;
 }
 
 export function TopicEditForm({
   name, icon, accentColor, saving, saveLabel = 'Save', cancelLabel = 'Cancel',
   onNameChange, onIconChange, onSave, onCancel, onKeyDown,
   topicId, fieldDefs = [], onFieldDefsChange,
+  hideTextField = false, onHideTextFieldChange,
 }: TopicEditFormProps) {
   const [newLabel, setNewLabel] = useState('');
   const [newType, setNewType] = useState<UserFieldDef['type']>('text');
@@ -271,6 +276,14 @@ export function TopicEditForm({
             </AddFieldBtn>
           )}
         </FieldsSection>
+      )}
+
+      {topicId !== undefined && onHideTextFieldChange && (
+        <Checkbox
+          checked={hideTextField}
+          onChange={onHideTextFieldChange}
+          label="Hide main text field (entries use custom fields; notes can be expanded)"
+        />
       )}
 
       <Actions>

@@ -10,6 +10,23 @@ export function stripHtml(html: string): string {
   return tmp.textContent || tmp.innerText || '';
 }
 
+/** Built-in "primary label" field keys, in priority order — the name/description
+ *  a structured entry carries when its text content is empty. */
+const BUILTIN_NAME_KEYS = [
+  'eventName', 'meetingName', 'goalObjective', 'milestoneObjective',
+  'taskDescription', 'mealDescription', 'recipeName',
+] as const;
+
+/** The entry's built-in name/description field value, or '' when none is set. */
+export function builtinEntryName(customFields: Record<string, unknown> | undefined | null): string {
+  if (!customFields) return '';
+  for (const key of BUILTIN_NAME_KEYS) {
+    const v = customFields[key];
+    if (typeof v === 'string' && v.trim()) return v.trim();
+  }
+  return '';
+}
+
 /** Build a one-line summary from user-defined field values, for preview display only. */
 export function summarizeUserFields(defs: UserFieldDef[], values: Record<string, unknown>): string {
   const parts: string[] = [];

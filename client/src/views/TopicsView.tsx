@@ -69,16 +69,13 @@ const Row = styled.button`
   cursor: pointer;
   text-align: left;
   color: var(--text-primary);
-  transition: background 120ms ease;
-
-  &:hover { background: var(--bg-hover); }
 `;
 
 const RowIcon = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-accent);
+  color: var(--text-primary);
 `;
 
 const RowName = styled.span`
@@ -89,6 +86,10 @@ const RowName = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color 120ms ease;
+
+  /* Hover: the title picks up the accent — no full-row highlight. */
+  ${Row}:hover & { color: var(--color-accent); }
 `;
 
 const RowCount = styled.span`
@@ -178,6 +179,7 @@ export function TopicsView() {
   const setTopics = useEntriesStore(s => s.setTopics);
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
+  const topicHideText = useUIStore(s => s.topicHideText);
   const updateTopicFields = useUIStore(s => s.updateTopicFields);
 
   // Add row
@@ -217,6 +219,12 @@ export function TopicsView() {
     settingsApi.upsert('topicCustomFields', { ...current, [topicId]: defs })
       .catch(err => console.error('Failed to save topic fields:', err));
   }, [updateTopicFields]);
+
+  const handleHideTextChange = useCallback((topicId: number, hide: boolean) => {
+    useUIStore.getState().updateTopicHideText(topicId, hide);
+    settingsApi.upsert('topicHideText', useUIStore.getState().topicHideText)
+      .catch(err => console.error('Failed to save topic option:', err));
+  }, []);
 
   const handleEditSave = useCallback(async () => {
     if (editingId === null || !editName.trim()) return;
@@ -305,6 +313,8 @@ export function TopicsView() {
                         topicId={topic.id}
                         fieldDefs={topicCustomFields[topic.id] ?? []}
                         onFieldDefsChange={defs => handleFieldDefsChange(topic.id, defs)}
+                        hideTextField={!!topicHideText[topic.id]}
+                        onHideTextFieldChange={hide => handleHideTextChange(topic.id, hide)}
                       />
                     </EditWrap>
                   )}

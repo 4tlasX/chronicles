@@ -28,6 +28,13 @@ interface FoodFieldsProps {
 export function FoodFields({ values, onChange }: FoodFieldsProps) {
   return (
     <Wrapper>
+      <FormField label="Meal Description">
+        <TextInput
+          value={values.mealDescription ?? ''}
+          onChange={e => onChange({ ...values, mealDescription: e.target.value })}
+          placeholder="What did you eat?"
+        />
+      </FormField>
       <Row>
         <FormField label="Meal Type">
           <Select

@@ -8,6 +8,8 @@ export interface GoalEntry {
   customFields: Record<string, unknown>;
   taxonomyId: number;
   createdAt: Date;
+  /** Entry's featured image (from metadata._images/_featuredKey), when set */
+  featuredImage?: { key: string; iv: string; mimeType: string } | null;
 }
 
 /* Roadmap (Kanban) status columns for goals. */

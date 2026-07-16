@@ -50,8 +50,8 @@ const LIGHT_CSS_VARS: Record<string, string> = {
   '--bg-inverse':        '#1b1d26',
   /* DS text */
   '--text-primary':      '#18181c',
-  '--text-secondary':    '#56565f',
-  '--text-tertiary':     '#90909a',
+  '--text-secondary':    '#4c4c55',
+  '--text-tertiary':     '#74747f',
   '--text-disabled':     '#a0a0aa',
   '--text-inverse':      '#ffffff',
   /* DS borders — hairlines only */
@@ -356,6 +356,7 @@ export function App() {
               <Route path="/goals/todos" element={<R><GoalsView /></R>} />
               <Route path="/goals/filter" element={<R><PlannerFilterView /></R>} />
               <Route path="/menu" element={<R><MenuView /></R>} />
+              <Route path="/menu/recipes" element={<R><HealthView topicNames={['Recipe', 'Recipes']} metaFields={[{ key: 'category', label: 'Category' }, { key: 'servings', label: 'Serves' }, { key: 'prepTime', label: 'Prep' }, { key: 'cookTime', label: 'Cook' }]} showDateFilter={false} title="Recipes" tabBar={<MealsTabBar />} /></R>} />
               <Route path="/menu/meals" element={<R><HealthView topicNames={['Meals']} metaFields={[{ key: 'mealType', label: 'Meal' }, { key: 'calories', label: 'Calories' }, { key: 'ingredients', label: 'Ingredients' }]} summaryFields={[{ key: 'calories', label: 'Total Calories' }]} title="Meals" tabBar={<MealsTabBar />} /></R>} />
               <Route path="/shopping" element={<R><ShoppingListsView /></R>} />
 

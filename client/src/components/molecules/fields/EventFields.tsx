@@ -30,6 +30,13 @@ interface EventFieldsProps {
 export function EventFields({ values, onChange, showCalendarSync }: EventFieldsProps) {
   return (
     <Wrapper>
+      <FormField label="Event Name">
+        <TextInput
+          value={values.eventName ?? ''}
+          onChange={e => onChange({ ...values, eventName: e.target.value })}
+          placeholder="What is the event?"
+        />
+      </FormField>
       <Row>
         <FormField label="Start">
           <DateTimeInput

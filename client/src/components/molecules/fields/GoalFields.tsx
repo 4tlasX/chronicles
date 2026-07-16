@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { Select } from '../../atoms/Select.js';
+import { TextInput } from '../../atoms/TextInput.js';
 import { DateInput } from '../../atoms/DateInput.js';
 import { FormField } from '../FormField.js';
 import type { GoalFieldValues } from '../../../types/fields.js';
@@ -29,6 +30,13 @@ interface GoalFieldsProps {
 export function GoalFields({ values, onChange }: GoalFieldsProps) {
   return (
     <Wrapper>
+      <FormField label="Goal/Objective">
+        <TextInput
+          value={values.goalObjective ?? ''}
+          onChange={e => onChange({ ...values, goalObjective: e.target.value })}
+          placeholder="What do you want to achieve?"
+        />
+      </FormField>
       <Row>
         <FormField label="Type">
           <Select

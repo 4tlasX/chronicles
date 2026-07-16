@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { CalendarHeader } from './CalendarHeader.js';
-import { stripHtml } from '../../utils/stripHtml.js';
+import { stripHtml, builtinEntryName } from '../../utils/stripHtml.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 import type { CalendarViewMode } from '../../views/CalendarView.js';
 
@@ -290,7 +290,7 @@ export function CalendarGrid({
                       <DayItems>
                         {dayEntries.slice(0, 3).map(entry => {
                           const topicName = getTopicName(entry);
-                          const preview = stripHtml(entry.content).slice(0, 30) || topicName || 'Entry';
+                          const preview = (stripHtml(entry.content).trim() || builtinEntryName((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)).slice(0, 30) || topicName || 'Entry';
                           return <DayItem key={entry.id}>{preview}</DayItem>;
                         })}
                         {dayEntries.length > 3 && <MoreLabel>+{dayEntries.length - 3} more</MoreLabel>}
@@ -329,7 +329,7 @@ export function CalendarGrid({
                 ) : (
                   dayEntries.map(entry => {
                     const topicName = getTopicName(entry);
-                    const preview = stripHtml(entry.content).slice(0, 50) || topicName || 'Entry';
+                    const preview = (stripHtml(entry.content).trim() || builtinEntryName((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)).slice(0, 50) || topicName || 'Entry';
                     return <MobileEntryChip key={entry.id}>{preview}</MobileEntryChip>;
                   })
                 )}

@@ -280,6 +280,7 @@ export function TopicSidebarPanel({
   const recentCount = entries.filter(e => new Date(e.createdAt).getTime() >= cutoff).length;
 
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
+  const topicHideText = useUIStore(s => s.topicHideText);
   const updateTopicFields = useUIStore(s => s.updateTopicFields);
 
   const handleFieldDefsChange = useCallback((topicId: number, defs: UserFieldDef[]) => {
@@ -289,6 +290,12 @@ export function TopicSidebarPanel({
     settingsApi.upsert('topicCustomFields', updated)
       .catch(err => console.error('Failed to save topic fields:', err));
   }, [updateTopicFields]);
+
+  const handleHideTextChange = useCallback((topicId: number, hide: boolean) => {
+    useUIStore.getState().updateTopicHideText(topicId, hide);
+    settingsApi.upsert('topicHideText', useUIStore.getState().topicHideText)
+      .catch(err => console.error('Failed to save topic option:', err));
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -384,6 +391,8 @@ export function TopicSidebarPanel({
                     topicId={topic.id}
                     fieldDefs={topicCustomFields[topic.id] ?? []}
                     onFieldDefsChange={defs => handleFieldDefsChange(topic.id, defs)}
+                    hideTextField={!!topicHideText[topic.id]}
+                    onHideTextFieldChange={hide => handleHideTextChange(topic.id, hide)}
                   />
                 )}
               </div>

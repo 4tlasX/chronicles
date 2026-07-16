@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, Fragment, type MutableRefObject } from 'react';
 import styled from 'styled-components';
-import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
+import { stripHtml, summarizeUserFields, builtinEntryName } from '../../utils/stripHtml.js';
 import { getTopicTrail } from '../../utils/topicBreadcrumb.js';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { Editor, type DictationControls } from './Editor.js';
+import { RecipeEntry } from './RecipeEntry.js';
 import { TopicSelector } from './TopicSelector.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { FieldRowLayoutContext } from '../molecules/FormField.js';
@@ -90,7 +91,7 @@ const EdDateBlock = styled.div`
   margin-top: 14px;
   margin-bottom: 0;
   padding-top: 26px;
-  padding-bottom: 22px;
+  padding-bottom: 30px;
   border-bottom: 1px solid var(--border-default);
 `;
 
@@ -134,15 +135,54 @@ const EdDateDow = styled.span`
   color: var(--text-tertiary);
 `;
 
+/* Title-led header — replaces the date block on topics whose entries lead
+   with their own name (events, meetings, quotes, books, music, goals,
+   milestones). Same block metrics as EdDateBlock so the layout doesn't shift. */
+const EdTitleBlock = styled.div`
+  margin-top: 14px;
+  padding-top: 26px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--border-default);
+`;
+
+const EdTitleText = styled.h1`
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(26px, 3.5vw, 38px);
+  line-height: 1.15;
+  color: var(--text-primary);
+  margin: 0;
+`;
+
+const EdTitleDetails = styled.div`
+  margin-top: 10px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  color: var(--text-secondary);
+`;
+
+const EdQuoteText = styled.blockquote`
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.4;
+  color: var(--text-primary);
+  margin: 0;
+`;
+
 /* Breadcrumb at the very top of the entry: VIEW / SUBVIEW / TOPIC on the
    left, the entry action bar on the right. Ancestors derive from the topic's
    home view; the topic is the last crumb. */
+/* Top padding is 0 so the row's divider lines up with the sidebar search
+   block's bottom border (EdBody's 24px top pad + 32px icons + 10px = 66px,
+   matching the search block's 16 + 34 + 16). */
 const EdCrumbRow = styled.nav`
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 20px 0 10px;
+  padding: 0 0 10px;
   border-bottom: 1px solid var(--border-subtle);
 `;
 
@@ -246,14 +286,12 @@ const EditorArea = styled.div<{ $hidden?: boolean }>`
   margin-top: 24px;
 `;
 
-/* Shown in place of the editor when a field-only entry collapses it —
-   quiet tracked-uppercase affordance to expand and write notes. */
-const AddNotesBtn = styled.button`
+/* "+ NEW" — accent text button opening a fresh entry, leads the action bar. */
+const NewEntryBtn = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  align-self: flex-start;
-  padding: 12px 0;
+  gap: 4px;
+  padding: 0 6px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -262,9 +300,30 @@ const AddNotesBtn = styled.button`
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
-  transition: color 120ms ease;
-  &:hover { color: var(--text-primary); }
+  color: var(--color-accent);
+  transition: opacity 120ms ease;
+  &:hover { opacity: 0.7; }
+`;
+
+/* "Done editing — view recipe" — accent text button above the recipe fields. */
+const ViewRecipeBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-bottom: 12px;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  transition: opacity 120ms ease;
+  &:hover { opacity: 0.7; }
 `;
 
 /* Inline image upload error under the action row (dictation-error pattern). */
@@ -384,8 +443,9 @@ function extractTitle(html: string): string {
 const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
   meals: 'food', medication: 'medication', symptom: 'symptom',
-  exercise: 'exercise', event: 'event', meeting: 'meeting',
-  allergy: 'allergy', 'shopping list': 'shopping_list', recipe: 'recipe',
+  exercise: 'exercise', event: 'event', events: 'event', meeting: 'meeting',
+  allergy: 'allergy', 'shopping list': 'shopping_list',
+  recipe: 'recipe', recipes: 'recipe',
   priorities: 'priorities', wellness: 'wellness',
 };
 
@@ -413,6 +473,9 @@ interface EntryFormProps {
   onBookmark?: () => void;
   onShare?: () => void;
   onBack?: () => void;
+  /** Recipe view actions (injected by JournalView) */
+  onAddToShoppingList?: (values: RecipeFieldValues) => void;
+  onAddToMenu?: () => void;
   /** Navigate to a breadcrumb ancestor (router injected by the view). */
   onNavigate?: (path: string) => void;
   isEditing: boolean;
@@ -435,7 +498,7 @@ interface EntryFormProps {
 export function EntryForm({
   entryId, content, onContentChange, topicId, onTopicChange, topics,
   customFields, onCustomFieldsChange, onSave, onAutoSave, onDelete, onNew,
-  onBookmark, onShare, onBack, onNavigate,
+  onBookmark, onShare, onBack, onNavigate, onAddToShoppingList, onAddToMenu,
   isEditing, isSaving, saveStatus, lastSavedAt, placeholder = 'Start writing...',
   dictationControlRef,
   images = [], featuredKey = null, onImagesSelected, onImageRemoved, onSetFeatured,
@@ -462,6 +525,7 @@ export function EntryForm({
   const entries = useEntriesStore(s => s.decryptedEntries);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
   const topicCustomFields = useUIStore(s => s.topicCustomFields);
+  const topicHideText = useUIStore(s => s.topicHideText);
   const cycleTrackingEnabled = useUIStore(s => s.cycleTrackingEnabled);
   const calendarSyncEnabled = useUIStore(s => s.calendarSyncEnabled);
 
@@ -506,7 +570,11 @@ export function EntryForm({
       const t = tid ? topics.find(tp => tp.id === tid) : undefined;
       return t && getCustomType(t.name) === 'recipe' && e.id !== entryId;
     })
-    .map(e => ({ id: e.id, title: stripHtml(e.content).slice(0, 60) || `Recipe #${e.id}` }));
+    .map(e => {
+      const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> | undefined;
+      const name = typeof cf?.recipeName === 'string' ? cf.recipeName.trim() : '';
+      return { id: e.id, title: name || stripHtml(e.content).slice(0, 60) || `Recipe #${e.id}` };
+    });
 
   // Build shopping list options for recipe linking
   const shoppingListOptions = entries
@@ -557,21 +625,129 @@ export function EntryForm({
   const userFieldValues = (customFields._userFields as Record<string, unknown>) ?? {};
   const canSave = stripHtml(content).length > 0
     || (userFieldDefs.length > 0 && summarizeUserFields(userFieldDefs, userFieldValues) !== '')
+    || builtinEntryName(customFields) !== ''
     || images.length > 0;
 
-  // Field-only entries (Books, Quotes, Music, …) collapse the empty editor so
-  // the fields lead; "Add notes" (or dictate/draw) expands it back
+  // The main text area is hidden entirely (no affordance) for every topic
+  // except Journal: built-in structured topics always, custom topics via
+  // their "Hide main text field" option — the fields simply move up.
+  // Existing text content always stays visible (hiding it would read as data
+  // loss), and dictate/draw force-reveal the editor since they write into it.
   const [notesExpanded, setNotesExpanded] = useState(false);
   useEffect(() => { setNotesExpanded(false); }, [entryId]);
   const hasTextContent = stripHtml(content).trim().length > 0 || content.includes('data-type="drawing"');
-  const hasFieldsUi = customType !== null || userFieldDefs.length > 0;
-  const editorCollapsed = !notesExpanded && !!entryId && !hasTextContent && hasFieldsUi;
+  const isJournalTopic = !selectedTopic || selectedTopic.name.toLowerCase() === 'journal';
+  const hideByTopicOption = topicId != null && !!topicHideText[topicId];
+  // Quote/Books/Music entries live in their custom fields — no text area
+  const fieldLedTopic = ['quote', 'quotes', 'book', 'books', 'music']
+    .includes(selectedTopic?.name.toLowerCase() ?? '');
+  const editorCollapsed = !notesExpanded && (
+    customType === 'event' ||
+    (!hasTextContent && !isJournalTopic && (customType !== null || hideByTopicOption || fieldLedTopic))
+  );
+
+  // Recipes render as a formatted page (RecipeEntry) once they have content;
+  // empty/new recipes start in the fields editor. "Edit recipe" flips back.
+  const isRecipe = customType === 'recipe';
+  const recipeValues = { servings: '', prepTime: '', cookTime: '', cuisine: '', ingredients: [], instructions: '', linkedShoppingListIds: [], ...(customFields as Partial<RecipeFieldValues>) } as RecipeFieldValues;
+  const recipeHasContent = !!(
+    recipeValues.recipeName?.trim() ||
+    recipeValues.ingredients.length > 0 ||
+    (recipeValues.steps?.length ?? 0) > 0 ||
+    recipeValues.instructions?.trim()
+  );
+  const [recipeEditing, setRecipeEditing] = useState(false);
+  useEffect(() => { setRecipeEditing(false); }, [entryId]);
+  const recipeViewMode = isRecipe && recipeHasContent && !recipeEditing;
+
+  const toggleRecipeIngredient = (id: string) => {
+    onCustomFieldsChange({
+      ...customFields,
+      ingredients: recipeValues.ingredients.map(i => i.id === id ? { ...i, checked: !i.checked } : i),
+    });
+  };
 
   // Entry meta data for datestrip
   const currentEntry = entryId ? entries.find(e => e.id === entryId) : null;
   const entryCreatedAt = currentEntry ? new Date(currentEntry.createdAt) : null;
 
   const entryTitle = entryId ? extractTitle(content) : null;
+
+  // ── Title-led headers ──
+  // These topics swap the date block for the entry's own name (like recipes):
+  // events/meetings (name + one detail line), quotes (the quote, formatted),
+  // books (book name), music (artist), goals and milestones (objective).
+  const topicNameLower = selectedTopic?.name.toLowerCase() ?? '';
+  const cfStr = (k: string) => {
+    const v = (customFields as Record<string, unknown>)[k];
+    return typeof v === 'string' ? v.trim() : '';
+  };
+  // Books/Music/Quote keep their data in user-defined custom fields — prefer
+  // the field whose label matches the topic's primary (Book/Artist/Quote),
+  // else the first field with a value
+  const firstUserFieldValue = (preferredLabels: string[]): string => {
+    const preferred = userFieldDefs.find(d => preferredLabels.some(p => d.label.toLowerCase().includes(p)));
+    const ordered = preferred ? [preferred, ...userFieldDefs.filter(d => d !== preferred)] : userFieldDefs;
+    for (const def of ordered) {
+      const v = userFieldValues[def.id];
+      if (typeof v === 'string' && v.trim()) return v.trim();
+      if (typeof v === 'number') return String(v);
+    }
+    return '';
+  };
+
+  const isQuoteTopic = topicNameLower === 'quote' || topicNameLower === 'quotes';
+  const headerQuote = isQuoteTopic ? firstUserFieldValue(['quote']) : '';
+  const headerTitle = (() => {
+    switch (topicNameLower) {
+      case 'event': case 'events': return cfStr('eventName');
+      case 'meeting': case 'meetings': return cfStr('meetingName');
+      case 'goal': case 'goals': return cfStr('goalObjective');
+      case 'milestone': case 'milestones': return cfStr('milestoneObjective');
+      case 'book': case 'books': return firstUserFieldValue(['book', 'title', 'name']);
+      case 'music': return firstUserFieldValue(['artist', 'musician', 'band']);
+      default: return '';
+    }
+  })();
+
+  // Strict label match into the user fields (no first-filled fallback)
+  const userFieldByLabel = (labels: string[]): string => {
+    const def = userFieldDefs.find(d => labels.some(p => d.label.toLowerCase().includes(p)));
+    if (!def) return '';
+    const v = userFieldValues[def.id];
+    return typeof v === 'string' ? v.trim() : v != null ? String(v) : '';
+  };
+
+  // Single detail line under the title: date · time · location for
+  // events/meetings; the author for quotes and books
+  const headerDetails = (() => {
+    if (['quote', 'quotes'].includes(topicNameLower)) {
+      const author = userFieldByLabel(['author', 'by', 'source', 'who']);
+      return author ? `— ${author}` : '';
+    }
+    if (['book', 'books'].includes(topicNameLower)) {
+      return userFieldByLabel(['author', 'by', 'writer']);
+    }
+    if (!['event', 'events', 'meeting', 'meetings'].includes(topicNameLower)) return '';
+    const parts: string[] = [];
+    const sd = cfStr('startDate');
+    if (sd) {
+      const d = new Date(`${sd}T00:00`);
+      if (!isNaN(d.getTime())) {
+        let label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const st = cfStr('startTime');
+        if (st) {
+          const t = new Date(`${sd}T${st}`);
+          if (!isNaN(t.getTime())) label += ` · ${t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+        }
+        parts.push(label);
+      }
+    }
+    if (cfStr('location')) parts.push(cfStr('location'));
+    return parts.join(' · ');
+  })();
+
+  const showTitleHeader = (!!headerTitle || !!headerQuote) && !recipeViewMode;
 
   const saveStatusNode = (() => {
     if (saveStatus === 'Save failed') return <StatusText>Save failed</StatusText>;
@@ -622,6 +798,9 @@ export function EntryForm({
 
             {/* Entry action bar — right side of the breadcrumb row */}
             <EdActions style={{ marginLeft: 'auto' }}>
+              <NewEntryBtn type="button" onClick={onNew} title="New entry">
+                + New
+              </NewEntryBtn>
               <IconBtn
                 type="button"
                 $active={isFavorite}
@@ -633,9 +812,10 @@ export function EntryForm({
               >
                 <Icon name="bookmark" size={16} strokeWidth={2} />
               </IconBtn>
-              {/* Share is hidden entirely on entries with images — sharing
-                  can never distribute user-hosted imagery */}
-              {images.length === 0 && (
+              {/* Share is hidden on entries with images — sharing never
+                  distributes user-hosted imagery. Recipes are exempt: they
+                  share their formatted fields and the photo stays private. */}
+              {(images.length === 0 || isRecipe) && (
                 <IconBtn
                   type="button"
                   aria-label="Share entry"
@@ -690,21 +870,19 @@ export function EntryForm({
               >
                 <Icon name="pencil" size={16} strokeWidth={2} />
               </IconBtn>
-              <IconBtn
-                type="button"
-                $danger
-                aria-label="Delete entry"
-                title="Delete"
-                onClick={() => entryId && onDelete?.()}
-                style={{ opacity: entryId ? 1 : 0.35, cursor: entryId ? 'pointer' : 'default' }}
-              >
-                <Icon name="trash" size={16} strokeWidth={2} />
-              </IconBtn>
             </EdActions>
           </EdCrumbRow>
 
-          {/* DS date block — big numeral + weekday under a 2px accent rule */}
-          {(entryCreatedAt || !entryId) && (
+          {/* DS date block — big numeral + weekday under a 2px accent rule.
+              Recipes in view mode lead with the recipe title instead. */}
+          {showTitleHeader ? (
+            <EdTitleBlock>
+              {headerQuote
+                ? <EdQuoteText>&ldquo;{headerQuote}&rdquo;</EdQuoteText>
+                : <EdTitleText>{headerTitle}</EdTitleText>}
+              {headerDetails && <EdTitleDetails>{headerDetails}</EdTitleDetails>}
+            </EdTitleBlock>
+          ) : (entryCreatedAt || !entryId) && !recipeViewMode && (
             <EdDateBlock>
               <EdDateContent>
                 <EdDateNum>{(entryCreatedAt || new Date()).getDate()}</EdDateNum>
@@ -716,19 +894,27 @@ export function EntryForm({
             </EdDateBlock>
           )}
 
-          {/* Featured image hero — under the date header, above the text area */}
-          {featuredImage && <EntryHeroBanner image={featuredImage} />}
+          {/* Featured image hero — under the date header, above the text area
+              (recipes place it inside their own layout) */}
+          {featuredImage && !recipeViewMode && <EntryHeroBanner image={featuredImage} />}
 
           {imageError && <ImageErrorText>{imageError}</ImageErrorText>}
 
-          {/* Rich text editor — collapsed for field-only entries */}
-          {editorCollapsed && (
-            <AddNotesBtn type="button" onClick={() => setNotesExpanded(true)}>
-              <Icon name="plus" size={13} strokeWidth={2.5} />
-              Add notes
-            </AddNotesBtn>
+          {/* Recipe read view — the formatted recipe page */}
+          {recipeViewMode && (
+            <RecipeEntry
+              values={recipeValues}
+              hero={featuredImage ? <EntryHeroBanner image={featuredImage} /> : null}
+              onToggleIngredient={toggleRecipeIngredient}
+              onEdit={() => setRecipeEditing(true)}
+              onDelete={entryId && onDelete ? () => onDelete() : undefined}
+              onAddToShoppingList={onAddToShoppingList ? () => onAddToShoppingList(recipeValues) : undefined}
+              onAddToMenu={onAddToMenu}
+            />
           )}
-          <EditorArea $hidden={editorCollapsed}>
+
+          {/* Rich text editor — hidden entirely for structured topics */}
+          <EditorArea $hidden={editorCollapsed || recipeViewMode}>
             <Editor
               content={content}
               onChange={onContentChange}
@@ -741,9 +927,16 @@ export function EntryForm({
             />
           </EditorArea>
 
-          {/* Custom fields, below editor */}
-          {customType && (
+          {/* Custom fields, below editor — recipes in view mode render the
+              formatted page instead; "Edit recipe" brings the fields back */}
+          {customType && !recipeViewMode && (
             <CustomFieldsSection>
+                {isRecipe && recipeHasContent && (
+                  <ViewRecipeBtn type="button" onClick={() => setRecipeEditing(false)}>
+                    <Icon name="check" size={12} strokeWidth={2.5} />
+                    Done editing — view recipe
+                  </ViewRecipeBtn>
+                )}
                 <CustomFieldsBody>
                   <FieldRowLayoutContext.Provider value={true}>
                   {customType === 'task' && <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentGoalId: null, parentMilestoneId: null, priority: 'none', deadline: '', ...customFields } as TaskFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} goalOptions={goalOptions} milestoneOptions={milestoneOptions} />}
@@ -766,7 +959,7 @@ export function EntryForm({
           )}
 
           {/* User-defined custom fields */}
-          {userFieldDefs.length > 0 && (
+          {userFieldDefs.length > 0 && !recipeViewMode && (
             <CustomFieldsSection>
                 <CustomFieldsBody>
                   <FieldRowLayoutContext.Provider value={true}>
@@ -814,7 +1007,15 @@ export function EntryForm({
         </FooterLeft>
         <SaveRowActions>
           <DiscardBtn onClick={onNew}>Discard changes</DiscardBtn>
-          <SaveButton $disabled={!canSave || isSaving} disabled={!canSave || isSaving} onClick={onSave}>
+          <SaveButton
+            $disabled={!canSave || isSaving}
+            disabled={!canSave || isSaving}
+            onClick={async () => {
+              await onSave();
+              // Saving a recipe lands back on the formatted recipe view
+              if (isRecipe) setRecipeEditing(false);
+            }}
+          >
             {isSaving ? <><Spinner size={14} /> Saving...</> : 'Save entry'}
           </SaveButton>
         </SaveRowActions>

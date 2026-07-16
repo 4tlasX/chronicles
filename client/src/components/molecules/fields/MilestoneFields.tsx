@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { Select } from '../../atoms/Select.js';
+import { TextInput } from '../../atoms/TextInput.js';
 import { DateInput } from '../../atoms/DateInput.js';
 import { Checkbox } from '../../atoms/Checkbox.js';
 import { FormField } from '../FormField.js';
@@ -118,6 +119,13 @@ interface MilestoneFieldsProps {
 export function MilestoneFields({ values, onChange, goalOptions, linkedTasks = [], onToggleTaskComplete, onUnlinkTask }: MilestoneFieldsProps) {
   return (
     <Wrapper>
+      <FormField label="Milestone Objective">
+        <TextInput
+          value={values.milestoneObjective ?? ''}
+          onChange={e => onChange({ ...values, milestoneObjective: e.target.value })}
+          placeholder="What does this milestone accomplish?"
+        />
+      </FormField>
       <FormField label="Linked Goal">
         <Select
           value={values.parentGoalId?.toString() || ''}

@@ -20,6 +20,9 @@ export interface MappedFields {
   attendees?: string;
   calendarTitle?: string;
   noCalendarSync?: boolean;
+  /** Built-in name fields — the primary label when the entry has no text. */
+  eventName?: string;
+  meetingName?: string;
 }
 
 const PHONE_PREFIX = 'Phone: ';
@@ -119,8 +122,8 @@ export function toGooglePayload(
   if (!fields.startDate) return null;
 
   const title = topicType === 'meeting'
-    ? (fields.meetingTopic?.trim() || fields.calendarTitle?.trim() || extractTitle(content))
-    : (fields.calendarTitle?.trim() || extractTitle(content));
+    ? (fields.meetingName?.trim() || fields.meetingTopic?.trim() || fields.calendarTitle?.trim() || extractTitle(content))
+    : (fields.eventName?.trim() || fields.calendarTitle?.trim() || extractTitle(content));
 
   let start: GoogleEventTime;
   let end: GoogleEventTime;

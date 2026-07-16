@@ -19,7 +19,6 @@ const tabs: TabEntry[] = [
   { value: 'date',      icon: 'calendar_month',  label: 'Date',      title: 'Pick a date' },
   { value: 'favorites', icon: 'bookmark',        label: 'Bookmarks', title: 'Bookmarked entries' },
   { value: 'search',    icon: 'search',          label: 'Search',    title: 'Search entries' },
-  { value: 'all',       icon: 'stylus_fountain_pen', label: 'New',    title: 'New entry', isNewEntry: true },
 ];
 
 const Container = styled.div`

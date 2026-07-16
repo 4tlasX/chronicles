@@ -16,6 +16,7 @@ import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 import { useOpenInJournal } from '../hooks/useOpenInJournal.js';
 import { deleteEntryWithImages } from '../utils/entryActions.js';
+import { builtinEntryName } from '../utils/stripHtml.js';
 import { toDateStr, startOfWeek, startOfMonth } from '../utils/dateUtils.js';
 import type { DateFilter } from '../types/health.js';
 
@@ -164,10 +165,12 @@ export function HealthView({ topicNames, metaFields = [], showDateFilter = true,
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [isAddOpen, setIsAddOpen] = useState(false);
 
-  const addTopic = useMemo(
-    () => topicNames.length === 1 ? allTopics.find(t => t.name.toLowerCase() === topicNames[0].toLowerCase()) : undefined,
-    [allTopics, topicNames]
-  );
+  // The add affordance appears when the page's names resolve to exactly one
+  // real topic — singular/plural aliases (Recipe/Recipes) still count as one
+  const addTopic = useMemo(() => {
+    const matches = allTopics.filter(t => topicNames.some(n => n.toLowerCase() === t.name.toLowerCase()));
+    return matches.length === 1 ? matches[0] : undefined;
+  }, [allTopics, topicNames]);
 
   const topicIds = useMemo(() => {
     const lowerNames = new Set(topicNames.map(n => n.toLowerCase()));
@@ -304,6 +307,7 @@ export function HealthView({ topicNames, metaFields = [], showDateFilter = true,
                       content={entry.content}
                       createdAt={created}
                       topicName={topic?.name}
+                      fallbackTitle={builtinEntryName((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)}
                       onClick={() => openInJournal(entry.id)}
                     />
                   </SwipeActions>

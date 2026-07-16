@@ -10,7 +10,7 @@ const SidebarRoot = styled.aside<{ $mobileOpen?: boolean }>`
   width: 92px;
   min-width: 92px;
   height: 100%;
-  background: var(--bg-sunken);
+  background: var(--bg-app);
   border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
@@ -44,13 +44,13 @@ const LogoBtn = styled.button<{ $active?: boolean }>`
   border: none;
   border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
-  background: ${({ $active }) => ($active ? 'var(--color-accent)' : 'transparent')};
-  color: ${({ $active }) => ($active ? 'var(--sidebar-active-ink, white)' : 'var(--text-secondary)')};
+  background: transparent;
+  color: ${({ $active }) => ($active ? 'var(--color-accent)' : 'var(--text-secondary)')};
   transition: background 120ms ease, color 120ms ease;
 
   &:hover {
-    background: ${({ $active }) => ($active ? 'var(--color-accent)' : 'var(--bg-hover)')};
-    color: ${({ $active }) => ($active ? 'var(--sidebar-active-ink, white)' : 'var(--text-primary)')};
+    background: ${({ $active }) => ($active ? 'transparent' : 'var(--bg-hover)')};
+    color: ${({ $active }) => ($active ? 'var(--color-accent)' : 'var(--text-primary)')};
   }
 `;
 
@@ -119,8 +119,8 @@ const NavIconBtn = styled.button<{ $active?: boolean }>`
   border: none;
   border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
-  background: ${({ $active }) => $active ? 'var(--color-accent)' : 'transparent'};
-  color: ${({ $active }) => $active ? 'var(--sidebar-active-ink, white)' : 'var(--text-secondary)'};
+  background: transparent;
+  color: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--text-secondary)'};
   transition: background 120ms ease, color 120ms ease;
 
   &:last-of-type {
@@ -128,8 +128,8 @@ const NavIconBtn = styled.button<{ $active?: boolean }>`
   }
 
   &:hover {
-    background: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--bg-hover)'};
-    color: ${({ $active }) => $active ? 'var(--sidebar-active-ink, white)' : 'var(--text-primary)'};
+    background: ${({ $active }) => $active ? 'transparent' : 'var(--bg-hover)'};
+    color: ${({ $active }) => $active ? 'var(--color-accent)' : 'var(--text-primary)'};
   }
 
   /* On the mobile reveal bar, keep natural height so the list can scroll
@@ -173,7 +173,6 @@ export function Sidebar() {
   const location = useLocation();
   const rawNavigate = useNavigate();
   const ff = useEntriesStore(s => s.featureFlags);
-  const activeInk = useUIStore(s => s.themeMode) === 'dark' ? 'black' : 'white';
   const setMobileNavOpen = useUIStore(s => s.setMobileNavOpen);
   const mobileNavOpen = useUIStore(s => s.mobileNavOpen);
 
@@ -189,7 +188,7 @@ export function Sidebar() {
   const hasHealth = ff.medicationEnabled || ff.foodEnabled || ff.exerciseEnabled || ff.allergiesEnabled;
 
   return (
-    <SidebarRoot $mobileOpen={mobileNavOpen} style={{ ['--sidebar-active-ink' as string]: activeInk }}>
+    <SidebarRoot $mobileOpen={mobileNavOpen}>
       <LogoBtn $active={at('/')} onClick={() => navigate('/')} title="Dashboard" aria-label="Dashboard">
         <LogoMark viewBox="0 0 100 100" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           {[0, 72, 144, 216, 288].map(deg => (

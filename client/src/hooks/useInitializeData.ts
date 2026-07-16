@@ -28,6 +28,7 @@ export function useInitializeData() {
   const setWeatherCity = useUIStore(s => s.setWeatherCity);
   const setWeatherUnit = useUIStore(s => s.setWeatherUnit);
   const setTopicCustomFields = useUIStore(s => s.setTopicCustomFields);
+  const setTopicHideText = useUIStore(s => s.setTopicHideText);
   const setCycleTrackingEnabled = useUIStore(s => s.setCycleTrackingEnabled);
   const setImagesEnabled = useUIStore(s => s.setImagesEnabled);
   const setImagesConfigured = useUIStore(s => s.setImagesConfigured);
@@ -67,6 +68,9 @@ export function useInitializeData() {
         if (typeof settingsMap.displayName === 'string') setDisplayName(settingsMap.displayName);
         if (settingsMap.topicCustomFields && typeof settingsMap.topicCustomFields === 'object' && !Array.isArray(settingsMap.topicCustomFields)) {
           setTopicCustomFields(settingsMap.topicCustomFields as import('../types/userFields.js').TopicCustomFields);
+        }
+        if (settingsMap.topicHideText && typeof settingsMap.topicHideText === 'object' && !Array.isArray(settingsMap.topicHideText)) {
+          setTopicHideText(settingsMap.topicHideText as Record<number, boolean>);
         }
         if (typeof settingsMap.weatherEnabled === 'boolean') setWeatherEnabled(settingsMap.weatherEnabled);
         if (typeof settingsMap.weatherCity === 'string') setWeatherCity(settingsMap.weatherCity);

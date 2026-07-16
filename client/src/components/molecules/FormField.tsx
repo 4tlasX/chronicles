@@ -13,7 +13,7 @@ const RowWrapper = styled.div`
   align-items: center;
   gap: 16px;
   padding: 14px 0;
-  border-bottom: 1px solid #2e2f32;
+  border-bottom: 1px solid var(--border-subtle);
 
   & > label {
     flex: 0 0 132px;

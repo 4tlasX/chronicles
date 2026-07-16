@@ -8,6 +8,7 @@ import { FilterTabs } from '../components/molecules/FilterTabs.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { useOpenInJournal } from '../hooks/useOpenInJournal.js';
 import { deleteEntryWithImages } from '../utils/entryActions.js';
+import { builtinEntryName } from '../utils/stripHtml.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 import { SwipeActions } from '../components/molecules/SwipeActions.js';
@@ -202,6 +203,7 @@ export function ShoppingListsView() {
                       createdAt={created}
                       topicName={shoppingListTopic?.name}
                       completed={completed}
+                      fallbackTitle={builtinEntryName((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)}
                       onClick={() => openInJournal(entry.id)}
                     />
                   </SwipeActions>

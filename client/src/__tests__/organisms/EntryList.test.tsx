@@ -34,6 +34,7 @@ vi.mock('@/utils/topicIcons', () => ({
 }));
 
 vi.mock('@/utils/stripHtml', () => ({
+  builtinEntryName: (cf: Record<string, unknown> | undefined | null) => { if (!cf) return ''; for (const k of ['eventName','meetingName','goalObjective','milestoneObjective','taskDescription','mealDescription']) { const v = cf[k]; if (typeof v === 'string' && v.trim()) return v.trim(); } return ''; },
   stripHtml: (html: string) => html.replace(/<[^>]*>/g, ''),
 }));
 

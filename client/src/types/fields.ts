@@ -21,14 +21,36 @@ export interface RecipeIngredient {
   id: string;
   amount: string;
   name: string;
+  /** Cook-along check-off in the recipe view (persisted) */
+  checked?: boolean;
 }
 
+/** One numbered method step — bold lead-in title + body text */
+export interface RecipeStep {
+  id: string;
+  title: string;
+  text: string;
+}
+
+export type RecipeCategory = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'dessert';
+export type RecipeDifficulty = 'easy' | 'medium' | 'hard';
+
 export interface RecipeFieldValues {
+  /** Primary label — the recipe's display title. */
+  recipeName?: string;
+  /** Italic one-liner under the title. */
+  description?: string;
+  /** Uppercase label above the title (BREAKFAST, …). */
+  category?: RecipeCategory | '';
   servings: string;
   prepTime: string;
   cookTime: string;
+  calories?: string;
+  difficulty?: RecipeDifficulty | '';
   cuisine: string;
   ingredients: RecipeIngredient[];
+  /** Structured method steps; `instructions` free text is the legacy fallback. */
+  steps?: RecipeStep[];
   instructions: string;
   linkedShoppingListIds: number[];
 }
@@ -56,6 +78,8 @@ export interface MenuPlanFieldValues {
 export type TaskPriority = 'urgent' | 'high' | 'medium' | 'low' | 'none';
 
 export interface TaskFieldValues {
+  /** Primary label — shown when the entry has no text content. */
+  taskDescription?: string;
   isInProgress: boolean;
   isCompleted: boolean;
   isAutoMigrating: boolean;
@@ -66,12 +90,16 @@ export interface TaskFieldValues {
 }
 
 export interface GoalFieldValues {
+  /** Primary label — shown when the entry has no text content. */
+  goalObjective?: string;
   goalType: 'short_term' | 'long_term';
   goalStatus: 'new' | 'planned' | 'in_progress' | 'completed';
   targetDate: string;
 }
 
 export interface MilestoneFieldValues {
+  /** Primary label — shown when the entry has no text content. */
+  milestoneObjective?: string;
   milestoneStatus: 'not_started' | 'in_progress' | 'completed';
   targetDate: string;
   isCompleted: boolean;
@@ -79,6 +107,8 @@ export interface MilestoneFieldValues {
 }
 
 export interface FoodFieldValues {
+  /** Primary label — shown when the entry has no text content. */
+  mealDescription?: string;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   consumedDate: string;
   consumedTime: string;
@@ -116,6 +146,8 @@ export interface ExerciseFieldValues {
 }
 
 export interface EventFieldValues {
+  /** Primary label — shown when the entry has no text content. */
+  eventName?: string;
   startDate: string;
   startTime: string;
   endDate: string;
@@ -131,6 +163,8 @@ export interface EventFieldValues {
 }
 
 export interface MeetingFieldValues {
+  /** Primary label — shown when the entry has no text content. */
+  meetingName?: string;
   startDate: string;
   startTime: string;
   endDate: string;

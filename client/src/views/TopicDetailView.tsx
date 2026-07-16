@@ -8,6 +8,7 @@ import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 import { useOpenInJournal } from '../hooks/useOpenInJournal.js';
 import { deleteEntryWithImages } from '../utils/entryActions.js';
+import { builtinEntryName } from '../utils/stripHtml.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { SwipeActions } from '../components/molecules/SwipeActions.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
@@ -204,6 +205,7 @@ export function TopicDetailView() {
                       createdAt={created}
                       topicName={topic.name}
                       topicColor={topic.color || accentColor}
+                      fallbackTitle={builtinEntryName((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)}
                       onClick={() => openInJournal(entry.id)}
                     />
                   </SwipeActions>

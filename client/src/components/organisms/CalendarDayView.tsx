@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { CalendarHeader } from './CalendarHeader.js';
-import { stripHtml } from '../../utils/stripHtml.js';
+import { stripHtml, builtinEntryName } from '../../utils/stripHtml.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 import type { Topic } from '../../types/topics.js';
@@ -11,7 +11,7 @@ function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function extractTitle(html: string): string {
+function extractTitle(html: string, fallback?: string): string {
   const headingMatch = html.match(/<h[1-4][^>]*>(.*?)<\/h[1-4]>/i);
   if (headingMatch) {
     const tmp = document.createElement('div');
@@ -19,7 +19,7 @@ function extractTitle(html: string): string {
     const text = (tmp.textContent || tmp.innerText || '').trim();
     if (text) return text;
   }
-  return stripHtml(html).trim().slice(0, 80) || 'Untitled';
+  return stripHtml(html).trim().slice(0, 80) || fallback || 'Untitled';
 }
 
 /* ── Styled ── */
@@ -232,7 +232,7 @@ export function CalendarDayView({
           entries.map(entry => {
             const topic = getTopicForEntry(entry);
             const timeLabel = getTimeLabel(entry, eventTopicIds);
-            const title = extractTitle(entry.content);
+            const title = extractTitle(entry.content, builtinEntryName((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>));
 
             return (
               <EntryRow key={entry.id} onClick={() => { setSelectedEntryId(entry.id); navigate('/journal'); }}>

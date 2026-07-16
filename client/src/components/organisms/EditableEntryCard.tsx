@@ -3,7 +3,7 @@ import { SwipeActions } from '../molecules/SwipeActions.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { useOpenInJournal } from '../../hooks/useOpenInJournal.js';
 import { deleteEntryWithImages } from '../../utils/entryActions.js';
-import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
+import { stripHtml, summarizeUserFields, builtinEntryName } from '../../utils/stripHtml.js';
 import type { DecryptedPost } from '@shared/crypto/types';
 import type { Topic } from '../../types/topics.js';
 
@@ -53,10 +53,8 @@ const Row = styled.div<{ $noDate?: boolean; $flush?: boolean; $rightDate?: boole
   border: none;
   width: 100%;
   text-align: left;
-  transition: background 120ms;
   min-height: 60px;
   border-radius: var(--r-sm, 2px);
-  &:hover { background: var(--bg-hover, var(--paper-well, rgba(0,0,0,0.03))); }
   @media (max-width: 768px) { padding: ${({ $flush }) => $flush ? '14px 4px' : '12px 16px'}; }
   @media (max-width: 480px) { gap: 8px; min-height: 52px; }
 `;
@@ -108,6 +106,10 @@ const TitleText = styled.div<{ $done?: boolean }>`
   line-height: 1.4;
   text-decoration: ${({ $done }) => $done ? 'line-through' : 'none'};
   margin-bottom: 3px;
+  transition: color 120ms ease;
+
+  /* Hover: the title picks up the accent — no full-row highlight. */
+  ${Row}:hover & { color: var(--color-accent); }
 `;
 
 const PreviewText = styled.div`
@@ -172,6 +174,9 @@ export function EditableEntryCard({ entry, topic, accentColor, onDeleted, metaFi
   const textContent = stripHtml(entry.content).trim();
   const preview = (() => {
     if (textContent) return textContent.slice(0, 120);
+    // Built-in name/description field (Event name, Task description, …)
+    const builtinName = builtinEntryName(cf);
+    if (builtinName) return builtinName;
     // Shopping list preview
     if (customType === 'shopping_list' && Array.isArray(cf.items) && cf.items.length > 0) {
       const items = cf.items as { name: string; checked: boolean }[];

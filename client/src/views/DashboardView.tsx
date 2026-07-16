@@ -28,7 +28,7 @@ import { Spinner } from '../components/atoms/Spinner.js';
 import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
-import { stripHtml, summarizeUserFields } from '../utils/stripHtml.js';
+import { stripHtml, summarizeUserFields, builtinEntryName } from '../utils/stripHtml.js';
 import { TopicSelector } from '../components/organisms/TopicSelector.js';
 import { Editor, type DictationControls } from '../components/organisms/Editor.js';
 import type { Topic } from '../types/topics.js';
@@ -1696,7 +1696,7 @@ function EventsCard({ accentColor, events, dragAttributes, dragListeners }: { ac
                 {monthAbbr && <EvtMonthAbbr>{monthAbbr}</EvtMonthAbbr>}
               </EvtDayNum>
               <EvtContent>
-                <EvtTitle>{stripHtml(ev.content).slice(0, 70)}</EvtTitle>
+                <EvtTitle>{(stripHtml(ev.content).trim() || builtinEntryName(ev.metadata?._customFields as Record<string, unknown>)).slice(0, 70)}</EvtTitle>
                 {metaStr && <EventMeta>{metaStr}</EventMeta>}
               </EvtContent>
             </EvtRow>

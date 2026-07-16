@@ -67,14 +67,17 @@ const ToolbarRow = styled.div<{ $collapsed: boolean }>`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0;
-  border-bottom: none;
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 8px;
   ${({ $collapsed }) => $collapsed && `
     position: absolute;
     top: 5px;
     right: 0;
     z-index: 2;
     padding: 4px 16px;
+    border-bottom: none;
+    margin-bottom: 0;
   `}
 `;
 

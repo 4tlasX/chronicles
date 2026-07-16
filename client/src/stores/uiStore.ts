@@ -65,6 +65,11 @@ interface UIState {
   setTopicCustomFields: (fields: TopicCustomFields) => void;
   updateTopicFields: (topicId: number, defs: UserFieldDef[]) => void;
 
+  // Per-topic option: hide the main text area in the entry editor (custom topics)
+  topicHideText: Record<number, boolean>;
+  setTopicHideText: (map: Record<number, boolean>) => void;
+  updateTopicHideText: (topicId: number, hide: boolean) => void;
+
   // Weather widget
   weatherEnabled: boolean;
   weatherCity: string;
@@ -145,6 +150,10 @@ export const useUIStore = create<UIState>((set) => ({
   topicCustomFields: {},
   setTopicCustomFields: (fields) => set({ topicCustomFields: fields }),
   updateTopicFields: (topicId, defs) => set(s => ({ topicCustomFields: { ...s.topicCustomFields, [topicId]: defs } })),
+
+  topicHideText: {},
+  setTopicHideText: (map) => set({ topicHideText: map }),
+  updateTopicHideText: (topicId, hide) => set(s => ({ topicHideText: { ...s.topicHideText, [topicId]: hide } })),
 
   weatherEnabled: false,
   weatherCity: '',

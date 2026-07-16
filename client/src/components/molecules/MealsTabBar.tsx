@@ -33,6 +33,7 @@ const TabBtn = styled.button<{ $active?: boolean }>`
 
 const TABS: { label: string; path: string }[] = [
   { label: 'Menu', path: '/menu' },
+  { label: 'Recipes', path: '/menu/recipes' },
   { label: 'Shopping Lists', path: '/shopping' },
   { label: 'Meals', path: '/menu/meals' },
 ];

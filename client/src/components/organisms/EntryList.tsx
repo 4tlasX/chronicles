@@ -7,7 +7,7 @@ import { Checkbox } from '../atoms/Checkbox.js';
 import { entries as entriesApi } from '../../services/api.js';
 import { removeEntriesLocally } from '../../services/calendarSync.js';
 import { collectImageKeys, bestEffortDeleteImages } from '../../services/imageStorage.js';
-import { stripHtml, summarizeUserFields } from '../../utils/stripHtml.js';
+import { stripHtml, summarizeUserFields, builtinEntryName } from '../../utils/stripHtml.js';
 
 const TOPIC_TO_TYPE: Record<string, string> = {
   task: 'task', goal: 'goal', milestone: 'milestone',
@@ -89,6 +89,15 @@ const BulkButton = styled.button<{ $danger?: boolean }>`
 
 const BulkSpacer = styled.span`
   margin-left: auto;
+`;
+
+/* Label across from the Select button — same type as the button text. */
+const BulkLabel = styled.span`
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
 `;
 
 const SelectRow = styled.div`
@@ -223,12 +232,19 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
       if (taxId && !enabledTopicIds.has(taxId)) return false;
 
       if (viewMode === 'date') {
-        const entryDate = new Date(entry.createdAt);
-        if (
-          entryDate.getFullYear() !== selectedDate.getFullYear() ||
-          entryDate.getMonth() !== selectedDate.getMonth() ||
-          entryDate.getDate() !== selectedDate.getDate()
-        ) return false;
+        // Mirror the calendar: entries with a startDate (events, meetings)
+        // belong to that day, not the day they were created
+        const startDate = customFields?.startDate as string | undefined;
+        if (startDate && /^\d{4}-\d{2}-\d{2}/.test(startDate)) {
+          if (startDate.slice(0, 10) !== toLocalDateKey(selectedDate)) return false;
+        } else {
+          const entryDate = new Date(entry.createdAt);
+          if (
+            entryDate.getFullYear() !== selectedDate.getFullYear() ||
+            entryDate.getMonth() !== selectedDate.getMonth() ||
+            entryDate.getDate() !== selectedDate.getDate()
+          ) return false;
+        }
       }
 
       if (viewMode === 'tasks') {
@@ -333,6 +349,7 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
       <BulkBar>
         {!selectMode ? (
           <>
+            <BulkLabel>BULK EDIT</BulkLabel>
             <BulkSpacer />
             <BulkButton onClick={() => setSelectMode(true)}>Select</BulkButton>
           </>
@@ -389,6 +406,8 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
                   const s = (customFields.sleepHours as number) || 0;
                   const parts = [w > 0 ? `${w}/${g} glasses` : '', m > 0 ? `Mood ${m}/5` : '', s > 0 ? `${s}h sleep` : ''].filter(Boolean);
                   previewText = parts.join(' · ') || 'Wellness check-in';
+                } else if (builtinEntryName(customFields)) {
+                  previewText = builtinEntryName(customFields);
                 } else if (topic?.id) {
                   const defs = topicCustomFields[topic.id] ?? [];
                   const uf = (customFields._userFields as Record<string, unknown>) ?? {};

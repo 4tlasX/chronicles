@@ -22,7 +22,7 @@ import { useUIStore } from '../stores/uiStore.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
 import { entries as entriesApi } from '../services/api.js';
-import { stripHtml } from '../utils/stripHtml.js';
+import { stripHtml, builtinEntryName } from '../utils/stripHtml.js';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { GoalEntry, MilestoneEntryData, TaskEntryData, RoadmapStatus } from '../types/goals.js';
 import { ROADMAP_COLUMNS, normalizeRoadmapStatus, normalizeMilestoneRoadmapStatus, milestoneFieldsForStatus } from '../types/goals.js';
@@ -211,11 +211,18 @@ export function GoalsView() {
     return entries
       .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === goalTopicId)
       .map(e => {
-        const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> || {};
-        return { id: e.id, content: e.content, title: stripHtml(e.content).slice(0, 120) || 'Untitled goal',
+        const meta = e.metadata as Record<string, unknown>;
+        const cf = meta?._customFields as Record<string, unknown> || {};
+        const imgs = Array.isArray(meta?._images) ? meta._images as { key: string; iv: string; mimeType: string }[] : [];
+        const featKey = typeof meta?._featuredKey === 'string' ? meta._featuredKey : null;
+        const featuredImage = featKey ? imgs.find(i => i.key === featKey) ?? null : null;
+        const objective = typeof cf.goalObjective === 'string' ? cf.goalObjective.trim() : '';
+        return { id: e.id, content: e.content,
+          title: stripHtml(e.content).trim().slice(0, 120) || objective || 'Untitled goal',
           goalType: (cf.goalType as string) || 'short_term', goalStatus: (cf.goalStatus as string) || 'active',
           targetDate: (cf.targetDate as string) || '', customFields: cf, taxonomyId: goalTopicId,
-          createdAt: e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt) };
+          createdAt: e.createdAt instanceof Date ? e.createdAt : new Date(e.createdAt),
+          featuredImage };
       });
   }, [entries, goalTopicId]);
 
@@ -652,6 +659,7 @@ export function GoalsView() {
                       topicName={topic?.name}
                       topicColor={topic?.color || accentColor}
                       completed={t.isCompleted}
+                      fallbackTitle={builtinEntryName((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)}
                       onClick={() => openInJournal(t.id)}
                     />
                   </SwipeActions>
@@ -673,6 +681,7 @@ export function GoalsView() {
                       topicName={topic?.name}
                       topicColor={topic?.color || accentColor}
                       completed={t.isCompleted}
+                      fallbackTitle={builtinEntryName((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)}
                       onClick={() => openInJournal(t.id)}
                     />
                   </SwipeActions>

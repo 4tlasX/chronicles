@@ -273,19 +273,18 @@ export const doses = {
 // =============================================================================
 
 export interface ShareRecord {
-  id: number;
   token: string;
-  accountId: number;
-  contentEncrypted: string; // base64
-  contentIv: string;        // base64
+  /** Entry the share was created from — present on owner list/create responses */
+  entryId?: number | null;
+  /** Plaintext shared content — present on public GET-by-token responses */
+  content?: string | null;
   createdAt: string;
   expiresAt: string | null;
-  isActive: boolean;
 }
 
 export const shares = {
-  /** Create a share (protected) */
-  create: (data: { contentEncrypted: string; contentIv: string; expiresAt?: string | null }) =>
+  /** Create a share (protected) — content is stored as plaintext by design */
+  create: (data: { content: string; entryId: number; expiresAt?: string | null }) =>
     request<ShareRecord>('/shares', { method: 'POST', body: data }),
 
   /** Fetch a share by token — public, no auth */

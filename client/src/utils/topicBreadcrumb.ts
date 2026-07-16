@@ -31,6 +31,7 @@ const TRAILS: Record<string, TrailCrumb[]> = {
   meals: [...HEALTH_TRAIL, { label: 'Food', path: '/health/food' }],
 
   recipe: MEALS_TRAIL,
+  recipes: MEALS_TRAIL,
   'shopping list': MEALS_TRAIL,
 
   event: CALENDAR_TRAIL,

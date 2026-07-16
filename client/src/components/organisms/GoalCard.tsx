@@ -11,6 +11,7 @@ import { InlineEditPanel } from '../molecules/InlineEditPanel.js';
 import { Editor } from './Editor.js';
 import { GoalFields, type GoalFieldValues } from '../molecules/fields/GoalFields.js';
 import { useEncryption } from '../../contexts/EncryptionContext.js';
+import { useDecryptedImage } from '../../hooks/useDecryptedImage.js';
 import { useEntriesStore } from '../../stores/entriesStore.js';
 import { entries as entriesApi } from '../../services/api.js';
 import type { GoalEntry, MilestoneEntryData, RoadmapStatus } from '../../types/goals.js';
@@ -68,6 +69,22 @@ const DayNum = styled.span`
 const ContentWrap = styled.div`
   min-width: 0;
 `;
+
+/* Featured image banner across the top of the card */
+const CardImage = styled.img`
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  display: block;
+  border-radius: var(--r-lg, 2px);
+  margin-bottom: 4px;
+`;
+
+function GoalCardImage({ image }: { image: { key: string; iv: string; mimeType: string } }) {
+  const { url } = useDecryptedImage(image.key, image.iv, image.mimeType);
+  if (!url) return null;
+  return <CardImage src={url} alt="" />;
+}
 
 const TitleRow = styled.div`
   display: flex;
@@ -284,6 +301,7 @@ export function GoalCard({ goal, milestones, accentColor, isEditing, onSelect, o
     <Card ref={setNodeRef} style={style} $isDragging={isDragging} $editing={isEditing} $accentColor={accentColor}>
       <CardHeader onClick={onSelect} $active={isEditing} {...attributes} {...listeners}>
         <ContentWrap>
+          {goal.featuredImage && <GoalCardImage image={goal.featuredImage} />}
           <TitleRow>
             <Title $completed={roadmapStatus === 'completed'}>{goal.title}</Title>
           </TitleRow>

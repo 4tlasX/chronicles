@@ -46,8 +46,10 @@ const DEFAULT_TOPICS = [
 
 async function ensureDefaultTopics(schemaName: string): Promise<void> {
   const existing = await getAllTaxonomies(schemaName);
-  const existingNames = new Set(existing.map(t => t.name.toLowerCase()));
-  const missing = DEFAULT_TOPICS.filter(t => !existingNames.has(t.name.toLowerCase()));
+  // Singular/plural tolerant — a user-created "Recipes" topic counts as "Recipe"
+  const norm = (n: string) => n.toLowerCase().replace(/s$/, '');
+  const existingNames = new Set(existing.map(t => norm(t.name)));
+  const missing = DEFAULT_TOPICS.filter(t => !existingNames.has(norm(t.name)));
 
   if (missing.length === 0) return;
 

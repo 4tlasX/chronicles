@@ -28,28 +28,11 @@ import { useUIStore } from '../stores/uiStore.js';
 import { entries as entriesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
 import { uploadEntryImage, bestEffortDeleteImages, collectImageKeys, loadImageStorageConfig, type EntryImage } from '../services/imageStorage.js';
 import { getOrCreateJournalTopic } from '../utils/getOrCreateJournalTopic.js';
-import { stripHtml, summarizeUserFields } from '../utils/stripHtml.js';
+import { stripHtml, summarizeUserFields, builtinEntryName } from '../utils/stripHtml.js';
+import type { RecipeFieldValues } from '../types/fields.js';
+import { recipeShareHtml } from '../utils/recipeShareHtml.js';
 import { toDateStr } from '../utils/dateUtils.js';
 import type { EncryptedPost } from '@shared/crypto/types';
-
-const PlanningLink = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 16px 20px 0;
-  padding: 6px 0;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-label);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  transition: opacity 120ms ease;
-  &:hover { opacity: 0.7; }
-`;
 
 const NewEntryDateNote = styled.div`
   margin: 16px 20px 0;
@@ -254,11 +237,12 @@ export function JournalView() {
     return topics.find(t => t.id === editorTopicId)?.name?.toLowerCase() === 'wellness';
   }, [editorTopicId, topics]);
 
-  // Goal & milestone entries get a quick link back to the Roadmap/Planning board.
-  const isPlanningEntry = useMemo(() => {
+  // Recipes share their formatted fields (name, ingredients, method) — and are
+  // exempt from the images-block-share rule since the photo itself never leaves
+  const isRecipeEntry = useMemo(() => {
     if (!editorTopicId) return false;
     const name = topics.find(t => t.id === editorTopicId)?.name?.toLowerCase();
-    return name === 'goal' || name === 'milestone';
+    return name === 'recipe' || name === 'recipes';
   }, [editorTopicId, topics]);
 
   // Wellness auto-save: saves without closing the editor
@@ -323,7 +307,8 @@ export function JournalView() {
     ) return;
     const hasText = !!stripHtml(currentContent).trim();
     const hasDrawing = currentContent.includes('data-type="drawing"');
-    if (!hasText && !hasDrawing && entryImages.length === 0) return;
+    const hasFieldData = Object.keys(customFields).length > 0;
+    if (!hasText && !hasDrawing && entryImages.length === 0 && !hasFieldData) return;
 
     let effectiveTopicId = editorTopicId;
     if (!effectiveTopicId) {
@@ -402,6 +387,15 @@ export function JournalView() {
         if (settingsMap.topicCustomFields && typeof settingsMap.topicCustomFields === 'object' && !Array.isArray(settingsMap.topicCustomFields)) {
           setTopicCustomFields(settingsMap.topicCustomFields as import('../types/userFields.js').TopicCustomFields);
         }
+        if (settingsMap.topicHideText && typeof settingsMap.topicHideText === 'object' && !Array.isArray(settingsMap.topicHideText)) {
+          useUIStore.getState().setTopicHideText(settingsMap.topicHideText as Record<number, boolean>);
+        }
+        // Editor-affecting settings the shared init hook loads — must load here
+        // too or wellness period/flow and calendar-sync fields vanish when the
+        // app initializes via /journal
+        if (typeof settingsMap.cycleTrackingEnabled === 'boolean') useUIStore.getState().setCycleTrackingEnabled(settingsMap.cycleTrackingEnabled);
+        if (typeof settingsMap.calendarSyncEnabled === 'boolean') useUIStore.getState().setCalendarSyncEnabled(settingsMap.calendarSyncEnabled);
+        if (typeof settingsMap.displayName === 'string') useUIStore.getState().setDisplayName(settingsMap.displayName);
         // Entry images are opt-in (default false); credentials are a master-key-encrypted setting
         if (typeof settingsMap.imagesEnabled === 'boolean') setImagesEnabled(settingsMap.imagesEnabled);
         loadImageStorageConfig(settingsMap.imageStorageConfig, decryptBytes)
@@ -464,9 +458,9 @@ export function JournalView() {
     if (selectedEntryId) {
       const entry = decryptedEntries.find(e => e.id === selectedEntryId);
       if (entry) {
-        setEditorContent(entry.content);
         const meta = entry.metadata as Record<string, unknown>;
         const cf = meta?._customFields as Record<string, unknown> ?? {};
+        setEditorContent(entry.content);
         const imgs = Array.isArray(meta?._images) ? (meta._images as EntryImage[]) : [];
         const feat = typeof meta?._featuredKey === 'string' ? (meta._featuredKey as string) : null;
         setEditorTopicId(meta?._taxonomyId as number | null ?? null);
@@ -501,7 +495,8 @@ export function JournalView() {
     const userFieldDefs = editorTopicId != null ? (topicCustomFields[editorTopicId] ?? []) : [];
     const userFieldValues = (customFields._userFields as Record<string, unknown>) ?? {};
     const hasFieldValues = userFieldDefs.length > 0 && summarizeUserFields(userFieldDefs, userFieldValues) !== '';
-    if (!hasText && !hasDrawing && !hasFieldValues && entryImages.length === 0) return;
+    const hasFieldData = Object.keys(customFields).length > 0;
+    if (!hasText && !hasDrawing && !hasFieldValues && !hasFieldData && entryImages.length === 0) return;
     const finalContent = editorContent;
     setIsSaving(true); setSaveStatus('');
 
@@ -523,6 +518,7 @@ export function JournalView() {
       }
       const encrypted = await encryptPost(finalContent, metadata);
 
+      // Saving keeps the entry open — the editor stays put with a saved status
       if (selectedEntryId) {
         await entriesApi.update(selectedEntryId, {
           contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
@@ -530,10 +526,6 @@ export function JournalView() {
           taxonomyIds: effectiveTopicId ? [effectiveTopicId] : [],
         });
         updateDecryptedEntry(selectedEntryId, { content: finalContent, metadata });
-        setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
-        setEntryImages([]); setFeaturedKey(null); setImageError('');
-        setShowMobileEditor(false);
-        setEditorExpanded(false);
       } else {
         const result = await entriesApi.create({
           contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
@@ -544,11 +536,10 @@ export function JournalView() {
         addDecryptedEntry({ id: result.id as number, content: finalContent, metadata, isEncrypted: true,
           createdAt: new Date(result.createdAt as string), updatedAt: new Date((result.updatedAt || result.createdAt) as string) });
         setPendingEntryDate(null);
-        setSelectedEntryId(null); setEditorContent(''); setEditorTopicId(null); setCustomFields({}); setWidgetType(null);
-        setEntryImages([]); setFeaturedKey(null); setImageError('');
-        setShowMobileEditor(false);
-        setEditorExpanded(false);
+        setSelectedEntryId(result.id as number);
       }
+      loadedStateRef.current = { content: finalContent, customFields: JSON.stringify(customFields), images: imagesSig(entryImages, featuredKey) };
+      setLastSavedAt(new Date());
     } catch (err) { console.error('Save failed:', err); setSaveStatus('Save failed'); }
     finally { setIsSaving(false); }
   }, [editorContent, selectedEntryId, editorTopicId, widgetType, customFields, topicCustomFields, entryImages, featuredKey, pendingEntryDate, encryptPost, setSelectedEntryId, setShowMobileEditor]);
@@ -654,6 +645,73 @@ export function JournalView() {
       setEditorExpanded(false);
     } catch (err) { console.error('Delete failed:', err); }
   }, [selectedEntryId]);
+
+  /** Recipe view: append the recipe's ingredients to the most recent shopping
+   *  list (creating one if none exists), cross-link both entries, then jump
+   *  to the shopping lists view. */
+  const handleAddToShoppingList = useCallback(async (recipe: RecipeFieldValues) => {
+    try {
+      const slTopic = topics.find(t => ['shopping list', 'shopping lists'].includes(t.name.toLowerCase()));
+      if (!slTopic) return;
+      const newItems = (recipe.ingredients ?? [])
+        .filter(i => i.name.trim())
+        .map(i => ({
+          id: crypto.randomUUID(),
+          name: [i.amount?.trim(), i.name.trim()].filter(Boolean).join(' '),
+          category: 'other' as const,
+          checked: false,
+        }));
+      if (newItems.length === 0) return;
+
+      const target = useEntriesStore.getState().decryptedEntries
+        .filter(e => (e.metadata as Record<string, unknown>)?._taxonomyId === slTopic.id)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+
+      let listId: number;
+      if (target) {
+        const meta = { ...(target.metadata as Record<string, unknown>) };
+        const cf = { ...((meta._customFields as Record<string, unknown>) ?? {}) };
+        cf.items = [...(Array.isArray(cf.items) ? (cf.items as unknown[]) : []), ...newItems];
+        const linked = Array.isArray(cf.linkedRecipeIds) ? (cf.linkedRecipeIds as number[]) : [];
+        if (selectedEntryId && !linked.includes(selectedEntryId)) cf.linkedRecipeIds = [...linked, selectedEntryId];
+        meta._customFields = cf;
+        const encrypted = await encryptPost(target.content, meta);
+        await entriesApi.update(target.id, {
+          contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+          metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+          taxonomyIds: [slTopic.id],
+        });
+        updateDecryptedEntry(target.id, { content: target.content, metadata: meta });
+        listId = target.id;
+      } else {
+        const content = '<p>Groceries</p>';
+        const metadata: Record<string, unknown> = {
+          _taxonomyId: slTopic.id,
+          _customFields: { items: newItems, notes: '', linkedRecipeIds: selectedEntryId ? [selectedEntryId] : [] },
+        };
+        const encrypted = await encryptPost(content, metadata);
+        const result = await entriesApi.create({
+          contentEncrypted: encrypted.contentEncrypted, contentIv: encrypted.contentIv,
+          metadataEncrypted: encrypted.metadataEncrypted, metadataIv: encrypted.metadataIv,
+          taxonomyIds: [slTopic.id],
+        });
+        addDecryptedEntry({
+          id: result.id as number, content, metadata, isEncrypted: true,
+          createdAt: new Date(result.createdAt as string),
+          updatedAt: new Date((result.updatedAt || result.createdAt) as string),
+        });
+        listId = result.id as number;
+      }
+
+      // Link the shopping list back onto the recipe (autosave persists it)
+      if (selectedEntryId) {
+        const cur = Array.isArray(customFields.linkedShoppingListIds) ? (customFields.linkedShoppingListIds as number[]) : [];
+        if (!cur.includes(listId)) setCustomFields({ ...customFields, linkedShoppingListIds: [...cur, listId] });
+      }
+
+      navigate('/shopping');
+    } catch (err) { console.error('Add to shopping list failed:', err); }
+  }, [topics, selectedEntryId, customFields, encryptPost, updateDecryptedEntry, addDecryptedEntry, navigate]);
 
   const handleNew = () => {
     // Discarding a never-saved entry: clean up any already-uploaded R2 objects
@@ -858,15 +916,6 @@ export function JournalView() {
                 New entry for {new Date(pendingEntryDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </NewEntryDateNote>
             )}
-            {isPlanningEntry && selectedEntryId !== null && (
-              <PlanningLink onClick={() => navigate(
-                topics.find(t => t.id === editorTopicId)?.name?.toLowerCase() === 'milestone'
-                  ? '/goals/milestones' : '/goals'
-              )}>
-                <Icon name="arrow-left" size={13} strokeWidth={2} />
-                Planning
-              </PlanningLink>
-            )}
             <EntryForm
               entryId={selectedEntryId}
               content={editorContent}
@@ -882,7 +931,9 @@ export function JournalView() {
               onNew={handleNew}
               onBookmark={handleBookmark}
               onNavigate={path => navigate(path)}
-              onShare={entryImages.length > 0 ? undefined : () => setShareOpen(true)}
+              onShare={entryImages.length > 0 && !isRecipeEntry ? undefined : () => setShareOpen(true)}
+              onAddToShoppingList={handleAddToShoppingList}
+              onAddToMenu={() => navigate('/menu')}
               onBack={handleMobileBack}
               isEditing={selectedEntryId !== null}
               isSaving={isSaving}
@@ -903,9 +954,19 @@ export function JournalView() {
         }
       />
 
-      {shareOpen && selectedEntryId && entryImages.length === 0 && (
+      {shareOpen && selectedEntryId && (entryImages.length === 0 || isRecipeEntry) && (
         <ShareModal
-          entryContent={editorContent}
+          entryId={selectedEntryId}
+          entryContent={
+            /* Recipes share their full formatted fields; other field-only
+               entries (e.g. events) fall back to their name field */
+            isRecipeEntry
+              ? recipeShareHtml({ servings: '', prepTime: '', cookTime: '', cuisine: '', ingredients: [], instructions: '', linkedShoppingListIds: [], ...(customFields as Partial<RecipeFieldValues>) } as RecipeFieldValues)
+              : stripHtml(editorContent).trim()
+                ? editorContent
+                : `<p>${builtinEntryName(customFields)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`
+          }
           onClose={() => setShareOpen(false)}
         />
       )}

@@ -6,34 +6,8 @@ import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { Modal } from '../atoms/Modal.js';
 import { shares as sharesApi, type ShareRecord } from '../../services/api.js';
 
-// =============================================================================
-// Helpers — share key crypto (separate from master key)
-// =============================================================================
-
-async function generateShareKey(): Promise<CryptoKey> {
-  return crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
-}
-
-async function exportShareKey(key: CryptoKey): Promise<string> {
-  const raw = await crypto.subtle.exportKey('raw', key);
-  return btoa(String.fromCharCode(...new Uint8Array(raw)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''); // base64url
-}
-
-async function encryptWithShareKey(key: CryptoKey, plaintext: string): Promise<{ encrypted: string; iv: string }> {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encoded = new TextEncoder().encode(plaintext);
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
-  return {
-    encrypted: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
-      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
-    iv: btoa(String.fromCharCode(...iv))
-      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
-  };
-}
-
-function buildShareUrl(token: string, shareKey: string): string {
-  return `${window.location.origin}/share/${token}#${shareKey}`;
+function buildShareUrl(token: string): string {
+  return `${window.location.origin}/share/${token}`;
 }
 
 // =============================================================================
@@ -169,11 +143,12 @@ const ErrorText = styled.p`
 // =============================================================================
 
 interface ShareModalProps {
-  entryContent: string; // plaintext (already decrypted) — only used client-side to re-encrypt with share key
+  entryId: number;
+  entryContent: string; // plaintext (already decrypted) — stored as-is on the server; sharing opts this entry out of zero-knowledge
   onClose: () => void;
 }
 
-export function ShareModal({ entryContent, onClose }: ShareModalProps) {
+export function ShareModal({ entryId, entryContent, onClose }: ShareModalProps) {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -183,33 +158,24 @@ export function ShareModal({ entryContent, onClose }: ShareModalProps) {
 
   useEffect(() => {
     sharesApi.list()
-      .then(setExistingShares)
+      .then(all => setExistingShares(all.filter(s => s.entryId === entryId)))
       .catch(() => {})
       .finally(() => setLoadingShares(false));
-  }, []);
+  }, [entryId]);
 
   const handleCreate = useCallback(async () => {
     setIsCreating(true);
     setError(null);
     try {
-      const key = await generateShareKey();
-      const keyStr = await exportShareKey(key);
-      const { encrypted, iv } = await encryptWithShareKey(key, entryContent);
-
-      const share = await sharesApi.create({
-        contentEncrypted: encrypted,
-        contentIv: iv,
-      });
-
-      const url = buildShareUrl(share.token, keyStr);
-      setShareUrl(url);
+      const share = await sharesApi.create({ content: entryContent, entryId });
+      setShareUrl(buildShareUrl(share.token));
       setExistingShares(prev => [share, ...prev]);
     } catch {
       setError('Failed to create share link. Please try again.');
     } finally {
       setIsCreating(false);
     }
-  }, [entryContent]);
+  }, [entryContent, entryId]);
 
   const handleCopy = useCallback(() => {
     if (!shareUrl) return;
@@ -237,7 +203,7 @@ export function ShareModal({ entryContent, onClose }: ShareModalProps) {
       {/* New share */}
       <SectionLabel>Create share link</SectionLabel>
       <Notice>
-        A unique encrypted link will be generated. The decryption key is embedded in the URL — anyone with the link can read this entry.
+        Anyone with the link can read this entry. A shared copy is stored unencrypted on the server until you revoke the link.
       </Notice>
 
       {shareUrl ? (
@@ -258,11 +224,11 @@ export function ShareModal({ entryContent, onClose }: ShareModalProps) {
 
       {error && <ErrorText>{error}</ErrorText>}
 
-      {/* Existing shares */}
+      {/* Existing links for this entry only */}
       {!loadingShares && existingShares.length > 0 && (
         <>
           <Divider />
-          <SectionLabel>Active links ({existingShares.length})</SectionLabel>
+          <SectionLabel>Active links for this entry ({existingShares.length})</SectionLabel>
           <SharesList>
             {existingShares.map(s => (
               <ShareItem key={s.token}>

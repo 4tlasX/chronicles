@@ -17,7 +17,7 @@ import { useInitializeData } from '../hooks/useInitializeData.js';
 import { useOpenInJournal } from '../hooks/useOpenInJournal.js';
 import { deleteEntryWithImages } from '../utils/entryActions.js';
 import { entries as entriesApi, settings as settingsApi } from '../services/api.js';
-import { stripHtml } from '../utils/stripHtml.js';
+import { stripHtml, builtinEntryName } from '../utils/stripHtml.js';
 import type { MilestoneEntryData, TaskEntryData } from '../types/goals.js';
 import type { PlannerFilterConfig, SavedPlannerFilter } from '../types/planner.js';
 import { EMPTY_PLANNER_FILTER, isFilterEmpty, filtersEqual } from '../types/planner.js';
@@ -650,6 +650,7 @@ export function PlannerFilterView() {
           createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
           topicName={topic?.name}
           completed={completed}
+          fallbackTitle={builtinEntryName((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)}
           onClick={() => openInJournal(id)}
         />
       </SwipeActions>

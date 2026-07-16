@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { stripHtml } from '../../utils/stripHtml.js';
+import { stripHtml, builtinEntryName } from '../../utils/stripHtml.js';
 import { useUIStore } from '../../stores/uiStore.js';
 
 import type { DecryptedPost } from '@shared/crypto/types';
@@ -271,7 +271,7 @@ export function CalendarDayDetail({
               }
             }
 
-            const title = stripHtml(entry.content).slice(0, 60) || topic?.name || 'Entry';
+            const title = (stripHtml(entry.content).trim() || builtinEntryName((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)).slice(0, 60) || topic?.name || 'Entry';
 
             const handleClick = () => {
               setSelectedEntryId(entry.id);

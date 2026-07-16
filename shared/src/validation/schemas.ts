@@ -64,10 +64,11 @@ export const disable2FASchema = z.object({
   password: z.string().min(1),
 });
 
-// Shares validation
+// Shares validation — shared content is stored as plaintext by design; the
+// user opts into that risk when creating a public link
 export const createShareSchema = z.object({
-  contentEncrypted: z.string().min(1, 'contentEncrypted is required'),
-  contentIv: z.string().min(1, 'contentIv is required'),
+  content: z.string().min(1, 'content is required').max(100_000, 'Content too large'),
+  entryId: z.number().int().positive(),
   expiresAt: z.string().datetime().nullable().optional(),
 });
 

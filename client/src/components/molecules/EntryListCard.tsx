@@ -9,13 +9,17 @@ interface EntryListCardProps {
   topicColor?: string;
   completed?: boolean;
   onClick?: () => void;
+  /** Title shown when the content has no text (e.g. built-in name field). */
+  fallbackTitle?: string;
+  /** Muted single line under the title (e.g. custom-field summary). */
+  preview?: string;
 }
 
 /* Mobile-style list row: big day number + weekday on the left, a colored topic
    dot + uppercase topic label, the title, a preview line, and a right chevron.
    Hairline divider between rows. Used by Tasks, Todos, and Topics lists. */
 
-function extractTitle(html: string): string {
+function extractTitle(html: string, fallback?: string): string {
   const headingMatch = html.match(/<h[1-4][^>]*>(.*?)<\/h[1-4]>/i);
   if (headingMatch) {
     const tmp = document.createElement('div');
@@ -23,7 +27,7 @@ function extractTitle(html: string): string {
     const text = (tmp.textContent || tmp.innerText || '').trim();
     if (text) return text;
   }
-  return stripHtml(html).trim().slice(0, 70) || 'Untitled';
+  return stripHtml(html).trim().slice(0, 70) || fallback || 'Untitled';
 }
 
 const Row = styled.div`
@@ -34,8 +38,6 @@ const Row = styled.div`
   padding: 18px 4px;
   cursor: pointer;
   border-bottom: 1px solid var(--border-subtle);
-  transition: background 120ms ease;
-  &:hover { background: var(--bg-hover); }
 `;
 
 const DateCol = styled.div`
@@ -94,6 +96,10 @@ const Title = styled.div<{ $completed?: boolean }>`
   overflow: hidden;
   text-overflow: ellipsis;
   text-decoration: ${({ $completed }) => $completed ? 'line-through' : 'none'};
+  transition: color 120ms ease;
+
+  /* Hover: the title picks up the accent — no full-row highlight. */
+  ${Row}:hover & { color: var(--color-accent); }
 `;
 
 const Chevron = styled.span`
@@ -103,10 +109,21 @@ const Chevron = styled.span`
   flex-shrink: 0;
 `;
 
-export function EntryListCard({ content, createdAt, topicName, completed, onClick }: EntryListCardProps) {
+const Preview = styled.div`
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export function EntryListCard({ content, createdAt, topicName, completed, onClick, fallbackTitle, preview }: EntryListCardProps) {
   const dayNum = createdAt.getDate();
   const weekday = createdAt.toLocaleDateString('en-US', { weekday: 'short' });
-  const title = extractTitle(content);
+  const title = extractTitle(content, fallbackTitle);
 
   return (
     <Row onClick={onClick}>
@@ -121,6 +138,7 @@ export function EntryListCard({ content, createdAt, topicName, completed, onClic
           </TopicRow>
         )}
         <Title $completed={completed}>{title}</Title>
+        {preview && <Preview>{preview}</Preview>}
       </ContentArea>
       <Chevron>
         <Icon name="chevron-right" size={20} strokeWidth={2} />

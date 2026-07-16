@@ -1,32 +1,42 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { shareLimiter } from '../middleware/rateLimiter.js';
-import { createShare, getShareByToken, revokeShare, getSharesByAccount } from '../db/shareQueries.js';
+import { createShare, getShareByToken, revokeShare, getSharesByAccount, type Share } from '../db/shareQueries.js';
 import { createShareSchema } from '@chronicles/shared';
 
 const router = Router();
 
-// Helper to serialize Buffer fields to base64
-function serializeShare(share: Record<string, unknown>) {
-  const result = { ...share };
-  for (const key of ['contentEncrypted', 'contentIv']) {
-    const val = result[key];
-    if (val instanceof Uint8Array || val instanceof Buffer) {
-      result[key] = Buffer.from(val).toString('base64');
-    }
-  }
-  return result;
+// Public payload — never expose accountId or internal id to viewers
+function publicShare(share: Share) {
+  return {
+    token: share.token,
+    content: share.content,
+    createdAt: share.createdAt,
+    expiresAt: share.expiresAt,
+  };
+}
+
+// Owner list payload — metadata only, no content
+function ownedShare(share: Share) {
+  return {
+    token: share.token,
+    entryId: share.entryId,
+    createdAt: share.createdAt,
+    expiresAt: share.expiresAt,
+  };
 }
 
 // GET /api/shares/:token — Public, no auth required
 router.get('/:token', shareLimiter, async (req, res) => {
   try {
     const share = await getShareByToken(String(req.params.token));
-    if (!share) {
+    // Shares from the retired encrypted-share scheme have no plaintext content
+    // and were never viewable — treat them as gone
+    if (!share || !share.content) {
       res.status(404).json({ error: 'Share not found or expired' });
       return;
     }
-    res.json(serializeShare(share as unknown as Record<string, unknown>));
+    res.json(publicShare(share));
   } catch (err) {
     console.error('Get share error:', err);
     res.status(500).json({ error: 'Failed to fetch share' });
@@ -42,16 +52,16 @@ router.post('/', authMiddleware, async (req, res) => {
       return;
     }
 
-    const { contentEncrypted, contentIv, expiresAt } = parsed.data;
+    const { content, entryId, expiresAt } = parsed.data;
 
     const share = await createShare({
       accountId: req.auth!.accountId,
-      contentEncrypted: Buffer.from(contentEncrypted, 'base64'),
-      contentIv: Buffer.from(contentIv, 'base64'),
+      entryId,
+      content,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
     });
 
-    res.status(201).json(serializeShare(share as unknown as Record<string, unknown>));
+    res.status(201).json(ownedShare(share));
   } catch (err) {
     console.error('Create share error:', err);
     res.status(500).json({ error: 'Failed to create share' });
@@ -77,7 +87,7 @@ router.delete('/:token', authMiddleware, async (req, res) => {
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const shares = await getSharesByAccount(req.auth!.accountId);
-    res.json(shares.map(s => serializeShare(s as unknown as Record<string, unknown>)));
+    res.json(shares.map(ownedShare));
   } catch (err) {
     console.error('List shares error:', err);
     res.status(500).json({ error: 'Failed to list shares' });

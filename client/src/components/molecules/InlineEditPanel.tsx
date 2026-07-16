@@ -78,7 +78,7 @@ const SectionHeader = styled.div<{ $noTopicPicker?: boolean }>`
     content: '';
     flex: 1;
     height: 1px;
-    background: #2e2f32;
+    background: var(--border-subtle);
   }
 `;
 
