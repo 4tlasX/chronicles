@@ -200,6 +200,12 @@ const CrumbTopic = styled.div`
     background: transparent;
     color: var(--color-accent);
   }
+  /* Chevron: top-aligned, sitting 1px below the top of the crumb text. */
+  & > div > button > span:last-child {
+    padding-bottom: 0;
+    align-self: flex-start;
+    margin-top: 1px;
+  }
   /* Dropdown menu: drop the outer border (matches Quick Entry). */
   & > div > div { border: none; }
 `;
