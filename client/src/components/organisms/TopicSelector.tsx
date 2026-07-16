@@ -151,9 +151,11 @@ interface TopicSelectorProps {
   filled?: boolean;
   /** Show the "No topic" clear option in the list. Defaults to true. */
   allowNone?: boolean;
+  /** Hide the topic icon on the trigger (used when the picker renders as a breadcrumb). */
+  hideIcon?: boolean;
 }
 
-export function TopicSelector({ selectedId, onSelect, topics, filled, allowNone = true }: TopicSelectorProps) {
+export function TopicSelector({ selectedId, onSelect, topics, filled, allowNone = true, hideIcon = false }: TopicSelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -183,7 +185,7 @@ export function TopicSelector({ selectedId, onSelect, topics, filled, allowNone 
       <Trigger $filled={filled ?? selectedId !== null} onClick={() => setOpen(!open)}>
         {selected ? (
           <>
-            <TopicIcon $color={accentColor}><TopicGlyph name={selected.icon} size={15} /></TopicIcon>
+            {!hideIcon && <TopicIcon $color={accentColor}><TopicGlyph name={selected.icon} size={15} /></TopicIcon>}
             {selected.name}
           </>
         ) : (

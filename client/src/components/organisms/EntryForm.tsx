@@ -620,6 +620,7 @@ export function EntryForm({
                 onSelect={id => onTopicChange(id)}
                 topics={topics}
                 allowNone={false}
+                hideIcon
               />
             </CrumbTopic>
           </EdCrumbRow>
