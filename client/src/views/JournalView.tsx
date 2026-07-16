@@ -609,11 +609,14 @@ export function JournalView() {
     if (uploaded.length === 0) return;
 
     const nextImages = [...entryImages, ...uploaded];
+    // The first image of an entry is featured by default (unstarring later is respected)
+    const nextFeatured = entryImages.length === 0 && !featuredKey ? nextImages[0].key : featuredKey;
     setEntryImages(nextImages);
+    setFeaturedKey(nextFeatured);
     // Autosave may have created the entry mid-upload — read the current id
     // from the store, never the closure
     const currentId = useUIStore.getState().selectedEntryId;
-    if (currentId) await persistImages(currentId, nextImages, featuredKey);
+    if (currentId) await persistImages(currentId, nextImages, nextFeatured);
     // New entries: the autosave effect (which watches entryImages) persists them
   }, [entryImages, featuredKey, encryptBytes, persistImages]);
 
@@ -621,7 +624,8 @@ export function JournalView() {
     const img = entryImages.find(i => i.key === key);
     if (!img) return;
     const nextImages = entryImages.filter(i => i.key !== key);
-    const nextFeatured = featuredKey === key ? null : featuredKey;
+    // Deleting the featured image promotes the next first image to the hero
+    const nextFeatured = featuredKey === key ? (nextImages[0]?.key ?? null) : featuredKey;
     setEntryImages(nextImages);
     setFeaturedKey(nextFeatured);
     const currentId = useUIStore.getState().selectedEntryId;
@@ -722,9 +726,10 @@ export function JournalView() {
     const newFavorite = !((entry.metadata as Record<string, unknown>)?._customFields as Record<string, unknown>)?._isFavorite;
     const updatedCustomFields = { ...customFields, _isFavorite: newFavorite };
 
-    // Optimistic update in store + form state
+    // Optimistic update in store + form state — spread the existing metadata
+    // so images, featured key, and widget type survive the bookmark toggle
     setCustomFields(updatedCustomFields);
-    const updatedMeta: Record<string, unknown> = {};
+    const updatedMeta: Record<string, unknown> = { ...(entry.metadata as Record<string, unknown>) };
     if (editorTopicId) updatedMeta._taxonomyId = editorTopicId;
     updatedMeta._customFields = updatedCustomFields;
     updateDecryptedEntry(selectedEntryId, { metadata: updatedMeta });
