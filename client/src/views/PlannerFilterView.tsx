@@ -6,7 +6,6 @@ import { ContentTemplate } from '../components/templates/ContentTemplate.js';
 import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { PlanningTabBar } from '../components/molecules/PlanningTabBar.js';
-import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { SwipeActions } from '../components/molecules/SwipeActions.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
@@ -15,6 +14,8 @@ import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useEncryption } from '../contexts/EncryptionContext.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
+import { useOpenInJournal } from '../hooks/useOpenInJournal.js';
+import { deleteEntryWithImages } from '../utils/entryActions.js';
 import { entries as entriesApi, settings as settingsApi } from '../services/api.js';
 import { stripHtml } from '../utils/stripHtml.js';
 import type { MilestoneEntryData, TaskEntryData } from '../types/goals.js';
@@ -440,7 +441,7 @@ export function PlannerFilterView() {
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
   const updateDecryptedEntry = useEntriesStore(s => s.updateDecryptedEntry);
-  const removeEntry = useEntriesStore(s => s.removeEntry);
+  const openInJournal = useOpenInJournal();
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const { encryptPost } = useEncryption();
 
@@ -451,7 +452,6 @@ export function PlannerFilterView() {
   const [activeSavedId, setActiveSavedId] = useState<string | null>(null);
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [saveName, setSaveName] = useState('');
-  const [editingId, setEditingId] = useState<number | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
 
   // Add new item state
@@ -634,35 +634,25 @@ export function PlannerFilterView() {
 
   const handleDeleteEntry = useCallback(async (id: number) => {
     try {
-      await entriesApi.delete(id);
-      removeEntry(id);
-      if (editingId === id) setEditingId(null);
+      await deleteEntryWithImages(id);
     } catch (err) { console.error('Failed to delete entry:', err); }
-  }, [removeEntry, editingId]);
+  }, []);
 
-  // Unified result row: standard entry-list card when collapsed, inline editor when editing.
+  // Unified result row — click or swipe-edit opens the entry in the journal editor.
   const renderResultCard = (id: number, taxonomyId: number, completed: boolean) => {
     const entry = entries.find(e => e.id === id);
     if (!entry) return null;
     const topic = allTopics.find(tp => tp.id === taxonomyId);
-    if (editingId !== id) {
-      return (
-        <SwipeActions key={id} accentColor={accentColor} onDelete={() => handleDeleteEntry(id)}>
-          <EntryListCard
-            content={entry.content}
-            createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
-            topicName={topic?.name}
-            completed={completed}
-            onClick={() => setEditingId(id)}
-          />
-        </SwipeActions>
-      );
-    }
     return (
-      <EditableEntryCard key={id} entry={entry} topic={topic} accentColor={accentColor}
-        isEditing onSelect={() => setEditingId(null)}
-        onClose={() => setEditingId(null)} onDeleted={() => setEditingId(null)}
-        metaFields={[]} hideDate flush />
+      <SwipeActions key={id} accentColor={accentColor} onEdit={() => openInJournal(id)} onDelete={() => handleDeleteEntry(id)}>
+        <EntryListCard
+          content={entry.content}
+          createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
+          topicName={topic?.name}
+          completed={completed}
+          onClick={() => openInJournal(id)}
+        />
+      </SwipeActions>
     );
   };
 
@@ -780,7 +770,7 @@ export function PlannerFilterView() {
         <NewEntryCard
           topic={activeTopic}
           accentColor={accentColor}
-          onCreated={(id) => { setEditingId(id); setAddType(null); }}
+          onCreated={() => setAddType(null)}
           hideButton
           isOpen={addType !== null}
           onOpenChange={(open) => { if (!open) setAddType(null); }}

@@ -1,97 +1,84 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ThemeProvider } from 'styled-components';
 import { lightTheme } from '@shared/theme/tokens';
 import { EditableEntryCard } from '@/components/organisms/EditableEntryCard';
+import type { DecryptedPost } from '@shared/crypto/types';
+import type { Topic } from '@/types/topics';
 
-vi.mock('@/contexts/EncryptionContext', () => ({
-  useEncryption: () => ({
-    encryptPost: vi.fn().mockResolvedValue({
-      contentEncrypted: '', contentIv: '',
-      metadataEncrypted: '', metadataIv: '',
-    }),
-  }),
+const openInJournal = vi.fn();
+vi.mock('@/hooks/useOpenInJournal', () => ({
+  useOpenInJournal: () => openInJournal,
 }));
 
-vi.mock('@/stores/entriesStore', () => ({
-  useEntriesStore: (selector: (s: Record<string, unknown>) => unknown) =>
-    selector({
-      updateDecryptedEntry: vi.fn(),
-      removeEntry: vi.fn(),
-    }),
+const deleteEntryWithImages = vi.fn().mockResolvedValue(undefined);
+vi.mock('@/utils/entryActions', () => ({
+  deleteEntryWithImages: (id: number) => deleteEntryWithImages(id),
 }));
 
-vi.mock('@/services/api', () => ({
-  entries: {
-    update: vi.fn().mockResolvedValue({}),
-    delete: vi.fn().mockResolvedValue(undefined),
-  },
+vi.mock('@/stores/uiStore', () => ({
+  useUIStore: (selector: (s: Record<string, unknown>) => unknown) =>
+    selector({ topicCustomFields: {} }),
 }));
 
-vi.mock('@/utils/topicIcons', () => ({
-  getTopicIcon: () => ({ prefix: 'fas', iconName: 'book' }),
-}));
-
-vi.mock('@/utils/stripHtml', () => ({
-  stripHtml: (html: string) => html.replace(/<[^>]*>/g, ''),
-}));
-
-vi.mock('@/components/organisms/Editor', () => ({
-  Editor: () => <div data-testid="editor">Editor</div>,
-}));
-
-function renderWithTheme(ui: React.ReactElement) {
-  return render(<ThemeProvider theme={lightTheme}>{ui}</ThemeProvider>);
-}
-
-const mockEntry = {
-  id: 1,
-  content: '<p>Test entry content</p>',
+const entry: DecryptedPost = {
+  id: 42,
+  content: '<p>Avocado toast notes</p>',
+  metadata: { _taxonomyId: 5 },
   isEncrypted: true,
-  createdAt: new Date('2024-01-15'),
-  updatedAt: new Date('2024-01-15'),
-  metadata: { _taxonomyId: 1 },
+  createdAt: new Date('2026-07-01T10:00:00'),
+  updatedAt: new Date('2026-07-01T10:00:00'),
 };
 
-const mockTopic = { id: 1, name: 'Work', icon: 'briefcase', color: '#3B82F6' };
+const topic = { id: 5, name: 'Recipe', icon: null, color: null } as unknown as Topic;
 
-describe('EditableEntryCard', () => {
-  const defaultProps = {
-    entry: mockEntry as never,
-    topic: mockTopic,
-    headerColor: '#4281a4',
-    isEditing: false,
-    onSelect: vi.fn(),
-    onClose: vi.fn(),
-    onDeleted: vi.fn(),
-  };
+function renderCard(props: Partial<React.ComponentProps<typeof EditableEntryCard>> = {}) {
+  return render(
+    <ThemeProvider theme={lightTheme}>
+      <EditableEntryCard entry={entry} topic={topic} accentColor="#4A5568" {...props} />
+    </ThemeProvider>
+  );
+}
 
-  it('renders entry preview text', () => {
-    renderWithTheme(<EditableEntryCard {...defaultProps} />);
-    expect(screen.getByText('Test entry content')).toBeInTheDocument();
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+describe('EditableEntryCard (swipeable row — no inline editing)', () => {
+  it('renders the entry preview text', () => {
+    renderCard();
+    expect(screen.getByText('Avocado toast notes')).toBeInTheDocument();
   });
 
-  it('renders date label', () => {
-    renderWithTheme(<EditableEntryCard {...defaultProps} />);
-    // Date format depends on locale; check that the card renders
-    const card = screen.getByText('Test entry content').closest('[class]');
-    expect(card).toBeTruthy();
+  it('opens the entry in the journal editor on click', () => {
+    renderCard();
+    fireEvent.click(screen.getByRole('button', { name: /avocado toast/i }));
+    expect(openInJournal).toHaveBeenCalledWith(42);
   });
 
-  it('calls onSelect when preview is clicked', () => {
-    const onSelect = vi.fn();
-    renderWithTheme(<EditableEntryCard {...defaultProps} onSelect={onSelect} />);
-    fireEvent.click(screen.getByText('Test entry content'));
-    expect(onSelect).toHaveBeenCalled();
+  it('opens the entry with the keyboard', () => {
+    renderCard();
+    fireEvent.keyDown(screen.getByRole('button', { name: /avocado toast/i }), { key: 'Enter' });
+    expect(openInJournal).toHaveBeenCalledWith(42);
   });
 
-  it('shows editor when editing', () => {
-    renderWithTheme(<EditableEntryCard {...defaultProps} isEditing={true} />);
-    expect(screen.getByTestId('editor')).toBeInTheDocument();
+  it('exposes swipe edit and delete actions', () => {
+    renderCard();
+    expect(screen.getByLabelText('Edit')).toBeInTheDocument();
+    expect(screen.getByLabelText('Delete')).toBeInTheDocument();
   });
 
-  it('does not show editor when not editing', () => {
-    renderWithTheme(<EditableEntryCard {...defaultProps} isEditing={false} />);
-    expect(screen.queryByTestId('editor')).not.toBeInTheDocument();
+  it('swipe-delete removes the entry (with image cleanup) and notifies', async () => {
+    const onDeleted = vi.fn();
+    renderCard({ onDeleted });
+    fireEvent.click(screen.getByLabelText('Delete'));
+    await waitFor(() => expect(deleteEntryWithImages).toHaveBeenCalledWith(42));
+    expect(onDeleted).toHaveBeenCalled();
+  });
+
+  it('swipe-edit opens the journal editor', () => {
+    renderCard();
+    fireEvent.click(screen.getByLabelText('Edit'));
+    expect(openInJournal).toHaveBeenCalledWith(42);
   });
 });

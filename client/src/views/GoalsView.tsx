@@ -12,7 +12,7 @@ import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 import { PlanningTabBar } from '../components/molecules/PlanningTabBar.js';
 import { GoalCard } from '../components/organisms/GoalCard.js';
 import { MilestoneCard } from '../components/organisms/MilestoneCard.js';
-import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
+import { deleteEntryWithImages } from '../utils/entryActions.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { SwipeActions } from '../components/molecules/SwipeActions.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
@@ -194,7 +194,6 @@ export function GoalsView() {
   useEffect(() => {
     setTab(tabFromPath);
   }, [tabFromPath]);
-  const [editingId, setEditingId] = useState<number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -526,15 +525,11 @@ export function GoalsView() {
     }
   }, [orderedMilestones, persistMilestoneStatus]);
 
-  const handleSelect = (id: number) => setEditingId(prev => prev === id ? null : id);
-
   const handleDeleteEntry = useCallback(async (id: number) => {
     try {
-      await entriesApi.delete(id);
-      removeEntry(id);
-      if (editingId === id) setEditingId(null);
+      await deleteEntryWithImages(id);
     } catch (err) { console.error('Failed to delete entry:', err); }
-  }, [removeEntry, editingId]);
+  }, []);
 
   // Goals & milestones open in the standard journal editor (not inline). The
   // editor shows a "Planning" link back to this board.
@@ -580,7 +575,6 @@ export function GoalsView() {
           <NewEntryCard
             topic={activeAddTopic}
             accentColor={accentColor}
-            onCreated={(id) => setEditingId(id)}
             hideButton
             isOpen={isAddOpen}
             onOpenChange={setIsAddOpen}
@@ -650,35 +644,17 @@ export function GoalsView() {
                 const entry = entries.find(e => e.id === t.id);
                 if (!entry) return null;
                 const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                const isEditing = editingId === t.id;
                 return (
-                  <div key={t.id}>
-                    <SwipeActions accentColor={accentColor} onDelete={() => handleDeleteEntry(t.id)} disabled={isEditing}>
-                      <EntryListCard
-                        content={entry.content}
-                        createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
-                        topicName={topic?.name}
-                        topicColor={topic?.color || accentColor}
-                        completed={t.isCompleted}
-                        onClick={() => handleSelect(t.id)}
-                      />
-                    </SwipeActions>
-                    {isEditing && (
-                      <EditableEntryCard
-                        entry={entry}
-                        topic={topic}
-                        accentColor={accentColor}
-                        isEditing
-                        hidePreview
-                        onSelect={() => handleSelect(t.id)}
-                        onClose={() => setEditingId(null)}
-                        onDeleted={() => setEditingId(null)}
-                        metaFields={[]}
-                        hideDate
-                        flush
-                      />
-                    )}
-                  </div>
+                  <SwipeActions key={t.id} accentColor={accentColor} onEdit={() => openInJournal(t.id)} onDelete={() => handleDeleteEntry(t.id)}>
+                    <EntryListCard
+                      content={entry.content}
+                      createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
+                      topicName={topic?.name}
+                      topicColor={topic?.color || accentColor}
+                      completed={t.isCompleted}
+                      onClick={() => openInJournal(t.id)}
+                    />
+                  </SwipeActions>
                 );
               })
         )}
@@ -689,35 +665,17 @@ export function GoalsView() {
                 const entry = entries.find(e => e.id === t.id);
                 if (!entry) return null;
                 const topic = allTopics.find(tp => tp.id === t.taxonomyId);
-                const isEditing = editingId === t.id;
                 return (
-                  <div key={t.id}>
-                    <SwipeActions accentColor={accentColor} onDelete={() => handleDeleteEntry(t.id)} disabled={isEditing}>
-                      <EntryListCard
-                        content={entry.content}
-                        createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
-                        topicName={topic?.name}
-                        topicColor={topic?.color || accentColor}
-                        completed={t.isCompleted}
-                        onClick={() => handleSelect(t.id)}
-                      />
-                    </SwipeActions>
-                    {isEditing && (
-                      <EditableEntryCard
-                        entry={entry}
-                        topic={topic}
-                        accentColor={accentColor}
-                        isEditing
-                        hidePreview
-                        onSelect={() => handleSelect(t.id)}
-                        onClose={() => setEditingId(null)}
-                        onDeleted={() => setEditingId(null)}
-                        metaFields={[]}
-                        hideDate
-                        flush
-                      />
-                    )}
-                  </div>
+                  <SwipeActions key={t.id} accentColor={accentColor} onEdit={() => openInJournal(t.id)} onDelete={() => handleDeleteEntry(t.id)}>
+                    <EntryListCard
+                      content={entry.content}
+                      createdAt={entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt)}
+                      topicName={topic?.name}
+                      topicColor={topic?.color || accentColor}
+                      completed={t.isCompleted}
+                      onClick={() => openInJournal(t.id)}
+                    />
+                  </SwipeActions>
                 );
               })
         )}

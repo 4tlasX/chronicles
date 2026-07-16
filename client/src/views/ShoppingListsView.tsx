@@ -6,7 +6,8 @@ import { Spinner } from '../components/atoms/Spinner.js';
 import { MealsTabBar } from '../components/molecules/MealsTabBar.js';
 import { FilterTabs } from '../components/molecules/FilterTabs.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
-import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
+import { useOpenInJournal } from '../hooks/useOpenInJournal.js';
+import { deleteEntryWithImages } from '../utils/entryActions.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 import { SwipeActions } from '../components/molecules/SwipeActions.js';
@@ -85,11 +86,6 @@ const List = styled.div`
   flex-direction: column;
 `;
 
-const EditWrap = styled.div`
-  border-top: 1px solid var(--border-subtle);
-  padding: 8px 0;
-`;
-
 /* ── Tabs ── */
 
 const TABS = [
@@ -104,20 +100,17 @@ export function ShoppingListsView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries   = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const removeEntry = useEntriesStore(s => s.removeEntry);
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
+  const openInJournal = useOpenInJournal();
 
   const [tab, setTab] = useState<Tab>('current');
-  const [editingId, setEditingId] = useState<number | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const handleDelete = useCallback(async (id: number) => {
     try {
-      await entriesApi.delete(id);
-      removeEntry(id);
-      if (editingId === id) setEditingId(null);
+      await deleteEntryWithImages(id);
     } catch (err) { console.error('Failed to delete entry:', err); }
-  }, [removeEntry, editingId]);
+  }, []);
 
   const shoppingListTopic = useMemo(
     () => allTopics.find(t => t.name.toLowerCase() === 'shopping list'),
@@ -197,34 +190,21 @@ export function ShoppingListsView() {
             <List>
               {visible.map(({ entry, completed }) => {
                 const created = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt);
-                const isEditing = editingId === entry.id;
                 return (
-                  <div key={entry.id}>
-                    <SwipeActions accentColor={accentColor} onDelete={() => handleDelete(entry.id)} disabled={isEditing}>
-                      <EntryListCard
-                        content={entry.content}
-                        createdAt={created}
-                        topicName={shoppingListTopic?.name}
-                        completed={completed}
-                        onClick={() => setEditingId(isEditing ? null : entry.id)}
-                      />
-                    </SwipeActions>
-                    {isEditing && (
-                      <EditWrap>
-                        <EditableEntryCard
-                          entry={entry}
-                          topic={shoppingListTopic}
-                          accentColor={accentColor}
-                          isEditing
-                          hidePreview
-                          onSelect={() => setEditingId(null)}
-                          onClose={() => setEditingId(null)}
-                          onDeleted={() => setEditingId(null)}
-                          autoExpandFields
-                        />
-                      </EditWrap>
-                    )}
-                  </div>
+                  <SwipeActions
+                    key={entry.id}
+                    accentColor={accentColor}
+                    onEdit={() => openInJournal(entry.id)}
+                    onDelete={() => handleDelete(entry.id)}
+                  >
+                    <EntryListCard
+                      content={entry.content}
+                      createdAt={created}
+                      topicName={shoppingListTopic?.name}
+                      completed={completed}
+                      onClick={() => openInJournal(entry.id)}
+                    />
+                  </SwipeActions>
                 );
               })}
             </List>

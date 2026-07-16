@@ -84,7 +84,6 @@ export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], 
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
 
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
-  const [editingId, setEditingId] = useState<number | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const addTopic = useMemo(
@@ -195,10 +194,6 @@ export function TopicEntriesView({ title, titleTo, topicNames, metaFields = [], 
                 entry={entry}
                 topic={getTopicForEntry(entry)}
                 accentColor={accentColor}
-                isEditing={editingId === entry.id}
-                onSelect={() => setEditingId(editingId === entry.id ? null : entry.id)}
-                onClose={() => setEditingId(null)}
-                onDeleted={() => setEditingId(null)}
                 metaFields={metaFields}
                 hideDate
               />

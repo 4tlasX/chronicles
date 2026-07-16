@@ -6,7 +6,8 @@ import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
 import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
-import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
+import { useOpenInJournal } from '../hooks/useOpenInJournal.js';
+import { deleteEntryWithImages } from '../utils/entryActions.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { SwipeActions } from '../components/molecules/SwipeActions.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
@@ -103,11 +104,6 @@ const List = styled.div`
   flex-direction: column;
 `;
 
-const EditWrap = styled.div`
-  border-top: 1px solid var(--border-subtle);
-  padding: 8px 0;
-`;
-
 const AddWrap = styled.div`
   padding: 8px 0 0;
 `;
@@ -120,21 +116,18 @@ export function TopicDetailView() {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const allTopics = useEntriesStore(s => s.allTopics);
   const entries = useEntriesStore(s => s.decryptedEntries);
-  const removeEntry = useEntriesStore(s => s.removeEntry);
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
+  const openInJournal = useOpenInJournal();
 
   const topic = allTopics.find(t => String(t.id) === String(topicId));
 
-  const [editingId, setEditingId] = useState<number | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const handleDeleteEntry = useCallback(async (id: number) => {
     try {
-      await entriesApi.delete(id);
-      removeEntry(id);
-      if (editingId === id) setEditingId(null);
+      await deleteEntryWithImages(id);
     } catch (err) { console.error('Failed to delete entry:', err); }
-  }, [removeEntry, editingId]);
+  }, []);
 
   const topicEntries = useMemo(() => {
     if (!topic) return [];
@@ -199,33 +192,21 @@ export function TopicDetailView() {
             <List>
               {topicEntries.map((entry: DecryptedPost) => {
                 const created = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt);
-                const isEditing = editingId === entry.id;
                 return (
-                  <div key={entry.id}>
-                    <SwipeActions accentColor={accentColor} onDelete={() => handleDeleteEntry(entry.id)} disabled={isEditing}>
-                      <EntryListCard
-                        content={entry.content}
-                        createdAt={created}
-                        topicName={topic.name}
-                        topicColor={topic.color || accentColor}
-                        onClick={() => setEditingId(isEditing ? null : entry.id)}
-                      />
-                    </SwipeActions>
-                    {isEditing && (
-                      <EditWrap>
-                        <EditableEntryCard
-                          entry={entry}
-                          topic={topic}
-                          accentColor={accentColor}
-                          isEditing
-                          hidePreview
-                          onSelect={() => setEditingId(null)}
-                          onClose={() => setEditingId(null)}
-                          onDeleted={() => setEditingId(null)}
-                        />
-                      </EditWrap>
-                    )}
-                  </div>
+                  <SwipeActions
+                    key={entry.id}
+                    accentColor={accentColor}
+                    onEdit={() => openInJournal(entry.id)}
+                    onDelete={() => handleDeleteEntry(entry.id)}
+                  >
+                    <EntryListCard
+                      content={entry.content}
+                      createdAt={created}
+                      topicName={topic.name}
+                      topicColor={topic.color || accentColor}
+                      onClick={() => openInJournal(entry.id)}
+                    />
+                  </SwipeActions>
                 );
               })}
             </List>

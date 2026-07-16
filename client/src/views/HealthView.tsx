@@ -5,7 +5,6 @@ import { EmptyState } from '../components/atoms/EmptyState.js';
 import { Spinner } from '../components/atoms/Spinner.js';
 import { HealthTabBar } from '../components/molecules/HealthTabBar.js';
 import { FilterTabs } from '../components/molecules/FilterTabs.js';
-import { EditableEntryCard } from '../components/organisms/EditableEntryCard.js';
 import { EntryListCard } from '../components/molecules/EntryListCard.js';
 import { NewEntryCard } from '../components/organisms/NewEntryCard.js';
 import { UnlockDialog } from '../components/organisms/UnlockDialog.js';
@@ -15,7 +14,8 @@ import { MaterialIcon } from '../components/atoms/MaterialIcon.js';
 import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { useInitializeData } from '../hooks/useInitializeData.js';
-import { entries as entriesApi } from '../services/api.js';
+import { useOpenInJournal } from '../hooks/useOpenInJournal.js';
+import { deleteEntryWithImages } from '../utils/entryActions.js';
 import { toDateStr, startOfWeek, startOfMonth } from '../utils/dateUtils.js';
 import type { DateFilter } from '../types/health.js';
 
@@ -125,11 +125,6 @@ const List = styled.div`
   flex-direction: column;
 `;
 
-const EditWrap = styled.div`
-  border-top: 1px solid var(--border-subtle);
-  padding: 8px 0;
-`;
-
 /* ── Helpers ── */
 
 /* ── Props ── */
@@ -156,17 +151,17 @@ interface HealthViewProps {
 /**
  * Unified single-column Health entry page: "Health" title, the Health tab bar
  * (tabs), a date filter (sub-tabs), then the entry list. Entries swipe to
- * reveal delete and open inline for editing (via EditableEntryCard).
+ * reveal edit/delete; clicking (or swipe-edit) opens the entry in the journal
+ * editor — its breadcrumb leads back here.
  */
 export function HealthView({ topicNames, metaFields = [], showDateFilter = true, printable = false, summaryFields = [], title = 'Health', tabBar }: HealthViewProps) {
   const { isReady, isLoading, needsUnlock, handleUnlock } = useInitializeData();
   const entries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
-  const removeEntry = useEntriesStore(s => s.removeEntry);
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
+  const openInJournal = useOpenInJournal();
 
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
-  const [editingId, setEditingId] = useState<number | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const addTopic = useMemo(
@@ -209,11 +204,9 @@ export function HealthView({ topicNames, metaFields = [], showDateFilter = true,
 
   const handleDelete = useCallback(async (id: number) => {
     try {
-      await entriesApi.delete(id);
-      removeEntry(id);
-      if (editingId === id) setEditingId(null);
+      await deleteEntryWithImages(id);
     } catch (err) { console.error('Failed to delete entry:', err); }
-  }, [removeEntry, editingId]);
+  }, []);
 
   const summaries = useMemo(() => {
     if (summaryFields.length === 0) return [];
@@ -299,34 +292,21 @@ export function HealthView({ topicNames, metaFields = [], showDateFilter = true,
             <List>
               {sortedEntries.map(entry => {
                 const created = entry.createdAt instanceof Date ? entry.createdAt : new Date(entry.createdAt);
-                const isEditing = editingId === entry.id;
                 const topic = getTopicForEntry(entry);
                 return (
-                  <div key={entry.id}>
-                    <SwipeActions accentColor={accentColor} onDelete={() => handleDelete(entry.id)} disabled={isEditing}>
-                      <EntryListCard
-                        content={entry.content}
-                        createdAt={created}
-                        topicName={topic?.name}
-                        onClick={() => setEditingId(isEditing ? null : entry.id)}
-                      />
-                    </SwipeActions>
-                    {isEditing && (
-                      <EditWrap>
-                        <EditableEntryCard
-                          entry={entry}
-                          topic={topic}
-                          accentColor={accentColor}
-                          isEditing
-                          hidePreview
-                          metaFields={metaFields}
-                          onSelect={() => setEditingId(null)}
-                          onClose={() => setEditingId(null)}
-                          onDeleted={() => setEditingId(null)}
-                        />
-                      </EditWrap>
-                    )}
-                  </div>
+                  <SwipeActions
+                    key={entry.id}
+                    accentColor={accentColor}
+                    onEdit={() => openInJournal(entry.id)}
+                    onDelete={() => handleDelete(entry.id)}
+                  >
+                    <EntryListCard
+                      content={entry.content}
+                      createdAt={created}
+                      topicName={topic?.name}
+                      onClick={() => openInJournal(entry.id)}
+                    />
+                  </SwipeActions>
                 );
               })}
             </List>
