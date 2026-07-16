@@ -133,20 +133,9 @@ const EdDateDow = styled.span`
   color: var(--text-tertiary);
 `;
 
-/* Actions row — icon buttons right-aligned, flanked by hairline rules (DS spec). */
-const EdTopicRow = styled.div`
-  display: flex;
-  gap: var(--s-3, 12px);
-  align-items: center;
-  margin-bottom: 28px;
-  padding: 16px 0 20px;
-  border-top: 1px solid var(--border-subtle);
-  border-bottom: 1px solid var(--border-subtle);
-  position: relative;
-`;
-
-/* Breadcrumb at the very top of the entry: VIEW / SUBVIEW / TOPIC.
-   Ancestors derive from the topic's home view; the topic is the last crumb. */
+/* Breadcrumb at the very top of the entry: VIEW / SUBVIEW / TOPIC on the
+   left, the entry action bar on the right. Ancestors derive from the topic's
+   home view; the topic is the last crumb. */
 const EdCrumbRow = styled.nav`
   display: flex;
   align-items: center;
@@ -252,6 +241,7 @@ const EditorArea = styled.div<{ $hidden?: boolean }>`
   display: ${({ $hidden }) => ($hidden ? 'none' : 'flex')};
   flex-direction: column;
   overflow: hidden;
+  margin-top: 24px;
 `;
 
 /* Shown in place of the editor when a field-only entry collapses it —
@@ -629,23 +619,8 @@ export function EntryForm({
                 hideIcon
               />
             </CrumbTopic>
-          </EdCrumbRow>
 
-          {/* DS date block — big numeral + weekday under a 2px accent rule */}
-          {(entryCreatedAt || !entryId) && (
-            <EdDateBlock>
-              <EdDateContent>
-                <EdDateNum>{(entryCreatedAt || new Date()).getDate()}</EdDateNum>
-                <EdDateMeta>
-                  <EdDateDow>{(entryCreatedAt || new Date()).toLocaleDateString('en-US', { weekday: 'long' })}</EdDateDow>
-                  <EdDateMonth>{(entryCreatedAt || new Date()).toLocaleDateString('en-US', { month: 'long' })}</EdDateMonth>
-                </EdDateMeta>
-              </EdDateContent>
-            </EdDateBlock>
-          )}
-
-          {/* Action buttons row, flanked by hairline rules */}
-          <EdTopicRow>
+            {/* Entry action bar — right side of the breadcrumb row */}
             <EdActions style={{ marginLeft: 'auto' }}>
               <IconBtn
                 type="button"
@@ -726,7 +701,20 @@ export function EntryForm({
                 <Icon name="trash" size={16} strokeWidth={2} />
               </IconBtn>
             </EdActions>
-          </EdTopicRow>
+          </EdCrumbRow>
+
+          {/* DS date block — big numeral + weekday under a 2px accent rule */}
+          {(entryCreatedAt || !entryId) && (
+            <EdDateBlock>
+              <EdDateContent>
+                <EdDateNum>{(entryCreatedAt || new Date()).getDate()}</EdDateNum>
+                <EdDateMeta>
+                  <EdDateDow>{(entryCreatedAt || new Date()).toLocaleDateString('en-US', { weekday: 'long' })}</EdDateDow>
+                  <EdDateMonth>{(entryCreatedAt || new Date()).toLocaleDateString('en-US', { month: 'long' })}</EdDateMonth>
+                </EdDateMeta>
+              </EdDateContent>
+            </EdDateBlock>
+          )}
 
           {imageError && <ImageErrorText>{imageError}</ImageErrorText>}
 
