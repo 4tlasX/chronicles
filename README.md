@@ -9,11 +9,11 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - **Dashboard Home** - Two-column drag-and-drop widget layout; quick entry, daily priorities, events & meetings, mini calendar, affirmations, daily wellness check-in, tasks, shopping list, medication schedule, weather, and menu plan; daily quote and greeting; Add your custom topic widget
 - **Rich Text Editor** - TipTap-based editor with formatting toolbar, inline freehand drawing, and voice dictation
 - **Voice Dictation** - Tap the mic button to dictate entries hands-free using the Web Speech API; interim text previews in real-time as you speak; works offline on iOS/Safari (on-device processing); auto-continues after silence
-- **Topic Organization** - Categorize entries with custom topics, icons, and drag-and-drop reordering; define your own custom fields per topic (text, number, date, yes/no, URL) — fields appear in the entry editor and dashboard quick entry; entries saved with only field values auto-summarize them as content
-- **Quick Tab Filters** - Today, Date (with active filter bar and clear button), Tasks, All, Bookmarks, and Search views
-- **Goals & Milestones** - Track goals with milestone progress and task linking; milestone status cycle (Not Started → In Progress → Completed) with tap-to-advance on the card
+- **Topic Organization** - Categorize entries with custom topics, icons, and drag-and-drop reordering; define your own custom fields per topic (text, number, date, yes/no, URL) — fields appear in the entry editor and dashboard quick entry; entries saved with only field values auto-summarize them as content; any topic can optionally hide the main text area so its entries are fields-only
+- **Quick Tab Filters** - Today, Date (with active filter bar and clear button), Tasks, All, Bookmarks, and Search views; the Date view lists events and meetings on their scheduled day, matching the calendar
+- **Goals & Milestones** - Track goals with milestone progress and task linking; milestone status cycle (Not Started → In Progress → Completed) with tap-to-advance on the card; goal cards display the entry's featured image as a banner
 - **Custom Planner Filters** - Cross-hierarchy search across goals, milestones, tasks, and todos; filter by keyword, item type, status, priority, parent goal, and parent milestone; save named filters that persist and can be reloaded in one tap
-- **Meal Planning & Recipes** - Weekly menu planner, recipe entries with ingredients and instructions, linked shopping lists
+- **Meal Planning & Recipes** - Weekly menu planner with a dedicated meals section (Menu, Recipes, Shopping Lists, Meals tabs); recipes render as a formatted recipe page — name, description, prep/cook/serves/calories/difficulty stats band, photo hero, checkable ingredients, and numbered method steps — with live serving scaling that recalculates ingredient amounts, one-tap "Add to shopping list" (appends all ingredients and cross-links the entries), and "Add to menu"
 - **Shopping Lists** - Checklist-style lists linkable to recipes; dashboard widget shows active list with inline check-off
 - **Health Tracking** - Medications, symptoms, food, exercise, and allergies; printable medication lists (with dosage and schedule), symptom logs, and allergy records
 - **Medication Schedule** - Daily dose tracking with time-based scheduling; real-time sync on tab focus
@@ -23,9 +23,10 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - **Calendar View** - Visual month overview; events and meetings appear on their scheduled date in your header colour
 - **Calendar Sync** - Two-way sync of Event and Meeting entries with Google Calendar (pick any calendar you own); optional import of events created directly in Google; read-only Apple Calendar subscription feed (ICS) for iPhone/iPad/Mac; connect, disconnect, and sync on demand from Settings
 - **Entry Images** - Attach up to 7 photos per entry, stored **zero-knowledge in your own Cloudflare R2 bucket**; images are encrypted in the browser with your master key before upload, so your bucket only ever holds ciphertext; thumbnail strip, tap-to-open lightbox, and an optional featured image that renders as a hero banner above the entry
-- **Entry Sharing** - Share entries via encrypted public links (hidden automatically for entries with images)
+- **Entry Sharing** - Share entries via public links; the share dialog manages the links for that entry (create, copy, revoke). Shared copies are stored unencrypted on the server by design — creating a link is an explicit opt-out of zero-knowledge for that entry, and revoking it removes access. Sharing is hidden for entries with images, except recipes, which share their formatted text while the photo stays private
+- **Title-Led Entry Headers** - Events, meetings, quotes, books, music, goals, and milestones open with their own name in place of the date block — events/meetings add a date · time · location line, quotes render formatted with author attribution, books show title and author
 - **PWA Support** - Installable as a standalone app with offline shell caching
-- **Customizable Theme** - 40+ muted vintage header colors, 28 background images, light/dark mode
+- **Customizable Theme** - Light/dark mode with muted accent color presets (Teal, Ink, Rose, Amber, Sage, Denim, Purple) that recolor the whole app, plus header colors and background images
 - **Display Name** - Set a display name shown in the dashboard greeting; username shown read-only in account settings
 - **Apple Pencil Support** - Scribble handwriting-to-text in all fields; freehand drawing canvas with pressure sensitivity, palm rejection, and undo — drawings saved inline as encrypted SVG
 - **Mobile Responsive** - Collapsible navigation, touch-friendly tap targets, single-column dashboard on small screens
@@ -37,6 +38,7 @@ A zero-knowledge encrypted journal and digital day planner for those too busy to
 - **Images never touch the Chronicles server** — they are encrypted client-side and uploaded straight to your own R2 bucket with URLs signed in the browser; your R2 credentials are themselves encrypted with your master key, so the server stores only ciphertext it cannot read
 - **Two-factor authentication** (TOTP) — no external services; secrets stored encrypted server-side
 - Recovery key system allows password reset without compromising zero-knowledge design
+- **Sharing is the one deliberate exception**: creating a share link stores a plaintext copy of that entry on the server so the link works for anyone — you opt in per entry, and revoking the link removes access
 - Schema-per-user database isolation (not row-level security)
 - Session management — view and revoke active sessions from any device
 - Non-extractable CryptoKeys — master key cannot be exported from the browser's crypto subsystem
@@ -94,11 +96,14 @@ Topics categorize your entries — like tags or folders. Each has an icon and co
 - **Exercise** - Type, duration, intensity, and distance tracking
 - **Allergy** - Allergen, severity, and reaction tracking
 - **Wellness** - Auto-created by the dashboard check-in widget; water, mood, and sleep fields
-- **Event** - Date/time, location, and contact details
-- **Meeting** - Attendees, topic, location, and scheduling
+- **Event** - Name, date/time, location, and contact details; opens with the event name as its header
+- **Meeting** - Name, attendees, topic, location, and scheduling
+- **Recipe** - Formatted recipe page: description, category, prep/cook/serves/calories/difficulty, checkable ingredients with serving scaling, numbered method steps, photo hero, shopping-list and menu integration
+- **Shopping List** - Checklist items with categories, linkable to recipes
+- **Menu Plan** - Weekly meal slots, linkable to recipes
 - **Priorities** - Auto-created by the dashboard priorities widget
-- **Music / Books / TV/Movies** - Entertainment tracking
-- **Research / Idea / Quote** - Inspiration collection
+- **Music / Books / TV/Movies** - Entertainment tracking; books and music lead with their title/artist from your custom fields
+- **Research / Idea / Quote** - Inspiration collection; quotes display formatted with author attribution
 
 You can create your own topics for anything else. Any topic can have **user-defined custom fields** — add them by editing a topic in the Topics view. Fields appear in the entry editor and Quick Entry widget. Supported types: text, number, date, yes/no, URL.
 
@@ -109,6 +114,7 @@ You can create your own topics for anything else. Any topic can have **user-defi
 - **Topics** - Manage and browse entries by topic
 - **Calendar** - Month view with clickable days for detail; events/meetings appear on their scheduled date
 - **Planning** - Goals, milestones, tasks, and todos (dropdown selector); Custom Filters view at `/goals/filter`
+- **Meals** (`/menu`) - Menu planner, Recipes, Shopping Lists, and Meals log tabs
 - **Health** - Medications, schedule, food, exercise, symptoms, allergies, and reporting
 - **Quick Links** - Entertainment and inspiration collections
 
@@ -163,7 +169,7 @@ Add up to 7 photos to any journal entry — without giving up zero-knowledge:
 2. **Enter credentials in Settings → Entry images** — They autosave as you type, get encrypted with your master key, and are stored as ciphertext the server cannot read. The setup guide in Settings walks through the bucket, token, and the required CORS policy, and an optional "Test connection" verifies everything from your browser.
 3. **Attach images in the editor** — Photos are downscaled, encrypted with AES-256-GCM in the browser, and uploaded directly to your bucket with browser-signed URLs. Chronicles' server never sees the images or your credentials — your bucket only ever contains encrypted noise.
 
-Star an image to feature it as a full-width banner above the entry; tap any thumbnail for a full-screen lightbox with keyboard and swipe navigation. Deleting an image or an entry (including bulk delete) also removes the objects from your bucket. Sharing is automatically disabled for entries that contain images.
+Star an image to feature it as a full-width banner above the entry (recipes and goal cards use it too); tap any thumbnail for a full-screen lightbox with keyboard and swipe navigation. Deleting an image or an entry (including bulk delete) also removes the objects from your bucket. Sharing is automatically disabled for entries that contain images — except recipes, which share only their formatted text while the photo stays in your bucket.
 
 ### Printable Views
 
@@ -177,7 +183,7 @@ Medication lists, symptom logs, and allergy records can be printed directly from
 - **Features** - Enable/disable health tracking, planning, entertainment, and more
 - **Calendar Sync** - Connect Google Calendar, choose the target calendar, toggle imports, manage the Apple ICS feed, and clean up old events
 - **Entry Images** - Toggle the feature, enter your Cloudflare R2 credentials (autosaved and master-key encrypted), test the connection, and follow the built-in setup guide
-- **Theme** - 40+ header colors, 28 background images, light/dark mode
+- **Theme** - Light/dark mode, muted accent color presets, header colors, background images
 - **Data** - Seed test data, export/import entries
 
 ## Getting Started
