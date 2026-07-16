@@ -11,6 +11,8 @@ import type { EntryImage } from '../../services/imageStorage.js';
 const BannerWrap = styled.div`
   width: 100%;
   height: clamp(240px, 38vh, 400px);
+  margin-top: 24px;
+  border-radius: var(--r-lg, 2px);
   background: var(--bg-sunken);
   display: flex;
   align-items: center;

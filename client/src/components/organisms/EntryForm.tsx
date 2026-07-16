@@ -594,8 +594,6 @@ export function EntryForm({
     <FormWrapper>
       {/* Scrollable body */}
       <ScrollArea>
-        {/* Featured image hero — outside EdBody for full-bleed width */}
-        {featuredImage && <EntryHeroBanner image={featuredImage} />}
         <EdBody>
           {/* Breadcrumb: view / subview / topic — the topic crumb is the picker */}
           <EdCrumbRow aria-label="Entry location">
@@ -716,6 +714,9 @@ export function EntryForm({
               </EdDateContent>
             </EdDateBlock>
           )}
+
+          {/* Featured image hero — under the date header, above the text area */}
+          {featuredImage && <EntryHeroBanner image={featuredImage} />}
 
           {imageError && <ImageErrorText>{imageError}</ImageErrorText>}
 
