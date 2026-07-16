@@ -87,6 +87,7 @@ const EdDateBlock = styled.div`
   align-items: flex-end;
   gap: 16px;
   justify-content: space-between;
+  margin-top: 14px;
   margin-bottom: 0;
   padding-top: 26px;
   padding-bottom: 22px;
