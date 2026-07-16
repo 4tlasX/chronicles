@@ -11,7 +11,7 @@ export interface TrailCrumb {
   path: string | null;
 }
 
-const JOURNAL_TRAIL: TrailCrumb[] = [{ label: 'Journal', path: '/journal' }];
+const JOURNAL_CRUMB: TrailCrumb = { label: 'Journal', path: '/journal' };
 const PLANNING_TRAIL: TrailCrumb[] = [{ label: 'Planning', path: '/goals' }];
 const HEALTH_TRAIL: TrailCrumb[] = [{ label: 'Health', path: '/health' }];
 const MEALS_TRAIL: TrailCrumb[] = [{ label: 'Meals', path: '/menu' }];
@@ -45,8 +45,9 @@ const TRAILS: Record<string, TrailCrumb[]> = {
   idea: [{ label: 'Inspiration', path: null }],
 };
 
-/** Ancestor crumbs for a topic; custom/unknown topics live under Journal. */
+/** Ancestor crumbs for a topic — always rooted at Journal, then the topic's
+ *  home view/subview (e.g. Meals → Journal / Health / Food). */
 export function getTopicTrail(topicName?: string | null): TrailCrumb[] {
   const key = (topicName ?? '').toLowerCase();
-  return TRAILS[key] ?? JOURNAL_TRAIL;
+  return [JOURNAL_CRUMB, ...(TRAILS[key] ?? [])];
 }

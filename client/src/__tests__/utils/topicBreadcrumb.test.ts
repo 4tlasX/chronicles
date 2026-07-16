@@ -1,55 +1,64 @@
 import { describe, it, expect } from 'vitest';
 import { getTopicTrail } from '@/utils/topicBreadcrumb';
 
+const JOURNAL = { label: 'Journal', path: '/journal' };
+
 describe('getTopicTrail', () => {
-  it('maps planning topics to Planning', () => {
+  it('always starts at Journal', () => {
+    for (const name of ['Task', 'Meals', 'Recipe', 'Music', undefined, 'Custom Topic']) {
+      expect(getTopicTrail(name)[0]).toEqual(JOURNAL);
+    }
+  });
+
+  it('maps planning topics to Journal / Planning', () => {
     for (const name of ['Task', 'Goal', 'Milestone', 'Priorities']) {
-      expect(getTopicTrail(name)).toEqual([{ label: 'Planning', path: '/goals' }]);
+      expect(getTopicTrail(name)).toEqual([JOURNAL, { label: 'Planning', path: '/goals' }]);
     }
   });
 
-  it('maps health topics to Health', () => {
+  it('maps health topics to Journal / Health', () => {
     for (const name of ['Medication', 'Symptom', 'Exercise', 'Allergy', 'Wellness']) {
-      expect(getTopicTrail(name)).toEqual([{ label: 'Health', path: '/health' }]);
+      expect(getTopicTrail(name)).toEqual([JOURNAL, { label: 'Health', path: '/health' }]);
     }
   });
 
-  it('gives the food log a Health / Food subview trail', () => {
+  it('gives the food log the full Journal / Health / Food trail', () => {
     expect(getTopicTrail('Meals')).toEqual([
+      JOURNAL,
       { label: 'Health', path: '/health' },
       { label: 'Food', path: '/health/food' },
     ]);
   });
 
-  it('maps recipes and shopping lists to Meals', () => {
-    expect(getTopicTrail('Recipe')).toEqual([{ label: 'Meals', path: '/menu' }]);
-    expect(getTopicTrail('Shopping List')).toEqual([{ label: 'Meals', path: '/menu' }]);
+  it('maps recipes and shopping lists to Journal / Meals', () => {
+    expect(getTopicTrail('Recipe')).toEqual([JOURNAL, { label: 'Meals', path: '/menu' }]);
+    expect(getTopicTrail('Shopping List')).toEqual([JOURNAL, { label: 'Meals', path: '/menu' }]);
   });
 
-  it('maps events and meetings to Calendar', () => {
-    expect(getTopicTrail('Event')).toEqual([{ label: 'Calendar', path: '/calendar' }]);
-    expect(getTopicTrail('Meeting')).toEqual([{ label: 'Calendar', path: '/calendar' }]);
+  it('maps events and meetings to Journal / Calendar', () => {
+    expect(getTopicTrail('Event')).toEqual([JOURNAL, { label: 'Calendar', path: '/calendar' }]);
+    expect(getTopicTrail('Meeting')).toEqual([JOURNAL, { label: 'Calendar', path: '/calendar' }]);
   });
 
   it('maps entertainment topics to their own views', () => {
-    expect(getTopicTrail('Music')).toEqual([{ label: 'Entertainment', path: '/entertainment/music' }]);
-    expect(getTopicTrail('Books')).toEqual([{ label: 'Entertainment', path: '/entertainment/books' }]);
-    expect(getTopicTrail('TV/Movies')).toEqual([{ label: 'Entertainment', path: '/entertainment/tv' }]);
+    expect(getTopicTrail('Music')).toEqual([JOURNAL, { label: 'Entertainment', path: '/entertainment/music' }]);
+    expect(getTopicTrail('Books')).toEqual([JOURNAL, { label: 'Entertainment', path: '/entertainment/books' }]);
+    expect(getTopicTrail('TV/Movies')).toEqual([JOURNAL, { label: 'Entertainment', path: '/entertainment/tv' }]);
   });
 
   it('maps inspiration topics, with Idea non-clickable (no route)', () => {
-    expect(getTopicTrail('Quote')).toEqual([{ label: 'Inspiration', path: '/inspiration/quotes' }]);
-    expect(getTopicTrail('Idea')).toEqual([{ label: 'Inspiration', path: null }]);
+    expect(getTopicTrail('Quote')).toEqual([JOURNAL, { label: 'Inspiration', path: '/inspiration/quotes' }]);
+    expect(getTopicTrail('Idea')).toEqual([JOURNAL, { label: 'Inspiration', path: null }]);
   });
 
-  it('falls back to Journal for custom, unknown, or missing topics', () => {
-    expect(getTopicTrail('Books I Love')).toEqual([{ label: 'Journal', path: '/journal' }]);
-    expect(getTopicTrail(undefined)).toEqual([{ label: 'Journal', path: '/journal' }]);
-    expect(getTopicTrail(null)).toEqual([{ label: 'Journal', path: '/journal' }]);
+  it('falls back to Journal alone for custom, unknown, or missing topics', () => {
+    expect(getTopicTrail('Books I Love')).toEqual([JOURNAL]);
+    expect(getTopicTrail(undefined)).toEqual([JOURNAL]);
+    expect(getTopicTrail(null)).toEqual([JOURNAL]);
   });
 
   it('is case-insensitive', () => {
-    expect(getTopicTrail('recipe')).toEqual([{ label: 'Meals', path: '/menu' }]);
-    expect(getTopicTrail('RECIPE')).toEqual([{ label: 'Meals', path: '/menu' }]);
+    expect(getTopicTrail('recipe')).toEqual([JOURNAL, { label: 'Meals', path: '/menu' }]);
+    expect(getTopicTrail('RECIPE')).toEqual([JOURNAL, { label: 'Meals', path: '/menu' }]);
   });
 });
