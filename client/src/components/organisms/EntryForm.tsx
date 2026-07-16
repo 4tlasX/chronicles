@@ -141,7 +141,8 @@ const EdCrumbRow = styled.nav`
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  padding-top: 20px;
+  padding: 20px 0 10px;
+  border-bottom: 1px solid var(--border-subtle);
 `;
 
 const CrumbLink = styled.button`
