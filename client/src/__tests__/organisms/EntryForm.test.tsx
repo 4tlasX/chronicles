@@ -14,7 +14,10 @@ vi.mock('@/stores/entriesStore', () => ({
 
 vi.mock('@/stores/uiStore', () => ({
   useUIStore: (selector: (s: Record<string, unknown>) => unknown) =>
-    selector({ headerColor: '#4A5568' }),
+    selector({
+      headerColor: '#4A5568',
+      topicCustomFields: { 5: [{ id: 'author', label: 'Author', type: 'text' }] },
+    }),
 }));
 
 vi.mock('@/utils/topicIcons', () => ({
@@ -23,6 +26,8 @@ vi.mock('@/utils/topicIcons', () => ({
 
 vi.mock('@/utils/stripHtml', () => ({
   stripHtml: (html: string) => html.replace(/<[^>]*>/g, ''),
+  summarizeUserFields: (defs: unknown[], values: Record<string, unknown>) =>
+    Object.values(values || {}).filter(Boolean).join(' · '),
 }));
 
 vi.mock('@/components/organisms/Editor', () => ({
@@ -122,5 +127,51 @@ describe('EntryForm', () => {
     );
     fireEvent.click(screen.getByText('Save'));
     expect(onSave).toHaveBeenCalled();
+  });
+
+  describe('collapsed editor for field-only entries', () => {
+    const bookTopics = [{ id: 5, name: 'Books', icon: null, color: null }];
+
+    it('collapses the editor when an existing entry has custom fields but no text', () => {
+      renderWithTheme(
+        <EntryForm {...defaultProps} entryId={2} isEditing topicId={5} topics={bookTopics} content="" />
+      );
+      expect(screen.getByTestId('editor')).not.toBeVisible();
+      expect(screen.getByText(/add notes/i)).toBeInTheDocument();
+    });
+
+    it('expands the editor when Add notes is clicked', () => {
+      renderWithTheme(
+        <EntryForm {...defaultProps} entryId={2} isEditing topicId={5} topics={bookTopics} content="" />
+      );
+      fireEvent.click(screen.getByText(/add notes/i));
+      expect(screen.getByTestId('editor')).toBeVisible();
+      expect(screen.queryByText(/add notes/i)).not.toBeInTheDocument();
+    });
+
+    it('does not collapse for new entries', () => {
+      renderWithTheme(
+        <EntryForm {...defaultProps} entryId={null} topicId={5} topics={bookTopics} content="" />
+      );
+      expect(screen.getByTestId('editor')).toBeVisible();
+      expect(screen.queryByText(/add notes/i)).not.toBeInTheDocument();
+    });
+
+    it('does not collapse when the entry has text content', () => {
+      renderWithTheme(
+        <EntryForm {...defaultProps} entryId={2} isEditing topicId={5} topics={bookTopics} content="<p>Some notes</p>" />
+      );
+      expect(screen.getByTestId('editor')).toBeVisible();
+      expect(screen.queryByText(/add notes/i)).not.toBeInTheDocument();
+    });
+
+    it('does not collapse when the topic has no custom fields', () => {
+      renderWithTheme(
+        <EntryForm {...defaultProps} entryId={2} isEditing topicId={9}
+          topics={[{ id: 9, name: 'Journal', icon: null, color: null }]} content="" />
+      );
+      expect(screen.getByTestId('editor')).toBeVisible();
+      expect(screen.queryByText(/add notes/i)).not.toBeInTheDocument();
+    });
   });
 });

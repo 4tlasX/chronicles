@@ -225,10 +225,31 @@ const CustomFieldsBody = styled.div`
   & > div { gap: 0 !important; }
 `;
 
-const EditorArea = styled.div`
-  display: flex;
+const EditorArea = styled.div<{ $hidden?: boolean }>`
+  display: ${({ $hidden }) => ($hidden ? 'none' : 'flex')};
   flex-direction: column;
   overflow: hidden;
+`;
+
+/* Shown in place of the editor when a field-only entry collapses it —
+   quiet tracked-uppercase affordance to expand and write notes. */
+const AddNotesBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 12px 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  transition: color 120ms ease;
+  &:hover { color: var(--text-primary); }
 `;
 
 /* Inline image upload error under the action row (dictation-error pattern). */
@@ -520,6 +541,14 @@ export function EntryForm({
     || (userFieldDefs.length > 0 && summarizeUserFields(userFieldDefs, userFieldValues) !== '')
     || images.length > 0;
 
+  // Field-only entries (Books, Quotes, Music, …) collapse the empty editor so
+  // the fields lead; "Add notes" (or dictate/draw) expands it back
+  const [notesExpanded, setNotesExpanded] = useState(false);
+  useEffect(() => { setNotesExpanded(false); }, [entryId]);
+  const hasTextContent = stripHtml(content).trim().length > 0 || content.includes('data-type="drawing"');
+  const hasFieldsUi = customType !== null || userFieldDefs.length > 0;
+  const editorCollapsed = !notesExpanded && !!entryId && !hasTextContent && hasFieldsUi;
+
   // Entry meta data for datestrip
   const currentEntry = entryId ? entries.find(e => e.id === entryId) : null;
   const entryCreatedAt = currentEntry ? new Date(currentEntry.createdAt) : null;
@@ -628,7 +657,7 @@ export function EntryForm({
                 type="button"
                 title="Dictate"
                 aria-label="Toggle dictation"
-                onClick={() => dictationControlRef?.current?.toggle()}
+                onClick={() => { setNotesExpanded(true); dictationControlRef?.current?.toggle(); }}
               >
                 <Icon name="mic" size={16} strokeWidth={2} />
               </IconBtn>
@@ -638,7 +667,7 @@ export function EntryForm({
                 aria-label="Toggle drawing toolbar"
                 title="Draw"
                 aria-expanded={toolbarOpen}
-                onClick={() => setToolbarOpen(!toolbarOpen)}
+                onClick={() => { setNotesExpanded(true); setToolbarOpen(!toolbarOpen); }}
               >
                 <Icon name="pencil" size={16} strokeWidth={2} />
               </IconBtn>
@@ -657,8 +686,14 @@ export function EntryForm({
 
           {imageError && <ImageErrorText>{imageError}</ImageErrorText>}
 
-          {/* Rich text editor */}
-          <EditorArea>
+          {/* Rich text editor — collapsed for field-only entries */}
+          {editorCollapsed && (
+            <AddNotesBtn type="button" onClick={() => setNotesExpanded(true)}>
+              <Icon name="plus" size={13} strokeWidth={2.5} />
+              Add notes
+            </AddNotesBtn>
+          )}
+          <EditorArea $hidden={editorCollapsed}>
             <Editor
               content={content}
               onChange={onContentChange}
