@@ -5,6 +5,7 @@ import { getTopicTrail } from '../../utils/topicBreadcrumb.js';
 import { Icon } from '../../../../design-system/components/core/Icon.jsx';
 import { Editor, type DictationControls } from './Editor.js';
 import { RecipeEntry } from './RecipeEntry.js';
+import { ImageLibraryPicker } from './ImageLibraryPicker.js';
 import { TopicSelector } from './TopicSelector.js';
 import { Spinner } from '../atoms/Spinner.js';
 import { FieldRowLayoutContext } from '../molecules/FormField.js';
@@ -488,6 +489,8 @@ interface EntryFormProps {
   images?: EntryImage[];
   featuredKey?: string | null;
   onImagesSelected?: (files: File[]) => void;
+  /** Attach images that already exist in the bucket (picked from the library) */
+  onExistingImagesSelected?: (images: EntryImage[]) => void;
   onImageRemoved?: (key: string) => void;
   onSetFeatured?: (key: string | null) => void;
   imageUploading?: boolean;
@@ -501,13 +504,14 @@ export function EntryForm({
   onBookmark, onShare, onBack, onNavigate, onAddToShoppingList, onAddToMenu,
   isEditing, isSaving, saveStatus, lastSavedAt, placeholder = 'Start writing...',
   dictationControlRef,
-  images = [], featuredKey = null, onImagesSelected, onImageRemoved, onSetFeatured,
+  images = [], featuredKey = null, onImagesSelected, onExistingImagesSelected, onImageRemoved, onSetFeatured,
   imageUploading = false, imageError, imagesReady = false,
 }: EntryFormProps) {
   const isFavorite = !!customFields._isFavorite;
   const accentColor = useUIStore(s => s.accentColor) || '#4A5568';
   const [toolbarOpen, setToolbarOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const featuredImage = featuredKey ? images.find(img => img.key === featuredKey) ?? null : null;
   const imagesFull = images.length >= 7;
@@ -850,6 +854,18 @@ export function EntryForm({
                   >
                     {imageUploading ? <Spinner size={14} /> : <Icon name="image" size={16} strokeWidth={2} />}
                   </IconBtn>
+                  {onExistingImagesSelected && (
+                    <IconBtn
+                      type="button"
+                      aria-label="Add image from library"
+                      title={imagesFull ? 'Maximum of 7 images per entry' : 'Add from library'}
+                      disabled={imagesFull}
+                      onClick={() => !imagesFull && setLibraryOpen(true)}
+                      style={{ opacity: imagesFull ? 0.35 : 1, cursor: imagesFull ? 'default' : 'pointer' }}
+                    >
+                      <Icon name="archive" size={16} strokeWidth={2} />
+                    </IconBtn>
+                  )}
                 </>
               )}
               <IconBtn
@@ -992,6 +1008,15 @@ export function EntryForm({
           images={images}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
+        />
+      )}
+
+      {libraryOpen && onExistingImagesSelected && (
+        <ImageLibraryPicker
+          excludeKeys={images.map(i => i.key)}
+          remainingSlots={7 - images.length}
+          onSelect={onExistingImagesSelected}
+          onClose={() => setLibraryOpen(false)}
         />
       )}
 

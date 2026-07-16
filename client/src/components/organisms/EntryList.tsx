@@ -7,6 +7,7 @@ import { Checkbox } from '../atoms/Checkbox.js';
 import { entries as entriesApi } from '../../services/api.js';
 import { removeEntriesLocally } from '../../services/calendarSync.js';
 import { collectImageKeys, bestEffortDeleteImages } from '../../services/imageStorage.js';
+import { filterDeletableImageKeys } from '../../utils/entryActions.js';
 import { stripHtml, summarizeUserFields, builtinEntryName } from '../../utils/stripHtml.js';
 
 const TOPIC_TO_TYPE: Record<string, string> = {
@@ -334,7 +335,9 @@ export function EntryList({ onToggleBookmark }: EntryListProps = {}) {
         cleanupKeys.push(...collectImageKeys(selectedEntries.filter(e => !remaining.has(e.id))));
       }
     } finally {
-      if (cleanupKeys.length > 0) void bestEffortDeleteImages(cleanupKeys);
+      // Skip objects still referenced by surviving entries (library reuse)
+      const deletable = filterDeletableImageKeys(cleanupKeys);
+      if (deletable.length > 0) void bestEffortDeleteImages(deletable);
       setBulkDeleting(false);
       exitSelectMode();
     }

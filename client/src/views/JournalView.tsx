@@ -27,6 +27,7 @@ import { useEntriesStore } from '../stores/entriesStore.js';
 import { useUIStore } from '../stores/uiStore.js';
 import { entries as entriesApi, topics as topicsApi, settings as settingsApi } from '../services/api.js';
 import { uploadEntryImage, bestEffortDeleteImages, collectImageKeys, loadImageStorageConfig, type EntryImage } from '../services/imageStorage.js';
+import { filterDeletableImageKeys } from '../utils/entryActions.js';
 import { getOrCreateJournalTopic } from '../utils/getOrCreateJournalTopic.js';
 import { stripHtml, summarizeUserFields, builtinEntryName } from '../utils/stripHtml.js';
 import type { RecipeFieldValues } from '../types/fields.js';
@@ -611,6 +612,25 @@ export function JournalView() {
     // New entries: the autosave effect (which watches entryImages) persists them
   }, [entryImages, featuredKey, encryptBytes, persistImages]);
 
+  /** Attach images picked from the library — no upload, the objects already
+   *  exist in the bucket; only this entry's metadata gains references. */
+  const handleExistingImagesSelected = useCallback(async (picked: EntryImage[]) => {
+    setImageError('');
+    const nextImages = [...entryImages];
+    for (const img of picked) {
+      if (nextImages.length >= 7) break;
+      if (!nextImages.some(i => i.key === img.key)) nextImages.push(img);
+    }
+    if (nextImages.length === entryImages.length) return;
+    // The first image of an entry is featured by default (matches upload)
+    const nextFeatured = entryImages.length === 0 && !featuredKey ? nextImages[0].key : featuredKey;
+    setEntryImages(nextImages);
+    setFeaturedKey(nextFeatured);
+    const currentId = useUIStore.getState().selectedEntryId;
+    if (currentId) await persistImages(currentId, nextImages, nextFeatured);
+    // New entries: the autosave effect (which watches entryImages) persists them
+  }, [entryImages, featuredKey, persistImages]);
+
   const handleImageRemoved = useCallback(async (key: string) => {
     const img = entryImages.find(i => i.key === key);
     if (!img) return;
@@ -621,7 +641,9 @@ export function JournalView() {
     setFeaturedKey(nextFeatured);
     const currentId = useUIStore.getState().selectedEntryId;
     if (currentId) await persistImages(currentId, nextImages, nextFeatured);
-    void bestEffortDeleteImages([img.key, img.thumbKey]);
+    // Only delete from R2 when no other entry uses this image (library reuse)
+    const deletable = filterDeletableImageKeys([img.key, img.thumbKey], currentId ? [currentId] : []);
+    if (deletable.length > 0) void bestEffortDeleteImages(deletable);
   }, [entryImages, featuredKey, persistImages]);
 
   const handleSetFeatured = useCallback(async (key: string | null) => {
@@ -633,9 +655,10 @@ export function JournalView() {
   const handleDelete = useCallback(async () => {
     if (!selectedEntryId) return;
     try {
-      // Collect R2 keys before the entry (and its metadata) disappears
+      // Collect R2 keys before the entry (and its metadata) disappears —
+      // objects still referenced by other entries stay in the bucket
       const entry = useEntriesStore.getState().decryptedEntries.find(e => e.id === selectedEntryId);
-      const imageKeys = entry ? collectImageKeys([entry]) : [];
+      const imageKeys = entry ? filterDeletableImageKeys(collectImageKeys([entry]), [selectedEntryId]) : [];
       await entriesApi.delete(selectedEntryId);
       removeEntry(selectedEntryId);
       if (imageKeys.length > 0) void bestEffortDeleteImages(imageKeys);
@@ -943,6 +966,7 @@ export function JournalView() {
               images={entryImages}
               featuredKey={featuredKey}
               onImagesSelected={handleImagesSelected}
+              onExistingImagesSelected={handleExistingImagesSelected}
               onImageRemoved={handleImageRemoved}
               onSetFeatured={handleSetFeatured}
               imageUploading={imageUploading}
@@ -980,7 +1004,7 @@ export function JournalView() {
         onConfirm={() => {
           if (pendingDeleteId) {
             const entry = useEntriesStore.getState().decryptedEntries.find(e => e.id === pendingDeleteId);
-            const imageKeys = entry ? collectImageKeys([entry]) : [];
+            const imageKeys = entry ? filterDeletableImageKeys(collectImageKeys([entry]), [pendingDeleteId]) : [];
             entriesApi.delete(pendingDeleteId).then(() => {
               useEntriesStore.getState().removeEntry(pendingDeleteId);
               if (imageKeys.length > 0) void bestEffortDeleteImages(imageKeys);
