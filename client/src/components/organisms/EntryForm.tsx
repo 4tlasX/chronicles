@@ -43,6 +43,15 @@ const EdActions = styled.div`
   display: flex;
   gap: 6px;
   align-items: center;
+  margin-left: auto;
+
+  /* Mobile: the action icons wrap under the breadcrumbs, aligned left */
+  @media (max-width: 768px) {
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+    padding-top: 4px;
+  }
 `;
 
 const IconBtn = styled.button<{ $active?: boolean; $activeColor?: string; $danger?: boolean }>`
@@ -800,8 +809,9 @@ export function EntryForm({
               />
             </CrumbTopic>
 
-            {/* Entry action bar — right side of the breadcrumb row */}
-            <EdActions style={{ marginLeft: 'auto' }}>
+            {/* Entry action bar — right of the breadcrumbs on desktop,
+                wrapped underneath and left-aligned on mobile */}
+            <EdActions>
               <NewEntryBtn type="button" onClick={onNew} title="New entry">
                 + New
               </NewEntryBtn>

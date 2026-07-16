@@ -953,7 +953,12 @@ export function JournalView() {
               onDelete={selectedEntryId ? handleDelete : undefined}
               onNew={handleNew}
               onBookmark={handleBookmark}
-              onNavigate={path => navigate(path)}
+              onNavigate={path => {
+                // The Journal crumb returns to the entry list — on mobile
+                // that means closing the editor so the list is full-width
+                if (path === '/journal') handleMobileBack();
+                navigate(path);
+              }}
               onShare={entryImages.length > 0 && !isRecipeEntry ? undefined : () => setShareOpen(true)}
               onAddToShoppingList={handleAddToShoppingList}
               onAddToMenu={() => navigate('/menu')}
