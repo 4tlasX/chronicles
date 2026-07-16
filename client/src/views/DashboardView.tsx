@@ -2223,6 +2223,7 @@ const TopicEntryDate = styled.span`
 function TopicWidget({ topicId, accentColor, dragAttributes, dragListeners }: { topicId: number; accentColor: string } & DragProps) {
   const decryptedEntries = useEntriesStore(s => s.decryptedEntries);
   const allTopics = useEntriesStore(s => s.allTopics);
+  const topicCustomFields = useUIStore(s => s.topicCustomFields);
 
   const topic = useMemo(() => allTopics.find(t => t.id === topicId), [allTopics, topicId]);
 
@@ -2263,7 +2264,16 @@ function TopicWidget({ topicId, accentColor, dragAttributes, dragListeners }: { 
           <div style={{ fontSize: 13, opacity: 0.5, padding: '8px 0' }}>No entries yet.</div>
         ) : (
           entries.map(e => {
-            const preview = stripHtml(e.content ?? '').trim().slice(0, 80) || '(no content)';
+            // Field-only entries (e.g. Books/Quotes/Music with custom fields
+            // but no text) preview their field values instead of "(no content)"
+            let preview = stripHtml(e.content ?? '').trim().slice(0, 80);
+            if (!preview) {
+              const cf = (e.metadata as Record<string, unknown>)?._customFields as Record<string, unknown> | undefined;
+              const defs = topicCustomFields[topicId] ?? [];
+              const uf = (cf?._userFields as Record<string, unknown>) ?? {};
+              preview = summarizeUserFields(defs, uf).slice(0, 80);
+            }
+            if (!preview) preview = '(no content)';
             return (
               <TopicEntryRow key={e.id}>
                 <TopicEntryPreview>{preview}</TopicEntryPreview>
