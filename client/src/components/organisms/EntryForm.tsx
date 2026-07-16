@@ -189,37 +189,6 @@ const CustomFieldsSection = styled.div`
   margin-top: var(--s-5, 20px);
 `;
 
-/* Section header: tracked uppercase label with a trailing hairline rule. */
-const CustomFieldsHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  margin-bottom: 6px;
-`;
-
-const CfCardTitle = styled.span`
-  font-family: var(--font-label);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 12px;
-
-  /* Trailing hairline rule to the right of the label. */
-  &::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #2e2f32;
-  }
-`;
-
-/* cf-card-badge: mono uppercase label on the right of header */
 const CustomFieldsBody = styled.div`
   /* Editor wrappers/rows: no extra gap — each field row carries its own padding. */
   & > div { gap: 0 !important; }
@@ -709,9 +678,6 @@ export function EntryForm({
           {/* Custom fields, below editor */}
           {customType && (
             <CustomFieldsSection>
-              <CustomFieldsHeader>
-                <CfCardTitle>{customType === 'task' ? 'Task Options' : customType === 'goal' ? 'Goal Type' : customType === 'milestone' ? 'Milestone Status' : customType === 'food' ? 'Meal Type' : customType === 'medication' ? 'Dosage' : customType === 'symptom' ? 'Severity' : customType === 'exercise' ? 'Exercise Type' : customType === 'event' ? 'Event Details' : customType === 'meeting' ? 'Meeting Details' : customType === 'allergy' ? 'Allergy Details' : customType === 'shopping_list' ? 'Shopping List' : customType === 'recipe' ? 'Recipe Details' : customType === 'wellness' ? 'Check-in Details' : 'Settings'}</CfCardTitle>
-              </CustomFieldsHeader>
                 <CustomFieldsBody>
                   <FieldRowLayoutContext.Provider value={true}>
                   {customType === 'task' && <TaskFields values={{ isInProgress: false, isCompleted: false, isAutoMigrating: true, parentGoalId: null, parentMilestoneId: null, priority: 'none', deadline: '', ...customFields } as TaskFieldValues} onChange={v => onCustomFieldsChange(v as unknown as Record<string, unknown>)} goalOptions={goalOptions} milestoneOptions={milestoneOptions} />}
@@ -736,9 +702,6 @@ export function EntryForm({
           {/* User-defined custom fields */}
           {userFieldDefs.length > 0 && (
             <CustomFieldsSection>
-              <CustomFieldsHeader>
-                <CfCardTitle>Custom Fields</CfCardTitle>
-              </CustomFieldsHeader>
                 <CustomFieldsBody>
                   <FieldRowLayoutContext.Provider value={true}>
                     <UserFieldsForm
