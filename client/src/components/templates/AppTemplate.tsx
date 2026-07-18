@@ -45,15 +45,16 @@ const AccentStripe = styled.div<{ $hidden?: boolean }>`
   display: ${({ $hidden }) => $hidden ? 'none' : 'block'};
 `;
 
-const Layout = styled.div<{ $hideAccentStripe?: boolean }>`
+const Layout = styled.div<{ $hideAccentStripe?: boolean; $focusMode?: boolean }>`
   display: flex;
   flex-direction: row;
   height: 100vh;
+  height: 100dvh; /* iOS Safari: 100vh extends behind the bottom toolbar */
   overflow: hidden;
   padding-top: ${({ $hideAccentStripe }) => $hideAccentStripe ? '0' : '3px'};
 
   @media (max-width: 768px) {
-    padding-top: 56px;
+    padding-top: ${({ $focusMode }) => $focusMode ? '0' : '56px'};
   }
 `;
 
@@ -98,13 +99,18 @@ export function AppTemplate({ children, hideSidebar, transparentContent, hideAcc
   const backgroundImage = useUIStore(s => s.backgroundImage);
   const isLightBg = BACKGROUND_IMAGES.find(bg => bg.value === backgroundImage)?.light ?? false;
   const navOpen = useUIStore(s => s.mobileNavOpen);
+  /* Mobile: MainColumn's transform makes it the containing block for the
+     fixed full-view editor overlay, and its stacking context sits below the
+     fixed nav bar — so while the overlay is open, hide the mobile chrome and
+     let the overlay fill the whole viewport. */
+  const focusMode = useUIStore(s => s.editorFocusMode);
 
   return (
     <>
       <AccentStripe $hidden={hideAccentStripe} />
       <Background />
-      {!hideSidebar && <MobileChrome />}
-      <Layout $hideAccentStripe={hideAccentStripe}>
+      {!hideSidebar && !focusMode && <MobileChrome />}
+      <Layout $hideAccentStripe={hideAccentStripe} $focusMode={focusMode}>
         <SkipLink href="#main-content">Skip to content</SkipLink>
         {!hideSidebar && <Sidebar />}
         <MainColumn $navOpen={!hideSidebar && navOpen}>

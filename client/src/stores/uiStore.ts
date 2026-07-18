@@ -42,6 +42,10 @@ interface UIState {
   showMobileEditor: boolean;
   setShowMobileEditor: (show: boolean) => void;
 
+  // Full-view editor overlay — mobile chrome hides so the overlay can fill the screen
+  editorFocusMode: boolean;
+  setEditorFocusMode: (v: boolean) => void;
+
   // Drawing / Apple Pencil
   pencilOnly: boolean;
   setPencilOnly: (v: boolean) => void;
@@ -131,6 +135,9 @@ export const useUIStore = create<UIState>((set) => ({
 
   showMobileEditor: false,
   setShowMobileEditor: (show) => set({ showMobileEditor: show }),
+
+  editorFocusMode: false,
+  setEditorFocusMode: (v) => set({ editorFocusMode: v }),
 
   pencilOnly: true,
   setPencilOnly: (v) => set({ pencilOnly: v }),

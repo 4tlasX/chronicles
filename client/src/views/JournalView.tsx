@@ -363,6 +363,16 @@ export function JournalView() {
     return () => window.removeEventListener('keydown', onKey);
   }, [editorExpanded]);
 
+  /* Mirror the expanded state into uiStore so AppTemplate hides the mobile
+     chrome — otherwise the fixed overlay is trapped in MainColumn's transform
+     containing block and sits behind/beside the mobile nav. */
+  useEffect(() => {
+    const { setEditorFocusMode, setMobileNavOpen } = useUIStore.getState();
+    setEditorFocusMode(editorExpanded);
+    if (editorExpanded) setMobileNavOpen(false);
+    return () => setEditorFocusMode(false);
+  }, [editorExpanded]);
+
   const handleUnlock = useCallback(async (password: string) => {
     if (!encryptionData?.kekSalt || !encryptionData?.encryptedMasterKey || !encryptionData?.kekWrapIv) {
       throw new Error('Missing encryption data');
