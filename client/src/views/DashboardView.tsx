@@ -1071,6 +1071,16 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [expanded]);
+
+  /* Mirror the expanded state into uiStore so AppTemplate hides the mobile
+     chrome — otherwise the fixed overlay is trapped in MainColumn's transform
+     containing block and sits under the mobile nav bar. */
+  useEffect(() => {
+    const { setEditorFocusMode, setMobileNavOpen } = useUIStore.getState();
+    setEditorFocusMode(expanded);
+    if (expanded) setMobileNavOpen(false);
+    return () => setEditorFocusMode(false);
+  }, [expanded]);
   const reflectionPrompt = useMemo(() => {
     const d = new Date();
     const dayOfYear = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
