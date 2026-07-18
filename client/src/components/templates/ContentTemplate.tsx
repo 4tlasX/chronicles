@@ -7,14 +7,15 @@ import { MobileChrome } from '../organisms/MobileChrome.js';
 import { useUIStore } from '../../stores/uiStore.js';
 import { BACKGROUND_IMAGES } from '@chronicles/shared';
 
-const Layout = styled.div`
+const Layout = styled.div<{ $focusMode?: boolean }>`
   display: flex;
   flex-direction: row;
   height: 100vh;
+  height: 100dvh; /* iOS Safari: 100vh extends behind the bottom toolbar */
   overflow: hidden;
 
   @media (max-width: 768px) {
-    padding-top: 56px;
+    padding-top: ${({ $focusMode }) => $focusMode ? '0' : '56px'};
   }
 `;
 
@@ -57,11 +58,16 @@ export function ContentTemplate({ children, hideSidebar }: ContentTemplateProps)
   const backgroundImage = useUIStore(s => s.backgroundImage);
   const isLightBg = BACKGROUND_IMAGES.find(bg => bg.value === backgroundImage)?.light ?? false;
   const navOpen = useUIStore(s => s.mobileNavOpen);
+  /* Same as AppTemplate: MainColumn's mobile transform is the containing
+     block for fixed full-view overlays (e.g. dashboard Quick Entry), and its
+     stacking context sits below the fixed nav bar — hide the mobile chrome
+     while an overlay is open so it can fill the whole viewport. */
+  const focusMode = useUIStore(s => s.editorFocusMode);
   return (
     <>
       <div data-print-hide><Background /></div>
-      {!hideSidebar && <div data-print-hide><MobileChrome /></div>}
-      <Layout>
+      {!hideSidebar && !focusMode && <div data-print-hide><MobileChrome /></div>}
+      <Layout $focusMode={focusMode}>
         {!hideSidebar && <div data-print-hide><Sidebar /></div>}
         <MainColumn $navOpen={!hideSidebar && navOpen}>
           <div data-print-hide><Header /></div>
