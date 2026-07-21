@@ -1328,7 +1328,7 @@ function QuickEntryCard({ accentColor, topics, dragAttributes, dragListeners }: 
             {saving ? <Spinner size={10} /> : (
               <>
                 <Icon name="plus" size={12} strokeWidth={2.5} />
-                Capture
+                Save
               </>
             )}
           </SaveBtn>
